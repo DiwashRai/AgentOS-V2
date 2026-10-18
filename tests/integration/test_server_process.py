@@ -135,7 +135,9 @@ def test_the_server_starts_answers_health_and_stops(tmp_path: Path) -> None:
     assert proc.poll() is not None
     assert not _healthy(port)
     if sys.platform != "win32":
-        assert proc.returncode == 0, output
+        # A graceful stop: uvicorn finishes, then re-raises SIGTERM on itself, so the exit code
+        # is -SIGTERM; the log line is the proof it shut down rather than being killed.
+        assert "Finished server process" in output, output
 
 
 def test_cleanup_ends_a_child_that_outlived_its_parent() -> None:
