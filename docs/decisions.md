@@ -25,13 +25,13 @@
 | # | Question | Default until decided |
 |---|---|---|
 | Q1 | Which social features beyond owner and conversation: mentions, notifications, presence, Jira comment sync? | Owner and conversation first; mentions next. |
-| Q2 | Turso: which engine (libSQL or the new Turso), and does it pass the spike? It must: install from Artifactory on RHEL 8 / Python 3.11 and on Windows, run in the container, support partial unique indexes, CHECK constraints, foreign keys and immediate write transactions with a busy timeout, and give a per-test in-memory database fast enough for the speed gate. | The spike, before any database code. |
-| Q3 | How does the web reach V2 if the API changes: an adapter in V1's web, or a new web app? And its kit: a component library, or our own? | Decide when the API is drafted. |
+| Q2 | Turso: which engine (libSQL or the new Turso), and does it pass the spike? It must: install from Artifactory on RHEL 8 / Python 3.11 and on Windows, run in the container, support partial unique indexes, CHECK constraints, foreign keys and immediate write transactions with a busy timeout, commits applied one at a time (the change feed's sequence relies on it), and give a per-test in-memory database fast enough for the speed gate. | The spike, before any database code. |
+| Q3 | How does the web reach V2 if the API changes: an adapter in V1's web, or a new web app? And its kit: a component library, or our own? | A new web on the kit: V2's API is too different for an adapter ([api.md](api.md)). The kit is decided at plan step 10. |
 | Q4 | The worker as a zip served under a `.py` name may trip workplace scanners. Zip, plain file, or something else? | Check at work before the worker is built. |
 | Q5 | Gates on runs: "dispatch again" to continue, or an approval record? Does a run's completion read the workflow it ran or the current one? | Dispatch again; the workflow it ran. |
 | Q6 | Package compatibility: exact protocol lockstep, or ignore unknown fields? | Lockstep (V1); revisit with the worker. |
 | Q7 | Liveness: a renewable lease, a wake signal, or V1's heartbeat with timers? | Heartbeat on the journal; events where a party can say so. |
-| Q8 | Live updates: polling (V1) or a stream? | Polling every 1-3 s; a stream if the API draft shows it's simpler. |
+| Q8 | Live updates: polling (V1) or a stream? | The change feed, a long poll ([api.md](api.md) › Live updates); polling every 1-3 s as the fallback. |
 | Q9 | Ticket edits: versioned like everything else? Ticket lists paginated? | Versioned; paginated. |
 | Q10 | May any writer edit any ticket, or only its owner? | Any writer (V1). |
 | Q11 | A CLI usage limit (429) shows only as exit 1: detect it and pause, or fail? | Fail with a clear reason. |

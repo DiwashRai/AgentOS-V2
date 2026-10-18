@@ -20,8 +20,9 @@ Dispatch is the request: it queues a run. The job is built when the run leaves t
 - One active run per ticket, enforced by the database.
 - A run's route (runner, mailbox or client) is stored at dispatch and kept.
 - Dispatch needs an open ticket and a workflow that renders; only the ticket's owner may target their own client, and it must exist; in repo mode, a repo in the catalog and a base branch. At launch the planned stage ids must still match.
-- While a run is active, the ticket's workflow, state, repo and branch can't change. The base branch locks at the first stage start. A queued client run also locks the owner, title, description and type (they run with the owner's credentials).
-- Context is read at launch and locks then (from the queue, for client runs, which run on the owner's machine); it unlocks when the run ends.
+- The run lock: while a run is active, the ticket's workflow, state, repo and base branch can't change. A queued client run also locks the owner, title, description and type (they run with the owner's credentials). `runs` sets each scope in the same transaction as the transition that starts it; the one function that ends a run clears them.
+- Context is also a run lock scope: it is read at launch and locks then (from the queue, for client runs, which run on the owner's machine); it unlocks when the run ends.
+- The workspace pin is not part of the run lock. The first stage start in repo mode pins the ticket's repo and the base branch its job started from (a resolved repo default included, so a later Settings change doesn't move it) for good, because work is committed on that branch; no run end clears it. A mailbox run pins when its job is handed out, since its stage starts arrive only at replay. A no-repo ticket has no pin, so a repo can be chosen later.
 - A dispatch from a stage inside a loop starts at that loop's round 2.
 - Launch takes the oldest unfenced run first. A launch that fails (a render error, changed stage ids, a provider start error) fails the run with the reason.
 - The workspace is deleted after success or cancel and kept after a failure.
@@ -33,14 +34,16 @@ Dispatch is the request: it queues a run. The job is built when the run leaves t
 
 The reaper (live routes; every 15 s; the first rule that applies wins; it writes only if the run is still as it saw it, a compare-and-set):
 
-| Rule | Applies to | Ends the run as |
+| Rule | Applies to | Outcome |
 |---|---|---|
-| The server itself slept (last tick over 60 s ago) | all | nothing: refresh running runs' last-seen and skip |
+| The server itself slept (last tick over 60 s ago) | all | nothing: refresh running runs' last-seen and skip (clients' lease times are never refreshed: only a lease moves them) |
 | No launch reference 15 min after launch | launched (not started) runner runs | failed: no launch |
 | Not started within the start allowance (unless the provider reports it running), or past the deadline whatever the provider says | launched (not started) runner and client runs | failed: never started |
 | 90 s without a post | running runs | failed: lost |
 | Past start + budget + 15 min, no stop asked yet | running runs | ask the worker to stop (budget) |
 | No result 2 min after a stop was asked | running runs | by the stop's reason: cancelled, or failed over budget |
+| An ended run's job past its deadline | ended runs whose job may still write | the run is unchanged; its job ends, which lifts the fence |
+| No lease for 60 s | clients that were online | nothing: a `clients` change for the web (online is derived from the last lease); its run workers carry on |
 
 Whenever the reaper (or a cancel) ends a runner run, it also cancels the CI run, so an orphan job doesn't hold a runner. Queued client runs never time out. Mailbox runs have their own rules (Mailbox below).
 

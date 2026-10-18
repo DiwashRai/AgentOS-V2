@@ -53,7 +53,7 @@ What V2 must do: the parity list against V1. Every V1 capability is here, or und
 - R29. Dispatch from the next stage or a chosen stage; continue after a gate; retry after a failure; cancel.
 - R30. A run runs its stages up to the next gate or the end, and ends gated (a gate with an enabled stage after it), succeeded, failed or cancelled, with the reason shown.
 - R31. A time budget from the stages' timeouts, rounds and repairs, capped so it fits the CI job's timeout; over budget, the run fails.
-- R32. Watch a run live: stages, rounds, verdicts, summarised agent output, warnings; see exactly what each stage was given and how it was called; download its other output (at most 20 MiB).
+- R32. Watch a run live: stages, rounds, verdicts, summarised agent output, warnings; see exactly what each stage was given and how it was called; download its other output (at most 20 MiB; mailbox runs have none).
 - R33. The worker commits and pushes after every stage and syncs declared context back after every stage.
 - R34. The last stage can open a pull request; the ticket gets its URL.
 - R35. Runs that never start, go silent or outlive their budget are ended with the reason (rules.md › Runs and jobs).
