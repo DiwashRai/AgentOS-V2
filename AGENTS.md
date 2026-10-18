@@ -6,9 +6,24 @@ Read first: `docs/vision.md` (what and why), `docs/architecture.md` (how), `docs
 
 Check at the edges, trust the types inside. Anything from outside (HTTP, the database, Jira, GitHub, git, processes, files, config) is parsed once at the boundary into our own types. Past that point code trusts its types: no re-checking, no `isinstance` or `is None` just in case, no defensive `try`. Bad states can't be written down: a value's type says which state it's in.
 
+## Setup
+
+Prerequisites: Python 3.11+, uv, just, git, and PowerShell 7 (`pwsh`) on Windows. Then `just setup` (installs the environment, enables the git hooks); re-run it after a lockfile change.
+
 ## Layout
 
-A feature is a package whose files say their role: `model.py`, `rules.py` (core: pure), `service.py` (shell: use cases), `routes.py`, `rows.py` and adapters (boundary). A use case spanning features is its own shell module. The worker is its own package with the same roles. import-linter and the gates enforce them; see `docs/architecture.md`.
+A feature is a package whose files say their role: `model.py`, `rules.py` (core: pure), `service.py` (shell: use cases), `routes.py`, `rows.py` and adapters (boundary). A use case spanning features is its own shell module.
+Shell files are named `service.py`, `loops.py`, `reaper.py` or `dispatcher.py`; any other name needs a layer in `quality-baseline.json`.
+`app` is the composition root: it alone may import any feature's routes. The worker (`agentos_worker`) is its own package: `core` (pure); `run`, `client` (shell); `http`, `git`, `procs`, `files` (boundary). import-linter (`pyproject.toml`) and the gates (`quality-baseline.json`) enforce them; see `docs/architecture.md`.
+
+| Path | What |
+|---|---|
+| `src/agentos/<feature>/` | The server, one package per row of the module map |
+| `src/agentos_worker/` | The worker (stdlib only) |
+| `src/agentos_protocol/` | The protocol shared by both (stdlib only) |
+| `tests/` | The fast suite (`conftest.py` at the root: clean environment, speed gate) |
+| `tests/integration/` | Real processes and git (everything here is marked `integration`) |
+| `tools/gates/` | The gates and their tests |
 
 ## Changes
 
@@ -24,12 +39,15 @@ A feature is a package whose files say their role: `model.py`, `rules.py` (core:
 
 | Command | What |
 |---|---|
+| `just setup` | Install the environment, enable the git hooks |
 | `just check` | Format, lint, types (strict), import rules |
+| `just fmt` | Format and apply lint fixes |
 | `just test` | The fast suite (under 10 s; its time is gated) |
 | `just test-integration` | Real git and real processes |
 | `just gates` | The measured limits: complexity, defensive patterns, `Any` in the core, fan-out, file size, suppressions |
 | `just ratchet` | Lower the gate baseline after the code improved |
 | `just card` | The gate numbers for a PR's description |
+| `just dev` | The server on 127.0.0.1:8000 |
 
 The pre-commit hook runs `check`, `test` and `gates`. CI runs all of them, `test-integration` included, on Windows and Linux for every PR.
 

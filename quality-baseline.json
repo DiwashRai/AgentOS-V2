@@ -1,0 +1,74 @@
+{
+  "version": 2,
+  "layers": {
+    "core": [
+      "src/agentos/*/model.py",
+      "src/agentos/*/rules.py",
+      "src/agentos/**/model/**",
+      "src/agentos/**/rules/**",
+      "src/agentos/workflows/**",
+      "src/agentos_protocol/**",
+      "src/agentos_worker/core/**"
+    ],
+    "shell": [
+      "src/agentos/*/service.py",
+      "src/agentos/*/loops.py",
+      "src/agentos/*/reaper.py",
+      "src/agentos/*/dispatcher.py",
+      "src/agentos/__init__.py",
+      "src/agentos/*/__init__.py",
+      "src/agentos_worker/__init__.py",
+      "src/agentos_worker/run/**",
+      "src/agentos_worker/client/**"
+    ],
+    "boundary": [
+      "src/agentos/*/routes.py",
+      "src/agentos/*/rows.py",
+      "src/agentos/app/**",
+      "src/agentos/__main__.py",
+      "src/agentos/jira/**",
+      "src/agentos/github/**",
+      "src/agentos/artifactory/**",
+      "src/agentos/db/**",
+      "src/agentos/targets/**",
+      "src/agentos_worker/http/**",
+      "src/agentos_worker/git/**",
+      "src/agentos_worker/procs/**",
+      "src/agentos_worker/files/**",
+      "src/agentos_worker/__main__.py"
+    ]
+  },
+  "limits": {
+    "cognitive": 15,
+    "cyclomatic": 10,
+    "cyclomatic_python_tool": "lizard",
+    "file_lines": 1000,
+    "fan_out": 5,
+    "optional_fields": 1,
+    "any": 0
+  },
+  "allowed": {
+    "uncapped": {
+      "boundary": [
+        "isinstance",
+        "try",
+        "cast"
+      ],
+      "shell": [
+        "cast"
+      ]
+    },
+    "defensive": {},
+    "suppressions": {},
+    "raw_tags": {}
+  },
+  "exceptions": {
+    "cognitive": {},
+    "cyclomatic": {},
+    "file_lines": {},
+    "fan_out": {},
+    "optional_fields": {},
+    "any": {}
+  },
+  "raises": []
+}
