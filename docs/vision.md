@@ -15,7 +15,7 @@ Simplify aggressively. If a feature doesn't clearly help one of the problems bel
 ## Principles
 
 - **Context is the product.** Writing, sharing, reviewing and improving context is the main job of the UI.
-- **Portable over proprietary.** `AGENTS.md` is the instructions file; no authored `CLAUDE.md`. What we ship to agents works with any agent CLI.
+- **Portable over proprietary.** `AGENTS.md` is the instructions file every run gets; a Space that wants a `CLAUDE.md` adds one pointing at it. What we ship to agents works with any agent CLI.
 - **Everything a run used is recorded.** A run can be explained from its record alone.
 - **Plain code first, AI second.** Rules are ordinary code; agents do the work that needs judgement.
 - **Social by default.** Every ticket has a conversation, can have an owner, and says clearly who it's waiting on.
@@ -29,7 +29,7 @@ Simplify aggressively. If a feature doesn't clearly help one of the problems bel
 | Ticket | A unit of work with a description, an owner, context and a workflow. Native, or imported from Jira. |
 | Context | What a ticket gives its agents (the kinds are in R16). |
 | Library | The Space's shared context items, agents and workflows, which tickets start from and promote back to. |
-| Runtime | How to call one agent CLI (Claude Code, Copilot CLI): an argv template. |
+| Runtime | How to call one agent CLI (Claude Code, Copilot CLI): an argv template, plus where that CLI reads skills and agents. |
 | Agent | A library item: instructions plus a runtime, model and effort. Stages use agents. |
 | Workflow | A library item: ordered stages, with loops and gates. A ticket works on its own copy. |
 | Stage | One step: an agent stage or a shell stage. A stage can be a check that passes or fails. |
@@ -53,7 +53,7 @@ Simplify aggressively. If a feature doesn't clearly help one of the problems bel
 Context handling is the heart of V2, and its main improvement over V1.
 
 - **First-class items:** `AGENTS.md`, skills, agents and the rest (R16), and workflows (R24). Each is a named, versioned item, not just a path.
-- **Written once, delivered per CLI.** People write `AGENTS.md` and skills; whatever a particular CLI needs (a pointer file, a skills folder) is generated for each run, never authored.
+- **Written once.** People write `AGENTS.md` and skills once; instructions go at the repo root, and each runtime says where its CLI reads skills and agents (R20). Nothing is generated per CLI.
 - **The library** holds the Space's items. A new ticket copies the items it uses; its copies are its own to change.
 - **Promote** sends a ticket's improved item back to the library (an admin, with a version check). **Drift** shows where a ticket's copy and the library differ, both ways.
 - **Every version is kept**, with who or which run wrote it. A run records the exact versions it used.
@@ -64,7 +64,7 @@ Context handling is the heart of V2, and its main improvement over V1.
 - A ticket can have an owner; it waits on someone, and they see it in their queue.
 - A conversation per ticket for humans, never sent to agents.
 - People, roles and approval of new users.
-- Next: mentions and notifications; later, presence (Q1).
+- No presence and no notifications; maybe mentions later. Jira sync comes much later (D16).
 
 ## Out
 

@@ -13,7 +13,9 @@ Status: design. No code yet.
 | [docs/vision.md](docs/vision.md) | The product: problems, principles, words, the loop, context |
 | [docs/requirements.md](docs/requirements.md) | What V2 must do, checked against V1 |
 | [docs/rules.md](docs/rules.md) | The invariants and edge cases V1 learnt the hard way |
-| [docs/architecture.md](docs/architecture.md) | How it's built: layers, states, boundaries, tests |
-| [docs/decisions.md](docs/decisions.md) | Decisions taken, and the ones still open |
+| [docs/architecture.md](docs/architecture.md) | How it's built: layers, modules, states, boundaries, tests |
+| [docs/api.md](docs/api.md) | The API: resources and actions, mapped from V1's |
+| [docs/api-v1.md](docs/api-v1.md) | V1's API as built, for reference |
+| [docs/decisions.md](docs/decisions.md) | Decisions taken, and why |
 | [docs/plan.md](docs/plan.md) | Build order and how we measure progress |
 | [AGENTS.md](AGENTS.md) | Rules for agents (and people) working in this repo |
