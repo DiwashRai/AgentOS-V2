@@ -2,7 +2,7 @@
 
 Each step is one or more PRs, each green in CI (D14), with its card in the description.
 
-1. **Skeleton.** `justfile`, the gates (empty baseline), the pre-commit hook, ruff, mypy strict, import-linter, pytest with the speed gate, CI on Windows and Linux with branch protection (D14), startup config (R48). A server that starts and answers health. The Turso spike (Q2) and the Claude Code check (Q13).
+1. **Skeleton.** `justfile`, the gates (empty baseline), the pre-commit hook, ruff, mypy strict, import-linter, pytest with the speed gate, CI on Windows and Linux with branch protection (D14), startup config (R48). A server that starts and answers health. The Turso spike (D6): it must install from Artifactory on RHEL 8 / Python 3.11 and on Windows, run in the container, support partial unique indexes, CHECK constraints, foreign keys and immediate write transactions with a busy timeout, apply commits one at a time (the change stream's sequence relies on it), and give a per-test in-memory database fast enough for the speed gate. In the same spike: `py7zr` and its compiled dependencies install from Artifactory on RHEL 8 in the container (D17).
 2. **States.** Every state and transition of runs, jobs, stage runs, tickets and context items, as types and a transition table, reviewed before the API's models.
 3. **API models.** The resources and actions are drafted ([api.md](api.md)); this step adds the models and the error codes from the states, as an OpenAPI schema.
 4. **People.** R1-R5.
@@ -10,8 +10,8 @@ Each step is one or more PRs, each green in CI (D14), with its card in the descr
 6. **Agents and workflows.** R22-R28.
 7. **Runs.** Dispatch, the state machine, the journal, the board, with a fake worker driving the protocol. R11-R14, R29-R35, R40-R42 (server side).
 8. **The worker.** The protocol from the worker's side; the process, git and file boundaries. R33, R40-R47.
-9. **Targets.** GitHub Actions (after the network spike, Q12), the client, mailbox. R36-R39.
-10. **Web.** The component kit first, then the screens on the new API (Q3).
+9. **Targets.** GitHub Actions (a self-hosted runner reaching the server is a bonus, D25), the client, mailbox. R36-R39.
+10. **Web.** The component kit first, then the screens on the new API (D4).
 11. **Settings, intake and deployment.** R49-R50.
 
 ## Measuring progress

@@ -10,8 +10,8 @@ V2's API, drafted from the requirements and mapped against V1's ([api-v1.md](api
 - **One context-item API**, used by a ticket and by the library.
 - **No per-screen endpoints, and no copies.** A screen composes resources. Run state is served once, by the run.
 - **Payloads don't depend on the viewer.** The board says who a ticket waits on; the web turns that into "needs you" by comparing it with the signed-in user.
-- **Everything editable is versioned the same way:** tickets, items and settings.
-- **One change feed** tells the web what to refetch, instead of a poll per resource.
+- **Context is versioned, the same way everywhere:** items and settings. Ticket fields aren't (last write wins, D22).
+- **No polling.** One event stream tells the web what to refetch (D21).
 - **Readable by viewers, written by role.** Nothing is public except health, the session and the worker program. Settings are readable by viewers on purpose (V1's public `/config` leaked repo URLs; rules.md › Access).
 
 ## Conventions
@@ -21,7 +21,7 @@ V2's API, drafted from the requirements and mapped against V1's ([api-v1.md](api
 | Auth | Session cookie for people, as V1 (rules.md › Access). Bearer job token (plus an instance header once bound) for workers; Bearer client token for clients. |
 | CSRF | `X-AgentOS: 1` on every cookie write; CORS off. |
 | Roles | Reads need viewer; ticket and context writes need writer; library, settings and people writes need admin. Pending users see only their session. |
-| Versions | A versioned resource carries `version`. A person's edit, whatever its method, takes `?base_version=N` (0 creates); 409 `stale_version` if it moved. Appends (messages, request-changes notes) and the system's writes (a run's synced items, the PR URL, a mapped base branch at take-in, the workspace pin, stages turned off) take none. Every write to an item adds a version; the system's writes to a ticket and derived fields (the board, drift) don't bump one. |
+| Versions | Items and settings areas carry `version`. A person's edit to one, whatever its method, takes `?base_version=N` (0 creates); 409 `stale_version` if it moved. Appends (request-changes notes) and the system's writes (a run's synced items, repo-only stages turned off in the workflow item) take none. Every write to an item adds a version; derived fields (the board, drift) never bump one. Tickets carry no version. |
 | Locks | While a run is active, the ticket's run lock refuses some edits with 409 `run_active`. Its scopes, and when each starts, are in rules.md › Runs and jobs. |
 | Pagination | One convention: `?after=<cursor>&limit=N`, or `before=` to page backwards, returning `{items, next}`. Every list that grows pages: tickets, runs, messages, events, item versions. A page may come back short while `next` is set. |
 | Errors | V1's body: `{"error": {code, message, issues[{loc, message}]}}`. One closed code set, smaller than V1's: one `not_found` (the message names the resource) instead of five lookup codes; 409 for state conflicts, 422 for bad input. The set is fixed with the states. |
@@ -50,7 +50,7 @@ V2's API, drafted from the requirements and mapped against V1's ([api-v1.md](api
 | `GET /api/tickets` | viewer | The board, paged and filtered in the database: `?state=` (default open and done; closed is hidden, R10), `owner`, `type`, `priority`, `q`, and `needs=<person>` (my queue: waiting on a human, and owned by that person or nobody, R13). `needs` filters on derived fields, so the core applies it after the database has applied the others and before the page is cut. Newest activity first; the cursor follows that order (a ticket whose activity moves while someone pages can repeat, which is fine at this scale). Each ticket carries its board fields (phase, rail, `waiting_on`, now, plan progress), derived from its runs and its plan item |
 | `POST /api/tickets` | writer | Create or take in: `{from: "new", title, ...}` or `{from: "jira", ref}`. Taking in an existing one returns it (200, not 201). The ticket starts with copies of the Space's default items and default workflow (`settings.defaults`) and the agents it uses |
 | `GET /api/tickets/{key}` | viewer | The ticket, its board fields, its active run's id, and the actions it offers now, each with why it's blocked (R11). Each action names the role it needs and whether only the owner may target their client; the web applies those for the viewer. Its items and runs are their own lists |
-| `PATCH /api/tickets/{key}` | writer | Fields, owner, repo, base branch, and the state: `{state: done \| closed, note?}` resolves (the note is posted to the conversation), `{state: open}` reopens. Versioned; subject to the run lock and the workspace pin (409 `workspace_pinned` for the repo or base branch once a stage has started in repo mode) |
+| `PATCH /api/tickets/{key}` | writer | Fields, owner, repo, base branch, and the state: `{state: done \| closed, note?}` resolves (the note is posted to the conversation), `{state: open}` reopens. It sends only the changed fields, and the last write wins per field; a PATCH touching a locked field is refused whole; subject to the run lock and the workspace pin (409 `workspace_pinned` for the repo or base branch once a stage has started in repo mode) |
 | `GET /api/tickets/{key}/messages` | viewer | The conversation, paged |
 | `POST /api/tickets/{key}/messages` | viewer | `{body}` |
 
@@ -78,7 +78,7 @@ One API for both scopes: `/api/tickets/{key}/items` (a ticket's copies) and `/ap
 
 | Endpoint | Access | What |
 |---|---|---|
-| `POST /api/tickets/{key}/runs` | writer | Dispatch: `{from_stage?, notes?, target?: runner \| client}` (the runner route is mailbox when the runner is configured for it). With no `from_stage`, it starts from the next stage (continue, retry). `notes` is "request changes", and can't be combined with `from_stage`: the run starts from the gated stage, and the notes are appended, as the caller, to the ticket's `changes` note (created if missing), so the run records them (R21). The target defaults to my client if I own the ticket and any of my clients is online, else the runner. 409 with the reason when the action isn't offered |
+| `POST /api/tickets/{key}/runs` | writer | Dispatch: `{from_stage?, notes?, target?: runner \| client}` (the runner route is mailbox when the runner is configured for it). With no `from_stage`, it starts from the next stage (continue, retry), or from the first stage if the ticket's workflow changed since the last run (D18; continue, retry and request changes aren't offered then). `notes` is "request changes", and can't be combined with `from_stage`: the run starts from the gated stage, and the notes are appended, as the caller, to the ticket's `changes` note (created if missing), so the run records them (R21). The target defaults to my client if I own the ticket and any of my clients is online, else the runner. 409 with the reason when the action isn't offered |
 | `GET /api/tickets/{key}/runs` | viewer | The ticket's runs, paged |
 | `GET /api/runs/{id}` | viewer | The run: state, route, stage runs with rounds and verdicts, reason, PR URL |
 | `GET /api/runs/{id}/package` | viewer | The job exactly as the worker got it: what each stage was given and how it was called (R32) |
@@ -90,14 +90,15 @@ One API for both scopes: `/api/tickets/{key}/items` (a ticket's copies) and `/ap
 
 | Endpoint | Access | What |
 |---|---|---|
-| `GET /api/changes?after=<seq>&wait=25` | viewer | A long poll. With no `after`, it returns the current `seq` at once. Otherwise it returns at once if anything changed after `seq`, else when something does or after `wait` seconds: `{seq, changed: [{kind: ticket \| run \| items \| messages \| library \| settings \| people \| clients, id}]}`. An unknown `seq` returns `{seq, reset: true}`: refetch everything |
+| `GET /api/changes` | viewer | A server-sent event stream: one event per change, `id: <seq>`, `data: {changed: [{kind: ticket \| run \| items \| messages \| library \| settings \| people \| clients \| intake, id}]}` |
 
 How it works:
-- **It replaces V1's polls:** the board and four ticket polls every 3 s, and a run's every 1 s. Each tab sends one request instead.
-- **Every write bumps one sequence in its own transaction,** so a change can't be missed. This needs commits applied one at a time; the Turso spike checks that (Q2). A run's change also lists its ticket, whose board fields and actions follow from it.
+- **It replaces V1's polls:** the board and four ticket polls every 3 s, and a run's every 1 s. The web holds one stream for all its tabs (a `SharedWorker`; browsers allow six connections per host over HTTP/1.1) and refetches only what an event lists; a run's log is fetched from its last sequence.
+- **Connecting:** a connect without `Last-Event-ID` first gets a `ready` event with the current id, and the web fetches what it shows only after it. `EventSource` reconnects by itself with `Last-Event-ID`. An id older than the change log keeps (24 h), or ahead of the current one (a fresh database), gets a `reset` event with the current id: refetch everything. After a 401 the browser stops retrying, so the web reopens the stream after signing in.
+- **Access:** signing out a session, or disabling a user or sending them back to pending, closes the affected streams at once (the server keeps open streams by session; V2 runs as one server process). Every 15 s a comment line keeps proxies from closing the stream, and the session is re-checked, which catches expiry. A pending user has no stream; their waiting page has a "Check again" button that reads `/session`. Responses set `X-Accel-Buffering: no`.
+- **Every write bumps one sequence in its own transaction,** so a change can't be missed. Writes made only for liveness (a heartbeat's last-seen, a lease's time) don't; a `clients` change is emitted only when a client goes online or offline. This needs commits applied one at a time; the Turso spike checks that (D6). A run's change also lists its ticket, whose board fields and actions follow from it.
 - **Changes that aren't writes become writes.** The live reaper already runs every 15 s. It emits a `clients` change when a client passes 60 s since its last lease (online is still derived from the last lease, in one place), and it ends a job at its deadline, which lifts the fence.
-- **Jira intake changes outside AgentOS,** so the intake view refetches when it opens and every 60 s.
-- It's the proposal for Q8; polling every 1–3 s is the fallback.
+- **Jira intake changes outside AgentOS,** so the server rereads the saved queries every minute (and at once when they're saved), keeps the result for `GET /jira/intake`, and emits an `intake` change when it differs.
 
 ### Settings and Jira
 
@@ -115,7 +116,7 @@ A mapping sets a ticket's base branch when the ticket is taken in. V1 also re-ap
 
 | Endpoint | Access | What |
 |---|---|---|
-| `GET /api/worker/program` | pub | The worker program, its hash in a header (R42) |
+| `GET /api/worker/program?format=7z\|tar.gz` | pub | The worker program as an archive: 7z for Windows, tar.gz for Linux (the default). Its content hash, the same for both, is in a header (R42, D17) |
 | `GET /api/worker/job` | job | The job package |
 | `POST /api/worker/journal` | job | `{records ≤500}` → `{ack, cancel, rejected[]}`. Binding, records, heartbeat and the cancel reply, as V1 (rules.md › Worker protocol) |
 | `PUT /api/worker/output` | job | The output upload, streamed. The token names the job; the server hashes the body, and the `output` record that follows must match |
@@ -141,7 +142,3 @@ The protocol keeps V1's shape, because its rules came from real bugs. It changes
 | `/intake`, `/mappings/jira-fields`, `/intake/preview`, `/mappings/preview` | `/jira/intake`, `/jira/fields`; the previews are `check` |
 | `/chat` (2) | `/messages` (2) |
 | New | `/changes`, `take`, `promote` |
-
-## Open
-
-- **Q8:** the change feed or polling. The feed is proposed.

@@ -6,8 +6,8 @@
 |---|---|
 | Server | Python 3.11+, FastAPI. The API, the run state machine, the dispatcher and the worker protocol. |
 | Database | Turso, behind one boundary module, so SQLite can replace it without touching anything else. |
-| Worker | Python 3.11, standard library only (runners have plain Python). Served by the server as one file. |
-| Web | V1's web app until V2's API exists; then a new web on a component kit (Q3, plan step 10). |
+| Worker | Python 3.11, standard library only (runners have plain Python). Served by the server as an archive: 7z for Windows, tar.gz for Linux (D17). |
+| Web | A new web on a component kit (plan step 10). V1 keeps running until V2 does everything it does (D4). |
 
 ## Core, shell, boundary
 
@@ -30,18 +30,18 @@ The server's packages, highest first. Each owns its tables (in the one schema fi
 | Package | Owns | Uses |
 |---|---|---|
 | `app` | The composition root: the FastAPI app, startup config, the choice of target adapter, auth dependencies, the error handler, `/health`, `/changes` | every package's routes |
-| `board` | `/tickets` and `/tickets/{key}`, which span features: the list and detail with derived fields (phase, rail, waiting on, now, plan progress) and the actions on offer, from `runs`' rules (R11-R14); create and take in (with the starting context); edits (a cleared repo turns off repo-only stages); `/jira/intake` | `runs`, `context`, `tickets`, `settings`, `people`, `jira` |
+| `board` | `/tickets` and `/tickets/{key}`, which span features: the list and detail with derived fields (phase, rail, waiting on, now, plan progress) and the actions on offer, from `runs`' rules (R11-R14); create and take in (with the starting context); edits (a cleared repo turns off repo-only stages); `/jira/intake` and the once-a-minute intake refresh behind it | `runs`, `context`, `tickets`, `settings`, `people`, `jira` |
 | `admin` | Settings saves and checks, which look across features (a repo, runtime or library item in use); `/jira/fields` | `context`, `tickets`, `settings`, `jira` |
 | `journal` | The worker side: `/worker/*` (serving the program, the job, binding and ingest, the output upload, the client lease and its "gone" reports) and the mailbox loop (it watches the CI run, fetches the outbox and replays it through the same ingest) | `runs`, `context`, `people`, `targets`, `program` |
-| `runs` | Run, job and stage-run states, the transition table, the actions a ticket offers (pure: ticket, workflow, runs in; actions and reasons out), dispatch, launch (building the package, with each runtime's generated CLI files, R20), the fence, cancel, the live reaper, `/tickets/{key}/runs` and `/runs/*`. It sets and clears the ticket's run lock and sets the workspace pin at the first stage start (rules.md › Runs and jobs); `tickets` and `context` check them | `context`, `tickets`, `settings`, `people`, `targets`, `program` |
+| `runs` | Run, job and stage-run states, the transition table, the actions a ticket offers (pure: ticket, workflow, runs in; actions and reasons out), dispatch, launch (building the package, placing context where each runtime reads it, R20), the fence, cancel, the live reaper, `/tickets/{key}/runs` and `/runs/*`. It sets and clears the ticket's run lock and sets the workspace pin at the first stage start (rules.md › Runs and jobs); `tickets` and `context` check them | `context`, `tickets`, `settings`, `people`, `targets`, `program` |
 | `targets` | The `Target` interface (start, cancel, status) and its adapters: GitHub Actions, and mailbox (Artifactory, then GitHub Actions), which also fetches, deletes and sweeps outboxes for `journal`. No database: what an adapter returns, its caller stores | `github`, `artifactory` |
 | `context` | Items, versions, the library, drift, take and promote, size limits; `/tickets/{key}/items`, `/library/items`, `/tickets/{key}/take`, `/promote` | `tickets`, `settings` |
 | `tickets` | Tickets: fields, keys, states, the run lock and the workspace pin, the conversation (`/messages`) | `people`, `settings` |
 | `people` | People, roles, sessions, sign-in, client tokens and whether one is online (the one derivation dispatch and `/me/clients` read); `/session`, `/people`, `/me/clients` | `settings`, `jira` |
 | `settings` | The settings documents, their typed reads, `GET /settings` | nothing |
-| `program` | Builds the worker program from `agentos_worker` and hashes it | nothing |
+| `program` | Builds and hashes the worker program's archives (rules.md › Worker protocol) | nothing |
 | `jira`, `github`, `artifactory` | Their HTTP clients: boundary only | nothing |
-| `workflows` | Stage and loop rules, prompt templates (sandboxed Jinja), runtimes' argv: pure | nothing |
+| `workflows` | Stage and loop rules, prompt templates (sandboxed Jinja), runtimes (argv, where context is placed, the usage-limit marker): pure | nothing |
 | `protocol` | The job package and journal record types, the protocol version, the path rules: stdlib only, shared with the worker | nothing |
 | `db` | The Turso connection, the schema, transactions, the change sequence | nothing |
 
@@ -95,11 +95,11 @@ Item      = an owned copy (version, copied_from: library version | None)
 
 ## Events over timers
 
-Anything that doesn't have to be a timeout isn't. Normal paths run on explicit messages: a result lifts the fence, a cancel rides the worker's next journal reply (runners take no inbound calls), a client reports a finished worker. Timers only detect a party that died and can't say so.
+Anything that doesn't have to be a timeout isn't. Normal paths run on explicit messages: a result lifts the fence, a cancel rides the worker's next journal reply (runners take no inbound calls), a client reports a finished worker. Timers only detect a party that died and can't say so, plus one outside source that can't tell us it changed: the once-a-minute Jira intake refresh.
 
 ## The worker
 
-- A package with the same three roles, enforced the same way; built into one deterministic file the server serves and hashes.
+- A package with the same three roles, enforced the same way; served as 7z and tar.gz archives (D17).
 - Git, processes, HTTP and the clock sit behind small interfaces, so tests use fakes.
 - Process handling for Windows and Linux (rules.md › Processes) is part of the process boundary from the first version.
 
@@ -107,7 +107,7 @@ Anything that doesn't have to be a timeout isn't. Normal paths run on explicit m
 
 - Designed from the requirements, as small as it can be: the resources and actions the requirements need, nothing per screen.
 - Models are discriminated unions where the domain is; the web's types are generated from the server's schema.
-- Writes that can conflict carry a version and get `stale_version` back.
+- Item and settings edits carry a version and get `stale_version` back.
 
 ## Tests and gates
 
