@@ -2,8 +2,7 @@
 
 Each step is one or more PRs, each green in CI (D14), with its card in the description.
 
-1. **Skeleton.** `justfile`, the gates (empty baseline), the pre-commit hook, ruff, mypy strict, import-linter, pytest with the speed gate, CI on Windows and Linux with branch protection (D14), startup config (R48). A server that starts and answers health. The Turso spike (D6): it must install from Artifactory on RHEL 8 / Python 3.11 and on Windows, run in the container, support partial unique indexes, CHECK constraints, foreign keys and immediate write transactions with a busy timeout, apply commits one at a time (the change stream's sequence relies on it), and give a per-test in-memory database fast enough for the speed gate. In the same spike: `py7zr` and its compiled dependencies install from Artifactory on RHEL 8 in the container (D17).
-2. **States.** Every state and transition of runs, jobs, stage runs, tickets and context items, as types and a transition table, reviewed before the API's models.
+1. **Skeleton.** `justfile`, the gates (empty baseline), the pre-commit hook, ruff, mypy strict, import-linter, pytest with the speed gate, CI on Windows and Linux with branch protection (D14), startup config (R48). A server that starts and answers health.2. **States.** Every state and transition of runs, jobs, stage runs, tickets and context items, as types and a transition table, reviewed before the API's models.
 3. **API models.** The resources and actions are drafted ([api.md](api.md)); this step adds the models and the error codes from the states, as an OpenAPI schema.
 4. **People.** R1-R5.
 5. **Tickets, context and the library.** R6-R10, R15-R21.

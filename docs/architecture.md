@@ -90,7 +90,7 @@ Item      = an owned copy (version, copied_from: library version | None)
 - Schema in one file: CHECK constraints for every enum and state, foreign keys on, the one-active-run rule as a unique index.
 - One typed decoder per query: the only place a raw row is read.
 - The run state machine is a table of allowed transitions; every state write is a guarded update generated from it, in one transaction; one function ends a run.
-- A contract test suite runs against the real database engine (transactions, concurrent dispatch and leases, constraints), so fast in-memory tests elsewhere don't hide engine behaviour.
+- A contract test suite runs against the real database engine (transactions, concurrent dispatch and leases, constraints, commits applied in order), so fast in-memory tests elsewhere don't hide engine behaviour.
 - No migrations while one person uses it: a schema change means a fresh database.
 
 ## Events over timers
