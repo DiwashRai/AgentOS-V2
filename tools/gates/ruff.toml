@@ -1,0 +1,13 @@
+# The gate scripts follow the project's ruff rules (they run in its environment).
+extend = "../../pyproject.toml"
+
+[lint.extend-per-file-ignores]
+"test_*.py" = ["S101", "S603", "S607"]
+# Running ruff, git, mypy and node is the gate scripts' job.
+"{baseline,mypy_any,python_measures,ts_measures}.py" = ["S603", "S607"]
+
+[lint.isort]
+known-first-party = [
+    "baseline", "card", "common", "defaults", "gates", "measures", "mypy_any", "pyfile",
+    "python_measures", "python_names", "results", "schema", "ts_measures",
+]

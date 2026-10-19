@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    # Stable names, so branch protection can require them: "ci (ubuntu-latest)", "ci (windows-latest)".
+    name: ci (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      # Actions are pinned by commit; the comment names the release.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # the gates compare the baseline with the PR's merge base
+          persist-credentials: false # the steps after it run the PR's code
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.0"
+          python-version: "3.11"
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+        with:
+          just-version: "1.49.0"
+      - run: uv sync --locked
+      - run: just check
+      - run: just test
+      - run: just test-integration
+      - name: just gates
+        shell: bash
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          if [ -n "$BASE" ]; then just gates --base "origin/$BASE"; else just gates; fi
