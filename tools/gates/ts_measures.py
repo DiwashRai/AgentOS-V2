@@ -1,6 +1,6 @@
 """The TypeScript measures: `ts_measures.mjs` (code lines, suppressions, raw tags, function names)
 and the gates' ESLint run (cognitive and cyclomatic complexity), both started at once. With no
-`.ts`/`.tsx` files under `web/src` (no web yet), there is nothing to measure and node never runs."""
+`.ts`/`.tsx` files to measure, node never runs."""
 
 from __future__ import annotations
 

@@ -8,7 +8,7 @@ Check at the edges, trust the types inside. Anything from outside (HTTP, the dat
 
 ## Setup
 
-Prerequisites: Python 3.11+, uv, just, git, and PowerShell 7 (`pwsh`) on Windows. Then `just setup` (installs the environment, enables the git hooks); re-run it after a lockfile change.
+Prerequisites: Python 3.11+, uv, just, git, Node 24 with npm, Chrome (the web's screenshot tests drive it), and PowerShell 7 (`pwsh`) on Windows. Then `just setup` (installs the environment and the web's packages, enables the git hooks); re-run it after a lockfile change.
 
 ## Layout
 
@@ -21,6 +21,7 @@ Shell files are named `service.py`, `loops.py`, `reaper.py` or `dispatcher.py`; 
 | `src/agentos/<feature>/` | The server, one package per row of the module map |
 | `src/agentos_worker/` | The worker (stdlib only) |
 | `src/agentos_protocol/` | The protocol shared by both (stdlib only) |
+| `web/` | The web: `src/kit` alone renders elements and holds CSS (each component, prop and variant has a reason in `src/kit/ledger.json`), `src/features/<screen>` composes the kit, `src/api` is the one data module; ESLint (`web/eslint.config.js`) enforces the layers |
 | `tests/` | The fast suite (`conftest.py` at the root: clean environment, speed gate) |
 | `tests/integration/` | Real processes and git (everything here is marked `integration`) |
 | `tools/gates/` | The gates and their tests |
@@ -32,7 +33,7 @@ Shell files are named `service.py`, `loops.py`, `reaper.py` or `dispatcher.py`; 
 - Review: an Opus reviewer and a Codex reviewer, both at high effort, label findings must-fix, should-fix or nit. Fix and re-review until neither reports a must-fix.
 - A change to behaviour updates the docs it contradicts, in the same PR.
 - Commits: one task each; the message from a file (`git commit -F`); only a `Co-Authored-By` trailer, never a session link.
-- Never skip the hook (`--no-verify`). Never weaken a check or a gate to make it pass: a failing gate means simplifying the code, not moving or disguising it to get past. `raises` entries in the gate baseline are the owner's to add.
+- Never skip the hook (`--no-verify`). Never weaken a check or a gate to make it pass: a failing gate means simplifying the code, not moving or disguising it to get past. `raises` entries in the gate baseline and in the kit ledger are the owner's to add.
 - A PR merges when CI is green and the review loop is done. The owner merges.
 
 ## Commands
@@ -42,12 +43,14 @@ Shell files are named `service.py`, `loops.py`, `reaper.py` or `dispatcher.py`; 
 | `just setup` | Install the environment, enable the git hooks |
 | `just check` | Format, lint, types (strict), import rules |
 | `just fmt` | Format and apply lint fixes |
-| `just test` | The fast suite (under 10 s; its time is gated) |
+| `just test` | The fast suite (under 10 s; its time is gated), then the web's unit tests (Vitest, outside the timed gate) |
 | `just test-integration` | Real git and real processes |
-| `just gates` | The measured limits: complexity, defensive patterns, `Any` in the core, fan-out, file size, suppressions |
+| `just gates` | The measured limits: complexity, defensive patterns, `Any` in the core, fan-out, file size, suppressions; and the web's kit gate (ledger, budget, reuse: `web/tools/kit.mjs`) |
 | `just ratchet` | Lower the gate baseline after the code improved |
 | `just card` | The gate numbers for a PR's description |
 | `just dev` | The server on 127.0.0.1:8000 |
+| `just dev-web` | The web on 127.0.0.1:5174 (W0: on fixtures) |
+| `just shots` | The web's screenshot tests (Playwright; `--update-snapshots` after a deliberate change) |
 
 The pre-commit hook runs `check`, `test` and `gates`. CI runs all of them, `test-integration` included, on Windows and Linux for every PR.
 

@@ -1,0 +1,172 @@
+/* key: mono on the project's identity tint */
+.key {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  height: var(--h-chip);
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-1);
+  background: var(--id-tint);
+  color: var(--id-text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-1);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+.sm {
+  height: var(--h-chip-sm);
+}
+.lg {
+  height: var(--sp-9);
+  padding: 0 var(--sp-4);
+  font-size: var(--fs-2);
+}
+.violet {
+  --id-tint: var(--id-violet-tint);
+  --id-text: var(--id-violet-text);
+}
+.plum {
+  --id-tint: var(--id-plum-tint);
+  --id-text: var(--id-plum-text);
+}
+.rose {
+  --id-tint: var(--id-rose-tint);
+  --id-text: var(--id-rose-text);
+}
+.gold {
+  --id-tint: var(--id-gold-tint);
+  --id-text: var(--id-gold-text);
+}
+.olive {
+  --id-tint: var(--id-olive-tint);
+  --id-text: var(--id-olive-text);
+}
+
+/* count pill */
+.count {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  min-width: var(--h-chip);
+  height: var(--h-chip-sm);
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-pill);
+  background: var(--rule-soft);
+  box-shadow: inset 0 0 0 var(--line-1) var(--rule);
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.count[data-tone="you"] {
+  background: var(--you-tint);
+  box-shadow: none;
+  color: var(--you-text);
+}
+.count[data-tone="done"] {
+  background: var(--done-tint);
+  box-shadow: none;
+  color: var(--done-text);
+}
+
+/* keycap: a real key, 1px edge and a 2px base */
+.kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--h-chip-sm);
+  height: var(--h-chip-sm);
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-1);
+  background: var(--raised);
+  color: var(--ink-2);
+  border: var(--line-1) solid var(--rule-strong);
+  border-bottom-width: var(--line-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-1);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* kicker tag */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--sp-9);
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-1);
+  background: var(--field);
+  box-shadow: inset 0 0 0 var(--line-1) var(--rule-soft);
+  color: var(--ink-1);
+  font-size: var(--fs-3);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+.tag[data-tone="blocked"] {
+  color: var(--blocked);
+}
+.tag[data-tone="quiet"] {
+  color: var(--ink-2);
+  font-weight: 400;
+}
+
+/* another system's status: one neutral ring */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: 100%;
+  height: var(--h-chip);
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-1);
+  background: var(--field);
+  box-shadow: inset 0 0 0 var(--line-1) var(--rule-soft);
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.status > i {
+  flex: none;
+  width: var(--sp-4);
+  height: var(--sp-4);
+  border-radius: 50%;
+  border: var(--line-mark) solid var(--ink-3);
+}
+.status > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* YOU */
+.you {
+  display: inline-block;
+  flex: none;
+  padding: var(--line-mark) var(--sp-2) var(--line-1);
+  border-radius: var(--r-1);
+  background: var(--you);
+  color: var(--you-ink);
+  font-family: var(--font-mono);
+  font-size: var(--fs-1);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  line-height: 1.2;
+}
+
+/* a key that opens elsewhere (Jira): the chip and a small arrow */
+.out {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  color: var(--ink-3);
+  border-radius: var(--r-1);
+}
+.out:hover {
+  color: var(--ink-1);
+}

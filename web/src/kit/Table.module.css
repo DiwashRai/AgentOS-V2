@@ -1,0 +1,61 @@
+.table {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.scroll {
+  flex: 1;
+  min-height: 0;
+}
+.head,
+.list {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+.head {
+  flex: none;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: var(--cols);
+  column-gap: var(--sp-7);
+  align-items: center;
+  height: var(--h-row-flat);
+  margin: 0 var(--sp-5);
+  padding: 0 var(--sp-7);
+  font-size: var(--fs-2);
+  font-weight: 500;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.head > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.head > span[data-end="true"] {
+  text-align: right;
+}
+.list {
+  min-height: 0;
+}
+.scroll > .list {
+  flex: 1;
+  overflow: hidden auto;
+  /* room for a lit row's halo and the focus ring at the sides */
+  padding: 0 var(--sp-5) var(--sp-8);
+}
+.foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  min-height: var(--h-control-lg);
+  padding: var(--sp-5) var(--sp-9);
+  border-top: var(--line-1) solid var(--rule);
+  font-size: var(--fs-2);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+/* a table in a longer page: its head lines up with rows that have no list padding */
+.table:not(.scroll) > .head {
+  margin: 0;
+}

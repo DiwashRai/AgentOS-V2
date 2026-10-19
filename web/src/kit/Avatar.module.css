@@ -1,0 +1,49 @@
+.av {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: var(--fs-1);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--id-on);
+  background: var(--id);
+}
+.md {
+  width: var(--h-chip);
+  height: var(--h-chip);
+}
+.talk {
+  width: var(--sp-9);
+  height: var(--sp-9);
+}
+.lg {
+  width: var(--h-avatar-lg);
+  height: var(--h-avatar-lg);
+}
+.slot {
+  background: none;
+}
+.dashed {
+  border: var(--line-1) dashed var(--rule-strong);
+}
+.violet {
+  --id: var(--id-violet);
+}
+.plum {
+  --id: var(--id-plum);
+}
+.rose {
+  --id: var(--id-rose);
+}
+.gold {
+  --id: var(--id-gold);
+  --id-on: var(--id-gold-on);
+}
+.olive {
+  --id: var(--id-olive);
+}
+.faces {
+  display: inline-flex;
+  gap: var(--sp-1);
+}

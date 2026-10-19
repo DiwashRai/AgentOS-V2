@@ -1,0 +1,110 @@
+.app {
+  display: grid;
+  grid-template-columns: var(--w-rail) minmax(0, 1fr);
+  min-height: 100vh;
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0 var(--sp-9) var(--sp-9);
+}
+
+/* the brand rail: dark in both themes; current = a lighter pad plus a marker on the left edge */
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-7) 0;
+  background: var(--rail);
+}
+.logo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--h-avatar-lg);
+  height: var(--h-avatar-lg);
+  margin-bottom: var(--sp-1);
+  border-radius: var(--r-3);
+  background: var(--accent);
+  box-shadow: 0 var(--line-2) var(--sp-4) calc(var(--line-2) * -1) var(--glow-accent);
+}
+.logo > i {
+  width: var(--sp-5);
+  height: var(--sp-5);
+  border-radius: 50%;
+  border: var(--line-2) solid var(--accent-ink);
+}
+.link {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--h-rail-item);
+  height: var(--h-rail-item);
+  border-radius: var(--r-3);
+  color: var(--rail-ink);
+  transition:
+    background-color var(--dur-fast),
+    color var(--dur-fast);
+}
+.link:hover,
+.link[aria-current] {
+  background: var(--rail-on);
+  color: var(--rail-on-ink);
+}
+.link:focus-visible {
+  outline-color: var(--rail-on-ink);
+}
+.link[aria-current]::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--sp-6) * -1);
+  top: var(--sp-4);
+  bottom: var(--sp-4);
+  width: var(--line-3);
+  border-radius: 0 var(--line-3) var(--line-3) 0;
+  background: var(--rail-on-ink);
+}
+.badge {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  width: var(--sp-3);
+  height: var(--sp-3);
+  border-radius: 50%;
+  background: var(--you);
+  box-shadow: 0 0 0 var(--line-2) var(--rail);
+}
+.spacer {
+  flex: 1;
+}
+
+/* the theme menu's swatches */
+.swatches {
+  display: inline-flex;
+  gap: var(--line-3);
+  background: none;
+}
+.swatches > i {
+  width: var(--sp-6);
+  height: var(--sp-6);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 var(--line-1) var(--ring);
+}
+.swPage {
+  background: var(--page);
+}
+.swInk {
+  background: var(--ink-1);
+}
+.swAccent {
+  background: var(--accent);
+}
+.swYou {
+  background: var(--you);
+}

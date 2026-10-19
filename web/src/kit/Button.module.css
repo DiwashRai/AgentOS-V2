@@ -1,0 +1,127 @@
+/* V1's buttons (the refresh): raised with a rule edge; hover only strengthens the edge; the weight
+   never changes by state. `you` is the gate primary, `accent` only Dispatch run on a ticket. */
+.btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  height: var(--h-control);
+  padding: 0 var(--sp-7);
+  border-radius: var(--r-3);
+  border: var(--line-1) solid var(--rule);
+  background: var(--raised);
+  color: var(--ink-1);
+  font-size: var(--fs-3);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+.btn:hover {
+  border-color: var(--rule-strong);
+}
+.btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.xs {
+  height: var(--sp-9);
+  padding: 0 var(--sp-4);
+  font-size: var(--fs-2);
+  font-weight: 500;
+}
+.sm {
+  height: var(--h-control-sm);
+  padding: 0 var(--sp-5);
+}
+.lg {
+  height: var(--h-control-lg);
+  padding: 0 var(--sp-8);
+  font-size: var(--fs-4);
+}
+.square {
+  padding: 0;
+  width: var(--h-control);
+  color: var(--ink-3);
+}
+.square.sm {
+  width: var(--h-control-sm);
+}
+.square.xs {
+  width: var(--h-chip);
+  height: var(--h-chip);
+  border-radius: var(--r-1);
+}
+.square:hover {
+  color: var(--ink-1);
+}
+
+.ink {
+  background: var(--ink-1);
+  border-color: var(--ink-1);
+  color: var(--bubble-mine-ink);
+}
+.ink:hover {
+  background: var(--ink-hover);
+  border-color: var(--ink-hover);
+}
+.you,
+.you:hover {
+  background: var(--you);
+  border-color: var(--you);
+  color: var(--you-ink);
+  box-shadow: 0 0 0 var(--line-3) var(--ring-you);
+}
+.you:focus-visible {
+  box-shadow: none;
+}
+.accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-accent);
+}
+.accent:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.quiet,
+.quiet:hover {
+  background: transparent;
+  border-color: transparent;
+  font-weight: 500;
+}
+.quiet:hover {
+  background: var(--field);
+}
+.lit {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: inset 0 0 0 var(--line-1) var(--rule-strong);
+}
+/* lit: fills like `you` while the row around it is hovered or keyboard-focused (Take in) */
+:is([data-row]:hover, [data-row]:has(:focus-visible)) .lit {
+  background: var(--you);
+  border-color: var(--you);
+  color: var(--you-ink);
+  box-shadow: none;
+}
+.link {
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: var(--fs-2);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: var(--line-3);
+}
+.link:hover {
+  text-decoration-color: var(--ink-1);
+}

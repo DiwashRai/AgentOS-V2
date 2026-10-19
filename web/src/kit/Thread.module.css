@@ -1,0 +1,122 @@
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+.msg {
+  display: grid;
+  grid-template-columns: var(--sp-9) minmax(0, 1fr);
+  gap: var(--sp-4);
+  min-width: 0;
+}
+.same {
+  margin-top: calc(var(--sp-4) * -1);
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.who {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-4);
+  font-size: var(--fs-3);
+  font-weight: 600;
+  color: var(--ink-1);
+}
+.who > time {
+  font-size: var(--fs-2);
+  font-weight: 400;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.bubble {
+  max-width: 94%;
+  padding: var(--sp-3) var(--sp-6);
+  border-radius: var(--r-1) var(--r-5) var(--r-5) var(--r-5);
+  background: var(--bubble);
+  color: var(--bubble-ink);
+  font-size: var(--fs-3);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.last .bubble {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* mine: on the right, ink bubble, no face */
+.mine {
+  grid-template-columns: minmax(0, 1fr);
+}
+.mine > :first-child {
+  display: none;
+}
+.mine .body {
+  align-items: flex-end;
+}
+.mine .who {
+  flex-direction: row-reverse;
+}
+.mine .bubble {
+  border-radius: var(--r-5) var(--r-1) var(--r-5) var(--r-5);
+  background: var(--bubble-mine);
+  color: var(--bubble-mine-ink);
+}
+.talk {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-7);
+  min-width: 0;
+}
+.talk > .thread {
+  flex: 1;
+}
+.compose {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-6);
+  border: var(--line-1) solid var(--rule);
+  border-radius: var(--r-4);
+  background: var(--raised);
+}
+.compose:focus-within {
+  border-color: var(--rule-strong);
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--line-2);
+}
+.compose > textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  border: 0;
+  padding: var(--sp-2) 0;
+  background: transparent;
+  outline: none;
+  font-size: var(--fs-3);
+  line-height: 1.45;
+  color: var(--ink-1);
+}
+.compose > textarea::placeholder {
+  color: var(--ink-3);
+}
+.send {
+  flex: none;
+  padding: var(--sp-2) var(--sp-5);
+  border-radius: var(--r-3);
+  background: var(--ink-1);
+  color: var(--bubble-mine-ink);
+  font-size: var(--fs-3);
+  font-weight: 600;
+}

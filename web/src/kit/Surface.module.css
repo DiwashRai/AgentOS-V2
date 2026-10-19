@@ -1,0 +1,21 @@
+.surface {
+  min-width: 0;
+  padding: var(--pad);
+}
+.recess {
+  background: var(--recess);
+  box-shadow: var(--shadow-recess);
+  border-radius: var(--r-5);
+}
+.sheet {
+  background: var(--surface);
+  box-shadow: var(--shadow-surface);
+  border-radius: var(--r-4);
+}
+.fill {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}

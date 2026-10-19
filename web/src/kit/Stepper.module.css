@@ -1,0 +1,256 @@
+/* ---------- glyph: segments 8×3 (xs 7), the current 11×5, gates a 6px diamond, in an 81px slot ---------- */
+.glyph {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--sp-4) + var(--line-1));
+  min-width: 0;
+  white-space: nowrap;
+  vertical-align: middle;
+  --seg: var(--sp-4);
+  --cur: calc(var(--sp-5) + var(--line-1));
+  --dia: var(--sp-3);
+}
+.xs {
+  --seg: calc(var(--sp-3) + var(--line-1));
+  --cur: var(--sp-5);
+  --dia: calc(var(--sp-2) + var(--line-1));
+}
+.segs {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  width: var(--w-glyph);
+}
+.segs > i {
+  flex: 0 1 auto;
+  min-width: var(--sp-1);
+  display: block;
+  width: var(--seg);
+  height: var(--line-3);
+  border-radius: var(--line-2);
+  background: var(--pending);
+}
+.segs > i[data-state="done"] {
+  background: var(--progress);
+}
+.segs > i[data-state="current"] {
+  width: var(--cur);
+  height: calc(var(--line-3) + var(--line-2));
+  background: var(--ink-1);
+}
+.live .segs > i[data-state="current"] {
+  background: var(--live);
+}
+.segs > i[data-state="skipped"] {
+  height: var(--line-mark);
+  background: var(--rule-strong);
+  opacity: 0.7;
+}
+.segs > i[data-state="failed"] {
+  width: var(--cur);
+  height: calc(var(--line-3) + var(--line-2));
+  background: var(--blocked);
+}
+.segs > u {
+  flex: none;
+  display: block;
+  width: var(--dia);
+  height: var(--dia);
+  margin: 0 var(--line-1);
+  border-radius: var(--line-1);
+  transform: rotate(45deg);
+  box-shadow: inset 0 0 0 var(--line-1) var(--rule-strong);
+}
+.segs > u[data-state="passed"] {
+  background: var(--progress);
+  box-shadow: none;
+}
+.segs > u[data-state="waiting"] {
+  box-shadow: inset 0 0 0 var(--line-mark) var(--you);
+}
+.segs > u[data-state="you"] {
+  background: var(--you);
+  box-shadow: 0 0 0 var(--line-2) var(--ring-you);
+}
+.finished .segs > i {
+  background: var(--progress);
+}
+.finished .segs > i[data-state="skipped"] {
+  background: var(--progress-soft);
+  opacity: 1;
+}
+.finished .segs > i[data-state="current"] {
+  width: var(--seg);
+  height: var(--line-3);
+}
+.glyph > b {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--fs-3);
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.round {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--fs-1);
+  font-weight: 400;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.glyph[data-gate="you"] > b {
+  color: var(--you-text);
+  font-weight: 600;
+}
+.glyph[data-blocked="true"] > b {
+  color: var(--blocked);
+  font-weight: 600;
+}
+.finished > b {
+  color: var(--done-text);
+  font-weight: 600;
+}
+
+/* ---------- steps: 3px bars (skipped 1.5) on one 10px track, so every name shares a baseline ---------- */
+.steps {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.steps > li {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--sp-3) + var(--line-1));
+  min-width: 0;
+}
+.step {
+  flex: 1 1 0;
+  min-width: var(--h-avatar-lg);
+}
+.bar {
+  display: block;
+  height: var(--line-3);
+  margin: calc((var(--sp-5) - var(--line-3)) / 2) 0;
+  border-radius: var(--line-2);
+  background: var(--track);
+}
+.name {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-3);
+  line-height: 1.25;
+  color: var(--ink-3);
+}
+.sub {
+  margin-top: calc(var(--line-3) * -1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-1);
+  line-height: 1.25;
+  color: var(--ink-3);
+}
+.step[data-state="done"] .bar {
+  background: var(--progress);
+}
+.step[data-state="done"] .name {
+  color: var(--ink-1);
+  font-weight: 500;
+}
+.step[data-state="current"] .bar {
+  background: var(--ink-1);
+}
+.step[data-state="current"] .name,
+.step[data-state="failed"] .name {
+  color: var(--ink-1);
+  font-weight: 600;
+}
+.live .step[data-state="current"] .bar {
+  background: var(--live);
+}
+.live .step[data-state="current"] .sub {
+  color: var(--live-text);
+}
+.step[data-state="skipped"] .bar {
+  height: var(--line-mark);
+  margin: calc((var(--sp-5) - var(--line-mark)) / 2) 0;
+  background: var(--progress-soft);
+}
+.step[data-state="skipped"] .name {
+  text-decoration: line-through;
+}
+.step[data-state="failed"] .bar {
+  background: var(--blocked);
+}
+.step[data-state="failed"] .sub {
+  color: var(--blocked);
+}
+.final .bar {
+  background: var(--progress);
+}
+.final .name,
+.final .sub {
+  color: var(--done-text);
+  font-weight: 600;
+}
+.gate {
+  flex: none;
+  align-items: center;
+  padding: 0 var(--sp-4);
+}
+.gate > u {
+  display: block;
+  width: var(--sp-4);
+  height: var(--sp-4);
+  margin: var(--line-1) 0;
+  border-radius: var(--line-mark);
+  transform: rotate(45deg);
+  box-shadow: inset 0 0 0 var(--line-mark) var(--rule-strong);
+}
+.gate .name {
+  max-width: var(--col-sm);
+}
+.gate[data-state="passed"] > u {
+  background: var(--progress);
+  box-shadow: none;
+}
+.gate[data-state="passed"] .name,
+.gate[data-state="waiting"] .name {
+  color: var(--ink-1);
+  font-weight: 500;
+}
+.gate[data-state="waiting"] > u {
+  box-shadow: inset 0 0 0 var(--line-2) var(--you);
+}
+.gate[data-state="you"] > u {
+  background: var(--you);
+  box-shadow: 0 0 0 var(--line-2) var(--ring-you);
+}
+.gate[data-state="you"] .name,
+.gate[data-state="you"] .sub {
+  color: var(--you-text);
+  font-weight: 600;
+}
+.compact {
+  gap: var(--sp-2);
+}
+.compact .gate {
+  padding: 0 var(--sp-3);
+}
+.compact .gate.bare,
+.bare {
+  padding: 0 var(--line-1);
+}

@@ -1,0 +1,169 @@
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  white-space: nowrap;
+  vertical-align: middle;
+  font-size: var(--fs-3);
+}
+.mark > i {
+  position: relative;
+  flex: none;
+  display: inline-block;
+  width: var(--sp-4);
+  height: var(--sp-4);
+  border-radius: 50%;
+}
+.mark > b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink-2);
+}
+.ask {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+/* running: a live dot that breathes */
+.run > i {
+  background: var(--live);
+}
+.run > i::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--sp-2) * -1);
+  border-radius: 50%;
+  border: var(--line-mark) solid var(--live);
+  opacity: 0;
+  animation: breathe var(--dur-breathe) ease-out infinite;
+}
+.run > b,
+.run .ask {
+  color: var(--live-text);
+}
+@keyframes breathe {
+  0% {
+    transform: scale(0.45);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+
+/* waiting on someone: a blue ring; the name in ink, since blue text means you */
+.wait > i {
+  box-shadow: inset 0 0 0 var(--line-mark) var(--you);
+}
+.wait > b {
+  color: var(--ink-1);
+}
+.wait .ask {
+  color: var(--ink-2);
+}
+
+/* waiting on you: the YOU pill, then the ask in the you hue */
+.you .ask {
+  font-weight: 600;
+  color: var(--you-text);
+}
+.you > i {
+  background: var(--you);
+}
+
+/* blocked: one crimson bar */
+.blk > i {
+  width: var(--line-3);
+  height: var(--sp-5);
+  margin: 0 var(--sp-1);
+  border-radius: var(--line-1);
+  background: var(--blocked);
+}
+.blk > b,
+.blk .ask {
+  color: var(--blocked);
+  font-weight: 600;
+}
+
+/* done: the green tick */
+.done > b,
+.done .ask {
+  color: var(--done-text);
+  font-weight: 600;
+}
+
+/* abandoned: a crimson cross */
+.abandoned > i {
+  border-radius: 0;
+}
+.abandoned > i::before,
+.abandoned > i::after {
+  content: "";
+  position: absolute;
+  left: calc(50% - var(--line-1));
+  top: 0;
+  width: var(--line-2);
+  height: 100%;
+  border-radius: var(--line-1);
+  background: var(--blocked);
+  transform: rotate(45deg);
+}
+.abandoned > i::after {
+  transform: rotate(-45deg);
+}
+.abandoned > b,
+.abandoned .ask {
+  color: var(--blocked);
+  font-weight: 600;
+}
+
+/* queued: a dotted ring, waiting for a runner */
+.queued > i {
+  border: var(--line-mark) dotted var(--ink-3);
+}
+.queued > b,
+.queued .ask {
+  color: var(--ink-3);
+}
+
+/* inbox: nobody acting, neutral */
+.idle > i {
+  box-shadow: inset 0 0 0 var(--line-mark) var(--rule-strong);
+}
+.idle > b,
+.idle .ask {
+  color: var(--ink-3);
+}
+
+/* the small glyph: 6px dots, the inbox ring 7px */
+.small > i {
+  width: var(--sp-3);
+  height: var(--sp-3);
+}
+.small.run > i {
+  box-shadow: 0 0 0 var(--line-3) var(--ring-live);
+}
+.small.run > i::after {
+  display: none;
+}
+.small.blk > i {
+  width: var(--line-3);
+  height: var(--sp-5);
+  margin: 0;
+}
+.small.idle > i {
+  box-shadow: none;
+  border: var(--line-mark) solid var(--ink-3);
+}

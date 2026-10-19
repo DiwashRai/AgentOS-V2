@@ -1,0 +1,64 @@
+.icon {
+  display: inline-flex;
+  flex: none;
+  line-height: 0;
+}
+.icon > svg {
+  display: block;
+}
+.line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--line-mark);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.line .solid {
+  fill: currentColor;
+  stroke: none;
+}
+.high,
+.low {
+  fill: none;
+  stroke-width: var(--line-mark);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.high {
+  stroke: var(--priority-high);
+}
+.low {
+  stroke: var(--priority-low);
+}
+.tick circle {
+  fill: var(--done);
+}
+.tick path {
+  fill: none;
+  stroke: var(--done-ink);
+  stroke-width: var(--line-mark);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.type .fill {
+  fill: var(--type-ink);
+}
+.type .glyph {
+  fill: none;
+  stroke: var(--type-ink);
+  stroke-width: var(--line-mark);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.feature rect {
+  fill: var(--type-feature);
+}
+.bug rect {
+  fill: var(--type-bug);
+}
+.improvement rect {
+  fill: var(--type-improvement);
+}
+.task rect {
+  fill: var(--type-task);
+}

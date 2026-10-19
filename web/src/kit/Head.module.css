@@ -1,0 +1,98 @@
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+  white-space: nowrap;
+}
+.group {
+  height: var(--h-control);
+  padding: 0 var(--sp-2);
+}
+/* groups sit 12px apart; the first one sits right under the column head */
+.group:not(:first-child) {
+  margin-top: var(--sp-6);
+}
+.zone {
+  height: var(--sp-9);
+}
+.zone:not(:first-child) {
+  margin-top: var(--sp-8);
+}
+.toggle,
+.static {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-3);
+  background: none;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+.toggle {
+  cursor: pointer;
+}
+.chev {
+  display: inline-flex;
+  color: var(--ink-3);
+  transition: transform var(--dur-fast) ease;
+}
+.toggle[aria-expanded="false"] > .chev {
+  transform: rotate(-90deg);
+}
+.icon {
+  display: inline-flex;
+  align-items: center;
+}
+.name {
+  font-weight: 600;
+  color: var(--ink-1);
+}
+.group .name {
+  font-size: var(--fs-4);
+}
+.zone .name {
+  font-size: var(--fs-5);
+}
+.you .name {
+  color: var(--you-text);
+}
+.done .name {
+  color: var(--done-text);
+}
+.rule {
+  flex: 1;
+  min-width: var(--sp-8);
+  height: var(--line-1);
+  background: var(--rule);
+}
+.summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--fs-2);
+  color: var(--ink-2);
+}
+.note {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--fs-2);
+  color: var(--ink-3);
+}
+.rack {
+  height: var(--h-control-sm);
+}
+.rack .name {
+  font-size: var(--fs-3);
+  color: var(--ink-2);
+}
+.rack:not(:first-child) {
+  margin-top: var(--sp-5);
+}

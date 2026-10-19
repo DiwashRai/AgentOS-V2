@@ -1,0 +1,784 @@
+{
+  "budget": {
+    "components": 25,
+    "props": 8,
+    "lines": 4068
+  },
+  "components": {
+    "Age": {
+      "why": "An age with each unit a size smaller, as V1 draws every age.",
+      "props": {
+        "text": {
+          "why": "The age as the screens write it (38m, 3h 05m, now)."
+        },
+        "strong": {
+          "why": "The Needs-you age is larger and in ink."
+        },
+        "title": {
+          "why": "The full time on hover."
+        }
+      }
+    },
+    "Avatar": {
+      "why": "A person's face on their identity hue, the empty slot that keeps columns aligned, or a row of faces.",
+      "props": {
+        "name": {
+          "why": "Initials on the face and its accessible name; none for an empty slot."
+        },
+        "seed": {
+          "why": "A stable hue per person (an id, or a Jira assignee's name)."
+        },
+        "size": {
+          "why": "Three places draw faces at three sizes.",
+          "values": {
+            "md": "Rows and heads (20px).",
+            "lg": "The rail's own face (30px).",
+            "talk": "The conversation (24px)."
+          }
+        },
+        "dashed": {
+          "why": "An unassigned issue shows a dashed empty face."
+        },
+        "people": {
+          "why": "Who works on a repo, who is in a conversation: one row, named together."
+        }
+      }
+    },
+    "Badge": {
+      "why": "Every small labelled chip: keys, counts, keycaps, tags, another system's status, YOU.",
+      "props": {
+        "kind": {
+          "why": "V1 had a component per chip; one component with a kind each.",
+          "values": {
+            "key": "A ticket or project key, tinted by its project.",
+            "count": "The count pill of heads and filter pills.",
+            "kbd": "A keycap in key hints.",
+            "tag": "The ticket page's kicker tags.",
+            "status": "A Jira status, which we only know by name.",
+            "you": "The YOU pill: the one mono-caps form."
+          }
+        },
+        "children": {
+          "why": "The chip's text (or a count)."
+        },
+        "size": {
+          "why": "Keys sit in rows, group heads and the ticket kicker.",
+          "values": {
+            "sm": "Group heads and the rack.",
+            "md": "Rows.",
+            "lg": "The ticket page's kicker."
+          }
+        },
+        "title": {
+          "why": "The full text or what a click does, on hover."
+        },
+        "href": {
+          "why": "A Jira key opens the issue, with V1's small arrow."
+        },
+        "tone": {
+          "why": "Count pills and tags take their head's or meaning's hue.",
+          "values": {
+            "neutral": "The default.",
+            "you": "Needs-you heads.",
+            "done": "Done heads.",
+            "blocked": "A high-priority tag.",
+            "quiet": "A repo or item name, receded."
+          }
+        }
+      }
+    },
+    "Button": {
+      "why": "Every button and button-like link, in V1's refresh form.",
+      "props": {
+        "children": {
+          "why": "The label; none makes an icon-only button."
+        },
+        "variant": {
+          "why": "V1's gate primacy: at most one strong button per group.",
+          "values": {
+            "default": "A raised button with a rule edge.",
+            "ink": "A primary that isn't a gate (Retry).",
+            "you": "The gate primary (Approve).",
+            "accent": "Only Dispatch run, only on a ticket.",
+            "quiet": "A borderless button (+N, icon buttons in a bar).",
+            "lit": "Take in: fills blue while its row is hovered.",
+            "link": "An underlined text action (Show all, Open ticket)."
+          }
+        },
+        "size": {
+          "why": "V1's four heights.",
+          "values": {
+            "xs": "24px: quiet inline buttons.",
+            "sm": "28px: row actions.",
+            "md": "34px: the top bar and the ticket header.",
+            "lg": "40px: a page's lone action."
+          }
+        },
+        "icon": {
+          "why": "A glyph before the label, or alone (close, open in Jira)."
+        },
+        "title": {
+          "why": "The tooltip; an icon-only button's name, so it must have one."
+        },
+        "blocked": {
+          "why": "The server says why an action is blocked (R11): it stays focusable, does nothing, and says why."
+        },
+        "onClick": {
+          "why": "What it does."
+        },
+        "href": {
+          "why": "A link that looks like a button: a path in the app, or out to Jira."
+        }
+      }
+    },
+    "Checklist": {
+      "why": "A plan's items (TASKS.md) with ticks, rings and section heads, drawn three times in V1.",
+      "props": {
+        "items": {
+          "why": "The plan's items."
+        },
+        "more": {
+          "why": "How many were left out (+N more)."
+        }
+      }
+    },
+    "Dialog": {
+      "why": "The peek: a modal panel on the browser's <dialog> (focus held, Esc, inert page, focus returned).",
+      "single": "Only the peek is a dialog yet; new ticket and the confirms join it in W4.",
+      "props": {
+        "label": {
+          "why": "Its accessible name."
+        },
+        "open": {
+          "why": "Shown or not (the URL decides)."
+        },
+        "onClose": {
+          "why": "Esc or the close button."
+        },
+        "children": {
+          "why": "Its sections, ruled apart."
+        }
+      }
+    },
+    "Facts": {
+      "why": "A line of facts (Owner Ada · Workflow Standard), V1's six key-value lines.",
+      "props": {
+        "items": {
+          "why": "The facts: a label and a value each."
+        }
+      }
+    },
+    "Frame": {
+      "why": "The app's frame: the dark brand rail (views, theme, settings, you) and the main column.",
+      "single": "There is one frame: the app's layout draws it around every screen.",
+      "props": {
+        "nav": {
+          "why": "The views at the top of the rail.",
+          "items": {
+            "icon": {
+              "why": "The view's glyph (IconName)."
+            }
+          }
+        },
+        "foot": {
+          "why": "Settings, under the theme menu.",
+          "items": {
+            "icon": {
+              "why": "The entry's glyph (IconName)."
+            }
+          }
+        },
+        "me": {
+          "why": "The signed-in face at the rail's foot."
+        },
+        "children": {
+          "why": "The current view."
+        }
+      }
+    },
+    "Head": {
+      "why": "The head over a zone, a group or a rack group: V1's ZoneHead, GroupHead and the queue's copy.",
+      "props": {
+        "name": {
+          "why": "What the group is."
+        },
+        "count": {
+          "why": "Its count pill."
+        },
+        "icon": {
+          "why": "A status glyph or a project key before the name."
+        },
+        "tone": {
+          "why": "Needs you and Done heads take their hue.",
+          "values": {
+            "neutral": "The default.",
+            "you": "Needs you.",
+            "done": "Done recently."
+          }
+        },
+        "note": {
+          "why": "A quiet note after the count (Longest wait first)."
+        },
+        "summary": {
+          "why": "The right slot after the hairline: a stat, links, a JQL."
+        },
+        "level": {
+          "why": "Three sizes of head in V1.",
+          "values": {
+            "zone": "My queue's 15px zone heads.",
+            "group": "Compact's and Intake's collapsible group heads.",
+            "rack": "The rack's small static heads."
+          }
+        },
+        "fold": {
+          "why": "A collapsible group: open or not, and the toggle."
+        }
+      }
+    },
+    "Icon": {
+      "why": "Every glyph: V1's line icons, the ticket-type squares, the priority chevrons and the tick.",
+      "props": {
+        "name": {
+          "why": "One glyph each (IconName)."
+        },
+        "label": {
+          "why": "Its accessible name when nothing beside it says what it is."
+        }
+      }
+    },
+    "Mark": {
+      "why": "A ticket's state in exactly one form per state (V1's StatusMark).",
+      "props": {
+        "kind": {
+          "why": "One form per state (MarkKind): R12's attention, plus the outcomes."
+        },
+        "name": {
+          "why": "Who or what, in the state's colour."
+        },
+        "ask": {
+          "why": "What it waits for (Sign off the plan)."
+        },
+        "text": {
+          "why": "Plain text after the label."
+        },
+        "glyph": {
+          "why": "The glyph alone: counters, legends, heads."
+        },
+        "small": {
+          "why": "The 6px dot of counters, pills and heads."
+        }
+      }
+    },
+    "Menu": {
+      "why": "A menu of choices, one current: Base UI's keyboard, typeahead and placement, our look; on the rail.",
+      "single": "Frame's theme menu draws it today; the ticket's run-from and the dispatch target use it in W4 and W7.",
+      "props": {
+        "label": {
+          "why": "The trigger's name and the menu's heading."
+        },
+        "icon": {
+          "why": "The trigger's glyph."
+        },
+        "items": {
+          "why": "The choices."
+        },
+        "value": {
+          "why": "The current one."
+        },
+        "onChange": {
+          "why": "A choice made."
+        }
+      }
+    },
+    "Meter": {
+      "why": "A running run's progress, one segment per step, the current one sweeping (V1's RunMeter).",
+      "props": {
+        "done": {
+          "why": "Steps finished."
+        },
+        "total": {
+          "why": "Steps in all."
+        },
+        "size": {
+          "why": "V1's three sizes.",
+          "values": {
+            "tile": "A run tile's full width.",
+            "row": "Inline in a row (48px).",
+            "strip": "The ticket's strip, each step named under it."
+          }
+        },
+        "names": {
+          "why": "The strip's step names."
+        }
+      }
+    },
+    "Notice": {
+      "why": "Loading, empty and failure states in V1's quiet language, and a capped list's +N strip.",
+      "props": {
+        "kind": {
+          "why": "Four quiet lines V1 drew about 25 ways.",
+          "values": {
+            "status": "Loading, or a failed read.",
+            "empty": "The dashed row of an empty zone.",
+            "problem": "What went wrong under a head (a failing query).",
+            "more": "+N more under a capped list."
+          }
+        },
+        "lead": {
+          "why": "The lead word in 600 (All quiet)."
+        },
+        "children": {
+          "why": "What it says after the lead."
+        },
+        "error": {
+          "why": "A status line that reports a failure."
+        }
+      }
+    },
+    "Page": {
+      "why": "A view: the top bar (title, context, counters, the view's controls, search, one button) and the body.",
+      "props": {
+        "title": {
+          "why": "The view's name, and the tab's."
+        },
+        "context": {
+          "why": "Quiet after the title: the Space, a scope, who."
+        },
+        "counters": {
+          "why": "The bar's counts; a zero recedes, a non-zero need-you is a pill.",
+          "items": {
+            "mark": {
+              "why": "The state the count is of (MarkKind)."
+            }
+          }
+        },
+        "middle": {
+          "why": "The view's own controls (filter pills, a crumb)."
+        },
+        "search": {
+          "why": "The search field, with / and Esc."
+        },
+        "action": {
+          "why": "The bar's one button."
+        },
+        "side": {
+          "why": "A full-height column beside the body (the ticket's Talk)."
+        },
+        "children": {
+          "why": "The body."
+        }
+      }
+    },
+    "Row": {
+      "why": "One item of a list: its cells on the table's columns, raised or flat, with a status edge.",
+      "props": {
+        "children": {
+          "why": "The cells."
+        },
+        "look": {
+          "why": "Actionable rows are raised, settled ones flat (V1's refresh).",
+          "values": {
+            "raised": "In flight or needs action.",
+            "flat": "Settled: done or closed.",
+            "you": "Raised with the needs-you wash."
+          }
+        },
+        "edge": {
+          "why": "The 3px status edge.",
+          "values": {
+            "you": "Needs you.",
+            "live": "Running.",
+            "blocked": "Blocked or abandoned.",
+            "done": "Complete.",
+            "quiet": "Queued, waiting, inbox."
+          }
+        },
+        "kind": {
+          "why": "The five shapes V1's lists take.",
+          "values": {
+            "line": "A dense list's row (Compact, Intake): lights up on hover.",
+            "item": "My queue's taller row: lifts.",
+            "tile": "A run tile: a card that lifts.",
+            "rack": "A bare entry (the rack, a team's items): lifts.",
+            "band": "A board's tall row with ruled cells (All teams)."
+          }
+        },
+        "action": {
+          "why": "It opens something (a peek, its expansion): a button under the cells, named by its label."
+        },
+        "open": {
+          "why": "It is the open one (selected)."
+        },
+        "more": {
+          "why": "Its expansion."
+        },
+        "alert": {
+          "why": "A failed action, said under it."
+        }
+      }
+    },
+    "Segmented": {
+      "why": "Filter pills on a recessed track (Compact's top bar).",
+      "single": "Compact's filter today; Settings › Mappings' Try it and the settings nav use it in W8 and W9.",
+      "props": {
+        "label": {
+          "why": "The group's name."
+        },
+        "items": {
+          "why": "The pills, each with a count and mark.",
+          "items": {
+            "mark": {
+              "why": "The state a pill filters by (MarkKind)."
+            }
+          }
+        },
+        "value": {
+          "why": "The pressed one."
+        },
+        "onChange": {
+          "why": "A pill pressed."
+        }
+      }
+    },
+    "Select": {
+      "why": "A picker (one of a list) inline in a line of facts: Base UI's keyboard, typeahead and placement, our look.",
+      "single": "The ticket's owner today; repos, runtimes and the defaults pick with it in W8 and W9.",
+      "props": {
+        "label": {
+          "why": "Its accessible name."
+        },
+        "value": {
+          "why": "The picked one."
+        },
+        "options": {
+          "why": "The list, each optionally with a face."
+        },
+        "onChange": {
+          "why": "A pick."
+        }
+      }
+    },
+    "Stack": {
+      "why": "The one layout box: screens lay out with it instead of raw elements.",
+      "props": {
+        "children": {
+          "why": "What it lays out (none for a spacer)."
+        },
+        "dir": {
+          "why": "Side by side or one under another.",
+          "values": {
+            "row": "Side by side.",
+            "column": "One under another."
+          }
+        },
+        "gap": {
+          "why": "The space between, a spacing token (Space)."
+        },
+        "align": {
+          "why": "Cross-axis alignment.",
+          "values": {
+            "start": "To the start.",
+            "center": "Centred.",
+            "baseline": "On the text's baseline."
+          }
+        },
+        "justify": {
+          "why": "Main-axis alignment.",
+          "values": {
+            "end": "To the end (buttons on the right).",
+            "between": "Spread to both ends."
+          }
+        },
+        "wrap": {
+          "why": "Wrap to more lines (buttons, tags)."
+        },
+        "grow": {
+          "why": "Take the free space (and push the rest along)."
+        },
+        "cols": {
+          "why": "Equal columns (run tiles, the rack).",
+          "values": {
+            "3": "The run tiles (three at most).",
+            "5": "The rack's columns."
+          }
+        }
+      }
+    },
+    "Stepper": {
+      "why": "A ticket's way through its workflow: V1's stage glyph and labelled stepper on one model.",
+      "props": {
+        "model": {
+          "why": "Its stages and gates, as the board says.",
+          "items": {
+            "stages": {
+              "why": "Inbox, the workflow's stages, Done: one segment each.",
+              "items": {
+                "state": {
+                  "why": "Where the ticket is on its way.",
+                  "values": {
+                    "done": "Finished: green.",
+                    "current": "Where it is now: the long segment.",
+                    "upcoming": "Not reached yet (or stale): grey.",
+                    "skipped": "Skipped by the workflow: struck through.",
+                    "failed": "Where it stopped: crimson."
+                  }
+                },
+                "gate": {
+                  "why": "The gate after a stage: a diamond.",
+                  "items": {
+                    "state": {
+                      "why": "Whether the gate has been passed, and who it waits for.",
+                      "values": {
+                        "pending": "Not reached yet: hollow.",
+                        "passed": "Signed off: green.",
+                        "waiting": "Parked, waiting on someone else: a blue ring.",
+                        "you": "Parked, waiting on you: filled blue."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "look": {
+          "why": "Rows show the glyph, the ticket and the peek the labelled steps.",
+          "values": {
+            "glyph": "The rows' 81px glyph with the stage's name.",
+            "steps": "The labelled stepper."
+          }
+        },
+        "compact": {
+          "why": "Bare diamonds for gates the ticket isn't parked at (the peek)."
+        }
+      }
+    },
+    "Surface": {
+      "why": "The one recessed zone per view, and the sheets that rest on it.",
+      "props": {
+        "children": {
+          "why": "What it holds."
+        },
+        "level": {
+          "why": "Sunken zone or raised panel.",
+          "values": {
+            "recess": "The view's sunken zone.",
+            "sheet": "A raised panel (Talk, the run band)."
+          }
+        },
+        "fill": {
+          "why": "Fill the page; only the inside scrolls."
+        },
+        "pad": {
+          "why": "Its padding, a spacing token (Space)."
+        },
+        "label": {
+          "why": "Its accessible name as a region."
+        }
+      }
+    },
+    "Tabs": {
+      "why": "Underline tabs: Base UI's roving focus and arrow keys, our look.",
+      "single": "The ticket page's sections today; Settings' areas use them in W8.",
+      "props": {
+        "label": {
+          "why": "The tab list's name."
+        },
+        "items": {
+          "why": "The tabs, each with a count."
+        },
+        "value": {
+          "why": "The current tab."
+        },
+        "onChange": {
+          "why": "A tab chosen."
+        },
+        "children": {
+          "why": "The current tab's panel."
+        }
+      }
+    },
+    "Table": {
+      "why": "A dense list on one grid: column head, rows in groups, a foot; rows line up across groups.",
+      "props": {
+        "columns": {
+          "why": "The grid: widths as tokens, which align right, where a rule sits.",
+          "items": {
+            "width": {
+              "why": "A column's width, a width token (Width)."
+            }
+          }
+        },
+        "head": {
+          "why": "Draw the column head (lists whose cells say what they are don't)."
+        },
+        "scroll": {
+          "why": "Fill the surface and scroll inside it, or sit in a longer page."
+        },
+        "foot": {
+          "why": "The bar under the list: key hints, a summary."
+        },
+        "children": {
+          "why": "The groups and rows."
+        }
+      }
+    },
+    "Text": {
+      "why": "All text on a screen: a role from the type scale, never a raw size.",
+      "props": {
+        "children": {
+          "why": "The text."
+        },
+        "variant": {
+          "why": "The type roles.",
+          "values": {
+            "display": "The ticket's title (34px).",
+            "title": "The peek's title (20px).",
+            "heading": "Section and band headings (15px).",
+            "body": "A description (14px, loose).",
+            "label": "Row titles (14px, 500).",
+            "ui": "The default (13px).",
+            "meta": "Notes and captions (12px).",
+            "code": "Mono: keys, JQL, paths."
+          }
+        },
+        "tone": {
+          "why": "The three inks and the status hues' text colours (Tone)."
+        },
+        "weight": {
+          "why": "Weight beside the variant's own.",
+          "values": {
+            "500": "Medium: names, a title in a list.",
+            "600": "Semibold: a lead word, a count."
+          }
+        },
+        "truncate": {
+          "why": "One line (true) or two, cut with an ellipsis.",
+          "values": {
+            "2": "Two lines: a title in a tile."
+          }
+        },
+        "tabular": {
+          "why": "Figures of one width, so counts and times line up."
+        },
+        "title": {
+          "why": "The full text on hover."
+        },
+        "as": {
+          "why": "The element the document needs.",
+          "values": {
+            "span": "Inline (the default).",
+            "p": "A paragraph.",
+            "h1": "The page's heading.",
+            "h2": "A section's heading."
+          }
+        }
+      }
+    },
+    "Thread": {
+      "why": "The conversation: faces and bubbles, mine on the right, and the composer.",
+      "props": {
+        "messages": {
+          "why": "The messages."
+        },
+        "look": {
+          "why": "A whole thread, or one message in a row's expansion.",
+          "values": {
+            "full": "The whole thread.",
+            "last": "One message, clamped."
+          }
+        },
+        "compose": {
+          "why": "A composer under it, with this placeholder."
+        }
+      }
+    }
+  },
+  "vocab": {
+    "Space": {
+      "why": "The spacing scale: a gap or a pad is one of its steps, never a length.",
+      "values": {
+        "0": "None.",
+        "1": "2px: a hairline gap.",
+        "2": "4px: within a chip.",
+        "3": "6px: an icon and its label.",
+        "4": "8px: items in a line.",
+        "5": "10px: a row's cells.",
+        "6": "12px: blocks in a panel.",
+        "7": "14px: a group's rows.",
+        "8": "16px: a zone's parts.",
+        "9": "24px: a page's sections.",
+        "10": "32px: the widest break."
+      }
+    },
+    "Width": {
+      "why": "Column and slot widths: the tokens a table's grid and a fixed slot are made of.",
+      "values": {
+        "fill": "Takes the rest (minmax(0, 1fr)).",
+        "fit": "As wide as its content, at least the 2xl column.",
+        "line": "A rule column's width.",
+        "dot": "A mark's slot.",
+        "face": "An avatar's slot.",
+        "xs": "40px: a priority or a count.",
+        "sm": "84px: a key, an age.",
+        "md": "112px: a short value.",
+        "lg": "128px: a person or a status.",
+        "xl": "168px: a long value.",
+        "2xl": "208px: a stage glyph and its label.",
+        "3xl": "300px: a band's lead column."
+      }
+    },
+    "Tone": {
+      "why": "Text colours: the three inks and the status hues.",
+      "values": {
+        "1": "Primary ink.",
+        "2": "Secondary ink.",
+        "3": "Tertiary ink.",
+        "you": "Your move.",
+        "done": "Complete.",
+        "blocked": "Blocked, abandoned, a failed read.",
+        "live": "Running."
+      }
+    },
+    "MarkKind": {
+      "why": "A ticket's states, one form each (Mark).",
+      "values": {
+        "run": "Running: the breathing live dot.",
+        "wait": "Waiting on someone: a blue ring.",
+        "you": "Needs you: the YOU pill.",
+        "blk": "Blocked: a crimson bar.",
+        "done": "Complete: the green tick.",
+        "abandoned": "Abandoned: a crimson cross.",
+        "queued": "Queued: a dotted ring.",
+        "idle": "Inbox: a neutral ring."
+      }
+    },
+    "IconName": {
+      "why": "Every glyph the kit draws (Icon).",
+      "values": {
+        "teams": "The rail: All teams.",
+        "queue": "The rail: My queue.",
+        "compact": "The rail: Compact.",
+        "intake": "The rail: Intake.",
+        "settings": "The rail: Settings.",
+        "theme": "The rail: the theme menu.",
+        "search": "The search field.",
+        "arrow": "Dispatch run's arrow; the Inbox note.",
+        "check": "The selected item in a menu or picker.",
+        "plus": "New, folded to an icon.",
+        "close": "Leave the ticket page.",
+        "chevron": "A group head's fold; a picker.",
+        "out": "Opens in Jira.",
+        "high": "High priority.",
+        "low": "Low priority.",
+        "normal": "Normal priority: an empty slot, so titles share one x.",
+        "tick": "Done, in a plan and the stepper's last stage.",
+        "tick-sm": "Done, inline in a mark or a head.",
+        "feature": "Ticket type: feature.",
+        "bug": "Ticket type: bug.",
+        "improvement": "Ticket type: improvement.",
+        "task": "Ticket type: task."
+      }
+    }
+  }
+}

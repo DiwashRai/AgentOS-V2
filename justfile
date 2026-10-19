@@ -6,6 +6,7 @@ default: check
 # Once per clone, and after a lockfile change: install the environment and enable the git hooks.
 setup:
     uv sync
+    npm ci --prefix web
     git config core.hooksPath .githooks
 
 # The checks: format, lint, types (strict, as Python 3.11), imports.
@@ -14,15 +15,18 @@ check:
     uv run ruff check .
     uv run mypy
     uv run lint-imports
+    npm run --prefix web check
 
 # Auto-format and apply lint fixes.
 fmt:
     uv run ruff format .
     uv run ruff check --fix .
+    npm run --prefix web fmt
 
 # The fast suite (its wall time is gated: tests/speed_gate.py, registered by the root conftest.py).
 test:
     uv run pytest -m "not integration"
+    npm run --prefix web test
 
 # Real processes and real git.
 test-integration:
@@ -32,6 +36,7 @@ test-integration:
 # checked against HEAD's baseline; `--base REF` checks against the merge base with REF instead.
 gates *args:
     uv run python tools/gates/gates.py {{ args }}
+    node web/tools/kit.mjs --check {{ args }}
 
 # Lower quality-baseline.json where the code improved (never raises it). Commit it with the change.
 ratchet:
@@ -40,7 +45,17 @@ ratchet:
 # Markdown for a PR description: the gate numbers against the merge base with `base`.
 card base="origin/main":
     @uv run python tools/gates/card.py --base {{ base }}
+    @node web/tools/kit.mjs --card --base {{ base }}
 
 # The server on 127.0.0.1:8000.
 dev:
     uv run python -m agentos
+
+# The web on 127.0.0.1:5174, on its fixtures.
+dev-web:
+    npm run --prefix web dev
+
+# The web's screenshots (Playwright, the installed Chrome): every screen state and the kit sheet in
+# both themes, against web/e2e's baselines. `just shots --update-snapshots` after a meant change.
+shots *args:
+    npm run --prefix web shots -- {{ args }}

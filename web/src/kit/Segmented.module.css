@@ -1,0 +1,54 @@
+.track {
+  display: flex;
+  flex: 0 0.02 auto;
+  gap: var(--sp-1);
+  min-width: 0;
+  padding: var(--sp-2);
+  border-radius: var(--r-4);
+  background: var(--recess);
+  box-shadow: var(--shadow-recess);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pill {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-5);
+  border: 0;
+  border-radius: var(--r-3);
+  background: transparent;
+  font-size: var(--fs-3);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.pill:hover {
+  color: var(--ink-1);
+}
+.pill[aria-pressed="true"] {
+  background: var(--row-raised);
+  box-shadow:
+    0 0 0 var(--line-1) var(--row-raised-edge),
+    var(--shadow-row);
+  color: var(--ink-1);
+  font-weight: 600;
+}
+.pill > em {
+  font-style: normal;
+  font-size: var(--fs-2);
+  font-weight: 600;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+.pill > em[data-zero="true"] {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.pill[data-you="true"],
+.pill[data-you="true"] > em {
+  color: var(--you-text);
+}

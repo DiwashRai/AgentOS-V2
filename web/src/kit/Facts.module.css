@@ -1,0 +1,21 @@
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-8);
+  margin: 0;
+  font-size: var(--fs-2);
+  color: var(--ink-3);
+}
+.fact {
+  display: flex;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.fact > dt {
+  margin: 0;
+}
+.fact > dd {
+  margin: 0;
+  color: var(--ink-1);
+  font-weight: 500;
+}

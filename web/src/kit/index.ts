@@ -1,0 +1,32 @@
+// The kit: the only code that renders elements or has CSS (ledger.json says why each piece exists).
+import "./fonts.css";
+import "./tokens.css";
+import "./base.css";
+
+export { Age, type AgeProps } from "./Age";
+export { Avatar, type AvatarProps } from "./Avatar";
+export { Badge, type BadgeProps } from "./Badge";
+export { Button, type ButtonProps, type ButtonVariant } from "./Button";
+export { type CheckItem, Checklist, type ChecklistProps } from "./Checklist";
+export { Dialog, type DialogProps } from "./Dialog";
+export { type Fact, Facts, type FactsProps } from "./Facts";
+export { Frame, type FrameProps, type NavItem } from "./Frame";
+export { Head, type HeadProps } from "./Head";
+export { Icon, type IconName, type IconProps } from "./Icon";
+export { Mark, type MarkKind, type MarkProps } from "./Mark";
+export { Menu, type MenuItem, type MenuProps } from "./Menu";
+export { Meter, type MeterProps } from "./Meter";
+export { Notice, type NoticeProps } from "./Notice";
+export { type Counter, Page, type PageProps, type Search } from "./Page";
+export { type Action, Row, type RowProps } from "./Row";
+export { type Segment, Segmented, type SegmentedProps } from "./Segmented";
+export { type Option, Select, type SelectProps } from "./Select";
+export { Stack, type StackProps } from "./Stack";
+export { type Step, type StepGate, Stepper, type StepperModel, type StepperProps } from "./Stepper";
+export { Surface, type SurfaceProps } from "./Surface";
+export { type Tab, Tabs, type TabsProps } from "./Tabs";
+export { type Column, Table, type TableProps } from "./Table";
+export { Text, type TextProps, type TextVariant } from "./Text";
+export { Thread, type ThreadMessage, type ThreadProps } from "./Thread";
+export { watchVisibility } from "./theme";
+export type { Space, Tone, Width } from "./vars";

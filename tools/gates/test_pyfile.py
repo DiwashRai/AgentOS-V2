@@ -289,7 +289,7 @@ def _ts_measures(tmp_path: Path, source: str) -> dict[str, Any]:
 
 @pytest.mark.skipif(
     shutil.which("node") is None or not (ts_measures.WEB / "node_modules" / "typescript").is_dir(),
-    reason="needs node and the web's typescript (no web yet)",
+    reason="needs node and the web's typescript (npm ci --prefix web)",
 )
 def test_ts_measures_reads_comments_tags_and_names(tmp_path: Path) -> None:
     measured = _ts_measures(
