@@ -133,8 +133,14 @@
   min-height: 0;
   padding-bottom: var(--sp-9);
 }
-.popped > .area {
+/* the popped area over its own copies of the row's note and problem, at a readable measure */
+.poppedCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: 100%;
   max-width: var(--w-editor);
+  min-height: 0;
 }
 
 /* NumberField: − the digits and their unit + in one box, the digits at a fixed width */

@@ -2,10 +2,10 @@
 // AGENTS.md): at least `lines` tall and growing with its text, or filling its column. Every area
 // can pop out to the whole window, for long text: the same value, edited at a readable measure,
 // and Done or Esc brings it back (inside an overlay too: it opens over it).
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "./Button";
-import { useDescribed } from "./described";
+import { type Described, useDescription } from "./described";
 import { Dialog } from "./Dialog";
 import s from "./Form.module.css";
 import { Page } from "./Page";
@@ -26,7 +26,8 @@ export interface TextAreaProps {
 export function TextArea({ label, value, onChange, placeholder, lines = 3, fill }: TextAreaProps) {
   const [out, setOut] = useState(false);
   const popped = useRef<HTMLTextAreaElement>(null);
-  const described = useDescribed();
+  const description = useDescription();
+  const words = useId();
   // popped out, the text has the focus (after the window's own, which takes it as it opens)
   useEffect(() => {
     if (!out) return;
@@ -35,13 +36,28 @@ export function TextArea({ label, value, onChange, placeholder, lines = 3, fill 
       cancelAnimationFrame(f);
     };
   }, [out]);
+  // popped out, the row's note and problem are out of reach (the page under the window is inert):
+  // the popped area is described by its own copies of them, under it
+  const own: Described = {
+    ...(description.note || description.problem
+      ? {
+          "aria-describedby": [
+            description.note ? `${words}n` : null,
+            description.problem ? `${words}p` : null,
+          ]
+            .filter((x) => x !== null)
+            .join(" "),
+        }
+      : {}),
+    ...(description.problem ? { "aria-invalid": true as const } : {}),
+  };
   const area = (full: boolean) => (
     <textarea
       ref={full ? popped : undefined}
       className={cx(s.box, s.area, (full || fill === true) && s.fill)}
       style={vars({ "--lines": String(lines) })}
       aria-label={label}
-      {...described}
+      {...(full ? own : description.attrs)}
       value={value}
       placeholder={placeholder}
       spellCheck={false}
@@ -76,9 +92,39 @@ export function TextArea({ label, value, onChange, placeholder, lines = 3, fill 
             </Button>
           }
         >
-          <div className={s.popped}>{area(true)}</div>
+          <div className={s.popped}>
+            <Words id={words} note={description.note} problem={description.problem}>
+              {area(true)}
+            </Words>
+          </div>
         </Page>
       </Dialog>
     </div>
   );
+}
+
+/** The popped-out area with its own copies of the row's note and problem under it. */
+function Words({ id, note, problem, children }: WordsProps) {
+  return (
+    <div className={s.poppedCol}>
+      {children}
+      {note ? (
+        <span className={s.note} id={`${id}n`}>
+          {note}
+        </span>
+      ) : null}
+      {problem ? (
+        <span className={s.problem} id={`${id}p`}>
+          {problem}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+interface WordsProps {
+  id: string;
+  note: string | undefined;
+  problem: string | undefined;
+  children: ReactNode;
 }

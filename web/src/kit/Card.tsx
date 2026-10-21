@@ -5,10 +5,10 @@
 //   dialog). A disabled stage is dimmed; a problem with it is said at its foot.
 // - agent: an agent at work (My queue): its lines one under another, filling the card's height so
 //   cards in a row line up; a queued one recedes to a hairline. A Meter drawn `edge` in it lies
-//   along its bottom edge (the card is its containing block).
+//   along its bottom edge (its summary, the card's full height, is the Meter's containing block).
 // - ticket: a ticket on a board (All teams): its lines one under another on a hairline card.
-// The keyboard and assistive tech get one real button, visually hidden, the focus ring round the
-// card; a pointer opens it from anywhere on it but its own controls or the end of a text
+// The keyboard and assistive tech get one real button, unseen over the summary and out of the
+// pointer's way, the focus ring round the card; a pointer opens it from anywhere on it but its own controls or the end of a text
 // selection, so its lines keep their own tooltips. What the lines say is the screen's.
 import type { MouseEvent, ReactNode } from "react";
 
@@ -42,8 +42,18 @@ export type CardProps = Common &
         onOpen: () => void;
         /** A queued agent: receded to a hairline. */
         off?: boolean;
+        face?: never;
+        open?: never;
+        problem?: never;
       }
-    | { look: "ticket"; onOpen: () => void }
+    | {
+        look: "ticket";
+        onOpen: () => void;
+        face?: never;
+        open?: never;
+        problem?: never;
+        off?: never;
+      }
   );
 
 /** The card's own button, visually hidden: a stage's says whether it is open; the others name what
@@ -55,7 +65,6 @@ function Hit({ say, expanded, onOpen }: { say: string; expanded?: boolean; onOpe
       className={s.hit}
       aria-expanded={expanded}
       aria-label={say}
-      title={say}
       onClick={onOpen}
     />
   );

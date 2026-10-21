@@ -17,22 +17,25 @@ export interface ComposerProps {
 
 export function Composer({ label, value, onChange, onSend }: ComposerProps) {
   return (
-    <label className={s.compose}>
-      <textarea
-        rows={1}
-        placeholder={label}
-        aria-label={label}
-        value={value}
-        onChange={(e) => {
-          onChange(e.currentTarget.value);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) onSend();
-        }}
-      />
+    <div className={s.compose}>
+      {/* the label wraps the text alone (a click on the box's padding focuses it), Send beside it */}
+      <label className={s.text}>
+        <textarea
+          rows={1}
+          placeholder={label}
+          aria-label={label}
+          value={value}
+          onChange={(e) => {
+            onChange(e.currentTarget.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) onSend();
+          }}
+        />
+      </label>
       <Button size="sm" onClick={onSend}>
         Send
       </Button>
-    </label>
+    </div>
   );
 }

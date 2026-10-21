@@ -7,7 +7,8 @@ export interface AvatarProps {
   name?: string;
   /** Who it is, for a stable hue: a person's id, or a name when there is no id (a Jira assignee). */
   seed?: string;
-  /** sm, md and mid are the neutral disc; talk and lg keep the person's hue. */
+  /** sm and mid are a neutral disc (in a pill, on a team); md (rows, pickers), talk and lg keep the
+   *  person's hue. */
   size?: "sm" | "md" | "mid" | "lg" | "talk";
   /** An empty face drawn dashed (Unassigned); otherwise an empty slot is an invisible spacer. */
   dashed?: boolean;

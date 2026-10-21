@@ -3,7 +3,7 @@
 import { createContext, type ReactNode, useContext } from "react";
 
 import s from "./Table.module.css";
-import { cx, vars, type Width, width } from "./vars";
+import { cx, vars, type Length, type Width, width } from "./vars";
 
 /** How a column takes its width: its width as set; or as wide as each row's own content, up to it
  *  (`hug`); or its width while there is room, less when the list is too narrow (`give`); or a fill
@@ -11,7 +11,7 @@ import { cx, vars, type Width, width } from "./vars";
 type Track =
   | { width: Width; hug?: never; give?: never; min?: never }
   | {
-      width: Width;
+      width: Length;
       /** As wide as each row's own content, up to width: the free width goes to the fill columns.
        *  Each row sizes it alone, so it suits a list without a column head (Linear's right cluster). */
       hug: true;
@@ -19,7 +19,7 @@ type Track =
       min?: never;
     }
   | {
-      width: Width;
+      width: Length;
       /** Its width while there is room, less only when the list is too narrow for the fill column's
        *  floor (a row's quiet properties, which then cut their words). */
       give: true;
@@ -30,7 +30,7 @@ type Track =
       width: "fill";
       /** A fill column's floor: it keeps this width before a hugging column takes more (a title over
        *  its chips, when the list is narrow). */
-      min: Width;
+      min: Length;
       hug?: never;
       give?: never;
     };

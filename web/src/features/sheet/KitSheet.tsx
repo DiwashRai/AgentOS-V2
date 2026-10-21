@@ -315,6 +315,8 @@ function LaneSheet() {
         label: n,
         content: card(n, edit),
         gate: gates[i] ? `${n} sign-off` : null,
+        // Build is inside the loop: the sheet says the workflow's rule, as the editor's model does
+        ...(n === "Build" ? { noGate: "Gates go after a loop's last stage" } : {}),
       }))}
       loops={[{ first: "build", last: "check", foot: <Text variant="meta">Up to 3 rounds</Text> }]}
       {...(edit

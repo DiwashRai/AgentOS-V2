@@ -7,6 +7,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 
 import { Choice } from "./choice";
+import { useDescribed } from "./described";
 import { Icon } from "./Icon";
 import { Mark, type MarkKind } from "./Mark";
 import p from "./Popover.module.css";
@@ -183,10 +184,12 @@ interface PillsProps {
   onChange: (id: string) => void;
 }
 
-/** Every pill, as wide as the form gives it: nothing to measure. */
+/** Every pill, as wide as the form gives it: nothing to measure. In a FormRow, the group is described
+ *  by the row's note and problem, as its overflow trigger is. */
 function Fit({ label, items, value, onChange }: SegmentedProps) {
+  const described = useDescribed();
   return (
-    <div className={s.track} data-fit role="group" aria-label={label}>
+    <div className={s.track} data-fit role="group" aria-label={label} {...described}>
       <Pills items={items} value={value} shown={() => true} onChange={onChange} />
     </div>
   );
@@ -194,6 +197,7 @@ function Fit({ label, items, value, onChange }: SegmentedProps) {
 
 /** As many pills as fit the bar, measured; the rest behind a "+N" chip. */
 function Measured({ label, items, value, onChange }: SegmentedProps) {
+  const described = useDescribed();
   const { track, ruler, room } = useRoom(
     items.map((it) => `${it.label}${String(it.count)}`).join(),
   );
@@ -209,6 +213,7 @@ function Measured({ label, items, value, onChange }: SegmentedProps) {
       data-collapsed={shown.size === 0}
       role="group"
       aria-label={label}
+      {...described}
     >
       <Pills items={items} value={value} shown={(i) => shown.has(i)} onChange={onChange} />
       {rest.length > 0 ? (

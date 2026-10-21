@@ -94,16 +94,14 @@ function AgentChip({ t }: { t: TicketRow }) {
   const a = t.attention;
   const what = a.kind === "running" ? `${a.agent} running` : "Queued";
   const whose = t.owner ? `, for ${t.owner.name}` : "";
-  return (
-    <Chip
-      label={what}
-      title={`${what}${whose}`}
-      after={{
-        agent: a.kind === "running" ? a.agent : null,
-        face: t.owner ? { name: t.owner.name, seed: String(t.owner.id) } : null,
-      }}
-    />
-  );
+  const face = t.owner ? { name: t.owner.name, seed: String(t.owner.id) } : undefined;
+  const who =
+    a.kind === "running"
+      ? { after: { agent: a.agent, ...(face ? { face } : {}) } }
+      : face
+        ? { after: { face } }
+        : {};
+  return <Chip label={what} title={`${what}${whose}`} {...who} />;
 }
 
 /** "Implement", or "Implement · round 2 of 3" in a later round (in words, so it never reads as the

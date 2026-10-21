@@ -158,7 +158,8 @@ export function Peek() {
       label={key ? `Peek at ${key}` : "Peek"}
       open={key !== null}
       onClose={close}
-      foot={key ? <Reply ticketKey={key} /> : null}
+      // keyed by the ticket: a draft is one ticket's
+      foot={key ? <Reply key={key} ticketKey={key} /> : null}
     >
       {key ? <Loaded ticketKey={key} me={me} now={now} onClose={close} /> : null}
     </Dialog>

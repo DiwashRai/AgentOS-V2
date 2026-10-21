@@ -15,9 +15,18 @@ import { tokenPx } from "./vars";
 /** A state's hue for a chip's dot. */
 export type ChipDot = "neutral" | "live" | "you" | "blocked" | "done";
 
-/** After the words: a count, or who works on it (an agent, a person's face). */
+/** A person's face: their name and the seed of their hue. */
+interface Face {
+  name: string;
+  seed: string;
+}
+
+/** After the words, one of: a count; or who works on it, an agent (with whose ticket it is) or a
+ *  person's face alone. Never a count and a who together, never a who with no one. */
 export type ChipAfter =
-  { text: string } | { agent: string | null; face: { name: string; seed: string } | null };
+  | { text: string; agent?: never; face?: never }
+  | { agent: string; face?: Face; text?: never }
+  | { face: Face; agent?: never; text?: never };
 
 export type ChipProps = {
   /** Its words (tests, AGENTS.md, Implement, northwind/web). */
@@ -76,10 +85,10 @@ function Remove({ label, onRemove }: { label: string; onRemove: () => void }) {
 
 /** After the words: a quieter count, or the agent's glyph on its live disc and a face. */
 function After({ after }: { after: ChipAfter }) {
-  if ("text" in after) return <span className={s.count}>{after.text}</span>;
+  if (after.text !== undefined) return <span className={s.count}>{after.text}</span>;
   return (
     <span className={s.who}>
-      {after.agent !== null ? (
+      {after.agent !== undefined ? (
         <span className={s.agent}>
           <Icon name="agents" label={`${after.agent} agent`} />
         </span>
@@ -95,7 +104,7 @@ function flags({ lead, after, onRemove, flash, tone = "line" }: ChipProps) {
   return {
     "data-tone": tone,
     "data-lead": on(lead !== undefined),
-    "data-who": on(after !== undefined && !("text" in after)),
+    "data-who": on(after !== undefined && after.text === undefined),
     "data-removable": on(onRemove !== undefined),
     "data-flash": on(flash === true),
   };

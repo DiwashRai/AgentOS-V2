@@ -11,8 +11,15 @@
   border: var(--line-1) solid var(--tk-card-edge);
   border-radius: var(--r-4);
   background: var(--tk-card);
-  cursor: text;
   transition: border-color var(--dur-fast);
+}
+/* the text's label fills the box but Send, so a click on the padding round the text focuses it */
+.text {
+  flex: 1;
+  align-self: stretch;
+  display: flex;
+  min-width: 0;
+  cursor: text;
 }
 .compose:hover {
   border-color: var(--rule-strong);
@@ -22,7 +29,7 @@
   outline: var(--line-2) solid var(--focus);
   outline-offset: var(--line-2);
 }
-.compose > textarea {
+.text > textarea {
   flex: 1;
   align-self: center;
   min-width: 0;
@@ -37,6 +44,6 @@
   line-height: 1.55;
   color: var(--ink-1);
 }
-.compose > textarea::placeholder {
+.text > textarea::placeholder {
   color: var(--ink-3);
 }

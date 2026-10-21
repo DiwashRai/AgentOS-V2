@@ -101,10 +101,13 @@ export const setAgent = (b: WorkflowBody, stage: string, agent: string) =>
 /** Why no gate can go after a stage, when none can: inside a loop, before its last stage (rules.md
  *  › Workflows: a gate only on a loop's last stage). */
 export function noGateAfter(b: WorkflowBody, id: string): string | undefined {
-  const at = (sid: string) => b.stages.findIndex((s) => s.id === sid);
-  const k = at(id);
-  const inside = b.loops.some((l) => at(l.first) <= k && k < at(l.last));
-  return inside ? "Gates go after a loop's last stage" : undefined;
+  const k = b.stages.findIndex((s) => s.id === id);
+  return insideLoop(b, k) ? "Gates go after a loop's last stage" : undefined;
+}
+
+/** Stage `k` is inside a loop, before its last stage: the one place no gate can go. */
+function insideLoop(b: WorkflowBody, k: number): boolean {
+  return b.loops.some((l) => span(b, l.first, l.last).slice(0, -1).includes(k));
 }
 
 export function setRounds(b: WorkflowBody, i: number, rounds: number): WorkflowBody {

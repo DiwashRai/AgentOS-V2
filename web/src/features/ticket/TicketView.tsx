@@ -192,7 +192,8 @@ export function TicketView() {
             action: headerActions(t.actions.filter((a) => a.id !== "cancel")).map((a) => (
               <ActionButton key={a.id} action={a} size="md" header />
             )),
-            side: { content: <Talk t={t} me={me} /> },
+            // keyed by the ticket: a draft is one ticket's, and doesn't follow you to the next
+            side: { content: <Talk key={t.key} t={t} me={me} /> },
           }
         : {})}
     >

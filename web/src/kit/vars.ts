@@ -31,6 +31,10 @@ export type Tone = "1" | "2" | "3" | "you" | "done" | "blocked" | "live";
 export type Width =
   "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "fill" | "fit" | "line" | "dot" | "face";
 
+/** A width that is a length: every Width but the two whole tracks (`fill`, `fit`), for a place
+ *  that wraps it in a track of its own (a hugging column's cap, a fill column's floor). */
+export type Length = Exclude<Width, "fill" | "fit">;
+
 const WIDTH: Partial<Record<Width, string>> = {
   fill: "minmax(0, 1fr)",
   fit: "minmax(var(--col-2xl), max-content)",

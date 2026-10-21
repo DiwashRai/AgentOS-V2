@@ -45,4 +45,4 @@ export { TextArea, type TextAreaProps } from "./TextArea";
 export { Thread, type ThreadMessage, type ThreadProps } from "./Thread";
 export { Toggle, type ToggleProps } from "./Toggle";
 export { watchVisibility } from "./theme";
-export type { Space, Tone, Width } from "./vars";
+export type { Length, Space, Tone, Width } from "./vars";

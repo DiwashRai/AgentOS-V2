@@ -33,7 +33,15 @@ export function FormRow({ label, children, note, problem }: FormRowProps) {
         {label}
       </span>
       <span className={s.control}>
-        <DescribedBy.Provider value={described}>{children}</DescribedBy.Provider>
+        <DescribedBy.Provider
+          value={{
+            attrs: described,
+            ...(note ? { note } : {}),
+            ...(problem ? { problem } : {}),
+          }}
+        >
+          {children}
+        </DescribedBy.Provider>
         {note ? (
           <span className={s.note} id={noteId}>
             {note}

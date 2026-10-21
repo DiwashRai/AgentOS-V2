@@ -126,14 +126,13 @@
   height: var(--sp-5);
   rotate: 180deg;
 }
-/* at least as wide as the row it opens from; the swatches' ring uses this theme's ink, resolved
-   before the swatches switch theme */
-.sideSheet .text {
-  font-weight: 500;
-}
+/* at least as wide as the row it opens from */
 .sideSheet {
   width: max(var(--anchor-width), var(--w-pop));
-  --ring: var(--ring-ink);
+}
+/* the theme names in their own weight, as Linear's sidebar menus set them */
+.sideSheet .text {
+  font-weight: 500;
 }
 /* an option's own picture leads it (a theme's swatch) */
 .aside {

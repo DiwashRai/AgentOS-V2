@@ -28,7 +28,7 @@ const KIT = join(SRC, "kit");
 const FEATURES = join(SRC, "features");
 const LEDGER = join(KIT, "ledger.json");
 const MEASURES = resolve(WEB, "../tools/gates/ts_measures.mjs");
-const VOCAB = ["Space", "Width", "Tone", "MarkKind", "IconName"];
+const VOCAB = ["Space", "Width", "Length", "Tone", "MarkKind", "IconName"];
 // Not screens: shared modules count for their importers; the kit sheet draws everything on purpose.
 const NOT_SCREENS = new Set(["shared", "sheet"]);
 const ts = createRequire(join(WEB, "package.json"))("typescript");
@@ -72,20 +72,31 @@ const kitShape = (x) =>
 function fieldsOf(checker, t, depth) {
   if (depth > 3) return {};
   const element = checker.isArrayType(t) ? checker.getTypeArguments(t)[0] : t;
-  // a kit shape, or an intersection of one with others (a column: its track's case and its common
-  // fields); a field the union's cases declare differently keeps its vocabulary and every value
-  const isKit = (x) => kitShape(x) || (x.isIntersection() && x.types.some(kitShape));
+  // a kit shape, or an intersection of kit shapes only (a column: its track's case and its common
+  // fields); a field the union's cases declare differently is merged (mergeProp)
+  const isKit = (x) => kitShape(x) || (x.isIntersection() && x.types.every(kitShape));
   const shapes = (element.isUnion() ? element.types : [element]).filter(isKit);
   const items = {};
   for (const field of shapes.flatMap((x) => x.getProperties())) {
     const p = propOf(checker, field, depth + 1);
     if (!(p.vocab || p.values.length || Object.keys(p.items).length)) continue;
-    const old = items[field.name];
-    items[field.name] = old
-      ? { ...old, vocab: old.vocab ?? p.vocab, values: [...new Set([...old.values, ...p.values])] }
-      : p;
+    items[field.name] = mergeProp(items[field.name], p);
   }
   return items;
+}
+
+/** One prop as the cases of a union declare it: the first vocabulary, every value, and every nested
+ *  field merged the same way, at every level. */
+function mergeProp(a, b) {
+  if (!a) return b;
+  const items = { ...a.items };
+  for (const [name, p] of Object.entries(b.items)) items[name] = mergeProp(items[name], p);
+  return {
+    vocab: a.vocab ?? b.vocab,
+    values: [...new Set([...a.values, ...b.values])],
+    items,
+    array: a.array || b.array,
+  };
 }
 
 /** One prop: its vocabulary, or its own literal values, and the fields inside it. */
@@ -122,8 +133,7 @@ function readKit() {
     for (const member of members) {
       for (const prop of checker.getPropertiesOfType(member)) {
         const p = propOf(checker, prop);
-        const old = props[prop.name];
-        props[prop.name] = old ? { ...old, values: [...new Set([...old.values, ...p.values])] } : p;
+        props[prop.name] = mergeProp(props[prop.name], p);
       }
     }
     kit[sym.name] = { notComponent: false, props };

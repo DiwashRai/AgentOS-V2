@@ -45,13 +45,13 @@
           "why": "Initials on the face and its accessible name; none for an empty slot."
         },
         "seed": {
-          "why": "A stable hue per person (an id, or a Jira assignee's name), for the faces that keep one (the conversation, the large face)."
+          "why": "A stable hue per person (an id, or a Jira assignee's name), for the faces drawn in the person's hue (rows, pickers, the conversation)."
         },
         "size": {
           "why": "Five places draw faces at five sizes.",
           "values": {
             "sm": "A face inside a pill (16px): an agent card's state chip.",
-            "md": "Rows, heads and pickers (20px), neutral.",
+            "md": "Rows, heads and pickers (18px): Linear's small face, a disc in the person's own hue.",
             "mid": "A neutral face whose initials must read (24px): All teams' team faces.",
             "lg": "The signed-in face in the sidebar's account popover (30px).",
             "talk": "The conversation and the sidebar head's signed-in face (24px), on the person's hue."
@@ -213,7 +213,7 @@
           "why": "The full text on hover, when it says more than the words."
         },
         "after": {
-          "why": "Quieter, after the words: a step count; or who works on it, the agent's glyph on its live disc and the face of whose ticket it is."
+          "why": "Quieter, after the words, one of: a step count; an agent's glyph on its live disc, with the face of whose ticket it is; or a person's face alone."
         }
       }
     },
@@ -352,12 +352,12 @@
           "why": "A command or a path reads in monospace."
         },
         "search": {
-          "why": "The kit's one search box (a view's top bar, a panel's list): the glyph, a / keycap; / focuses the top layer's, Esc clears it and never closes the overlay it is in."
+          "why": "The kit's one search box (a view's top bar, a panel's list): the glyph, a / keycap; / focuses the top layer's, Esc clears it and never closes the overlay it is in. One search per layer: the first is the one / reaches."
         }
       }
     },
     "FormRow": {
-      "why": "One setting on one line: its label in a column of its own so a card's settings line up, the control beside it, a quiet note after it and a problem under it (the selected stage's fields, an agent's properties).",
+      "why": "One setting on one line: its label in a column of its own so a card's settings line up, the control beside it, a quiet note after it and a problem under it (the selected stage's fields, an agent's properties). It names its group by its label, its note and problem describe the controls in it, and a problem marks them invalid (Field, TextArea, Toggle, NumberField, Select and Segmented read that).",
       "props": {
         "label": {
           "why": "What the setting is."
@@ -418,7 +418,7 @@
       }
     },
     "Head": {
-      "why": "The head over a zone, a group or a rack group: V1's ZoneHead, GroupHead and the queue's copy.",
+      "why": "The head over a list's run: a zone (My queue's cards), a group (Compact's, My queue's lists), or a line (Intake's queries).",
       "props": {
         "name": {
           "why": "What the group is."
@@ -438,7 +438,7 @@
           }
         },
         "note": {
-          "why": "A quiet note after the count (Longest wait first)."
+          "why": "Quiet, after the count (Longest wait first); on a line it is inside the fold, part of its name (didn't answer)."
         },
         "summary": {
           "why": "The right slot after the hairline: a stat, links, a JQL."
@@ -523,7 +523,7 @@
           "why": "Two places draw a run's progress.",
           "values": {
             "row": "Inline in a row (48px): the ticket's Now line; the default.",
-            "edge": "An agent Card's: one still hairline track along the card's bottom edge (the card is its containing block)."
+            "edge": "An agent Card's: one still hairline track along its bottom edge (the card's summary, its full height, is the Meter's containing block)."
           }
         }
       }
@@ -1114,6 +1114,21 @@
       "values": {
         "fill": "Takes the rest (minmax(0, 1fr)).",
         "fit": "As wide as its content, at least the 2xl column.",
+        "line": "A rule column's width.",
+        "dot": "A mark's slot.",
+        "face": "An avatar's slot.",
+        "xs": "40px: a priority or a count.",
+        "sm": "84px: a key, an age.",
+        "md": "112px: a short value.",
+        "lg": "128px: a person or a status.",
+        "xl": "168px: a long value.",
+        "2xl": "208px: a stage glyph and its label.",
+        "3xl": "300px: a band's lead column."
+      }
+    },
+    "Length": {
+      "why": "A width that is a length (every Width but the whole tracks fill and fit), where a track wraps it: a hugging or giving column's width, a fill column's floor.",
+      "values": {
         "line": "A rule column's width.",
         "dot": "A mark's slot.",
         "face": "An avatar's slot.",
