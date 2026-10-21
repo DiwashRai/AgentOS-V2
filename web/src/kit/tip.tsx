@@ -47,10 +47,13 @@ export function Tips({ children }: { children: ReactNode }) {
         onOpenChange={(open, details) => {
           if (open) {
             const el = details.trigger;
-            if (el?.hasAttribute("data-tip-cut") && !cutShort(el)) details.cancel();
+            const whole = el?.hasAttribute("data-tip-cut") === true && !cutShort(el);
             // a popup's trigger given focus back as it closed (`data-tip-rest`, Menu's)
-            if (details.reason === "trigger-focus" && el?.hasAttribute("data-tip-rest"))
-              details.cancel();
+            const rest = details.reason === "trigger-focus" && el?.hasAttribute("data-tip-rest");
+            if (!whole && !rest) return;
+            // not this one, and not the one before it either, left over somewhere else
+            details.cancel();
+            handle.close();
             return;
           }
           if (details.reason !== "escape-key") return;

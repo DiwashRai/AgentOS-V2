@@ -8,13 +8,25 @@
 // action with no place of its own on the screen didn't happen (a copy the browser refused); never
 // a spinner, or a problem a screen should say in place.
 import { Toast } from "@base-ui/react/toast";
-import { type ReactNode, type RefObject, useEffect, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  type RefObject,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { Icon } from "./Icon";
 import { useLayer } from "./layer";
 import p from "./Popover.module.css";
 import s from "./Toast.module.css";
 import { cx } from "./vars";
+
+type Raise = (title: string, note?: string) => void;
+
+const Raiser = createContext<Raise | null>(null);
 
 function List() {
   const { toasts } = Toast.useToastManager();
@@ -33,8 +45,9 @@ function List() {
 
 interface ToastsProps {
   children: ReactNode;
-  /** A dialog asking its question: the region stays in view, its toasts running their time, but
-   *  inert, so neither Tab nor F6 can leave the question for it. */
+  /** A dialog asking its question: toasts raised meanwhile wait, and show (and are announced, and
+   *  start their time) once it is answered; the region is inert, so neither Tab nor F6 can leave
+   *  the question for it. */
   held?: boolean;
   /** Where a side panel's toasts dock, inside the panel (else the window's bottom left). */
   dock?: RefObject<HTMLElement | null> | undefined;
@@ -43,6 +56,22 @@ interface ToastsProps {
 /** The region the toasts raised under it show in: the frame's, and each dialog's own. */
 export function Toasts({ children, held = false, dock }: ToastsProps) {
   const layer = useLayer();
+  const [manager] = useState(() => Toast.createToastManager());
+  const waiting = useRef<[string, string | undefined][]>([]);
+  // read when a toast is raised, not when its raiser was taken (a copy that finishes later)
+  const holding = useRef(held);
+  const show = (title: string, note: string | undefined) => {
+    manager.add({ title, ...(note ? { description: note } : {}) });
+  };
+  const raise: Raise = (title, note) => {
+    if (holding.current) waiting.current.push([title, note]);
+    else show(title, note);
+  };
+  useEffect(() => {
+    holding.current = held;
+    if (held) return;
+    for (const [title, note] of waiting.current.splice(0)) show(title, note);
+  });
   // a dialog's region mounts once the dialog itself is there (its element is set after the things
   // inside it), or it would land in the body, under the dialog
   const [placed, setPlaced] = useState(false);
@@ -50,8 +79,8 @@ export function Toasts({ children, held = false, dock }: ToastsProps) {
     setPlaced(true);
   }, []);
   return (
-    <Toast.Provider>
-      {children}
+    <Toast.Provider toastManager={manager}>
+      <Raiser value={raise}>{children}</Raiser>
       {placed ? (
         <Toast.Portal {...(dock ? { container: dock } : layer)}>
           <Toast.Viewport className={cx(s.region, dock && s.docked)} inert={held}>
@@ -63,10 +92,9 @@ export function Toasts({ children, held = false, dock }: ToastsProps) {
   );
 }
 
-/** Raise a toast: what was done, and a quiet line under it. */
-export function useToast(): (title: string, note?: string) => void {
-  const toasts = Toast.useToastManager();
-  return (title, note) => {
-    toasts.add({ title, ...(note ? { description: note } : {}) });
-  };
+/** Raise a toast: what was done, and a quiet line under it. Under a frame or a dialog only. */
+export function useToast(): Raise {
+  const raise = useContext(Raiser);
+  if (!raise) throw new Error("useToast outside a Frame or Dialog");
+  return raise;
 }

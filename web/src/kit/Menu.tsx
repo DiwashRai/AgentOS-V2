@@ -67,8 +67,10 @@ export function Menu({ label, groups, size = "md" }: MenuProps) {
   const [rest, setRest] = useState(false);
   return (
     <Base.Root
-      onOpenChange={(open) => {
-        setRest(!open);
+      // only a close that gives the focus back to the button (Esc, a choice); Tab or a click
+      // elsewhere takes it away, and nothing would clear the rest
+      onOpenChange={(open, details) => {
+        setRest(!open && (details.reason === "escape-key" || details.reason === "item-press"));
       }}
     >
       <Tip text={label} said>
