@@ -116,7 +116,6 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   height: 100%;
-  padding-right: var(--gutter);
 }
 /* the bar's hairline, under the close as well as the view's top bar */
 .frame::before {
@@ -137,11 +136,13 @@
   height: var(--sp-9);
   border-left: var(--line-1) solid var(--tk-card-edge);
 }
+/* the gutter inside the scroller, as the sheet's own, so a rail beside the body runs out through it */
 .view {
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  padding-right: var(--gutter);
   overflow-y: auto;
   scrollbar-width: thin;
 }
