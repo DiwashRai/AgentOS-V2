@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ledgerProblems } from "./ledger.mjs";
+import { ledgerProblems, mergeProp } from "./ledger.mjs";
 
 const VOCAB = { Width: ["sm", "fill"], Length: ["sm"] };
 const VOCAB_LEDGER = {
@@ -46,14 +46,17 @@ describe("the kit ledger", () => {
   });
 
   it("checks every vocabulary a union's cases give one prop, whatever their order", () => {
-    const props = { width: shape(["fill"], ["Length", "Width"]) };
-    expect(ledgerProblems(kit(props), VOCAB, ledger({ width: { why: "how wide" } }))).toEqual([]);
-    const lost = { ...VOCAB_LEDGER, Width: undefined };
-    const problems = ledgerProblems(kit(props), VOCAB, {
+    const width = shape([], ["Width"]);
+    const length = shape([], ["Length"]);
+    const lost = {
       ...ledger({ width: { why: "how wide" } }),
-      vocab: lost,
-    });
-    expect(problems.some((p) => p.includes("vocabulary Width"))).toBe(true);
+      vocab: { Length: VOCAB_LEDGER.Width },
+    };
+    for (const merged of [mergeProp(width, length), mergeProp(length, width)]) {
+      expect(merged.vocabs.sort()).toEqual(["Length", "Width"]);
+      const problems = ledgerProblems(kit({ width: merged }), VOCAB, lost);
+      expect(problems.some((p) => p.includes("vocabulary Width"))).toBe(true);
+    }
   });
 
   it("takes a narrowing vocabulary's reasons from the one it narrows", () => {

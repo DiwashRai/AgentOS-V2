@@ -1,7 +1,6 @@
 // A picker: one of a list (the ticket's owner, an agent's runtime, the theme). Base UI's combobox
 // does the keyboard, filtering and placement; the look is ours: closed, a property chip (face,
-// name,
-// chevron), a form field, or a sidebar row (its glyph, the label, the current choice muted, a
+// name, chevron), a form field, or a sidebar row (its glyph, the label, the current choice muted, a
 // chevron pointing up); open, the kit's one popover, a "Change owner…" filter on its first line,
 // each option with its picture, name and muted detail, the current one ticked. The sidebar's opens
 // above the row, anchored to its start, as Linear's sidebar-foot menus do.
@@ -43,7 +42,7 @@ function Label({ option, slot }: { option: Option | null; slot: boolean }) {
   if (!option) return null;
   return (
     <>
-      {option.face ? <Avatar name={option.label} seed={option.id} /> : null}
+      {option.face ? <Avatar name={option.label} seed={option.id} beside /> : null}
       {!option.face && slot ? <Avatar dashed /> : null}
       <span className={s.text}>{option.label}</span>
     </>

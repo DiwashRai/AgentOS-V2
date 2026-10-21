@@ -62,7 +62,7 @@ export type MarkModel =
   | { kind: "you"; ask?: string }
   | {
       kind: "run" | "wait" | "blk" | "done" | "abandoned" | "queued" | "idle";
-      name?: string;
+      name: string;
       ask?: string;
     };
 

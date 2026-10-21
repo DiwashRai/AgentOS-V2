@@ -8,8 +8,8 @@ describe("a Now chip's words", () => {
       "Bea · Plan sign-off",
     );
   });
-  it("says the state when it names no one", () => {
-    expect(chipWords({ kind: "run" })).toBe("Running");
+  it("says your move when it asks nothing", () => {
+    expect(chipWords({ kind: "you" })).toBe("Your move");
   });
   it("says the ask alone for your move", () => {
     expect(chipWords({ kind: "you", ask: "Sign off the plan" })).toBe("Sign off the plan");

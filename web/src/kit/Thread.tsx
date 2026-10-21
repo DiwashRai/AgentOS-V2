@@ -30,7 +30,7 @@ export function Thread({ messages, look = "full" }: ThreadProps) {
         const same = i > 0 && messages[i - 1]?.seed === m.seed;
         return (
           <li key={m.id} className={cx(s.msg, look === "full" && m.mine && s.mine, same && s.same)}>
-            {same ? <span /> : <Avatar name={m.name} seed={m.seed} size="talk" />}
+            {same ? <span /> : <Avatar name={m.name} seed={m.seed} size="talk" beside />}
             <span className={s.body}>
               {same ? null : (
                 <span className={s.who}>

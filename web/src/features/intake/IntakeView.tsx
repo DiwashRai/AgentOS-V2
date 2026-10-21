@@ -65,7 +65,7 @@ function Meta({ issue }: { issue: IntakeIssue }) {
   const fact = metaFact(issue);
   return (
     <Stack dir="row" gap={3} align="center">
-      {issue.assignee ? <Avatar name={issue.assignee} /> : <Avatar dashed />}
+      {issue.assignee ? <Avatar name={issue.assignee} beside /> : <Avatar dashed />}
       <Quiet>{issue.assignee ?? "Unassigned"}</Quiet>
       <Quiet>·</Quiet>
       <Stack dir="row" gap={2} align="center">

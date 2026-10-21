@@ -1,5 +1,5 @@
-// Identity hues: a project key takes its hue from the key's prefix, a person from their name. A
-// stable hash over the five `--id-*` hues (V1's, so the same key reads in the same colour). Pure.
+// A person's face: its hue, a stable hash of who they are over the five `--id-*` hues (V1's, so
+// the same person reads in the same colour), and its initials. Project keys are neutral. Pure.
 
 export const HUES = ["violet", "blue", "rose", "teal", "slate"] as const;
 export type Hue = (typeof HUES)[number];
@@ -16,18 +16,6 @@ function fnv1a(text: string): number {
 
 export function hueOf(seed: string): Hue {
   return HUES[fnv1a(seed) % HUES.length] ?? "violet";
-}
-
-/** "NW-14" → "NW"; a bare prefix is its own project. */
-export function projectPrefix(key: string): string {
-  const trimmed = key.trim();
-  const dash = trimmed.lastIndexOf("-");
-  const head = dash > 0 && /^\d+$/.test(trimmed.slice(dash + 1)) ? trimmed.slice(0, dash) : trimmed;
-  return head.toUpperCase();
-}
-
-export function keyHue(key: string): Hue {
-  return hueOf(`project:${projectPrefix(key)}`);
 }
 
 /** "Ada Park" → "AP"; "ada" → "AD". */

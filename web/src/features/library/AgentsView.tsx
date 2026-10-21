@@ -36,7 +36,7 @@ export function AgentsView() {
     >
       {shown.map((a) => (
         <LibraryRow key={a.id} name={a.name} href={href(a)}>
-          <NameCell lead={<Avatar name={a.name} seed={`agent:${a.id}`} />} name={a.name} />
+          <NameCell lead={<Avatar name={a.name} seed={`agent:${a.id}`} beside />} name={a.name} />
           <Text tone="2">{runtimeName(runtimes, a.runtime)}</Text>
           <Text tone="2">{a.model}</Text>
           <Text tone="2">{a.effort}</Text>

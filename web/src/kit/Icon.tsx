@@ -264,7 +264,13 @@ export function Icon({ name, label }: IconProps) {
     : ({ "aria-hidden": true } as const);
   return (
     <span className={cx(s.icon, s[name])} title={label} {...a11y}>
-      <svg className={g.cls} width={g.box} height={g.box} viewBox={`0 0 ${view} ${view}`}>
+      <svg
+        aria-hidden="true"
+        className={g.cls}
+        width={g.box}
+        height={g.box}
+        viewBox={`0 0 ${view} ${view}`}
+      >
         {g.box === 14 && g.cls === s.type ? <rect width="14" height="14" rx="3.5" /> : null}
         {g.d}
       </svg>

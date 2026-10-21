@@ -61,7 +61,7 @@ function Head({ t, me, now, onClose, plan }: BodyProps & { plan: readonly PlanIt
         owner={{
           value: t.owner ? (
             <>
-              <Avatar name={t.owner.name} seed={String(t.owner.id)} />
+              <Avatar name={t.owner.name} seed={String(t.owner.id)} beside />
               {t.owner.name}
             </>
           ) : (

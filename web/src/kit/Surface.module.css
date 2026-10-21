@@ -1,6 +1,5 @@
 /* --ground: the surface's own fill, for what paints an opaque copy of it (a sticky head) */
 .surface {
-  --ground: var(--page);
   min-width: 0;
   padding: var(--pad);
 }

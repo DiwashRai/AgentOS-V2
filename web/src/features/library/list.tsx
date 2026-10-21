@@ -197,7 +197,9 @@ export function ChangedCell({ by, at }: { by: Author; at: Iso }) {
   const who = by.kind === "person" ? firstName(by.person.name) : `Run #${String(by.run_id)}`;
   return (
     <Stack dir="row" gap={3} align="center">
-      {by.kind === "person" ? <Avatar name={by.person.name} seed={String(by.person.id)} /> : null}
+      {by.kind === "person" ? (
+        <Avatar name={by.person.name} seed={String(by.person.id)} beside />
+      ) : null}
       <Text tone="2" truncate>
         {who}
       </Text>

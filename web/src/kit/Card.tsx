@@ -16,8 +16,7 @@ import s from "./Card.module.css";
 import { Opener, openOnClick } from "./opener";
 
 interface Common {
-  /** What it is: a stage's button says "Edit Implement"; the others say this whole ("Peek at …").
-   *  */
+  /** What it is: a stage's says "Edit Implement"; the others say this whole ("Peek at …"). */
   label: string;
   /** Its lines: a stage's summary, an agent's or a ticket's lines. */
   children: ReactNode;
@@ -75,8 +74,7 @@ function Foot({ problem, open }: { problem: string | undefined; open: ReactNode 
 /** A data attribute that is there or not. */
 const flag = (on: boolean) => on || undefined;
 
-/** What a card draws, from its case: a stage's face, settings and problem, and what its button
- *  says. */
+/** What a card draws, by its case: a stage's face, settings and problem, and its button's words. */
 function caseOf(props: CardProps) {
   if (props.look === "agent" || props.look === "ticket") {
     const off = props.look === "agent" && props.off === true;

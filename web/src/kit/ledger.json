@@ -62,6 +62,9 @@
         },
         "people": {
           "why": "Who works on a repo, who is in a conversation: one row, named together."
+        },
+        "beside": {
+          "why": "Its name is written beside it (an option, a message, a row's owner, the account sheet): the face is drawing alone, so a reader hears the name once."
         }
       }
     },
@@ -83,7 +86,7 @@
         "size": {
           "why": "Keys sit in rows, group heads and the ticket kicker.",
           "values": {
-            "sm": "Compact's foot and an agent card's key.",
+            "sm": "Compact's foot and the cards' keys (an agent's, a board's).",
             "md": "Rows."
           }
         },
@@ -527,7 +530,7 @@
         "size": {
           "why": "Two places draw a run's progress.",
           "values": {
-            "row": "Inline in a row (48px): the ticket's Now line; the default.",
+            "row": "Inline (48px), the default: the ticket's Now line, where the stepper widens it to 120px.",
             "edge": "An agent Card's: one still hairline track along its bottom edge (the card's summary, its full height, is the Meter's containing block)."
           }
         }
@@ -823,7 +826,7 @@
                     "done": "Finished: green.",
                     "current": "Where it is now: its segment in the state's colour, its name in ink.",
                     "upcoming": "Not reached yet (or stale): grey.",
-                    "skipped": "Skipped by the workflow: a dashed hairline and a Skipped caption.",
+                    "skipped": "Skipped by the workflow: a dashed bar as thick as the others, and a Skipped caption.",
                     "failed": "Where it stopped: crimson."
                   }
                 },
@@ -979,7 +982,7 @@
         "variant": {
           "why": "The type roles.",
           "values": {
-            "display": "The ticket's title (28px).",
+            "display": "The ticket's title (24px).",
             "title": "The peek's title (20px).",
             "heading": "Section and band headings (15px).",
             "body": "A description (16px, loose).",
@@ -1143,14 +1146,14 @@
     "MarkKind": {
       "why": "A ticket's states, one form each (Mark).",
       "values": {
-        "run": "Running: the breathing live dot.",
-        "wait": "Waiting on someone: a blue ring.",
-        "you": "Needs you: the YOU pill.",
-        "blk": "Blocked: a crimson bar.",
-        "done": "Complete: the green tick.",
-        "abandoned": "Abandoned: a crimson cross.",
-        "queued": "Queued: a dotted ring.",
-        "idle": "Inbox: a neutral ring."
+        "run": "Running: an orange ring, its pie as far as the run is, its halo breathing.",
+        "wait": "Waiting on someone else: a grey ring three quarters filled.",
+        "you": "Needs you: the YOU pill; alone, a blue ring filled whole.",
+        "blk": "Blocked: a crimson disc with a bar across it.",
+        "done": "Complete: a green disc with a tick.",
+        "abandoned": "Abandoned: a grey disc with a cross, its name in crimson.",
+        "queued": "Queued: a dotted ring, waiting for a runner.",
+        "idle": "Inbox: an empty grey ring, nobody acting."
       }
     },
     "IconName": {
@@ -1169,7 +1172,7 @@
         "arrow": "Dispatch run's arrow; the Inbox note.",
         "check": "The selected item in a menu or picker; a check stage's mark on its card.",
         "plus": "New, folded to an icon.",
-        "close": "Leave the ticket page.",
+        "close": "Close: the peek, a full-window editor, a chip's remove.",
         "chevron": "A group head's fold; a picker; the sidebar's Space switcher and theme row, menus; move a block down, the next item.",
         "up": "The chevron turned up: move a block up (AGENTS.md's blocks), the previous item (an item editor's bar).",
         "right": "The chevron turned right: a folded block's unfold (AGENTS.md's blocks, whose head is a name field, not a Head).",
@@ -1183,7 +1186,7 @@
         "high": "High priority: all three signal bars lit.",
         "low": "Low priority: the first of three signal bars lit, so it never reads as a fold chevron.",
         "normal": "Normal priority: an empty slot, so titles share one x.",
-        "tick": "Done, in a plan and the stepper's last stage.",
+        "tick": "Done: a plan step's tick (the Checklist).",
         "tick-sm": "Done, inline in a mark or a head.",
         "feature": "Ticket type: feature.",
         "bug": "Ticket type: bug.",

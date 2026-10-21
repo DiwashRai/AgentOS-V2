@@ -105,7 +105,7 @@ function Workspace({ space, me }: { space: string; me: FrameProps["me"] }) {
             <span className={p.head}>{space}</span>
             {me ? (
               <span className={s.who}>
-                <Avatar name={me.name} seed={me.seed} size="lg" />
+                <Avatar name={me.name} seed={me.seed} size="lg" beside />
                 <span className={s.whoText}>
                   <span className={s.whoName}>{me.name}</span>
                   <span className={s.whoNote}>Signed in</span>

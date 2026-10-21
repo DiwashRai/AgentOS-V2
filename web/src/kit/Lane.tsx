@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import { Button } from "./Button";
 import type { DragPayload } from "./dnd";
 import s from "./Lane.module.css";
+import u from "./unseen.module.css";
 import { Sortable } from "./Sortable";
 
 export interface LaneStage {
@@ -136,7 +137,12 @@ function Joint({ st, i, last, edit }: JointProps) {
   return (
     <div className={s.joint} data-end={last || undefined}>
       {edit || gated ? <Diamond st={st} i={i} edit={edit} /> : null}
-      {gated ? <span className={s.name}>{st.gate}</span> : null}
+      {gated ? (
+        <span className={s.name}>
+          <span className={u.unseen}>Gate: </span>
+          {st.gate}
+        </span>
+      ) : null}
       {edit ? <Insert st={st} i={i} last={last} edit={edit} /> : null}
     </div>
   );

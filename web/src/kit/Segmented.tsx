@@ -190,8 +190,7 @@ interface PillsProps {
 }
 
 /** Every pill, as wide as the form gives it: nothing to measure. In a FormRow, the group is
- *  described
- *  by the row's note and problem, as its overflow trigger is. */
+ *  described by the row's note and problem, as its overflow trigger is. */
 function Fit({ label, items, value, onChange }: SegmentedProps) {
   const described = useDescribed();
   return (

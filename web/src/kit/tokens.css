@@ -1,14 +1,14 @@
 /* The design tokens: the ONLY file with raw values (Stylelint refuses them everywhere else).
    V1's sizes (its web/src/styles/tokens.css) under fewer names, with a flatter, neutral palette:
-   near-duplicates folded into one, in-between sizes (12.5, 13.5, 14.5, 11.5px) into the nearest step.
-   Themes are plain attribute selectors, so a subtree can carry its own theme (the kit sheet and the
-   theme menu's swatches do). index.html sets the attribute on <html> before first paint.
+   near-duplicates folded into one, in-between sizes (12.5, 13.5, 14.5, 11.5px) into the nearest
+   step. Themes are plain attribute selectors, so a subtree can carry its own theme (the kit sheet
+   and the theme menu's swatches do). index.html sets the attribute on <html> before first paint.
    Hue rules: --you is the theme's own accent (your move, the open row, the current step, focus:
    indigo on Paper, Mist and Carbon, orchid on Plum, teal on Harbour, royal blue on Midnight,
    each with white on it), orange = running, red = blocked, green = done, amber = a warning. The
-   ink button is ink: only Dispatch run and the logo. The --id-* hues are people's faces; project keys are
-   neutral. Metadata chips (a row's stage, repo, status) carry no outline: borders are for controls.
-   Text pairs keep >= 4.5:1.
+   ink button is ink: only Dispatch run and the logo. The --id-* hues are people's faces; project
+   keys are neutral. Metadata chips (a row's stage, repo, status) carry no outline: borders are
+   for controls. Text pairs keep >= 4.5:1.
    Themes (kit/theme.ts lists them, index.html allows them): two light, four dark, all on the same
    names. Each light theme takes the Paper block and each dark one the Carbon block, whose other
    colours are mixed from a few steps (side, page, recess, surface, raised), inks and, in the dark,
@@ -85,13 +85,13 @@
   --progress: #16a34a;
   /* ticket types and priority */
   /* sidebar: a grey ground a clear step (about 4 L*) under the page, so the main column reads as an
-     inset sheet on it, as Linear's light sidebar does; labels near the ink, so the nav carries weight */
+     inset sheet on it, as Linear's light sidebar does; labels near the ink, the nav's weight */
   --side: color-mix(in srgb, var(--ink-1) 5%, var(--page));
   --side-ink: color-mix(in srgb, var(--ink-1) 88%, var(--side));
   --side-hover: color-mix(in srgb, var(--ink-1) 4%, transparent);
   --side-on: color-mix(in srgb, var(--ink-1) 7.5%, transparent);
   --side-on-ink: var(--ink-1);
-  /* sidebar: a view's count on the page's white, ringed, so it lifts off the grey; new ticket's ring */
+  /* sidebar: a view's count on the page's white, ringed to lift off the grey; new ticket's ring */
   --side-count-fill: var(--page);
   --side-count-ring: color-mix(in srgb, var(--ink-1) 10%, transparent);
   --side-tool-ring: color-mix(in srgb, var(--ink-1) 14%, transparent);
@@ -527,7 +527,7 @@
   --col-3xl: 300px; /* a list line's chips, hugging up to it */
   /* intake · Notice: the empty ring, a row glyph's size */
   --notice-mark: 12px;
-  /* intake · Notice: a problem's reading measure, so what went wrong wraps short of the row's end */
+  /* intake · Notice: a problem's reading measure: what went wrong wraps short of the row's end */
   --notice-measure: 72ch;
   /* intake · Notice: a glyph's slot in an item list, as wide as the group labels' chevron */
   --notice-slot: 10px;
@@ -552,8 +552,8 @@
   --dur-sweep: 1.7s; /* a running meter's sweep */
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
 
-  /* sidebar: Linear's labelled sidebar: 240px wide, items 32px tall 2px apart (a 34px pitch), three groups (the
-     views, the sections, the foot) 24px apart, a section's label hugging its entries */
+  /* sidebar: Linear's labelled sidebar: 240px wide, items 32px tall 2px apart (a 34px pitch), three
+     groups (the views, the sections, the foot) 24px apart, a section's label hugging its entries */
   --w-side: 240px;
   --h-side-item: 32px;
   --h-side-title: 32px; /* a section's heading, 8px of it open above the label */
@@ -603,11 +603,12 @@
   --w-ask: 400px;
   --w-editor: 960px; /* a popped-out text area's measure */
   --w-form-col: 280px; /* a form's two columns fold to one below this each */
+  --ground: var(--page); /* what a sticky head paints over, where no Surface sets its own */
   --z-raise: 1; /* a piece over its siblings (a drop's tag, a drop line) */
   --z-sticky: 2; /* a list's sticky group heads, over its rows */
   --z-pop: 10; /* the kit's popups, over everything on the page (sticky heads included) */
-  /* focus: the ring's offset; outside by default, tight on a bordered box (a field, a chip's ×), inside
-     on a row that runs to its list's edges */
+  /* focus: the ring's offset; outside by default, tight on a bordered box (a field, a chip's ×),
+     inside on a row that runs to its list's edges */
   --focus-out: var(--line-2);
   --focus-tight: var(--line-1);
   --focus-in: calc(var(--line-2) * -1);

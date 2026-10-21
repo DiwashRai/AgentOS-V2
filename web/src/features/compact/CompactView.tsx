@@ -329,7 +329,7 @@ export function CompactView() {
                 key={`head-${g.id}`}
                 name={g.title}
                 count={g.items.length}
-                icon={<Mark kind={g.mark} glyph />}
+                icon={<Mark kind={g.mark} glyph name={false} />}
                 tone={g.id === "needs_you" ? "you" : g.id === "done" ? "done" : "neutral"}
                 summary={<SummaryText summary={g.summary} />}
                 fold={{

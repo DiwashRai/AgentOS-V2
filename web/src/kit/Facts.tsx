@@ -20,8 +20,7 @@ export type Fact = {
       picker?: never;
     }
   | {
-      /** A picker in place of the value (the ticket's owner): it brings its own padding and hover.
-       *  */
+      /** A picker in place of the value (the ticket's owner), with its own padding and hover. */
       picker: ReactNode;
       value?: never;
       icon?: never;
@@ -34,8 +33,7 @@ export interface FactsProps {
   label?: string;
 }
 
-/** A fact's value: a picker as it is, or the glyph, the words and the note in the chip's padding.
- *  */
+/** A fact's value: a picker as it is, or the glyph, the words and the note in the chip. */
 function Value({ f }: { f: Fact }) {
   const note = f.note ? <span className={s.note}>{f.note}</span> : null;
   if (f.picker !== undefined)

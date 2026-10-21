@@ -81,18 +81,7 @@ function Full({
         <div className={s.view}>{children}</div>
       </div>
       {hasAsk ? (
-        <div
-          className={s.scrim}
-          role="presentation"
-          // the question owns Esc: it answers the question (the screen's toggle), and never reaches
-          // the dialog, whose repeat cancel the browser would not let be held
-          onKeyDown={(e) => {
-            if (e.key !== "Escape") return;
-            e.preventDefault();
-            e.stopPropagation();
-            onClose();
-          }}
-        >
+        <div className={s.scrim}>
           <div
             ref={asking}
             className={s.ask}
@@ -121,8 +110,9 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
     if (!d) return;
     if (open && !d.open) {
       d.showModal();
-      // the full look opens on itself, not its close; Tab goes on from there
-      if (look === "full") d.focus();
+      // the full look opens on itself, not its close; Tab goes on from there (not while it asks:
+      // the question has the focus)
+      if (look === "full" && (ask === undefined || ask === null)) d.focus();
     }
     if (!open && d.open) d.close();
   });
@@ -138,6 +128,14 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
       className={look === "full" ? s.full : s.side}
       tabIndex={look === "full" ? -1 : undefined}
       aria-label={label}
+      // Esc is the dialog's own, wherever focus is in it (the question too): a keydown it prevents
+      // never becomes the browser's close request, which a repeated Esc can't hold. A key a popup
+      // or a nested dialog inside has taken already is theirs.
+      onKeyDown={(e) => {
+        if (e.key !== "Escape" || e.defaultPrevented) return;
+        e.preventDefault();
+        onClose();
+      }}
       onCancel={(e) => {
         if (!e.cancelable) return; // the browser closes it anyway: `onClose` below reports it
         e.preventDefault();

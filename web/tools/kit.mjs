@@ -23,7 +23,7 @@ import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { ledgerProblems } from "./ledger.mjs";
+import { ledgerProblems, mergeProp } from "./ledger.mjs";
 
 const WEB = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = join(WEB, "src");
@@ -86,20 +86,6 @@ function fieldsOf(checker, t, depth) {
     items[field.name] = mergeProp(items[field.name], p);
   }
   return items;
-}
-
-/** One prop as the cases of a union declare it: every vocabulary, every value, and every nested
- *  field merged the same way, at every level. */
-function mergeProp(a, b) {
-  if (!a) return b;
-  const items = { ...a.items };
-  for (const [name, p] of Object.entries(b.items)) items[name] = mergeProp(items[name], p);
-  return {
-    vocabs: [...new Set([...a.vocabs, ...b.vocabs])],
-    values: [...new Set([...a.values, ...b.values])],
-    items,
-    array: a.array || b.array,
-  };
 }
 
 /** One prop: its vocabulary, or its own literal values, and the fields inside it. */

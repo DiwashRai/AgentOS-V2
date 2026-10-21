@@ -33,15 +33,15 @@ export type MarkProps = Common &
         name?: string | false;
         /** Still: no breathing halo (a grid of cards, a board, would pulse all at once). */
         still?: boolean;
-        /** A running glyph's pie: how far its run is (Linear's in-progress circle); half without
-         *  it. */
+        /** A running glyph's pie, as far as its run is (Linear's in-progress circle); else half. */
         progress?: { done: number; total: number } | null;
         ask?: never;
       }
     | {
         glyph?: false;
-        /** The label in the state's colour ("Builder · run #42", "Bea", "Blocked"). */
-        name?: string;
+        /** The label in the state's colour ("Builder · run #42", "Bea", "Blocked"): a named mark says
+         *  its state (the glyph alone is the other form). */
+        name: string;
         /** The ask, after the name: "· ask". */
         ask?: string;
         kind: Exclude<MarkKind, "you">;

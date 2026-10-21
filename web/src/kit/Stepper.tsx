@@ -68,8 +68,7 @@ const GATE_SUB: Record<StepGate["state"], (g: StepGate) => string> = {
 };
 
 /** A gate: its diamond on the track where its stage ends, its name a caption under the stage's;
- *  bare (the diamond only, the name in its title) when compact and the ticket isn't parked there.
- *  */
+ *  bare (the diamond alone, named by its knot) when compact and the ticket isn't parked. */
 function GateCaption({ g, bare }: { g: StepGate; bare: boolean }) {
   if (bare && !parked(g)) return null;
   const sub = GATE_SUB[g.state](g);
@@ -91,7 +90,7 @@ function Knot({ g, bare }: { g: StepGate; bare: boolean }) {
       className={s.knot}
       data-state={g.state}
       role="img"
-      aria-label={`Gate: `}
+      aria-label={`Gate: ${g.label}`}
       title={g.label}
     />
   );

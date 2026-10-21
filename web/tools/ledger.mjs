@@ -4,6 +4,20 @@
 // (`of`) takes that one's reasons; the ledger names nothing the kit doesn't have; no component has
 // more than `budget.props` props. Pure, so its tests run on plain values.
 
+/** One prop as the cases of a union declare it: every vocabulary, every value, and every nested
+ *  field merged the same way, at every level. */
+export function mergeProp(a, b) {
+  if (!a) return b;
+  const items = { ...a.items };
+  for (const [name, p] of Object.entries(b.items)) items[name] = mergeProp(items[name], p);
+  return {
+    vocabs: [...new Set([...a.vocabs, ...b.vocabs])],
+    values: [...new Set([...a.values, ...b.values])],
+    items,
+    array: a.array || b.array,
+  };
+}
+
 function propProblems(where, value, entry, led, vocab) {
   if (!entry?.why) return [`${where}: no reason in the ledger`];
   if (value.vocabs.length) {

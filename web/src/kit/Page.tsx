@@ -22,8 +22,8 @@ export interface Search {
 
 export interface PageProps {
   /** The view's name; a pair is Linear's breadcrumb (the ticket: the view it came from, a link
-   *  back,
-   *  then its key), the last step the name, drawn at crumb size rather than as a view's heading. */
+   *  back, then its key), the last step the name, drawn at crumb size rather than as a view's
+   *  heading. */
   title: string | readonly [{ label: string; href: string }, string];
   /** After the title, quiet: the Space, a scope. */
   context?: string | undefined;

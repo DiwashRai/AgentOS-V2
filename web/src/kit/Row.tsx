@@ -15,7 +15,8 @@ export interface Action {
 }
 
 export interface RowProps {
-  /** The cells, one per column; with fewer, the last spans the rest. Outside a table they stack. */
+  /** The cells, one per column; with fewer, the last spans the rest, and one past the columns is
+   *  not drawn. Outside a table they stack. */
   children: ReactNode;
   /** line: a list's one-line row (Compact, My queue); item: a roomy two-line row (Intake); rack: a
    *  bare entry (a run's stage); band: a board's swimlane; columns: the board's column head, one

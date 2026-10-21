@@ -188,7 +188,7 @@ export function History({ versions }: { versions: readonly Version[] }) {
           <Stack key={v.version} dir="row" gap={4} align="center">
             <Text tone="3" tabular>{`v${String(v.version)}`}</Text>
             {v.by.kind === "person" ? (
-              <Avatar name={v.by.person.name} seed={String(v.by.person.id)} />
+              <Avatar name={v.by.person.name} seed={String(v.by.person.id)} beside />
             ) : (
               <Icon name="agents" />
             )}

@@ -89,7 +89,7 @@ const WORDS: Record<TabId, string> = { agents: "agents", skills: "skills", files
 function Item({ e, at, says }: { e: Entry; at: string | null; says: string }) {
   return (
     <Stack dir="row" gap={5} align="center">
-      {e.face ? <Avatar name={e.name} seed={`agent:${e.id}`} /> : null}
+      {e.face ? <Avatar name={e.name} seed={`agent:${e.id}`} beside /> : null}
       <Stack gap={1} grow>
         <Text variant={e.kind === "file" ? "code" : "ui"} tone="1" weight={500} truncate>
           {e.name}
