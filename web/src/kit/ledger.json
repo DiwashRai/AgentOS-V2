@@ -496,30 +496,6 @@
         }
       }
     },
-    "Menu": {
-      "why": "A menu of choices, one current: Base UI's combobox keyboard, filter and placement, the kit's one popover opening on its filter, as every kit list of choices does; in the sidebar's foot, opening above its row, its chevron pointing up.",
-      "single": "Frame's theme menu draws it today; the ticket's run-from and the dispatch target use it in W4 and W7.",
-      "props": {
-        "label": {
-          "why": "The trigger's name, and the filter's prompt (Change theme…)."
-        },
-        "icon": {
-          "why": "The trigger's glyph."
-        },
-        "text": {
-          "why": "The trigger as a sidebar row: the glyph, this word, the current choice and a chevron (the foot's Theme row)."
-        },
-        "items": {
-          "why": "The choices."
-        },
-        "value": {
-          "why": "The current one."
-        },
-        "onChange": {
-          "why": "A choice made."
-        }
-      }
-    },
     "Meter": {
       "why": "A running run's progress, one segment per step, the current one sweeping (V1's RunMeter).",
       "props": {
@@ -706,17 +682,16 @@
       }
     },
     "Select": {
-      "why": "A picker (one of a list) as a property chip in a properties row: Base UI's combobox keyboard, filter and placement, the kit's one popover.",
-      "single": "The ticket's owner today; repos, runtimes and the defaults pick with it in W8 and W9.",
+      "why": "A picker, one of a list (a ticket's owner, an agent's runtime, the theme): Base UI's keyboard, filtering and placement, our look; Menu folded into it.",
       "props": {
         "label": {
-          "why": "Its accessible name, and the filter's prompt (Change owner…)."
+          "why": "Its accessible name, the filter's placeholder, and the sidebar row's word."
         },
         "value": {
           "why": "The picked one."
         },
         "options": {
-          "why": "The list, each optionally with a face (a faceless one among faces, Unassigned, gets a dashed no-one ring)."
+          "why": "The list, each optionally with a face (a faceless one among faces, Unassigned, gets the empty face), a muted detail, or its own picture (a theme swatch)."
         },
         "onChange": {
           "why": "A pick."
@@ -725,8 +700,12 @@
           "why": "Among a form's fields (an item editor's runtime, model and effort) a picker must read as one of them, not as a property chip.",
           "values": {
             "chip": "A properties row's chip (the ticket's owner): the default.",
-            "field": "The form's field box, as wide as its slot, the chevron at its end."
+            "field": "The form's field box, as wide as its slot, the chevron at its end.",
+            "side": "A sidebar row (the theme at the sidebar's foot): its glyph, the word, the current choice, opening upward."
           }
+        },
+        "icon": {
+          "why": "The sidebar row's glyph (IconName)."
         }
       }
     },

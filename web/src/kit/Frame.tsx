@@ -9,8 +9,8 @@ import { Link, matchPath, useLocation } from "react-router";
 import { Avatar } from "./Avatar";
 import s from "./Frame.module.css";
 import { Icon, type IconName } from "./Icon";
-import { Menu } from "./Menu";
 import p from "./Popover.module.css";
+import { Select } from "./Select";
 import { applyTheme, currentTheme, THEMES, themeOf, type ThemeId } from "./theme";
 import { cx, tokenPx } from "./vars";
 
@@ -201,13 +201,13 @@ export function Frame({ space, nav, sections, foot, me, children }: FrameProps) 
           {foot.map((item) => (
             <SideLink key={item.label} item={item} path={path} />
           ))}
-          {/* the theme menu's trigger is the row itself: its glyph, "Theme", the current theme's
-              name and the menu's chevron */}
-          <Menu
+          {/* the theme picker is a sidebar row: its glyph, "Theme", the current theme's name and the
+              chevron */}
+          <Select
+            look="side"
             label="Theme"
             icon="theme"
-            text="Theme"
-            items={THEME_ITEMS}
+            options={THEME_ITEMS}
             value={theme}
             onChange={(id) => {
               const next = themeOf(id);

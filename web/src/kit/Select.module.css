@@ -44,14 +44,6 @@
 .field .chev {
   margin-left: auto;
 }
-/* no one: Linear's empty face, a dashed ring in the muted ink, the size of a face */
-.nobody {
-  flex: none;
-  width: var(--h-chip);
-  height: var(--h-chip);
-  border: var(--line-1) dashed var(--ink-3);
-  border-radius: var(--r-pill);
-}
 .trigger:hover {
   background: var(--chip-hover);
 }
@@ -80,4 +72,68 @@
 /* the picker's sheet: wide enough for a full name beside its face */
 .sheet {
   min-width: var(--w-pop-filter);
+}
+/* side: a sidebar row (its glyph, the word, the current choice muted, the chevron), as tall as the
+   sidebar's items; it fills like one while open */
+.side {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  width: 100%;
+  height: var(--h-side-item);
+  padding: 0 var(--sp-3) 0 var(--sp-4);
+  border: 0;
+  border-radius: var(--r-3);
+  background: none;
+  color: var(--side-ink);
+  font-size: var(--fs-4);
+  font-weight: 500;
+  letter-spacing: var(--track-snug);
+  transition:
+    background-color var(--dur-fast),
+    color var(--dur-fast);
+}
+.side:hover {
+  background: var(--side-hover);
+  color: var(--side-on-ink);
+}
+.side[data-popup-open] {
+  background: var(--side-on);
+  color: var(--side-on-ink);
+}
+.side > svg {
+  width: var(--sp-8);
+  height: var(--sp-8);
+  color: var(--side-icon, var(--side-ink));
+}
+.side > .text {
+  flex: 1;
+  text-align: left;
+}
+.now {
+  flex: none;
+  font-size: var(--fs-3);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--ink-3);
+}
+/* it points the way the list opens: up, from the sidebar's foot */
+.up {
+  margin-left: calc(var(--sp-3) * -1);
+}
+.up svg {
+  width: var(--sp-5);
+  height: var(--sp-5);
+  rotate: 180deg;
+}
+/* at least as wide as the row it opens from; the swatches' ring uses this theme's ink, resolved
+   before the swatches switch theme */
+.sideSheet {
+  width: max(var(--anchor-width), var(--w-pop));
+  --ring: var(--ring-ink);
+}
+/* an option's own picture leads it (a theme's swatch) */
+.aside {
+  display: inline-flex;
+  flex: none;
 }

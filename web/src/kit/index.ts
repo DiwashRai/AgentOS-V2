@@ -23,7 +23,6 @@ export { Head, type HeadProps } from "./Head";
 export { Icon, type IconName, type IconProps } from "./Icon";
 export { Lane, type LaneEdit, type LaneLoop, type LaneProps, type LaneStage } from "./Lane";
 export { Mark, type MarkKind, type MarkProps } from "./Mark";
-export { Menu, type MenuItem, type MenuProps } from "./Menu";
 export { Meter, type MeterProps } from "./Meter";
 export { Notice, type NoticeProps } from "./Notice";
 export { NumberField, type NumberFieldProps } from "./NumberField";
