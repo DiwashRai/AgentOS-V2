@@ -6,7 +6,8 @@
 //           reasons, given once; the ledger names nothing the kit doesn't have;
 //   budget  at most `budget.components` components, `budget.props` props each, `budget.lines`
 //           code lines in src/kit; raising one against the base needs a `raises` entry (the
-//           owner's to add, as the gate baseline's are);
+//           owner's to add, as the gate baseline's are). The budget is a checkpoint, not a wall:
+//           a failure means ask the owner, with the reuse tried first; the card lists each raise;
 //   reuse   each component's screens (a features/ folder; a shared module counts for the screens
 //           that import it; the app's layout is "app"); one drawn by a single screen needs a
 //           `single` reason. The card lists the variants 0 or 1 screens choose.
@@ -359,11 +360,16 @@ function card(base) {
   console.log(
     `### Kit\n\n${String(Object.keys(kit).length)}/${String(led.budget.components)} components, ${linesText(lines)}, budget ${String(led.budget.lines)}.\n`,
   );
+  // A raise is the owner's checkpoint: each one is listed with its reason, so the review sees it.
   const changed = Object.entries(led.budget).filter(([k, n]) => before && n !== before.budget?.[k]);
-  if (changed.length)
-    console.log(
-      `**Budget changed**: ${changed.map(([k, n]) => `${k} ${String(before.budget[k])} -> ${String(n)}`).join(", ")}\n`,
-    );
+  if (changed.length) {
+    console.log(`**Budget raised** (the owner reviews each raise)\n`);
+    for (const [k, n] of changed) {
+      const why = (led.raises ?? []).find((r) => r.budget === k && r.to === n)?.why;
+      console.log(`- ${k}: ${String(before.budget[k])} -> ${String(n)}: ${why ?? "**no reason**"}`);
+    }
+    console.log("");
+  }
   const fresh = added(led, before);
   console.log(`**New in the ledger** (${String(fresh.length)})\n`);
   for (const a of fresh) console.log(`- ${a}`);

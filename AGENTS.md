@@ -34,6 +34,7 @@ Shell files are named `service.py`, `loops.py`, `reaper.py` or `dispatcher.py`; 
 - A change to behaviour updates the docs it contradicts, in the same PR.
 - Commits: one task each; the message from a file (`git commit -F`); only a `Co-Authored-By` trailer, never a session link.
 - Never skip the hook (`--no-verify`). Never weaken a check or a gate to make it pass: a failing gate means simplifying the code, not moving or disguising it to get past. `raises` entries in the gate baseline and in the kit ledger are the owner's to add.
+- The kit's budget (`web/src/kit/ledger.json`) is the owner's checkpoint on its growth, not a wall: raises are fine when they're needed, and the pressure is there to make reuse the first choice. A change that needs more asks the owner (through the lead) with what it needs, the existing components it tried and why they don't fit, and the cost; the owner approves by adding the `raises` entry. `just card` lists every raise with its reason.
 - A PR merges when CI is green and the review loop is done. The owner merges.
 
 ## Commands
