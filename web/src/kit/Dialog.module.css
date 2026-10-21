@@ -34,7 +34,8 @@
     transform: none;
   }
 }
-/* the sections scroll inside the panel, one hairline between each and the next */
+/* the sections scroll inside the panel, one hairline between each and the next; a section is each
+   top element the children draw (Dialog's children say so) */
 .body {
   flex: 1;
   min-height: 0;
@@ -43,12 +44,12 @@
   overflow-y: auto;
   scrollbar-width: thin;
 }
-.section {
+.body > * {
   flex: none;
   padding: var(--sp-8) var(--sp-9);
   border-bottom: var(--line-1) solid var(--tk-card-edge);
 }
-.section:last-child {
+.body > :last-child {
   border-bottom: 0;
 }
 /* the foot: pinned under the sections, ruled off where they scroll away under it */

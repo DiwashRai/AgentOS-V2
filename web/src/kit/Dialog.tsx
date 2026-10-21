@@ -7,7 +7,7 @@
 //   then the view (a Page, so its top bar and body are the same as on its own screen). `ask`
 //   draws a question over it, modal inside it (unsaved changes: Save, Discard, Keep editing).
 // It sits in the browser's top layer, so the kit's popovers opened inside it mount inside it.
-import { Children, type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 
 import { Button } from "./Button";
 import s from "./Dialog.module.css";
@@ -19,6 +19,8 @@ export type DialogProps = {
   open: boolean;
   /** Esc or the close button: the screen decides (close, or ask first). */
   onClose: () => void;
+  /** Beside the page: its sections, each top element the children draw (a component may return
+   *  several in a fragment), padded and ruled apart. Full: the one view. */
   children: ReactNode;
 } & (
   | {
@@ -115,15 +117,7 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
   });
   const side = (
     <>
-      <div className={s.body}>
-        {open
-          ? Children.toArray(children).map((section, i) => (
-              <section key={i} className={s.section}>
-                {section}
-              </section>
-            ))
-          : null}
-      </div>
+      <div className={s.body}>{open ? children : null}</div>
       {open && foot ? <div className={s.foot}>{foot}</div> : null}
     </>
   );
