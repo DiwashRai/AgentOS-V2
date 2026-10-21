@@ -1,0 +1,99 @@
+/* Card: a stage as its own object on the sheet (All teams' card: white on a firm hairline with a
+   soft drop; in the dark a slight step above the sheet on a lit hairline). The summary lights on
+   hover like a row; the selected card is ringed in your move's accent and opens in place, its
+   settings ruled off under the summary. */
+.card {
+  position: relative;
+  min-width: 0;
+  border: var(--line-1) solid var(--teams-card-edge);
+  border-radius: var(--r-4);
+  background: var(--teams-card);
+  box-shadow: var(--teams-card-shadow);
+  transition:
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
+}
+.card[data-edit]:hover {
+  border-color: var(--teams-card-hover-edge);
+}
+.card[data-open],
+.card[data-open]:hover {
+  border-color: var(--you);
+  box-shadow:
+    0 0 0 var(--line-3) var(--card-open-ring),
+    var(--teams-card-shadow);
+}
+
+/* the summary: the face on the lane's axis, the words beside it */
+.summary {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--h-chip) minmax(0, 1fr);
+  column-gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-6);
+  border-radius: calc(var(--r-4) - var(--line-1));
+}
+.card[data-edit] .summary:hover {
+  background: var(--teams-card-hover);
+}
+.card[data-off] .summary > :not(.hit) {
+  opacity: var(--lane-off);
+}
+/* the summary's one button, under its words, so the words stay plain text */
+.hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  cursor: pointer;
+}
+.hit:focus-visible {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: calc(var(--line-2) * -1);
+}
+.face {
+  display: grid;
+  place-items: center;
+  height: var(--h-chip);
+  color: var(--ink-2);
+}
+.main {
+  min-width: 0;
+}
+
+/* what's wrong: a line at the summary's foot, a faint wash of the blocked hue under it */
+.problem {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-6) var(--sp-3) calc(var(--sp-6) + var(--h-chip) + var(--sp-5));
+  border-top: var(--line-1) solid var(--teams-card-edge);
+  background: var(--card-problem);
+  color: var(--blocked);
+  font-size: var(--fs-2);
+  font-weight: 500;
+}
+.problem::before {
+  content: "";
+  flex: none;
+  width: var(--sp-3);
+  height: var(--sp-3);
+  border-radius: var(--line-1);
+  transform: rotate(45deg);
+  background: currentColor;
+}
+.card[data-problem]:not([data-open]) {
+  border-color: var(--card-problem-edge);
+}
+.card[data-problem]:not([data-open]) > .problem:last-child {
+  border-radius: 0 0 calc(var(--r-4) - var(--line-1)) calc(var(--r-4) - var(--line-1));
+}
+
+/* opened: the settings under a hairline, lined up with the summary's words */
+.body {
+  padding: var(--sp-7) var(--sp-6) var(--sp-8);
+  border-top: var(--line-1) solid var(--teams-card-edge);
+}

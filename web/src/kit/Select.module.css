@@ -20,6 +20,30 @@
   cursor: pointer;
   transition: background-color var(--dur-fast) ease;
 }
+/* field: the form's field box (Form.module.css's .box and .field), the chevron at its far end */
+.field {
+  width: 100%;
+  height: var(--h-field);
+  padding: 0 var(--sp-4) 0 var(--sp-5);
+  border: var(--line-1) solid var(--ctl-edge);
+  background: var(--input);
+  color: var(--ink-1);
+  font-size: var(--fs-3);
+  font-weight: 400;
+  transition: border-color var(--dur-fast) ease;
+}
+.field:hover,
+.field[data-popup-open] {
+  border-color: var(--ctl-edge-hover);
+  background: var(--input);
+}
+.field:focus-visible {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--line-1);
+}
+.field .chev {
+  margin-left: auto;
+}
 /* no one: Linear's empty face, a dashed ring in the muted ink, the size of a face */
 .nobody {
   flex: none;

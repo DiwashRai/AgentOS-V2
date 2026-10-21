@@ -12,13 +12,16 @@ import { zones } from "../features/queue/model";
 import { useBoard, useSpace } from "../features/shared/board";
 import { Frame, type FrameProps, type NavItem } from "../kit";
 
-// Agents, Skills and Settings have no screens yet: they are entries only, with nowhere to lead.
+// Context: the Space's library (R19), each kind its own screen. Settings has no screen yet: it is
+// an entry only, with nowhere to lead.
 const SECTIONS: FrameProps["sections"] = [
   {
     title: "Context",
     items: [
-      { label: "Agents", icon: "agents" },
-      { label: "Skills", icon: "skills" },
+      { to: "/library/workflows", label: "Workflows", icon: "workflows" },
+      { to: "/library/agents", label: "Agents", icon: "agents" },
+      { to: "/library/skills", label: "Skills", icon: "skills" },
+      { to: "/library/files", label: "Files", icon: "files" },
     ],
   },
 ];

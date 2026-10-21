@@ -102,3 +102,7 @@
   flex: none;
   width: var(--glyph-sm);
 }
+/* fit: a choice of two in a form, as wide as its chips, every chip shown */
+.track[data-fit] {
+  flex: none;
+}

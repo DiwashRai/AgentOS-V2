@@ -184,6 +184,11 @@
   grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 30vw, var(--w-talk-max));
   border-top: var(--line-1) solid var(--tk-card-edge);
 }
+/* a side column of settings (an item editor's properties, in form rows) is a narrower rail, so
+   the content beside it keeps the width */
+.split:has(> .side [data-setting]) {
+  grid-template-columns: minmax(0, 1fr) var(--w-rail);
+}
 /* the body: one calm reading column, room under its last line when scrolled to the end */
 .split > .body {
   padding: var(--sp-10) var(--sp-10) calc(var(--sp-10) * 2) 0;
@@ -192,6 +197,11 @@
   width: 100%;
   max-width: var(--w-ticket);
   margin-inline: auto;
+}
+/* beside a rail of settings the body is an editor: flush with the title, out to the rail's gutter,
+   so it lines up the same full window over the ticket as beside the sidebar */
+.split:has(> .side [data-setting]) > .body > * {
+  max-width: none;
 }
 /* the column beside: no card, the page's own ground ruled off by one hairline, full height, so what
    it holds can pin its foot (Talk's reply box) to the window's bottom */

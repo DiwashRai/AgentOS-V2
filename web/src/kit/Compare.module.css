@@ -1,0 +1,78 @@
+/* Compare: two versions on one grid, a column each, ruled apart by a hairline; the heads on the
+   card's band, the lines in monospace under them, each side's changed lines on a tint with an edge
+   at their left (yours your move's accent, theirs a firm grey), a gap a faint fill */
+.compare {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-width: 0;
+  border: var(--line-1) solid var(--tk-card-edge);
+  border-radius: var(--r-4);
+  background: var(--input);
+  overflow: hidden;
+}
+.compare > :nth-child(even) {
+  border-left: var(--line-1) solid var(--tk-card-edge);
+}
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+  min-height: var(--h-control-lg);
+  padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-6);
+  border-bottom: var(--line-1) solid var(--tk-card-edge);
+  background: var(--list-band);
+  font-size: var(--fs-3);
+  white-space: nowrap;
+}
+.head > b {
+  font-weight: 500;
+  color: var(--ink-1);
+}
+.note {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink-3);
+}
+.action {
+  flex: none;
+  margin-left: auto;
+}
+.line,
+.gap {
+  min-width: 0;
+  padding: 0 var(--sp-6);
+  border-left-width: var(--line-2);
+  border-left-style: solid;
+  border-left-color: transparent;
+  font-family: var(--font-mono);
+  font-size: var(--fs-3);
+  line-height: var(--code-line);
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 2;
+}
+.line[data-changed][data-side="mine"] {
+  border-left-color: var(--you);
+  background: var(--diff-mine);
+  color: var(--ink-1);
+}
+.line[data-changed][data-side="theirs"] {
+  border-left-color: var(--ink-3);
+  background: var(--diff-theirs);
+  color: var(--ink-1);
+}
+.gap {
+  background: var(--diff-gap);
+}
+/* room over the first lines and under the last */
+.compare > :nth-child(3),
+.compare > :nth-child(4) {
+  padding-top: var(--sp-4);
+}
+.compare > :nth-last-child(-n + 2) {
+  padding-bottom: var(--sp-5);
+}

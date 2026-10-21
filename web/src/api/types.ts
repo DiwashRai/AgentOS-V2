@@ -149,6 +149,36 @@ export interface Ticket extends TicketRow {
 
 export type ItemKind = "instructions" | "skill" | "agent" | "note" | "plan" | "file" | "workflow";
 
+/** Who wrote a version (R17): a person, or a ticket's run. */
+export type Author =
+  { kind: "person"; person: Person } | { kind: "run"; run_id: number; ticket: string };
+
+/** One version of an item, newest first in a history (R17). */
+export interface Version {
+  version: number;
+  at: Iso;
+  by: Author;
+}
+
+/** A library item named in a list (an agent a workflow uses, a workflow an item is in). */
+export interface LibraryRef {
+  id: string;
+  name: string;
+}
+
+/** How a ticket's copy differs from the library item it came from, both ways (R19): the
+ *  library's newer version when it moved on since the copy (null: it hasn't), and whether the
+ *  ticket changed its copy. Neither: the copy is in step. */
+export interface Drift {
+  library: number | null;
+  changed: boolean;
+}
+
+/** Where a ticket's item came from: its own (notes, the plan), or a copy of a library item at a
+ *  version, with its drift. */
+export type Origin =
+  { kind: "own" } | { kind: "copy"; of: LibraryRef; version: number; drift: Drift };
+
 /** A context item as `GET {scope}/items` lists it: no content. */
 export interface ItemSummary {
   name: string;
@@ -156,6 +186,183 @@ export interface ItemSummary {
   writable: boolean;
   version: number;
   updated_at: Iso;
+  updated_by: Author;
+  origin: Origin;
+}
+
+/** A named block of `AGENTS.md` (R16): blocks are edited and reordered one by one. */
+export interface Block {
+  name: string;
+  text: string;
+}
+
+/** An agent's settings (R23): its instructions (markdown) and how it runs. */
+export interface AgentSettings {
+  instructions: string;
+  runtime: RuntimeId;
+  model: string;
+  effort: Effort;
+}
+
+/** An item's content: plain text (a skill's SKILL.md, a note, the plan, a file), `AGENTS.md`'s
+ *  named blocks, or an agent's settings. */
+export type ItemBody =
+  | { kind: "text"; text: string }
+  | { kind: "blocks"; blocks: readonly Block[] }
+  | { kind: "agent"; agent: AgentSettings };
+
+/** `GET /api/tickets/{key}/items/{name}`: one of a ticket's items with its content. */
+export interface Item extends ItemSummary {
+  body: ItemBody;
+  /** The latest few versions, newest first. */
+  history: readonly Version[];
+}
+
+// ---------------------------------------------------------------- the library (R19-R28)
+
+export type RuntimeId = "claude-code" | "copilot-cli";
+export type Effort = "low" | "medium" | "high" | "xhigh" | "max";
+
+/** A runtime (R22) as the pickers need it: its name and the models it offers. */
+export interface Runtime {
+  id: RuntimeId;
+  name: string;
+  models: readonly string[];
+}
+
+/** The workflows and tickets that use a library item. */
+export interface UsedBy {
+  workflows: readonly LibraryRef[];
+  tickets: readonly string[];
+}
+
+/** What every library item carries: its id (the URL's), version, who changed it last and when,
+ *  and the latest few versions, newest first. */
+interface Versioned {
+  id: string;
+  version: number;
+  updated_at: Iso;
+  updated_by: Author;
+  history: readonly Version[];
+}
+
+/** `GET /api/library/agents/{id}`: an agent (R23). */
+export interface Agent extends Versioned, AgentSettings {
+  name: string;
+  description: string;
+  used_by: UsedBy;
+}
+
+/** `GET /api/library/skills/{id}`: a skill (R16, R20), its `SKILL.md` at `path`. */
+export interface Skill extends Versioned {
+  name: string;
+  description: string;
+  path: string;
+  content: string;
+  used_by: UsedBy;
+}
+
+/** `GET /api/library/files/{id}`: a file, a path and its content; `AGENTS.md` as named blocks. */
+export interface LibraryFile extends Versioned {
+  path: string;
+  /** Its size in bytes. */
+  size: number;
+  body: { kind: "text"; text: string } | { kind: "blocks"; blocks: readonly Block[] };
+  used_by: UsedBy;
+}
+
+export type StagePhase = "plan" | "build" | "verify" | "review";
+
+/** A gate after a stage: its name, and the short form the rail draws. */
+export interface StageGate {
+  label: string;
+  short: string;
+}
+
+/** Skills and files by library id: the workflow's (every stage gets them) or a stage's own. */
+export interface ContextRefs {
+  skills: readonly string[];
+  files: readonly string[];
+}
+
+/** What every stage has (R24). */
+interface StageCommon {
+  id: string;
+  name: string;
+  phase: StagePhase;
+  enabled: boolean;
+  needs_repo: boolean;
+  timeout_min: number;
+  /** The gate after it, or none. */
+  gate: StageGate | null;
+  /** Skills and files this stage adds to the workflow's. */
+  context: ContextRefs;
+}
+
+/** Repairs of an invalid verdict, by resuming the session (R26). */
+export type Repairs = 0 | 1 | 2 | 3;
+
+/** An agent stage (R23, R24): its agent with any overrides, its prompt (a template over ticket
+ *  fields, R28), whether it resumes its session, and, as a check, its verdict repairs. */
+export interface AgentStage extends StageCommon {
+  kind: "agent";
+  agent: string;
+  overrides: { runtime: RuntimeId | null; model: string | null; effort: Effort | null };
+  prompt: string;
+  resume: boolean;
+  check: { repairs: Repairs } | null;
+}
+
+/** A shell stage: a command, which as a check passes on exit 0. */
+export interface ShellStage extends StageCommon {
+  kind: "shell";
+  command: string;
+  check: boolean;
+}
+
+export type Stage = AgentStage | ShellStage;
+
+/** A block of consecutive stages, `first` to `last` by stage id, repeated up to `rounds` (at most
+ *  5) until its checks pass (R25). */
+export interface Loop {
+  first: string;
+  last: string;
+  rounds: number;
+}
+
+/** A workflow's content, the same in the library and in a ticket's copy. */
+export interface WorkflowBody {
+  stages: readonly Stage[];
+  loops: readonly Loop[];
+  /** The skills and files every stage gets. */
+  context: ContextRefs;
+}
+
+/** `GET /api/library/workflows/{id}`: a library workflow (R24-R27). */
+export interface Workflow extends Versioned, WorkflowBody {
+  name: string;
+  description: string;
+  is_default: boolean;
+  /** The tickets whose copy came from it. */
+  tickets: readonly string[];
+}
+
+/** `GET /api/tickets/{key}/workflow`: the ticket's own copy (R27): the library workflow and
+ *  version it came from, its drift, and its own version (the one a save checks). */
+export interface TicketWorkflow extends WorkflowBody {
+  ticket: string;
+  name: string;
+  from: { id: string; version: number };
+  drift: Drift;
+  version: number;
+  updated_at: Iso;
+  updated_by: Author;
+}
+
+/** A ticket field a prompt can name (R28), as `{{ name }}`. */
+export interface TemplateField {
+  name: string;
+  about: string;
 }
 
 export interface Message {
@@ -181,10 +388,15 @@ export interface Run {
   state: RunState;
   route: "runner" | "mailbox" | "client";
   by: Person | null;
+  /** The stage it was dispatched from (by stage id). */
+  from_stage: string;
+  /** Its time budget in minutes. */
+  budget_min: number;
   created_at: Iso;
   started_at: Iso | null;
   ended_at: Iso | null;
   reason: string | null;
+  /** Its stage runs in order, a loop's stages once per round. */
   stages: readonly StageRun[];
 }
 

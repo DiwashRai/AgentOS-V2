@@ -35,7 +35,7 @@ const LAYERS = {
     CSS,
     KIT,
     {
-      group: ["**/app/**", "**/domain/fixtures"],
+      group: ["**/app/**", "**/domain/fixtures", "**/domain/library-fixtures"],
       message: "Screens don't reach into the app or the fixtures.",
     },
     {

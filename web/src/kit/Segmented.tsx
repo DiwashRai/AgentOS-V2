@@ -8,6 +8,7 @@ import { Combobox as Base } from "@base-ui/react/combobox";
 import { useLayoutEffect, useRef, useState } from "react";
 
 import { Icon } from "./Icon";
+import { useLayer } from "./layer";
 import { Mark, type MarkKind } from "./Mark";
 import p from "./Popover.module.css";
 import s from "./Segmented.module.css";
@@ -26,6 +27,9 @@ export interface SegmentedProps {
   items: readonly Segment[];
   value: string;
   onChange: (id: string) => void;
+  /** Hug its chips instead of taking the bar's free room, with no overflow chip: a choice of two
+   *  in a form (a stage's Maker | Check), with its next control beside it. */
+  fit?: boolean;
 }
 
 /** The row's room and its chips' natural widths, read from the hidden ruler. */
@@ -120,6 +124,7 @@ interface MoreProps {
 
 function More({ label, items, value, current, onChange }: MoreProps) {
   const marked = items.some((it) => it.mark !== undefined);
+  const layer = useLayer();
   return (
     <Base.Root
       items={items}
@@ -138,7 +143,7 @@ function More({ label, items, value, current, onChange }: MoreProps) {
         {current ? <Body it={current} /> : `+${String(items.length)}`}
         <Chev />
       </Base.Trigger>
-      <Base.Portal>
+      <Base.Portal {...layer}>
         <Base.Positioner align="start" sideOffset={() => tokenPx("--sp-2")}>
           <Base.Popup className={cx(p.sheet, s.sheet)} aria-label={label}>
             <Base.Input
@@ -175,12 +180,12 @@ function More({ label, items, value, current, onChange }: MoreProps) {
   );
 }
 
-export function Segmented({ label, items, value, onChange }: SegmentedProps) {
+export function Segmented({ label, items, value, onChange, fit }: SegmentedProps) {
   const { track, ruler, room } = useRoom(
     items.map((it) => `${it.label}${String(it.count)}`).join(),
   );
   const pressed = items.findIndex((it) => it.id === value);
-  const shown = shownOf(room, pressed);
+  const shown = fit ? new Set(items.map((_, i) => i)) : shownOf(room, pressed);
   const rest = items.filter((_, i) => !shown.has(i));
   const pick = items[pressed];
   const current = shown.has(pressed) ? undefined : pick;
@@ -189,6 +194,7 @@ export function Segmented({ label, items, value, onChange }: SegmentedProps) {
       ref={track}
       className={s.track}
       data-collapsed={shown.size === 0}
+      data-fit={fit === true || undefined}
       role="group"
       aria-label={label}
     >

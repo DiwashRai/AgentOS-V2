@@ -5,6 +5,7 @@ import { Combobox as Base } from "@base-ui/react/combobox";
 
 import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
+import { useLayer } from "./layer";
 import p from "./Popover.module.css";
 import s from "./Select.module.css";
 import { cx, tokenPx } from "./vars";
@@ -21,6 +22,9 @@ export interface SelectProps {
   value: string;
   options: readonly Option[];
   onChange: (id: string) => void;
+  /** chip: a property chip (the default); field: the form's field box, as wide as its slot, so a
+   *  picker among fields reads as one of them (an agent's runtime beside its name). */
+  look?: "chip" | "field";
 }
 
 /** `slot`: others in the list have faces, so a faceless one (Unassigned) gets Linear's no-one
@@ -36,9 +40,10 @@ function Label({ option, slot }: { option: Option | null; slot: boolean }) {
   );
 }
 
-export function Select({ label, value, options, onChange }: SelectProps) {
+export function Select({ label, value, options, onChange, look = "chip" }: SelectProps) {
   const current = options.find((o) => o.id === value) ?? null;
   const slot = options.some((o) => o.face);
+  const layer = useLayer();
   return (
     <Base.Root
       items={options}
@@ -49,13 +54,13 @@ export function Select({ label, value, options, onChange }: SelectProps) {
         if (o !== null) onChange(o.id);
       }}
     >
-      <Base.Trigger className={s.trigger} aria-label={label}>
+      <Base.Trigger className={cx(s.trigger, look === "field" && s.field)} aria-label={label}>
         <Label option={current} slot={slot} />
         <Base.Icon className={s.chev}>
           <Icon name="chevron" />
         </Base.Icon>
       </Base.Trigger>
-      <Base.Portal>
+      <Base.Portal {...layer}>
         <Base.Positioner sideOffset={() => tokenPx("--sp-2")} align="start">
           <Base.Popup className={cx(p.sheet, s.sheet)} aria-label={label}>
             <Base.Input

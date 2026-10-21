@@ -1,9 +1,9 @@
 // The ticket page (/t/:key), as Linear's issue page: the bar (My queue › the key, the crumb the way
 // back; search; the ticket's actions), then one calm column with no cards (the title and lead, the
 // properties, the workflow's stepper with what happens now under it, the tabs) and Talk in the
-// column beside it, its reply box at the window's foot. W0 draws Overview; the other tabs arrive with their tickets (W5 runs, W6 context, W7
-// workflow).
-import { useState } from "react";
+// column beside it, its reply box at the window's foot. The tab is in the URL (?tab=), and so is a
+// full-window editor over the page (?edit=: tabs.ts, overlays.tsx).
+import { type ReactNode, useState } from "react";
 import { useParams } from "react-router";
 
 import { useItems, useMessages, usePeople, usePlan, useRuns, useTicket } from "../../api/queries";
@@ -26,9 +26,14 @@ import {
 import { ActionButton, headerActions } from "../shared/Actions";
 import { threadMessage, useBoard } from "../shared/board";
 import { useSearch } from "../shared/useSearch";
+import { ContextTab } from "./ContextTab";
 import { Now } from "./now";
+import { TicketOverlays } from "./overlays";
 import { Properties } from "./properties";
+import { RunsTab } from "./RunsTab";
+import { type TabId, useTicketUrl } from "./tabs";
 import { TalkHead } from "./talk";
+import { WorkflowTab } from "./WorkflowTab";
 
 /** The owner, as a picker in its chip. */
 function Owner({ t }: { t: Ticket }) {
@@ -144,7 +149,13 @@ function Body({ t, me, now }: { t: Ticket; me: Person | null; now: number }) {
   const plan = parsePlan(usePlan(t.key).data ?? "");
   const runs = useRuns(t.key).data?.items ?? [];
   const items = useItems(t.key).data?.items ?? [];
-  const [tab, setTab] = useState("overview");
+  const { tab, setTab } = useTicketUrl();
+  const panels: Record<TabId, ReactNode> = {
+    overview: <Overview t={t} plan={plan} items={items.map((i) => i.name)} />,
+    runs: <RunsTab t={t} />,
+    context: <ContextTab t={t} />,
+    workflow: <WorkflowTab t={t} />,
+  };
   return (
     <Stack gap={10}>
       <Header t={t} me={me} now={now} plan={plan} />
@@ -159,12 +170,9 @@ function Body({ t, me, now }: { t: Ticket; me: Person | null; now: number }) {
           { id: "workflow", label: "Workflow" },
         ]}
       >
-        {tab === "overview" ? (
-          <Overview t={t} plan={plan} items={items.map((i) => i.name)} />
-        ) : (
-          <Notice kind="status">This tab arrives with its own ticket.</Notice>
-        )}
+        {panels[tab]}
       </Tabs>
+      <TicketOverlays t={t} />
     </Stack>
   );
 }

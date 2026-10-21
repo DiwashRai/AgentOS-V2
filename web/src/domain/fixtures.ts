@@ -1,12 +1,12 @@
 // Invented fixtures for W0's static screens, shaped like V2's API (api/types.ts). Every name, key
 // and repo is made up. Times are relative to one fixed instant, NOW, so screenshots are stable.
 // Excluded from the gates' measures (tools/gates/ts_measures.py) as data, not logic.
+// The library's fixtures, and each ticket's workflow copy and items, are in library-fixtures.ts.
 import type {
   Attention,
   Gate,
   Intake,
   IntakeIssue,
-  ItemSummary,
   Message,
   Person,
   Phase,
@@ -20,7 +20,7 @@ import type {
 } from "../api/types";
 
 export const NOW = Date.parse("2026-10-14T10:00:00Z");
-const ago = (minutes: number) => new Date(NOW - minutes * 60_000).toISOString();
+export const ago = (minutes: number) => new Date(NOW - minutes * 60_000).toISOString();
 
 const person = (id: number, name: string, role: Person["role"] = "writer"): Person => ({
   id,
@@ -420,7 +420,7 @@ export const TICKETS: TicketRow[] = [
   }),
 ];
 
-const rowOf = (key: string): TicketRow => {
+export const rowOf = (key: string): TicketRow => {
   const found = TICKETS.find((t) => t.key === key);
   if (!found) throw new Error(`no fixture ticket ${key}`);
   return found;
@@ -441,7 +441,8 @@ export function ticketOf(key: string): Ticket {
     description: DESCRIPTIONS[key] ?? "No description yet.",
     labels: key === "NW-17" ? ["comments", "sync"] : [],
     base_branch: r.repo ? { name: "main", from: "repo" } : null,
-    workflow: { name: "Standard", version: 3 },
+    // NW-17 copied Standard at v3 (it has drifted since); the rest at v4 (library-fixtures.ts)
+    workflow: { name: "Standard", version: key === "NW-17" ? 3 : 4 },
     active_run: r.attention.kind === "running" ? r.attention.run_id : null,
     pr_url: null,
     created_at: ago(60 * 30),
@@ -490,6 +491,8 @@ export const MESSAGES: Record<string, Message[]> = {
   "SUP-231": [message(8, ELI, 45, "Support says this hits every offline user on mobile.")],
 };
 
+// NW-17's runs, newest first: the running one (round 2 of the Implement → Review loop, after
+// Review failed round 1) and the one that stopped at the plan's sign-off gate.
 export const RUNS: Record<string, Run[]> = {
   "NW-17": [
     {
@@ -497,13 +500,17 @@ export const RUNS: Record<string, Run[]> = {
       state: "running",
       route: "runner",
       by: ADA,
-      created_at: ago(7),
-      started_at: ago(6),
+      from_stage: "implement",
+      budget_min: 90,
+      created_at: ago(48),
+      started_at: ago(47),
       ended_at: null,
       reason: null,
       stages: [
-        { stage_id: "implement", name: "Implement", round: 1, state: "running", verdict: null },
-        { stage_id: "review", name: "Review", round: 1, state: "pending", verdict: null },
+        { stage_id: "implement", name: "Implement", round: 1, state: "done", verdict: null },
+        { stage_id: "review", name: "Review", round: 1, state: "done", verdict: "fail" },
+        { stage_id: "implement", name: "Implement", round: 2, state: "running", verdict: null },
+        { stage_id: "review", name: "Review", round: 2, state: "pending", verdict: null },
         { stage_id: "pr", name: "Open a PR", round: 1, state: "pending", verdict: null },
       ],
     },
@@ -512,34 +519,16 @@ export const RUNS: Record<string, Run[]> = {
       state: "gated",
       route: "runner",
       by: ADA,
+      from_stage: "plan",
+      budget_min: 30,
       created_at: ago(140),
       started_at: ago(139),
       ended_at: ago(118),
-      reason: null,
+      reason: "Waiting at Plan sign-off",
       stages: [{ stage_id: "plan", name: "Plan", round: 1, state: "done", verdict: null }],
     },
   ],
 };
-
-/** Every ticket starts with the Space's default items (R16). */
-export const ITEMS: ItemSummary[] = [
-  {
-    name: "AGENTS.md",
-    kind: "instructions",
-    writable: false,
-    version: 2,
-    updated_at: ago(60 * 30),
-  },
-  {
-    name: "skills/ticket/SKILL.md",
-    kind: "skill",
-    writable: false,
-    version: 1,
-    updated_at: ago(60 * 30),
-  },
-  { name: "TASKS.md", kind: "plan", writable: true, version: 4, updated_at: ago(20) },
-  { name: "notes/changes.md", kind: "note", writable: true, version: 1, updated_at: ago(60 * 2) },
-];
 
 // ---------------------------------------------------------------- intake
 const issue = (

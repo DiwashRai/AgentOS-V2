@@ -1,0 +1,23 @@
+/* Override: a neutral dot, the value in ink, the agent's own struck through in the muted ink */
+.over {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sp-2);
+  white-space: nowrap;
+}
+.over > i {
+  flex: none;
+  width: var(--prop-dot);
+  height: var(--prop-dot);
+  border-radius: 50%;
+  background: var(--ink-2);
+}
+.over > b {
+  color: var(--ink-1);
+  font-weight: 500;
+}
+.over > s {
+  color: var(--ink-3);
+  text-decoration-color: var(--ink-3);
+}

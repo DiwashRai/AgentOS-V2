@@ -115,8 +115,13 @@ export function Page({
   children,
 }: PageProps) {
   const [crumb, name] = typeof title === "string" ? [null, title] : title;
+  // A view over another (a full-window editor over the ticket) gives the tab back when it closes.
   useEffect(() => {
+    const before = document.title;
     document.title = `${name} · AgentOS`;
+    return () => {
+      document.title = before;
+    };
   }, [name]);
   return (
     <div className={s.page}>

@@ -76,6 +76,24 @@ const GLYPHS = {
     ...LINE16,
     d: <path d="M8 1.75 13.75 5v6L8 14.25 2.25 11V5zM2.25 5 8 8.25 13.75 5M8 8.25v6" />,
   },
+  // the library's workflows: the ticket's stepped path, on the sidebar's grid
+  workflows: {
+    ...LINE16,
+    d: (
+      <>
+        <circle cx="4" cy="3.5" r="1.75" />
+        <circle cx="12" cy="12.5" r="1.75" />
+        <path d="M4 5.25V7a1.5 1.5 0 0 0 1.5 1.5h5A1.5 1.5 0 0 1 12 10v.75" />
+      </>
+    ),
+  },
+  // the library's files: a page with its corner turned
+  files: {
+    ...LINE16,
+    d: (
+      <path d="M4.5 2h4.75l3.25 3.25v7.25a1.5 1.5 0 0 1-1.5 1.5h-6.5A1.5 1.5 0 0 1 3 12.5v-9A1.5 1.5 0 0 1 4.5 2zM9.25 2v3.25h3.25" />
+    ),
+  },
   theme: {
     ...LINE16,
     d: (
@@ -104,8 +122,40 @@ const GLYPHS = {
   arrow: { ...LINE14, d: <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" /> },
   check: { ...LINE12, d: <path d="M2.5 6.2l2.3 2.3 4.7-5" /> },
   plus: { ...LINE12, d: <path d="M6 1.75v8.5M1.75 6h8.5" /> },
+  minus: { ...LINE12, d: <path d="M1.75 6h8.5" /> },
+  // a drag handle: two columns of three dots
+  grip: {
+    ...LINE12,
+    d: (
+      <>
+        {[3, 6, 9].map((y) => (
+          <g key={y} className={s.solid}>
+            <circle cx="4.25" cy={y} r="1" />
+            <circle cx="7.75" cy={y} r="1" />
+          </g>
+        ))}
+      </>
+    ),
+  },
+  undo: { ...LINE14, d: <path d="M5.5 3 3 5.5 5.5 8M3 5.5h5.25a3 3 0 0 1 0 6H6.5" /> },
+  redo: { ...LINE14, d: <path d="M8.5 3 11 5.5 8.5 8M11 5.5H5.75a3 3 0 0 0 0 6H7.5" /> },
+  // a loop's rounds: two arrows chasing round a circle
+  loop: {
+    ...LINE14,
+    d: (
+      <path d="M11.5 6a4.5 4.5 0 0 0-8.3-1.4M2.5 8a4.5 4.5 0 0 0 8.3 1.4M3 2.5v2.25h2.25M11 11.5V9.25H8.75" />
+    ),
+  },
+  // a shell stage: a prompt and a cursor
+  shell: { ...LINE14, d: <path d="M3 4.5 5.5 7 3 9.5M7 10h4" /> },
+  // a gate: the stepper's diamond, as a glyph
+  gate: { ...LINE12, d: <path d="M6 1.75 10.25 6 6 10.25 1.75 6z" /> },
   close: { ...LINE12, d: <path d="M3 3l6 6M9 3l-6 6" /> },
   chevron: { ...LINE10, d: <path d="M2.5 4l2.5 2.5L7.5 4" /> },
+  // the chevron turned up: move a row up, the previous item
+  up: { ...LINE10, d: <path d="M2.5 6l2.5-2.5L7.5 6" /> },
+  // the chevron turned right: a folded block
+  right: { ...LINE10, d: <path d="M4 2.5l2.5 2.5L4 7.5" /> },
   // a section heading's fold caret, Linear's small solid triangle
   caret: { ...LINE10, d: <path d="M2.75 3.75h4.5L5 6.5z" className={s.caret} /> },
   out: { ...LINE10, d: <path d="M2.5 7.5 7.5 2.5M3.5 2.5h4v4" /> },

@@ -9,6 +9,7 @@ import { Combobox as Base } from "@base-ui/react/combobox";
 import type { ReactNode } from "react";
 
 import { Icon, type IconName } from "./Icon";
+import { useLayer } from "./layer";
 import s from "./Menu.module.css";
 import p from "./Popover.module.css";
 import { cx, tokenPx } from "./vars";
@@ -34,6 +35,7 @@ export interface MenuProps {
 
 export function Menu({ label, icon, text, items, value, onChange }: MenuProps) {
   const now = items.find((it) => it.id === value) ?? null;
+  const layer = useLayer();
   return (
     <Base.Root
       items={items}
@@ -60,7 +62,7 @@ export function Menu({ label, icon, text, items, value, onChange }: MenuProps) {
           </>
         ) : null}
       </Base.Trigger>
-      <Base.Portal>
+      <Base.Portal {...layer}>
         <Base.Positioner side="top" align="start" sideOffset={() => tokenPx("--sp-2")}>
           <Base.Popup className={cx(p.sheet, s.menu)} aria-label={label}>
             <Base.Input

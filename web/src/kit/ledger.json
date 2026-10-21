@@ -1,8 +1,8 @@
 {
   "budget": {
-    "components": 26,
+    "components": 40,
     "props": 8,
-    "lines": 5810
+    "lines": 7628
   },
   "raises": [
     {
@@ -14,6 +14,16 @@
       "budget": "lines",
       "to": 5810,
       "why": "The Linear-style revamp (owner approved, to be trimmed before use)"
+    },
+    {
+      "budget": "components",
+      "to": 40,
+      "why": "The library and workflow editor screens (owner approved, to be trimmed before use)"
+    },
+    {
+      "budget": "lines",
+      "to": 7628,
+      "why": "The library and workflow editor screens (owner approved, to be trimmed before use)"
     }
   ],
   "components": {
@@ -111,7 +121,7 @@
             "done": "Done heads.",
             "blocked": "A high-priority tag.",
             "quiet": "An agent card's state pill and repo, the ticket page's item names: regular muted text on the hairline.",
-            "fill": "An agent card's state and repo: a filled chip with no edge, a face at its end."
+            "fill": "An agent card's state and repo: a filled chip with no edge, a face at its end; a stage's phase on its card, so it reads as a property, not a second name."
           }
         }
       }
@@ -160,6 +170,49 @@
         }
       }
     },
+    "Card": {
+      "why": "A stage as its own object on the workflow's lane (All teams' card look): its face on the lane's axis, its summary beside it as one button that selects it, opening in place to its settings (no dialog); dimmed when the stage is off, a problem at its foot.",
+      "props": {
+        "label": {
+          "why": "The stage's name, for the summary button (Edit Implement, Close Implement)."
+        },
+        "face": {
+          "why": "An agent's face or a shell stage's glyph, in the slot the lane's axis runs through."
+        },
+        "children": {
+          "why": "The summary: name, phase, agent or command, effort, the prompt's first line, chips, the check or maker mark."
+        },
+        "open": {
+          "why": "The selected stage's settings, drawn in place under the summary (the owner's rule: no dialog, every field visible)."
+        },
+        "onOpen": {
+          "why": "A click on the summary selects the card or closes it; none draws it read only (the ticket's Workflow tab)."
+        },
+        "off": {
+          "why": "A disabled stage is dimmed (the spec's rule), still in its place on the lane."
+        },
+        "problem": {
+          "why": "Inline validation (a gate inside a loop, a prompt naming an unknown field), at the card's foot in the blocked ink."
+        }
+      }
+    },
+    "Chip": {
+      "why": "A skill or a file named on a stage or a workflow, as Linear's label chip with its glyph, and a remove at its end where it can be taken off (the workflow-context strip, an open card).",
+      "props": {
+        "label": {
+          "why": "Its name (tests, AGENTS.md)."
+        },
+        "icon": {
+          "why": "What it is: the sidebar's Skills or Files glyph."
+        },
+        "onRemove": {
+          "why": "Take it off the stage or the workflow; none draws it read only (a closed card, the ticket's tab)."
+        },
+        "flash": {
+          "why": "A click in the library panel adds a chip that may be far below the fold: it scrolls into view and flashes once, so the click visibly landed."
+        }
+      }
+    },
     "Checklist": {
       "why": "A plan's items (TASKS.md) with ticks, rings and section heads, drawn three times in V1.",
       "props": {
@@ -179,9 +232,24 @@
         }
       }
     },
+    "Compare": {
+      "why": "A version conflict shows both sides (the spec's keep-mine and take-theirs): two versions of one text line against line in monospace, each side's changed lines tinted, a gap where a side has none, its choice at its head; no other piece draws two texts in step.",
+      "single": "The library's item editors draw it on a version conflict, for the ticket's Context items too (one shared editor); the workflow editor's refused Promote can take it up.",
+      "props": {
+        "label": {
+          "why": "Its accessible name."
+        },
+        "sides": {
+          "why": "Each side's head: what it is (Yours, Theirs), where it came from and who saved it when, and its choice (Keep mine, Take theirs)."
+        },
+        "rows": {
+          "why": "The lines in pairs, lined up by the screen (a gap where one side has no line), each marked changed or not from the version both sides started from, so only the lines each person changed are tinted."
+        }
+      }
+    },
     "Dialog": {
-      "why": "The peek: a modal panel on the browser's <dialog> (focus held, Esc, inert page, focus returned).",
-      "single": "Only the peek is a dialog yet; new ticket and the confirms join it in W4.",
+      "why": "A modal on the browser's <dialog> (focus held, Esc, inert page, focus returned), in two looks: the peek's side panel and the full-window editor.",
+      "single": "The peek draws the side look and the ticket page the full one; new ticket and the confirms join them in W4.",
       "props": {
         "label": {
           "why": "Its accessible name."
@@ -190,13 +258,62 @@
           "why": "Shown or not (the URL decides)."
         },
         "onClose": {
-          "why": "Esc or the close button."
+          "why": "Esc or the close button: the screen closes it by `open`, or asks first (unsaved changes)."
         },
         "children": {
           "why": "Its sections, one hairline apart; they scroll inside the panel."
         },
         "foot": {
-          "why": "Pinned under the scrolling sections, as Linear's reply box sits at its panel's foot (the peek's composer)."
+          "why": "Pinned under the scrolling sections, as Linear's reply box sits at its panel's foot (the peek's composer); the side look only."
+        },
+        "look": {
+          "why": "The peek reads beside the list; editing always gets the whole window (the owner's rule).",
+          "values": {
+            "side": "The peek: a panel sliding in from the right, its sections ruled apart (the default).",
+            "full": "A full-window editor over the page (a ticket's workflow or item): the close at the top left, then a Page, so the editor is framed as on its own screen."
+          }
+        },
+        "ask": {
+          "why": "Closing with unsaved changes asks inside the overlay (Save, Discard, Keep editing): a small sheet over it, modal inside it, the view under it inert."
+        }
+      }
+    },
+    "Drag": {
+      "why": "A thing to drag from a palette onto a target (the workflow editor's library panel: an agent, a skill, a file) as a small card; a click or Enter is the alternative to dragging.",
+      "single": "The workflow editor's library panel is the one palette; the same editor serves the library's workflows and a ticket's copy.",
+      "props": {
+        "payload": {
+          "why": "What it carries: its kind, which decides the targets that take it, and its id."
+        },
+        "label": {
+          "why": "Its accessible name and tooltip, saying what a click does (Add to the selected stage)."
+        },
+        "onClick": {
+          "why": "The click and keyboard alternative to dragging it."
+        },
+        "children": {
+          "why": "The card's content (a face and a name, a skill's name)."
+        }
+      }
+    },
+    "Drop": {
+      "why": "A place a drag can land (a stage's card, the workflow-context strip): ringed in your move's accent while a drag it takes is over it, saying what a drop does; the innermost target wins.",
+      "single": "The workflow editor's stage cards and workflow-context strip; the same editor serves the library's workflows and a ticket's copy.",
+      "props": {
+        "accept": {
+          "why": "The kinds it takes (an agent onto a card; a skill or a file onto a card or the strip)."
+        },
+        "onDrop": {
+          "why": "A drop of one of them."
+        },
+        "label": {
+          "why": "What a drop does (Add to Implement), a tag on its ring while a drag is over it."
+        },
+        "children": {
+          "why": "The target itself (a card, a strip)."
+        },
+        "over": {
+          "why": "Drawn as under a drag: the spec's mid-drag state, as a still."
         }
       }
     },
@@ -209,6 +326,43 @@
         },
         "label": {
           "why": "The row's head, as Linear's \"Properties\" (Properties, Code, Workflow on the ticket page and the peek)."
+        }
+      }
+    },
+    "Field": {
+      "why": "A one-line text field (a stage's name, a shell command): Linear's input, a quiet fill on the controls' hairline.",
+      "props": {
+        "label": {
+          "why": "Its accessible name (a FormRow says it on screen)."
+        },
+        "value": {
+          "why": "The text."
+        },
+        "onChange": {
+          "why": "An edit."
+        },
+        "placeholder": {
+          "why": "What goes in it, while it is empty (npm run lint)."
+        },
+        "mono": {
+          "why": "A command or a path reads in monospace."
+        }
+      }
+    },
+    "FormRow": {
+      "why": "One setting on one line: its label in a column of its own so a card's settings line up, the control beside it, a quiet note after it and a problem under it (the selected stage's fields, an agent's properties).",
+      "props": {
+        "label": {
+          "why": "What the setting is."
+        },
+        "children": {
+          "why": "The control."
+        },
+        "note": {
+          "why": "Quiet words after the control (an override's inherited value: the agent's is high)."
+        },
+        "problem": {
+          "why": "Inline validation under the control (a prompt naming an unknown field), in the blocked ink."
         }
       }
     },
@@ -228,7 +382,7 @@
           }
         },
         "sections": {
-          "why": "Headed groups under the views (Context: Agents, Skills), each folding under its heading; an entry with no screen yet (no to) is drawn like a view but leads nowhere and takes no hover.",
+          "why": "Headed groups under the views (Context: the library's Workflows, Agents, Skills and Files), each folding under its heading; an entry with no screen yet (no to) is drawn like a view but leads nowhere and takes no hover.",
           "items": {
             "items": {
               "why": "The section's entries.",
@@ -303,6 +457,23 @@
         },
         "label": {
           "why": "Its accessible name when nothing beside it says what it is."
+        }
+      }
+    },
+    "Lane": {
+      "why": "A workflow's stages top to bottom on an axis through the cards' faces: between two cards a joint with the gate's diamond (the stepper's) and the + that inserts a stage; a loop as a bracket round its stages with its rounds at its foot; editing, the stages reorder on a Sortable that also takes drops between cards. One lane for the editor and the ticket's read-only tab.",
+      "props": {
+        "label": {
+          "why": "The list's accessible name."
+        },
+        "stages": {
+          "why": "The stages in order: an id, a name for the handle, the diamond and the +, the card, and the gate after it."
+        },
+        "loops": {
+          "why": "The loops by their first and last stage, each with its foot (up to N rounds, a number field while editing, what's wrong with it)."
+        },
+        "edit": {
+          "why": "The editing affordances (reorder, the gate toggle, insert, drops between cards, a still of the drop line); none draws the lane read only (the ticket's Workflow tab). Inside a loop the empty gate slot is inert, since a gate goes only after a loop's last stage (rules.md › Workflows)."
         }
       }
     },
@@ -414,6 +585,42 @@
         }
       }
     },
+    "NumberField": {
+      "why": "A whole number in a range (a stage's timeout, a loop's rounds, a check's repairs): its digits and unit between − and +; arrow keys step it.",
+      "single": "The workflow editor's timeout, rounds and repairs; the same editor serves the library's workflows and a ticket's copy.",
+      "props": {
+        "label": {
+          "why": "Its accessible name."
+        },
+        "value": {
+          "why": "The number."
+        },
+        "onChange": {
+          "why": "A new number, only ever one in range."
+        },
+        "min": {
+          "why": "The least it takes (0 repairs, 1 round)."
+        },
+        "max": {
+          "why": "The most it takes (3 repairs, 5 rounds)."
+        },
+        "unit": {
+          "why": "After the digits (min, rounds)."
+        }
+      }
+    },
+    "Override": {
+      "why": "A stage's setting over its agent's own (a model, an effort) must read without hovering and without a state's hue: a neutral dot, the value set here, the agent's own struck through after it.",
+      "single": "The workflow editor's stage cards and the ticket's Workflow tab (one card summary); the item editors' agent copies can take it up.",
+      "props": {
+        "value": {
+          "why": "The value set on the stage (xhigh)."
+        },
+        "own": {
+          "why": "The agent's own value it replaces (high), struck through."
+        }
+      }
+    },
     "Page": {
       "why": "A view: the top bar (title, context, counters, the view's controls, search, its buttons) and the body.",
       "props": {
@@ -441,7 +648,7 @@
           "why": "The bar's buttons at its right end (New ticket; the ticket's actions)."
         },
         "side": {
-          "why": "A full-height column beside the body, ruled off by one hairline with no card, so what it holds can pin its foot to the window's bottom (the ticket's Talk and its reply box)."
+          "why": "A full-height column beside the body, ruled off by one hairline with no card, so what it holds can pin its foot to the window's bottom (the ticket's Talk and its reply box); a column of settings (FormRows: an item editor's properties) is a narrower rail, so the content keeps the width, and fills its column flush with the title out to the rail (no reading width), so the item editor lines up the same full window over the ticket as beside the sidebar."
         },
         "children": {
           "why": "The body."
@@ -498,7 +705,7 @@
     },
     "Segmented": {
       "why": "Filter chips, one row on the bar that never clips: bare words but for the pressed one, filled on a hairline; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
-      "single": "Compact's filter today; Settings › Mappings' Try it and the settings nav use it in W8 and W9.",
+      "single": "Compact's filter, and a stage's Maker | Check in the workflow editor (one of two, said on screen, where a switch's off would need decoding); Settings › Mappings' Try it and the settings nav use it in W8 and W9.",
       "props": {
         "label": {
           "why": "The group's name, and the overflow filter's prompt (Change filter…)."
@@ -516,6 +723,9 @@
         },
         "onChange": {
           "why": "A pill pressed."
+        },
+        "fit": {
+          "why": "A choice of two in a form (a stage's Maker | Check) hugs its chips, so the control used with it (a check's repairs) sits beside it rather than at the row's far end."
         }
       }
     },
@@ -534,6 +744,40 @@
         },
         "onChange": {
           "why": "A pick."
+        },
+        "look": {
+          "why": "Among a form's fields (an item editor's runtime, model and effort) a picker must read as one of them, not as a property chip.",
+          "values": {
+            "chip": "A properties row's chip (the ticket's owner): the default.",
+            "field": "The form's field box, as wide as its slot, the chevron at its end."
+          }
+        }
+      }
+    },
+    "Sortable": {
+      "why": "A list reordered by dragging (a workflow's stages, AGENTS.md's blocks): a handle in the gutter at each row's left, a drop line where the row will land, ↑ and ↓ on the handle as the keyboard way, a live region saying where it went; it takes drops from outside between rows too.",
+      "single": "AGENTS.md's blocks in the shared item editor, which the library's Files and the ticket's Context items both open.",
+      "props": {
+        "label": {
+          "why": "The list's accessible name."
+        },
+        "items": {
+          "why": "The rows: an id, a name for the handle and the live region, and the content."
+        },
+        "onMove": {
+          "why": "A row moved, from its index to its new one."
+        },
+        "accept": {
+          "why": "Kinds dropped in from outside between rows (an agent dropped on the lane adds a stage)."
+        },
+        "onDrop": {
+          "why": "One of those, at the slot the drop line marked."
+        },
+        "gap": {
+          "why": "The space between rows; the drop line sits in its middle."
+        },
+        "preview": {
+          "why": "The drop line drawn at a slot: the spec's mid-drag state, as a still."
         }
       }
     },
@@ -635,6 +879,32 @@
         }
       }
     },
+    "Strip": {
+      "why": "A workflow as written, at a glance in a list row (the library's Workflows): a segment per stage in its phase's hue, a turned-off one dashed, a gate's diamond, a loop's bracket under its stages, then the words; the Stepper draws a ticket's way through one, by state, and has no phases or loops.",
+      "single": "The library's Workflows list; a ticket's Workflow tab or a workflow picker can take it up.",
+      "props": {
+        "label": {
+          "why": "The words after it (5 stages · loops up to 3 rounds)."
+        },
+        "stages": {
+          "why": "The stages in order: name, phase, off, the gate after it.",
+          "items": {
+            "phase": {
+              "why": "A segment's hue, so the shape of a workflow reads at a glance (planning, then building, then checks).",
+              "values": {
+                "plan": "Violet.",
+                "build": "Sky.",
+                "verify": "Teal.",
+                "review": "Pink."
+              }
+            }
+          }
+        },
+        "loops": {
+          "why": "The loops by their first and last stage, and their rounds (in the tooltip)."
+        }
+      }
+    },
     "Surface": {
       "why": "The one recessed zone per view, and the sheets that rest on it.",
       "props": {
@@ -671,27 +941,6 @@
         }
       }
     },
-    "Tabs": {
-      "why": "Underline tabs on a hairline, as Linear's section tabs (plain words, the current one underlined on the rule): Base UI's roving focus and arrow keys, our look.",
-      "single": "The ticket page's sections today; Settings' areas use them in W8.",
-      "props": {
-        "label": {
-          "why": "The tab list's name."
-        },
-        "items": {
-          "why": "The tabs, each with a count."
-        },
-        "value": {
-          "why": "The current tab."
-        },
-        "onChange": {
-          "why": "A tab chosen."
-        },
-        "children": {
-          "why": "The current tab's panel."
-        }
-      }
-    },
     "Table": {
       "why": "A dense list on one grid: column head, rows in groups, a foot; rows line up across groups.",
       "props": {
@@ -723,6 +972,27 @@
         },
         "measure": {
           "why": "Hold the head, rows and foot to a reading width, so a row's far end stays near its words (Intake's triage list asks for it)."
+        }
+      }
+    },
+    "Tabs": {
+      "why": "Underline tabs on a hairline, as Linear's section tabs (plain words, the current one underlined on the rule): Base UI's roving focus and arrow keys, our look.",
+      "single": "The ticket page's sections today; Settings' areas use them in W8.",
+      "props": {
+        "label": {
+          "why": "The tab list's name."
+        },
+        "items": {
+          "why": "The tabs, each with a count."
+        },
+        "value": {
+          "why": "The current tab."
+        },
+        "onChange": {
+          "why": "A tab chosen."
+        },
+        "children": {
+          "why": "The current tab's panel."
         }
       }
     },
@@ -779,6 +1049,29 @@
         }
       }
     },
+    "TextArea": {
+      "why": "Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of AGENTS.md), growing with its text.",
+      "props": {
+        "label": {
+          "why": "Its accessible name."
+        },
+        "value": {
+          "why": "The text."
+        },
+        "onChange": {
+          "why": "An edit."
+        },
+        "placeholder": {
+          "why": "What goes in it, while it is empty."
+        },
+        "lines": {
+          "why": "Its least height in lines (a prompt's few, an editor's many)."
+        },
+        "fill": {
+          "why": "An item editor's body fills its column and scrolls inside."
+        }
+      }
+    },
     "Thread": {
       "why": "The conversation as Linear's comments: faces and plain text, mine on the right in a bubble, and the composer.",
       "props": {
@@ -794,6 +1087,20 @@
         },
         "compose": {
           "why": "A composer under it, with this placeholder; in a full-height column it sits at the foot. With no messages only the composer draws (the peek pins it at its panel's foot)."
+        }
+      }
+    },
+    "Toggle": {
+      "why": "An on/off setting as Linear's switch (a stage's enabled, resume and needs a repo; an item's writable by agents).",
+      "props": {
+        "label": {
+          "why": "Its accessible name and tooltip (a FormRow or the row says it on screen)."
+        },
+        "on": {
+          "why": "On or off."
+        },
+        "onChange": {
+          "why": "Flipped."
         }
       }
     }
@@ -869,12 +1176,14 @@
         "settings": "The sidebar: Settings.",
         "theme": "The sidebar: the theme row, the theme menu's trigger.",
         "search": "The search field; the sidebar head's search button.",
-        "compose": "The sidebar head's new-ticket button, Linear's compose.",
+        "compose": "The sidebar head's new-ticket button, Linear's compose; the ticket's Workflow tab's one Edit; a copy the ticket changed (Changed here).",
         "arrow": "Dispatch run's arrow; the Inbox note.",
-        "check": "The selected item in a menu or picker.",
+        "check": "The selected item in a menu or picker; a check stage's mark on its card.",
         "plus": "New, folded to an icon.",
         "close": "Leave the ticket page.",
-        "chevron": "A group head's fold; a picker; the sidebar's Space switcher and theme row, menus.",
+        "chevron": "A group head's fold; a picker; the sidebar's Space switcher and theme row, menus; move a block down, the next item.",
+        "up": "The chevron turned up: move a block up (AGENTS.md's blocks), the previous item (an item editor's bar).",
+        "right": "The chevron turned right: a folded block's unfold (AGENTS.md's blocks, whose head is a name field, not a Head).",
         "caret": "A sidebar section's fold, Linear's small solid caret.",
         "out": "Opens in Jira.",
         "repo": "The ticket's properties: its repo.",
@@ -889,7 +1198,16 @@
         "feature": "Ticket type: feature.",
         "bug": "Ticket type: bug.",
         "improvement": "Ticket type: improvement.",
-        "task": "Ticket type: task."
+        "task": "Ticket type: task.",
+        "workflows": "The sidebar's Context: Workflows.",
+        "files": "The sidebar's Context: Files.",
+        "minus": "A number field's −.",
+        "grip": "A sortable row's drag handle.",
+        "undo": "The workflow editor's Undo.",
+        "redo": "The workflow editor's Redo.",
+        "loop": "A loop's rounds on the workflow lane.",
+        "shell": "A shell stage, in place of an agent's face.",
+        "gate": "A gate as a glyph (a stage's gate after it, in a field or a chip)."
       }
     }
   }

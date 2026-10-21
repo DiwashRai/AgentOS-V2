@@ -7,20 +7,31 @@ import {
   Avatar,
   Badge,
   Button,
+  Card,
   Checklist,
+  Chip,
   type Column,
+  Dialog,
+  Drag,
+  Drop,
   Facts,
+  Field,
+  FormRow,
   Head,
   Icon,
   type IconName,
+  Lane,
   Mark,
   type MarkKind,
   Meter,
   Notice,
+  NumberField,
+  Override,
   Page,
   Row,
   Segmented,
   Select,
+  Sortable,
   Stack,
   Stepper,
   type StepperModel,
@@ -28,8 +39,10 @@ import {
   Table,
   Tabs,
   Text,
+  TextArea,
   type TextVariant,
   Thread,
+  Toggle,
 } from "../../kit";
 
 const ICONS: readonly IconName[] = [
@@ -38,11 +51,22 @@ const ICONS: readonly IconName[] = [
   "compact",
   "intake",
   "settings",
+  "workflows",
+  "agents",
+  "skills",
+  "files",
   "theme",
   "search",
   "arrow",
   "check",
   "plus",
+  "minus",
+  "grip",
+  "undo",
+  "redo",
+  "loop",
+  "shell",
+  "gate",
   "close",
   "chevron",
   "out",
@@ -137,6 +161,246 @@ const COLUMNS: readonly Column[] = [
   { label: "Ticket", width: "fill" },
   { label: "Upd", width: "xs", end: true },
 ];
+
+/** The form pieces in a card's settings: a field, a picker, a number, a switch, markdown. */
+function FormSheet() {
+  const [name, setName] = useState("Implement");
+  const [command, setCommand] = useState("");
+  const [minutes, setMinutes] = useState(60);
+  const [resume, setResume] = useState(true);
+  const [prompt, setPrompt] = useState(
+    "Work through TASKS.md for {{ ticket.key }}, one step per commit.\n\nFix what {{ verdict.note }} says first.",
+  );
+  return (
+    <Stack gap={4}>
+      <FormRow label="Name">
+        <Field label="Name" value={name} onChange={setName} />
+      </FormRow>
+      <FormRow label="Command">
+        <Field
+          label="Command"
+          value={command}
+          onChange={setCommand}
+          placeholder="npm run lint"
+          mono
+        />
+      </FormRow>
+      <FormRow label="Timeout" note="the agent's is 30">
+        <NumberField
+          label="Timeout"
+          value={minutes}
+          onChange={setMinutes}
+          min={1}
+          max={240}
+          unit="min"
+        />
+      </FormRow>
+      <FormRow label="Resume session">
+        <Toggle label="Resume session" on={resume} onChange={setResume} />
+      </FormRow>
+      <FormRow label="Prompt" problem="No field verdict.note: did you mean verdict.notes?">
+        <TextArea label="Prompt" value={prompt} onChange={setPrompt} lines={4} />
+      </FormRow>
+    </Stack>
+  );
+}
+
+const STAGE_NAMES = ["Plan", "Implement", "Lint", "Review", "Open a PR"];
+
+/** Drag and drop: a palette of cards, a target that takes skills, and a list to reorder. */
+function DragSheet() {
+  const [order, setOrder] = useState(STAGE_NAMES);
+  const [got, setGot] = useState<readonly string[]>([]);
+  const add = (id: string) => {
+    setGot((g) => [...g, id]);
+  };
+  return (
+    <Stack dir="row" gap={9} align="start">
+      <Stack gap={4}>
+        {["tests", "review"].map((id) => (
+          <Drag
+            key={id}
+            payload={{ kind: "skill", id }}
+            label={`Skill ${id}: drag onto a target, or click to add it`}
+            onClick={() => {
+              add(id);
+            }}
+          >
+            <Text weight={500}>{id}</Text>
+          </Drag>
+        ))}
+      </Stack>
+      <Stack gap={6} grow>
+        <Drop
+          accept={["skill"]}
+          onDrop={(p) => {
+            add(p.id);
+          }}
+          label="Add to Implement"
+        >
+          <Surface level="sheet" pad={6}>
+            <Text tone="2">{got.length ? got.join(", ") : "Drop a skill here"}</Text>
+          </Surface>
+        </Drop>
+        <Drop accept={["skill"]} onDrop={() => undefined} label="Add to every stage" over>
+          <Surface level="sheet" pad={6}>
+            <Text tone="2">A target drawn as under a drag</Text>
+          </Surface>
+        </Drop>
+      </Stack>
+      <Stack grow>
+        <Sortable
+          label="Stages"
+          gap={3}
+          preview={2}
+          onMove={(from, to) => {
+            setOrder((o) => {
+              const next = [...o];
+              next.splice(to, 0, ...next.splice(from, 1));
+              return next;
+            });
+          }}
+          items={order.map((n) => ({
+            id: n,
+            label: n,
+            content: (
+              <Surface level="sheet" pad={5}>
+                <Text weight={500}>{n}</Text>
+              </Surface>
+            ),
+          }))}
+        />
+      </Stack>
+    </Stack>
+  );
+}
+
+/** A lane while editing (a gate, a loop, a selected card, a problem, a still of the drop line)
+ *  beside the same lane read only. */
+function LaneSheet() {
+  const [open, setOpen] = useState<string | null>("build");
+  const [gates, setGates] = useState<readonly boolean[]>([true, false, false]);
+  const names = ["Plan", "Build", "Check"];
+  const card = (name: string, edit: boolean) => (
+    <Card
+      label={name}
+      face={<Avatar name={name} seed={name} />}
+      off={name === "Check" && !edit}
+      {...(edit && name === "Check" ? { problem: "A gate inside a loop" } : {})}
+      {...(edit
+        ? {
+            onOpen: () => {
+              setOpen(open === name.toLowerCase() ? null : name.toLowerCase());
+            },
+          }
+        : {})}
+      open={edit && open === name.toLowerCase() ? <Text tone="2">Its settings</Text> : undefined}
+    >
+      <Stack gap={3}>
+        <Text variant="label">{name}</Text>
+        {name === "Build" ? <Override value="xhigh" own="high" /> : null}
+        <Stack dir="row" gap={3}>
+          <Chip label="tests" icon="skills" />
+          {edit ? <Chip label="AGENTS.md" icon="files" onRemove={() => undefined} /> : null}
+        </Stack>
+      </Stack>
+    </Card>
+  );
+  const lane = (edit: boolean) => (
+    <Lane
+      label="Stages"
+      stages={names.map((n, i) => ({
+        id: n.toLowerCase(),
+        label: n,
+        content: card(n, edit),
+        gate: gates[i] ? `${n} sign-off` : null,
+      }))}
+      loops={[{ first: "build", last: "check", foot: <Text variant="meta">Up to 3 rounds</Text> }]}
+      {...(edit
+        ? {
+            edit: {
+              onMove: () => undefined,
+              onGate: (i: number) => {
+                setGates((g) => g.map((x, k) => (k === i ? !x : x)));
+              },
+              onInsert: () => undefined,
+              accept: ["agent"],
+              onDrop: () => undefined,
+              preview: 1,
+            },
+          }
+        : {})}
+    />
+  );
+  return (
+    <Stack dir="row" gap={9} align="start">
+      <Stack grow>{lane(true)}</Stack>
+      <Stack grow>{lane(false)}</Stack>
+    </Stack>
+  );
+}
+
+/** The full-window overlay, with its close question. */
+function OverlaySheet() {
+  const [open, setOpen] = useState(false);
+  const [asking, setAsking] = useState(false);
+  return (
+    <>
+      <Button
+        onClick={() => {
+          setOpen(true);
+        }}
+      >
+        Open the full-window overlay
+      </Button>
+      <Dialog
+        look="full"
+        label="A full-window editor"
+        open={open}
+        onClose={() => {
+          setAsking(!asking);
+        }}
+        ask={
+          asking ? (
+            <>
+              <Text variant="heading">Discard your changes?</Text>
+              <Stack dir="row" gap={4} justify="end">
+                <Button
+                  onClick={() => {
+                    setAsking(false);
+                  }}
+                >
+                  Keep editing
+                </Button>
+                <Button
+                  onClick={() => {
+                    setAsking(false);
+                    setOpen(false);
+                  }}
+                >
+                  Discard
+                </Button>
+                <Button
+                  variant="you"
+                  onClick={() => {
+                    setAsking(false);
+                    setOpen(false);
+                  }}
+                >
+                  Save
+                </Button>
+              </Stack>
+            </>
+          ) : null
+        }
+      >
+        <Page title="A full-window editor" action={<Button variant="you">Save</Button>}>
+          <Text tone="2">Esc or the close asks first.</Text>
+        </Page>
+      </Dialog>
+    </>
+  );
+}
 
 function Section({ name, children }: { name: string; children: ReactNode }) {
   return (
@@ -363,6 +627,20 @@ export function KitSheet() {
             >
               <Text tone="2">{`The ${tab} panel`}</Text>
             </Tabs>
+          </Section>
+          <Section name="Form: FormRow, Field, NumberField, Toggle, TextArea">
+            <FormSheet />
+          </Section>
+          <Section name="Drag, Drop, Sortable">
+            <DragSheet />
+          </Section>
+          <Section name="Lane, Card, Chip">
+            <LaneSheet />
+          </Section>
+          <Section name="Dialog, full">
+            <Stack dir="row">
+              <OverlaySheet />
+            </Stack>
           </Section>
           <Section name="Checklist, Facts, Thread">
             <Checklist

@@ -1,0 +1,157 @@
+/* Lane: the cards one under another on an axis through their faces (--lane-axis from a card's
+   edge). Editing, the gutter at the left holds each card's handle and the band of a loop reaches
+   round it; read only, the gutter is just the band's. */
+.lane {
+  --out: var(--sp-5);
+  --h: var(--h-joint-read);
+  --reach: var(--sp-3);
+  min-width: 0;
+  padding: var(--sp-5) var(--sp-5) var(--sp-4) var(--sp-6);
+}
+.lane[data-edit] {
+  --out: calc(var(--w-grip) + var(--sp-3));
+  --h: var(--h-joint);
+  --reach: var(--sp-5);
+  padding-left: calc(var(--w-grip) + var(--sp-5));
+}
+.row,
+.block {
+  position: relative;
+  min-width: 0;
+}
+/* a card paints over its loop's band */
+.block > :not(.band) {
+  position: relative;
+}
+
+/* a loop's band, one piece per stage: open at the seams, closed and rounded at its ends; the first
+   piece reaches up past the joint's diamond, the last stops under the loop's foot */
+.band {
+  position: absolute;
+  inset: 0 calc(var(--sp-5) * -1) 0 calc(var(--out) * -1);
+  border-inline: var(--line-1) solid var(--loop-edge);
+  background: var(--loop-fill);
+  pointer-events: none;
+}
+.band:is([data-pos="first"], [data-pos="only"]) {
+  top: calc(var(--reach) * -1);
+  border-top: var(--line-1) solid var(--loop-edge);
+  border-radius: var(--r-5) var(--r-5) 0 0;
+}
+.band:is([data-pos="last"], [data-pos="only"]) {
+  bottom: calc(var(--sp-4) * -1);
+  border-bottom: var(--line-1) solid var(--loop-edge);
+  border-radius: 0 0 var(--r-5) var(--r-5);
+}
+.band[data-pos="only"] {
+  border-radius: var(--r-5);
+}
+.block:is([data-loop="last"], [data-loop="only"]) {
+  margin-bottom: var(--sp-4);
+}
+
+/* a loop's foot: the loop glyph on the axis, then its rounds and anything wrong with it */
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3) var(--sp-4);
+  min-height: var(--h-field);
+  padding: var(--sp-4) var(--sp-4) 0 calc(var(--lane-axis) - var(--glyph) / 2);
+  color: var(--ink-3);
+  font-size: var(--fs-2);
+}
+
+/* a joint: the axis through it, the diamond on the axis, the gate's name and the + after it */
+.joint {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--h);
+  padding-left: calc(var(--lane-axis) - var(--h-gate-hit) / 2);
+}
+.joint::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--lane-axis) - var(--line-1) / 2);
+  width: var(--line-1);
+  background: var(--lane-line);
+}
+/* after the last card: the axis runs only down to the diamond */
+.joint[data-end]::before {
+  bottom: 50%;
+}
+.gate {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--h-gate-hit);
+  height: var(--h-gate-hit);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-1);
+  background: none;
+}
+/* the diamond: the stepper's gate (its track fill on a firm ring); off, a dashed ghost on the
+   page's ground so the axis doesn't run through it */
+.gate::after {
+  content: "";
+  width: var(--gate-dia);
+  height: var(--gate-dia);
+  border: var(--line-1) dashed var(--ink-3);
+  border-radius: var(--line-2);
+  background: var(--page);
+  opacity: 0.55;
+  transform: rotate(45deg);
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    opacity var(--dur-fast) ease;
+}
+.gate[data-on]::after,
+button.gate:hover::after {
+  opacity: 1;
+}
+.gate[data-on]::after {
+  border: var(--line-mark) solid var(--ink-3);
+  background: var(--ink-3);
+}
+button.gate {
+  cursor: pointer;
+}
+button.gate:hover::after {
+  border-color: var(--ink-2);
+}
+button.gate:not([data-on]):hover::after {
+  border-style: solid;
+}
+/* inside a loop, where no gate can go: a fainter ghost that takes no click */
+.gate[data-inert]::after {
+  opacity: 0.25;
+}
+.gate[data-inert] {
+  cursor: not-allowed;
+}
+button.gate:focus-visible {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: 0;
+}
+.name {
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  font-weight: 500;
+  white-space: nowrap;
+}
+/* the + stays quiet until its joint is hovered */
+.joint > :last-child:not(.name, .gate) {
+  opacity: 0.6;
+  transition: opacity var(--dur-fast) ease;
+}
+.joint:hover > :last-child,
+.joint > :last-child:focus-visible {
+  opacity: 1;
+}

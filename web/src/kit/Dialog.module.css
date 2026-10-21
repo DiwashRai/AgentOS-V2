@@ -60,3 +60,80 @@
 .foot:empty {
   display: none;
 }
+
+/* full: the whole window over the app, for editing. The close sits at the top left, level with
+   the view's top bar; the view (a Page) fills the rest, as the frame's main column does. */
+.full {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--page);
+  color: var(--ink-2);
+  overflow: hidden;
+}
+.full:focus-visible {
+  outline: none;
+}
+.full::backdrop {
+  background: var(--tk-scrim);
+}
+.full[open] {
+  display: block;
+  animation: rise var(--dur-fast) var(--ease-out);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--sp-4));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.frame {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--sp-4);
+  height: 100%;
+  padding: 0 var(--sp-9) 0 var(--sp-6);
+}
+.close {
+  display: flex;
+  align-items: center;
+  height: var(--h-top);
+}
+.view {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+/* the question over it: the view dimmed under a scrim, a small sheet in the middle */
+.scrim {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--tk-scrim);
+}
+.ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  width: min(var(--w-ask), calc(100vw - var(--sp-9) * 2));
+  padding: var(--sp-8) var(--sp-9);
+  border: var(--line-1) solid var(--pop-edge);
+  border-radius: var(--r-5);
+  background: var(--pop);
+  box-shadow: var(--shadow-pop);
+  color: var(--ink-1);
+}

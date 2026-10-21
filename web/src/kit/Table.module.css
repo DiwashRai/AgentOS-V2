@@ -17,7 +17,8 @@
   overflow: hidden;
   display: grid;
   grid-template-columns: var(--cols);
-  column-gap: var(--sp-7);
+  /* a list row's own gap (Row's line), so each label sits over its column */
+  column-gap: var(--sp-5);
   align-items: center;
   height: var(--h-list-head);
   padding: 0 var(--list-pad) 0 var(--list-inset);

@@ -1,0 +1,176 @@
+/* The form controls (Field, TextArea, NumberField, Toggle, FormRow): Linear's inputs, a fill a
+   hair off the page on the controls' hairline, firmer on hover, the focus ring on focus; text in
+   ink at the rows' size. */
+.box {
+  min-width: 0;
+  border: var(--line-1) solid var(--ctl-edge);
+  border-radius: var(--r-2);
+  background: var(--input);
+  color: var(--ink-1);
+  font-size: var(--fs-3);
+  letter-spacing: var(--track-snug);
+  transition: border-color var(--dur-fast) ease;
+}
+.box:hover {
+  border-color: var(--ctl-edge-hover);
+}
+.box:focus-within {
+  border-color: var(--ctl-edge-hover);
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--line-1);
+}
+.box::placeholder,
+.box ::placeholder {
+  color: var(--ink-3);
+}
+
+/* Field: one line, as wide as its slot */
+.field {
+  width: 100%;
+  height: var(--h-field);
+  padding: 0 var(--sp-5);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2);
+  letter-spacing: 0;
+}
+
+/* TextArea: monospace markdown, at least `--lines` tall, growing with its text; or filling its
+   column and scrolling inside */
+.area {
+  display: block;
+  width: 100%;
+  min-height: calc(var(--code-line) * var(--lines) + var(--sp-5) * 2);
+  padding: var(--sp-5) var(--sp-6);
+  field-sizing: content;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: var(--fs-3);
+  line-height: var(--code-line);
+  letter-spacing: 0;
+  tab-size: 2;
+  scrollbar-width: thin;
+}
+.fill {
+  flex: 1;
+  height: 100%;
+  field-sizing: fixed;
+  resize: none;
+}
+
+/* NumberField: − the digits and their unit + in one box, the digits at a fixed width */
+.number {
+  display: inline-flex;
+  align-items: center;
+  height: var(--h-field);
+  padding: 0 var(--sp-1);
+}
+.number > input {
+  width: var(--w-number);
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  appearance: textfield;
+}
+.number > input::-webkit-inner-spin-button,
+.number > input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+.unit {
+  padding: 0 var(--sp-3) 0 var(--sp-2);
+  color: var(--ink-3);
+}
+.step {
+  display: inline-grid;
+  place-items: center;
+  width: var(--sp-9);
+  height: var(--sp-9);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-1);
+  background: none;
+  color: var(--ink-3);
+}
+.step:hover:not(:disabled) {
+  background: var(--ctl-hover);
+  color: var(--ink-1);
+}
+.step:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Toggle: Linear's switch, a pill track with a white knob, your move's accent when on */
+.switch {
+  flex: none;
+  position: relative;
+  width: var(--w-switch);
+  height: var(--h-switch);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--switch-off);
+  transition: background-color var(--dur-fast) ease;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: var(--switch-inset);
+  left: var(--switch-inset);
+  width: calc(var(--h-switch) - var(--switch-inset) * 2);
+  height: calc(var(--h-switch) - var(--switch-inset) * 2);
+  border-radius: var(--r-pill);
+  background: var(--switch-knob);
+  box-shadow: var(--ctl-shadow);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.switch[aria-checked="true"] {
+  background: var(--you);
+}
+.switch[aria-checked="true"]::after {
+  transform: translateX(calc(var(--w-switch) - var(--h-switch)));
+}
+
+/* FormRow: the label in its column, the control (and a quiet note) beside it, a problem under the
+   control in the blocked ink */
+.row {
+  display: grid;
+  grid-template-columns: var(--w-form-label) minmax(0, 1fr);
+  column-gap: var(--sp-6);
+  row-gap: var(--sp-2);
+  align-items: center;
+  min-width: 0;
+}
+.label {
+  align-self: start;
+  display: flex;
+  align-items: center;
+  min-height: var(--h-field);
+  color: var(--tk-label);
+  font-size: var(--fs-3);
+  letter-spacing: var(--track-snug);
+}
+.control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+  min-height: var(--h-field);
+}
+.note {
+  color: var(--ink-3);
+  font-size: var(--fs-2);
+}
+.problem {
+  grid-column: 2;
+  color: var(--blocked);
+  font-size: var(--fs-2);
+}

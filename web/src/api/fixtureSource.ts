@@ -2,7 +2,6 @@
 import {
   ADA,
   INTAKE,
-  ITEMS,
   MESSAGES,
   NOW,
   PEOPLE,
@@ -12,6 +11,17 @@ import {
   TICKETS,
   ticketOf,
 } from "../domain/fixtures";
+import {
+  AGENTS,
+  FILES,
+  itemOf,
+  itemsOf,
+  RUNTIMES,
+  SKILLS,
+  TEMPLATE_FIELDS,
+  ticketWorkflowOf,
+  WORKFLOWS,
+} from "../domain/library-fixtures";
 import type { DataSource } from "./source";
 import type { Page } from "./types";
 
@@ -20,6 +30,13 @@ const page = <T>(items: readonly T[]): Page<T> => ({ items, next: null });
 const settle = <T>(read: () => T): Promise<T> =>
   new Promise((resolve) => {
     resolve(read());
+  });
+/** One library item by id; an unknown id rejects. */
+const byId = <T extends { id: string }>(list: readonly T[], id: string): Promise<T> =>
+  settle(() => {
+    const found = list.find((x) => x.id === id);
+    if (!found) throw new Error(`no fixture ${id}`);
+    return found;
   });
 
 export const fixtureSource: DataSource = {
@@ -33,6 +50,18 @@ export const fixtureSource: DataSource = {
   messages: (key) => Promise.resolve(page(MESSAGES[key] ?? [])),
   runs: (key) => Promise.resolve(page(RUNS[key] ?? [])),
   plan: (key) => Promise.resolve(PLANS[key] ?? null),
-  items: () => Promise.resolve(page(ITEMS)),
+  items: (key) => Promise.resolve(page(itemsOf(key))),
+  item: (key, name) => settle(() => itemOf(key, name)),
+  ticketWorkflow: (key) => settle(() => ticketWorkflowOf(key)),
   intake: () => Promise.resolve(INTAKE),
+  workflows: () => Promise.resolve(page(WORKFLOWS)),
+  workflow: (id) => byId(WORKFLOWS, id),
+  agents: () => Promise.resolve(page(AGENTS)),
+  agent: (id) => byId(AGENTS, id),
+  skills: () => Promise.resolve(page(SKILLS)),
+  skill: (id) => byId(SKILLS, id),
+  files: () => Promise.resolve(page(FILES)),
+  file: (id) => byId(FILES, id),
+  runtimes: () => Promise.resolve(RUNTIMES),
+  templateFields: () => Promise.resolve(TEMPLATE_FIELDS),
 };
