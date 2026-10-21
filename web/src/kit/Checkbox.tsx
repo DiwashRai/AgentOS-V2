@@ -5,6 +5,7 @@
 import { Checkbox as Base } from "@base-ui/react/checkbox";
 import { useId } from "react";
 
+import { useDescribed } from "./described";
 import s from "./Form.module.css";
 import { Icon } from "./Icon";
 
@@ -19,6 +20,9 @@ export interface CheckboxProps {
 
 export function Checkbox({ label, checked, onChange, note }: CheckboxProps) {
   const said = useId();
+  // in a FormRow, the row's note and problem describe it too, after its own note
+  const row = useDescribed();
+  const ids = [note ? `${said}n` : null, row["aria-describedby"] ?? null].filter((x) => x !== null);
   return (
     <label className={s.choice}>
       {/* named by its words alone, its note its description: the label holds both, so a click
@@ -30,7 +34,8 @@ export function Checkbox({ label, checked, onChange, note }: CheckboxProps) {
           onChange(on);
         }}
         aria-labelledby={`${said}l`}
-        {...(note ? { "aria-describedby": `${said}n` } : {})}
+        {...(ids.length > 0 ? { "aria-describedby": ids.join(" ") } : {})}
+        {...(row["aria-invalid"] ? { "aria-invalid": true } : {})}
       >
         <Base.Indicator className={s.mark}>
           <Icon name="check" />

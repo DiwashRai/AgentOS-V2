@@ -31,7 +31,7 @@ function List() {
 }
 
 /** The region the toasts raised under it show in: the frame's, and each dialog's own. */
-export function Toasts({ children }: { children: ReactNode }) {
+export function Toasts({ children, held = false }: { children: ReactNode; held?: boolean }) {
   const layer = useLayer();
   // a dialog's region mounts once the dialog itself is there (its element is set after the things
   // inside it), or it would land in the body, under the dialog
@@ -42,7 +42,9 @@ export function Toasts({ children }: { children: ReactNode }) {
   return (
     <Toast.Provider>
       {children}
-      {placed ? (
+      {/* held (a dialog asking its question): the region is gone, so neither Tab nor F6 can leave
+          the question for it; its toasts show once the question is answered */}
+      {placed && !held ? (
         <Toast.Portal {...layer}>
           <Toast.Viewport className={s.region}>
             <List />

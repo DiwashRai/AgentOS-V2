@@ -178,7 +178,7 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
     >
       <Layer.Provider value={ref}>
         <Tips>
-          <Toasts>
+          <Toasts held={ask !== undefined}>
             {look === "side" ? (
               side
             ) : open ? (

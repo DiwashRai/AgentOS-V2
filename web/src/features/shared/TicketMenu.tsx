@@ -7,6 +7,11 @@ import { Menu, type MenuItem, useToast } from "../../kit";
 function useCopy() {
   const say = useToast();
   return (text: string, done: string) => {
+    // the browser has a clipboard only on a secure origin (https, or this machine)
+    if (!window.isSecureContext) {
+      say("Couldn't copy", "The browser has no clipboard on this address.");
+      return;
+    }
     navigator.clipboard.writeText(text).then(
       () => {
         say(done);
