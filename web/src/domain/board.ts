@@ -57,12 +57,14 @@ export function groupOf(t: Pick<TicketRow, "attention">, me: Person | null): Gro
   }
 }
 
-/** The status mark's model: a kind and its words (kit Mark's props). */
-export interface MarkModel {
-  kind: "run" | "wait" | "you" | "blk" | "done" | "abandoned" | "queued" | "idle";
-  name?: string;
-  ask?: string;
-}
+/** The status mark's model: a kind and its words (kit Mark's props); YOU has no name. */
+export type MarkModel =
+  | { kind: "you"; ask?: string }
+  | {
+      kind: "run" | "wait" | "blk" | "done" | "abandoned" | "queued" | "idle";
+      name?: string;
+      ask?: string;
+    };
 
 export function markOf(a: Attention, me: Person | null): MarkModel {
   switch (a.kind) {

@@ -79,12 +79,3 @@
 .row[data-last] > * {
   padding-bottom: var(--sp-5);
 }
-/* words for assistive tech only */
-.unseen {
-  position: absolute;
-  width: var(--line-1);
-  height: var(--line-1);
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}

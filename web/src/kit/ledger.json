@@ -326,7 +326,7 @@
       "single": "The ticket page and the peek both draw it, through the one properties composition the ticket feature shares with the peek.",
       "props": {
         "items": {
-          "why": "The facts: a label, a value (words, after a muted glyph, or other content) or a picker that brings its own padding, and quiet words after it (main, from the repo).",
+          "why": "The facts: a label, then a value (words after a muted glyph, or other content) or a picker that brings its own padding; quiet words after either (main, from the repo).",
           "items": {
             "icon": {
               "why": "A muted glyph before the value: what kind of fact it is (a type, a repo, a branch, a workflow)."
@@ -429,7 +429,7 @@
           "why": "What the group is."
         },
         "count": {
-          "why": "Its count pill."
+          "why": "Its count, a bare number after the name."
         },
         "icon": {
           "why": "A status glyph or a project key before the name."
@@ -496,7 +496,7 @@
           "why": "One form per state (MarkKind): R12's attention, plus the outcomes."
         },
         "name": {
-          "why": "Who or what, in the state's colour (Builder · run #42, Bea, Blocked); on a glyph, its accessible name, the state's word by default, or false where the words beside it already say it (a tab's count, a counter)."
+          "why": "Who or what, in the state's colour (Builder · run #42, Bea, Blocked), never with YOU, which stands alone; on a glyph, its accessible name, the state's word by default, or false where the words beside it already say it (a filter chip, a counter)."
         },
         "ask": {
           "why": "What it waits for (Sign off the plan)."
@@ -562,7 +562,7 @@
           }
         },
         "fix": {
-          "why": "A problem's or an empty line's way out, on a muted line of its own so neither wraps into the other: words, or words round a link (An admin can fix the query in Settings › Intake)."
+          "why": "A problem's way out, on a muted line of its own so neither wraps into the other: words, or words round a link (An admin can fix the query in Settings › Intake)."
         },
         "more": {
           "why": "A capped list's +N line: what it says and the button that shows the rest (Show 3 more)."
@@ -821,7 +821,7 @@
                   "why": "Where the ticket is on its way.",
                   "values": {
                     "done": "Finished: green.",
-                    "current": "Where it is now: the long segment.",
+                    "current": "Where it is now: its segment in the state's colour, its name in ink.",
                     "upcoming": "Not reached yet (or stale): grey.",
                     "skipped": "Skipped by the workflow: a dashed hairline and a Skipped caption.",
                     "failed": "Where it stopped: crimson."
@@ -849,7 +849,7 @@
           "why": "Smaller words and bare diamonds for gates the ticket isn't parked at (an expanded row)."
         },
         "now": {
-          "why": "What happens now (the live run, its step and its Cancel, a gate's ask, a blocked reason) as a full-width line under the stages, set off by space alone (no card), so the stepper and the run read as one strip (the ticket page and the peek)."
+          "why": "What happens now (the live run, its step and its Cancel, a gate's ask, a blocked reason) as a full-width line under the stages, the two on one run card so they read as one object (the ticket page and the peek)."
         }
       }
     },
@@ -1065,7 +1065,7 @@
       "why": "An on/off setting as Linear's switch (a stage's enabled, resume and needs a repo; an item's writable by agents).",
       "props": {
         "label": {
-          "why": "Its accessible name and tooltip (a FormRow or the row says it on screen)."
+          "why": "Its accessible name (a FormRow or the row says it on screen)."
         },
         "on": {
           "why": "On or off."
@@ -1115,13 +1115,13 @@
       "values": {
         "fill": "Takes the rest (minmax(0, 1fr)).",
         "face": "An avatar's slot.",
-        "xs": "40px: a priority or a count.",
-        "sm": "84px: a key, an age.",
+        "xs": "44px: an age, a run's or a version's number, a row's one icon button.",
+        "sm": "76px: a key, a stage, a source, a short verdict or start time.",
         "md": "112px: a short value.",
         "lg": "128px: a person or a status.",
         "xl": "168px: a long value.",
-        "2xl": "208px: a stage glyph and its label.",
-        "3xl": "300px: a band's lead column."
+        "2xl": "208px: a fill column's floor (a title keeps it), a row's buttons' cap.",
+        "3xl": "300px: a list line's chips, hugging their content up to it."
       }
     },
     "Length": {

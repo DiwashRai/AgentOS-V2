@@ -128,7 +128,7 @@ function itemBadge(t: TicketRow, me: Person | null): ItemBadge {
   }
   if (a.kind === "waiting") return waitingBadge(t, a, me);
   const m = markOf(a, me);
-  return { kind: m.kind, text: m.name ?? "" };
+  return { kind: m.kind, text: m.kind === "you" ? "" : (m.name ?? "") };
 }
 
 /** One item, three levels: its key (12px, muted) leads; then the state's glyph (Linear's status

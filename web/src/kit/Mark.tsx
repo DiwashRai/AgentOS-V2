@@ -33,16 +33,27 @@ export type MarkProps = Common &
         name?: string | false;
         /** Still: no breathing halo (a grid of cards, a board, would pulse all at once). */
         still?: boolean;
-        /** A running glyph's pie: how far its run is (Linear's in-progress circle); half without it. */
+        /** A running glyph's pie: how far its run is (Linear's in-progress circle); half without
+         *  it. */
         progress?: { done: number; total: number } | null;
         ask?: never;
       }
     | {
         glyph?: false;
-        /** The label in the state's colour ("Builder · run #42", "Bea", "Blocked"); `you` shows YOU. */
+        /** The label in the state's colour ("Builder · run #42", "Bea", "Blocked"). */
         name?: string;
-        /** The ask: after YOU in the you hue ("Sign off the plan"); after a name, "· ask". */
+        /** The ask, after the name: "· ask". */
         ask?: string;
+        kind: Exclude<MarkKind, "you">;
+        still?: never;
+        progress?: never;
+      }
+    | {
+        /** YOU stands alone, no name: the ask follows it in the you hue ("Sign off the plan"). */
+        kind: "you";
+        glyph?: false;
+        ask?: string;
+        name?: never;
         still?: never;
         progress?: never;
       }
@@ -75,7 +86,7 @@ export function Mark(props: MarkProps) {
 
 /** YOU stands alone; any other state shows its glyph and its name, and the ask follows the name. */
 function NamedMark({ kind, name, ask, small }: NamedProps) {
-  const named = kind !== "you" && name !== undefined;
+  const named = name !== undefined;
   return (
     <span className={cx(s.mark, s[kind], small && s.small)}>
       {kind === "you" ? <Badge kind="you" /> : <Glyph />}

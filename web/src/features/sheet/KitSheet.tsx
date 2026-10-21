@@ -460,9 +460,13 @@ export function KitSheet() {
           </Section>
           <Section name="Mark">
             <Stack dir="row" gap={8} wrap>
-              {MARKS.map((kind) => (
-                <Mark key={kind} kind={kind} name={kind} ask="ask" />
-              ))}
+              {MARKS.map((kind) =>
+                kind === "you" ? (
+                  <Mark key={kind} kind={kind} ask="ask" />
+                ) : (
+                  <Mark key={kind} kind={kind} name={kind} ask="ask" />
+                ),
+              )}
             </Stack>
             <Stack dir="row" gap={6}>
               {MARKS.map((kind) => (

@@ -38,8 +38,8 @@ export function TextArea({ label, value, onChange, placeholder, lines = 3, fill 
   }, [out]);
   // popped out, the row's note and problem are out of reach (the page under the window is inert):
   // the popped area is described by its own copies of them, under it
-  const inline = describe(description.id, description.note, description.problem);
-  const own = describe(words, description.note, description.problem);
+  const inline = description ? describe(description.id, description) : {};
+  const own = description ? describe(words, description) : {};
   const area = (full: boolean) => (
     <textarea
       ref={full ? popped : undefined}
@@ -82,7 +82,7 @@ export function TextArea({ label, value, onChange, placeholder, lines = 3, fill 
           }
         >
           <div className={s.popped}>
-            <Words id={words} note={description.note} problem={description.problem}>
+            <Words id={words} note={description?.note} problem={description?.problem}>
               {area(true)}
             </Words>
           </div>

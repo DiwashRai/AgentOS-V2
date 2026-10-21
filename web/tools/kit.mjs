@@ -82,20 +82,20 @@ function fieldsOf(checker, t, depth) {
   const items = {};
   for (const field of shapes.flatMap((x) => x.getProperties())) {
     const p = propOf(checker, field, depth + 1);
-    if (!(p.vocab || p.values.length || Object.keys(p.items).length)) continue;
+    if (!(p.vocabs.length || p.values.length || Object.keys(p.items).length)) continue;
     items[field.name] = mergeProp(items[field.name], p);
   }
   return items;
 }
 
-/** One prop as the cases of a union declare it: the first vocabulary, every value, and every nested
+/** One prop as the cases of a union declare it: every vocabulary, every value, and every nested
  *  field merged the same way, at every level. */
 function mergeProp(a, b) {
   if (!a) return b;
   const items = { ...a.items };
   for (const [name, p] of Object.entries(b.items)) items[name] = mergeProp(items[name], p);
   return {
-    vocab: a.vocab ?? b.vocab,
+    vocabs: [...new Set([...a.vocabs, ...b.vocabs])],
     values: [...new Set([...a.values, ...b.values])],
     items,
     array: a.array || b.array,
@@ -105,10 +105,10 @@ function mergeProp(a, b) {
 /** One prop: its vocabulary, or its own literal values, and the fields inside it. */
 function propOf(checker, prop, depth = 0) {
   const declared = prop.valueDeclaration?.type?.getText() ?? "";
-  if (VOCAB.includes(declared)) return { vocab: declared, values: [], items: {}, array: false };
+  if (VOCAB.includes(declared)) return { vocabs: [declared], values: [], items: {}, array: false };
   const t = checker.getNonNullableType(checker.getTypeOfSymbol(prop));
   const array = checker.isArrayType(t);
-  return { vocab: null, values: literals(t), items: fieldsOf(checker, t, depth), array };
+  return { vocabs: [], values: literals(t), items: fieldsOf(checker, t, depth), array };
 }
 
 /** The kit: every PascalCase value its index exports, as a component with its props. */

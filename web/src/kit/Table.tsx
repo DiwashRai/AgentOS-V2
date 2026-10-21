@@ -12,13 +12,15 @@ type Track =
   | {
       width: Length;
       /** As wide as each row's own content, up to width: the free width goes to the fill columns.
-       *  Each row sizes it alone, so it suits a list without a column head (Linear's right cluster). */
+       *  Each row sizes it alone, so it suits a list without a column head (Linear's right
+       *  cluster). */
       hug: true;
       min?: never;
     }
   | {
       width: "fill";
-      /** A fill column's floor: it keeps this width before a hugging column takes more (a title over
+      /** A fill column's floor: it keeps this width before a hugging column takes more (a title
+       *  over
        *  its chips, when the list is narrow). */
       min: Length;
       hug?: never;
@@ -40,7 +42,8 @@ function track(c: Column): string {
 /** The columns rows lay their cells on; a Row resets it for what it holds. */
 export const Columns = createContext<readonly Column[]>([]);
 
-/** Whether the list scrolls inside its surface: a group head in it stays at the top (Head reads it). */
+/** Whether the list scrolls inside its surface: a group head in it stays at the top (Head reads
+ *  it). */
 export const Scrolling = createContext(false);
 
 export function useColumns(): readonly Column[] {

@@ -39,28 +39,21 @@
 .fact:not([data-picker]):hover {
   background: var(--tk-hover);
 }
-.fact > dt {
-  position: absolute;
-  width: var(--line-1);
-  height: var(--line-1);
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
+/* both forms at the row's type: a picker's chip takes the row's size, weight and ink */
 .fact > dd {
-  margin: 0;
-}
-.value {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
   min-width: 0;
   min-height: var(--h-fact);
-  padding: 0 var(--sp-4);
+  margin: 0;
   color: var(--tk-ink);
   font-size: var(--fs-tk);
   font-weight: 400;
   white-space: nowrap;
+}
+.value {
+  padding: 0 var(--sp-4);
 }
 /* the value's muted glyph */
 .glyph {
@@ -68,11 +61,9 @@
   flex: none;
   color: var(--ink-3);
 }
-/* a picker brings its own padding and hover */
-.picker {
-  display: flex;
-  align-items: center;
-  min-height: var(--h-fact);
+/* a picker brings its own padding and hover; a note after it keeps the chip's end padding */
+.picker > .note {
+  padding-right: var(--sp-4);
 }
 .note {
   margin-left: calc(var(--sp-2) * -1);

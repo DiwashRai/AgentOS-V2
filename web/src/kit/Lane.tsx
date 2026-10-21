@@ -89,8 +89,8 @@ interface JointProps {
  *  go (`noGate`) an empty slot is inert and says why; one that got there by a reorder stays a
  *  toggle, so it can be taken off. */
 function Diamond({ st, i, edit }: Omit<JointProps, "last">) {
-  if (!edit)
-    return <span className={s.gate} data-on role="img" aria-label={`Gate: ${st.gate ?? ""}`} />;
+  // read only, the gate's name is written beside it: the diamond is drawing alone
+  if (!edit) return <span className={s.gate} data-on aria-hidden="true" />;
   const on = st.gate !== null;
   if (st.noGate !== undefined && !on)
     return (

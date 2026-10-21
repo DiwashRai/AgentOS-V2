@@ -22,7 +22,8 @@ export interface ChoiceProps<T extends ChoiceItem> {
   items: readonly T[];
   value: string;
   onChange: (id: string) => void;
-  /** The trigger: its class, its name when its body doesn't say it, a flag for its look, its body. */
+  /** The trigger: its class, its name when its body doesn't say it, a flag for its look, its body.
+   *  */
   trigger: { className: string | undefined; name?: string; current?: boolean; body: ReactNode };
   /** Opens above the trigger (the sidebar's foot) or below it. */
   side?: "top" | "bottom";

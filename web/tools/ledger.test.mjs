@@ -13,12 +13,12 @@ const ledger = (props) => ({
   components: { Cell: { why: "a cell", props } },
 });
 const kit = (props) => ({ Cell: { props } });
-const shape = (values, vocab = null) => ({ vocab, values, items: {}, array: false });
+const shape = (values, vocabs = []) => ({ vocabs, values, items: {}, array: false });
 
 describe("the kit ledger", () => {
   it("takes a vocabulary prop's reasons from the vocabulary", () => {
     const problems = ledgerProblems(
-      kit({ width: shape([], "Width") }),
+      kit({ width: shape([], ["Width"]) }),
       VOCAB,
       ledger({ width: { why: "how wide" } }),
     );
@@ -27,7 +27,7 @@ describe("the kit ledger", () => {
 
   it("wants a reason for a value a union adds beside a vocabulary", () => {
     const problems = ledgerProblems(
-      kit({ width: shape(["auto"], "Width") }),
+      kit({ width: shape(["auto"], ["Width"]) }),
       VOCAB,
       ledger({ width: { why: "how wide" } }),
     );
@@ -37,12 +37,23 @@ describe("the kit ledger", () => {
 
   it("names a reason beside a vocabulary the kit no longer has", () => {
     const problems = ledgerProblems(
-      kit({ width: shape([], "Width") }),
+      kit({ width: shape([], ["Width"]) }),
       VOCAB,
       ledger({ width: { why: "how wide", values: { auto: "its own" } } }),
     );
     expect(problems).toHaveLength(1);
     expect(problems[0]).toContain("width=auto");
+  });
+
+  it("checks every vocabulary a union's cases give one prop, whatever their order", () => {
+    const props = { width: shape(["fill"], ["Length", "Width"]) };
+    expect(ledgerProblems(kit(props), VOCAB, ledger({ width: { why: "how wide" } }))).toEqual([]);
+    const lost = { ...VOCAB_LEDGER, Width: undefined };
+    const problems = ledgerProblems(kit(props), VOCAB, {
+      ...ledger({ width: { why: "how wide" } }),
+      vocab: lost,
+    });
+    expect(problems.some((p) => p.includes("vocabulary Width"))).toBe(true);
   });
 
   it("takes a narrowing vocabulary's reasons from the one it narrows", () => {

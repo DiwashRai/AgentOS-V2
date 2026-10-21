@@ -19,6 +19,10 @@
   outline: var(--line-2) solid var(--focus);
   outline-offset: var(--focus-tight);
 }
+/* a control whose row has a problem: its edge in the problem's colour, as the words under it */
+.box:is([aria-invalid="true"], :has([aria-invalid="true"])) {
+  border-color: var(--blocked);
+}
 .box::placeholder,
 .box ::placeholder {
   color: var(--ink-3);

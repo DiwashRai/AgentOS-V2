@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import s from "./Facts.module.css";
 import { Icon, type IconName } from "./Icon";
+import u from "./unseen.module.css";
 
 export type Fact = {
   label: string;
@@ -19,7 +20,8 @@ export type Fact = {
       picker?: never;
     }
   | {
-      /** A picker in place of the value (the ticket's owner): it brings its own padding and hover. */
+      /** A picker in place of the value (the ticket's owner): it brings its own padding and hover.
+       *  */
       picker: ReactNode;
       value?: never;
       icon?: never;
@@ -32,9 +34,17 @@ export interface FactsProps {
   label?: string;
 }
 
-/** A fact's value: a picker as it is, or the glyph, the words and the note in the chip's padding. */
+/** A fact's value: a picker as it is, or the glyph, the words and the note in the chip's padding.
+ *  */
 function Value({ f }: { f: Fact }) {
-  if (f.picker !== undefined) return <dd className={s.picker}>{f.picker}</dd>;
+  const note = f.note ? <span className={s.note}>{f.note}</span> : null;
+  if (f.picker !== undefined)
+    return (
+      <dd className={s.picker}>
+        {f.picker}
+        {note}
+      </dd>
+    );
   return (
     <dd className={s.value}>
       {f.icon ? (
@@ -43,7 +53,7 @@ function Value({ f }: { f: Fact }) {
         </span>
       ) : null}
       {f.value}
-      {f.note ? <span className={s.note}>{f.note}</span> : null}
+      {note}
     </dd>
   );
 }
@@ -60,7 +70,7 @@ export function Facts({ items, label }: FactsProps) {
             data-picker={f.picker !== undefined || undefined}
             title={f.label}
           >
-            <dt>{f.label}</dt>
+            <dt className={u.unseen}>{f.label}</dt>
             <Value f={f} />
           </div>
         ))}

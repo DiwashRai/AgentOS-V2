@@ -385,19 +385,18 @@
   /* themes · faces: a hue each, the same in every theme (a person reads the same everywhere), white
      initials on it */
   --id-violet: #7c3aed;
-  --id-plum: #2563eb;
+  --id-blue: #2563eb;
   --id-rose: #db2777;
-  --id-gold: #0f766e;
-  --id-olive: #4b5b78;
+  --id-teal: #0f766e;
+  --id-slate: #4b5b78;
   --id-on: #ffffff;
-  --id-gold-on: #ffffff;
   /* rows: each face toned into the page by the theme's --face-id (full on light, a touch less on
      dark) */
   --id-violet-row: color-mix(in srgb, var(--id-violet) var(--face-id), var(--page));
-  --id-plum-row: color-mix(in srgb, var(--id-plum) var(--face-id), var(--page));
+  --id-blue-row: color-mix(in srgb, var(--id-blue) var(--face-id), var(--page));
   --id-rose-row: color-mix(in srgb, var(--id-rose) var(--face-id), var(--page));
-  --id-gold-row: color-mix(in srgb, var(--id-gold) var(--face-id), var(--page));
-  --id-olive-row: color-mix(in srgb, var(--id-olive) var(--face-id), var(--page));
+  --id-teal-row: color-mix(in srgb, var(--id-teal) var(--face-id), var(--page));
+  --id-slate-row: color-mix(in srgb, var(--id-slate) var(--face-id), var(--page));
   /* agents: a card's bottom-edge track (a faint ink, filled live, the step under way a soft
      live); a queued card's hairline, fainter than a running one's; its chips' fill and faint edge
      (Linear's label chip), the stage's dot; the agent's glyph disc in the pill (a live tint) */
@@ -517,15 +516,15 @@
   --w-meter: 48px; /* a run meter inline in a row */
   --tile-bar: 2px; /* agents: a card's progress track, along its bottom edge */
   --w-tile-agent-glyph: 12px; /* agents: the agent's glyph inside its disc */
-  --col-xs: 44px; /* rows: an age, as wide as "3h 10m" */
+  --col-xs: 44px; /* rows: an age (as wide as "3h 10m"), a run's or a version's number */
   --prop-dot: 7px; /* rows: a property chip's dot */
   --h-face: 18px; /* rows: a face in a row or a picker */
-  --col-sm: 76px; /* rows: a key and its priority, a stage, a source */
+  --col-sm: 76px; /* rows: a key, a stage, a source, a verdict */
   --col-md: 112px;
   --col-lg: 128px;
   --col-xl: 168px;
-  --col-2xl: 208px; /* a row's buttons, at least */
-  --col-3xl: 300px; /* My queue's ask */
+  --col-2xl: 208px; /* a fill column's floor; a row's buttons' cap */
+  --col-3xl: 300px; /* a list line's chips, hugging up to it */
   /* intake · Notice: the empty ring, a row glyph's size */
   --notice-mark: 12px;
   /* intake · Notice: a problem's reading measure, so what went wrong wraps short of the row's end */
@@ -550,6 +549,7 @@
   /* motion: transform and opacity only, and only on live things */
   --dur-fast: 0.16s;
   --dur-breathe: 2s;
+  --dur-sweep: 1.7s; /* a running meter's sweep */
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
 
   /* sidebar: Linear's labelled sidebar: 240px wide, items 32px tall 2px apart (a 34px pitch), three groups (the
@@ -603,6 +603,7 @@
   --w-ask: 400px;
   --w-editor: 960px; /* a popped-out text area's measure */
   --w-form-col: 280px; /* a form's two columns fold to one below this each */
+  --z-raise: 1; /* a piece over its siblings (a drop's tag, a drop line) */
   --z-sticky: 2; /* a list's sticky group heads, over its rows */
   --z-pop: 10; /* the kit's popups, over everything on the page (sticky heads included) */
   /* focus: the ring's offset; outside by default, tight on a bordered box (a field, a chip's ×), inside

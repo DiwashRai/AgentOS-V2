@@ -344,8 +344,8 @@ export function Editor({ title, draft, context, middle, banner }: EditorProps) {
   return (
     <Page
       title={title}
-      {...(context ? { context } : {})}
-      {...(middle ? { middle } : {})}
+      context={context}
+      middle={middle}
       action={<Actions draft={draft} problems={problems.count} />}
       side={{
         content: (

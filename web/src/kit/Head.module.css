@@ -138,5 +138,5 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  background: linear-gradient(var(--list-band), var(--list-band)), var(--recess);
+  background: linear-gradient(var(--list-band), var(--list-band)), var(--ground);
 }

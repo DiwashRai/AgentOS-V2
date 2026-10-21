@@ -41,10 +41,9 @@
 .scroll > .list {
   flex: 1;
   overflow: hidden auto;
-  /* rows run edge to edge (their focus ring sits inside); room at the end, as tall as the fade the
-     rows scroll out under, so the last row clears it */
+  /* rows run edge to edge (their focus ring sits inside); room under the last row when scrolled to
+     the end, so it doesn't sit on the surface's foot */
   padding: 0 0 var(--sp-10);
-  mask-image: var(--list-fade);
 }
 /* the foot keeps the list's scrollbar gutter, so its far end lines up with the rows' */
 .foot {

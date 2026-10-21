@@ -30,13 +30,21 @@ export type NoticeProps = Said &
         more?: never;
       }
     | {
-        kind: "empty" | "problem";
-        /** item: a line of a two-line item list (Intake), in the items' size; an empty ring or a
-         *  problem's blocked dot sits where the group labels' chevrons do, the words just after it. */
+        kind: "problem";
+        /** item: a line of a two-line item list (Intake), in the items' size; the blocked dot sits
+         *  where the group labels' chevrons do, the words just after it. */
         align?: "item";
-        /** A problem's second line: what can be done about it. */
+        /** The problem's second line: what can be done about it. */
         fix?: NoticeFix;
         error?: never;
+        more?: never;
+      }
+    | {
+        kind: "empty";
+        /** item: as a problem's, the empty ring in the chevrons' slot. */
+        align?: "item";
+        error?: never;
+        fix?: never;
         more?: never;
       }
     | {

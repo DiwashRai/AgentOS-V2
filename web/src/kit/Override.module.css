@@ -21,12 +21,3 @@
   color: var(--ink-3);
   text-decoration-color: var(--ink-3);
 }
-/* words for assistive tech only */
-.unseen {
-  position: absolute;
-  width: var(--line-1);
-  height: var(--line-1);
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}

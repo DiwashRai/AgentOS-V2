@@ -12,6 +12,9 @@ const STATES = [
   { name: "ticket-missing", path: "/t/NW-404" },
   { name: "compact-repo", path: "/compact?repo=northwind/web" },
   { name: "all-teams", path: "/teams" },
+  // an item editor: its text fills the window (TextArea fill through Page's measure)
+  { name: "skill-editor", path: "/library/skills/ticket" },
+  { name: "workflow-editor", path: "/library/workflows/standard" },
 ] as const;
 
 async function open(page: Page, path: string, theme: string) {

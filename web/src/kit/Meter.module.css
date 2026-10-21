@@ -25,7 +25,7 @@
   width: 45%;
   border-radius: var(--line-2);
   background: var(--live);
-  animation: sweep 1.7s var(--ease-out) infinite;
+  animation: sweep var(--dur-sweep) var(--ease-out) infinite;
 }
 @keyframes sweep {
   0% {

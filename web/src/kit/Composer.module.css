@@ -26,7 +26,7 @@
 .compose:hover {
   border-color: var(--rule-strong);
 }
-.compose:focus-within {
+.compose:has(textarea:focus-visible) {
   border-color: var(--rule-strong);
   outline: var(--line-2) solid var(--focus);
   outline-offset: var(--focus-out);

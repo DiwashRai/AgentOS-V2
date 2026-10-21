@@ -101,9 +101,9 @@
   background: var(--side-on);
   color: var(--side-on-ink);
 }
-.side > svg {
-  width: var(--sp-8);
-  height: var(--sp-8);
+.side > .glyph {
+  display: inline-flex;
+  flex: none;
   color: var(--side-icon, var(--side-ink));
 }
 .side > .text {

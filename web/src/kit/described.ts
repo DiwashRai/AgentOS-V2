@@ -10,16 +10,18 @@ export interface Described {
   "aria-invalid"?: true;
 }
 
-export interface Description {
-  /** The id the row's words are drawn under: the note at `${id}n`, the problem at `${id}p`. */
-  id?: string;
-  note?: string;
-  problem?: string;
+/** A row's words: its note and its problem. */
+export interface Words {
+  note?: string | undefined;
+  problem?: string | undefined;
 }
 
+/** What a FormRow tells its controls: the id its words are drawn under (the note at `${id}n`, the
+ *  problem at `${id}p`) and the words; null outside a row. */
+export type Description = ({ id: string } & Words) | null;
+
 /** The one rule: the words' ids, and invalid while there is a problem. */
-export function describe(id: string | undefined, note?: string, problem?: string): Described {
-  if (id === undefined) return {};
+export function describe(id: string, { note, problem }: Words): Described {
   const ids = [note ? `${id}n` : null, problem ? `${id}p` : null].filter((x) => x !== null);
   return {
     ...(ids.length > 0 ? { "aria-describedby": ids.join(" ") } : {}),
@@ -27,12 +29,12 @@ export function describe(id: string | undefined, note?: string, problem?: string
   };
 }
 
-export const DescribedBy = createContext<Description>({});
+export const DescribedBy = createContext<Description>(null);
 
 /** The description and validity a control takes from the FormRow it is in. */
 export function useDescribed(): Described {
   const d = useContext(DescribedBy);
-  return describe(d.id, d.note, d.problem);
+  return d ? describe(d.id, d) : {};
 }
 
 /** The row's words, for a control that draws its own copy of them. */

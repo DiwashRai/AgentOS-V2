@@ -5,6 +5,7 @@
 import { type DragEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 import s from "./Drag.module.css";
+import u from "./unseen.module.css";
 import { claim, claimed, type DragPayload, kindOf, left, payloadOf, startDrag } from "./dnd";
 import { Icon } from "./Icon";
 import { type Space, space, vars } from "./vars";
@@ -167,7 +168,7 @@ export function Sortable({
           {it.content}
         </div>
       ))}
-      <span className={s.said} aria-live="polite">
+      <span className={u.unseen} aria-live="polite">
         {said}
       </span>
     </div>

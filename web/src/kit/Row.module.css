@@ -128,19 +128,14 @@
 
 /* band: a board's swimlane. No surface of its own: the first cell names it, every other cell is
    a stage's lane, its items stacked as cards straight on the page (a lane with no card is bare
-   page). The cells run the full width of the board,
-   and swimlanes are ruled apart. A flat band is the board's column head: one short line of stage
-   names over the lanes, on the same grid. */
+   page). The cells run the full width of the board, and swimlanes are ruled apart. columns: the
+   board's column head, one short line of stage names over the lanes, on the same grid. */
 .band,
 .row.band:is(:hover, :has(:focus-visible)) {
   z-index: auto;
   background: none;
   box-shadow: none;
   border-radius: 0;
-}
-/* the focus ring goes round the focused card, not the whole swimlane */
-.row.band:has(.hit:focus-visible) {
-  outline: none;
 }
 .band > .inner {
   align-items: stretch;

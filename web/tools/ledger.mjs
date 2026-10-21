@@ -1,14 +1,22 @@
-// The ledger's reasons, checked against what the kit declares (kit.mjs reads both): every`n// component, prop, variant and nested field has a reason; a prop typed with a vocabulary takes the`n// vocabulary's, and a value a union adds beside it needs its own; a vocabulary that narrows another`n// (`of`) takes that one's reasons; the ledger names nothing the kit doesn't have; no component has`n// more than `budget.props` props. Pure, so its tests run on plain values.`n
+// The ledger's reasons, checked against what the kit declares (kit.mjs reads both): every
+// component, prop, variant and nested field has a reason; a prop typed with a vocabulary takes the
+// vocabulary's, and a value a union adds beside it needs its own; a vocabulary that narrows another
+// (`of`) takes that one's reasons; the ledger names nothing the kit doesn't have; no component has
+// more than `budget.props` props. Pure, so its tests run on plain values.
+
 function propProblems(where, value, entry, led, vocab) {
   if (!entry?.why) return [`${where}: no reason in the ledger`];
-  if (value.vocab) {
-    if (!led.vocab?.[value.vocab]) return [`${where}: vocabulary ${value.vocab} not in the ledger`];
-    // a value a union's other case adds beside the vocabulary needs its own reason
-    const own = vocab[value.vocab] ?? [];
+  if (value.vocabs.length) {
+    const unknown = value.vocabs.filter((name) => !led.vocab?.[name]);
+    if (unknown.length)
+      return unknown.map((name) => `${where}: vocabulary ${name} not in the ledger`);
+    // a value a union's other case adds beside the vocabularies needs its own reason
+    const own = value.vocabs.flatMap((name) => vocab[name] ?? []);
     const extra = value.values.filter((v) => !own.includes(v));
+    const beside = value.vocabs.join(", ");
     const out = extra
       .filter((v) => !entry.values?.[v])
-      .map((v) => `${where}=${v}: no reason in the ledger (beside ${value.vocab})`);
+      .map((v) => `${where}=${v}: no reason in the ledger (beside ${beside})`);
     for (const v of Object.keys(entry.values ?? {}))
       if (!extra.includes(v)) out.push(`${where}=${v}: in the ledger, not in the kit`);
     return out;

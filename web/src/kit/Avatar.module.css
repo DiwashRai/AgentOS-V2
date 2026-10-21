@@ -55,22 +55,21 @@
   --id: var(--id-violet);
   --id-row: var(--id-violet-row);
 }
-.plum {
-  --id: var(--id-plum);
-  --id-row: var(--id-plum-row);
+.blue {
+  --id: var(--id-blue);
+  --id-row: var(--id-blue-row);
 }
 .rose {
   --id: var(--id-rose);
   --id-row: var(--id-rose-row);
 }
-.gold {
-  --id: var(--id-gold);
-  --id-row: var(--id-gold-row);
-  --id-on: var(--id-gold-on);
+.teal {
+  --id: var(--id-teal);
+  --id-row: var(--id-teal-row);
 }
-.olive {
-  --id: var(--id-olive);
-  --id-row: var(--id-olive-row);
+.slate {
+  --id: var(--id-slate);
+  --id-row: var(--id-slate-row);
 }
 .faces {
   display: inline-flex;

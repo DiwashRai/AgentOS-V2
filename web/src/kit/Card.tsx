@@ -8,14 +8,16 @@
 //   along its bottom edge (its summary, the card's full height, is the Meter's containing block).
 // - ticket: a ticket on a board (All teams): its lines one under another on a hairline card.
 // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
-// ring round the card, and a click anywhere on it for a pointer. What the lines say is the screen's.
+// ring round the card, and a click anywhere on it for a pointer. What the lines say is the
+// screen's.
 import type { ReactNode } from "react";
 
 import s from "./Card.module.css";
 import { Opener, openOnClick } from "./opener";
 
 interface Common {
-  /** What it is: a stage's button says "Edit Implement"; the others say this whole ("Peek at …"). */
+  /** What it is: a stage's button says "Edit Implement"; the others say this whole ("Peek at …").
+   *  */
   label: string;
   /** Its lines: a stage's summary, an agent's or a ticket's lines. */
   children: ReactNode;
@@ -73,7 +75,8 @@ function Foot({ problem, open }: { problem: string | undefined; open: ReactNode 
 /** A data attribute that is there or not. */
 const flag = (on: boolean) => on || undefined;
 
-/** What a card draws, from its case: a stage's face, settings and problem, and what its button says. */
+/** What a card draws, from its case: a stage's face, settings and problem, and what its button
+ *  says. */
 function caseOf(props: CardProps) {
   if (props.look === "agent" || props.look === "ticket") {
     const off = props.look === "agent" && props.off === true;

@@ -1,5 +1,6 @@
 // A picker: one of a list (the ticket's owner, an agent's runtime, the theme). Base UI's combobox
-// does the keyboard, filtering and placement; the look is ours: closed, a property chip (face, name,
+// does the keyboard, filtering and placement; the look is ours: closed, a property chip (face,
+// name,
 // chevron), a form field, or a sidebar row (its glyph, the label, the current choice muted, a
 // chevron pointing up); open, the kit's one popover, a "Change owner…" filter on its first line,
 // each option with its picture, name and muted detail, the current one ticked. The sidebar's opens
@@ -55,7 +56,11 @@ function TriggerBody({ label, current, slot, look, icon }: TriggerProps) {
   if (look === "side") {
     return (
       <>
-        {icon ? <Icon name={icon} /> : null}
+        {icon ? (
+          <span className={s.glyph}>
+            <Icon name={icon} />
+          </span>
+        ) : null}
         <span className={s.text}>{label}</span>
         <span className={s.now}>{current?.label}</span>
         <span className={cx(s.chev, s.up)}>

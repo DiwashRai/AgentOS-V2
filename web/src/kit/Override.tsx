@@ -2,6 +2,7 @@
 // the value set, then the one it replaces struck through after it, so an override reads without
 // hovering and without borrowing a state's hue. Whose values they are is the screen's to say.
 import s from "./Override.module.css";
+import u from "./unseen.module.css";
 
 export interface OverrideProps {
   /** The value set (xhigh). */
@@ -17,7 +18,7 @@ export function Override({ value, own }: OverrideProps) {
       <b>{value}</b>
       <s aria-hidden="true">{own}</s>
       {/* what the struck value says, in words for assistive tech */}
-      <span className={s.unseen}>{`, replacing ${own}`}</span>
+      <span className={u.unseen}>{`, replacing ${own}`}</span>
     </span>
   );
 }

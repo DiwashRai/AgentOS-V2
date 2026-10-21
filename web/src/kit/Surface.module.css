@@ -1,14 +1,18 @@
+/* --ground: the surface's own fill, for what paints an opaque copy of it (a sticky head) */
 .surface {
+  --ground: var(--page);
   min-width: 0;
   padding: var(--pad);
 }
 .recess {
+  --ground: var(--recess);
   background: var(--recess);
   box-shadow: var(--shadow-recess);
   border-radius: var(--r-5);
 }
 /* a sheet is Linear's card: one hairline, a near-flat fill, no lift */
 .sheet {
+  --ground: var(--tk-card);
   background: var(--tk-card);
   box-shadow: 0 0 0 var(--line-1) var(--tk-card-edge);
   border-radius: var(--r-4);

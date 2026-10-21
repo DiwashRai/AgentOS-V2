@@ -5,6 +5,7 @@
 import type { ReactNode } from "react";
 
 import s from "./Compare.module.css";
+import u from "./unseen.module.css";
 
 export interface CompareCell {
   text: string;
@@ -34,12 +35,12 @@ function Line({ cell, side }: { cell: CompareCell | null; side: "mine" | "theirs
   if (cell === null)
     return (
       <span className={s.gap} role="cell" data-side={side}>
-        <span className={s.unseen}>no line</span>
+        <span className={u.unseen}>no line</span>
       </span>
     );
   return (
     <span className={s.line} role="cell" data-side={side} data-changed={cell.changed || undefined}>
-      {cell.changed ? <span className={s.unseen}>changed: </span> : null}
+      {cell.changed ? <span className={u.unseen}>changed: </span> : null}
       {cell.text === "" ? "​" : cell.text}
     </span>
   );

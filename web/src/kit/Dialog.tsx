@@ -81,7 +81,18 @@ function Full({
         <div className={s.view}>{children}</div>
       </div>
       {hasAsk ? (
-        <div className={s.scrim}>
+        <div
+          className={s.scrim}
+          role="presentation"
+          // the question owns Esc: it answers the question (the screen's toggle), and never reaches
+          // the dialog, whose repeat cancel the browser would not let be held
+          onKeyDown={(e) => {
+            if (e.key !== "Escape") return;
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }}
+        >
           <div
             ref={asking}
             className={s.ask}

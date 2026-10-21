@@ -189,7 +189,8 @@ interface PillsProps {
   onChange: (id: string) => void;
 }
 
-/** Every pill, as wide as the form gives it: nothing to measure. In a FormRow, the group is described
+/** Every pill, as wide as the form gives it: nothing to measure. In a FormRow, the group is
+ *  described
  *  by the row's note and problem, as its overflow trigger is. */
 function Fit({ label, items, value, onChange }: SegmentedProps) {
   const described = useDescribed();
@@ -225,7 +226,7 @@ function Measured({ label, items, value, onChange }: SegmentedProps) {
       <Pills items={items} value={value} shown={(i) => shown.has(i)} onChange={onChange} />
       {rest.length > 0 ? (
         // the group carries the row's description; its overflow chip doesn't repeat it
-        <DescribedBy.Provider value={{}}>
+        <DescribedBy.Provider value={null}>
           <More label={label} items={rest} value={value} current={current} onChange={onChange} />
         </DescribedBy.Provider>
       ) : null}

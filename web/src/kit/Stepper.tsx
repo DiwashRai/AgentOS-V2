@@ -68,7 +68,8 @@ const GATE_SUB: Record<StepGate["state"], (g: StepGate) => string> = {
 };
 
 /** A gate: its diamond on the track where its stage ends, its name a caption under the stage's;
- *  bare (the diamond only, the name in its title) when compact and the ticket isn't parked there. */
+ *  bare (the diamond only, the name in its title) when compact and the ticket isn't parked there.
+ *  */
 function GateCaption({ g, bare }: { g: StepGate; bare: boolean }) {
   if (bare && !parked(g)) return null;
   const sub = GATE_SUB[g.state](g);
@@ -77,6 +78,22 @@ function GateCaption({ g, bare }: { g: StepGate; bare: boolean }) {
       <span>{g.short}</span>
       {sub ? <b>{sub}</b> : null}
     </span>
+  );
+}
+
+/** The gate's diamond on the track: drawing alone where its caption names it; bare, it is the
+ *  gate's only sign, named for assistive tech too. */
+function Knot({ g, bare }: { g: StepGate; bare: boolean }) {
+  if (!bare || parked(g))
+    return <span className={s.knot} data-state={g.state} aria-hidden="true" />;
+  return (
+    <span
+      className={s.knot}
+      data-state={g.state}
+      role="img"
+      aria-label={`Gate: `}
+      title={g.label}
+    />
   );
 }
 
@@ -95,11 +112,7 @@ function StageStep({ step, final, text, bare }: StageProps) {
       data-state={step.state}
       aria-current={at ? "step" : undefined}
     >
-      <span className={s.bar}>
-        {step.gate ? (
-          <span className={s.knot} data-state={step.gate.state} title={step.gate.label} />
-        ) : null}
-      </span>
+      <span className={s.bar}>{step.gate ? <Knot g={step.gate} bare={bare} /> : null}</span>
       <span className={s.name} title={step.name}>
         {final ? <Icon name="tick-sm" /> : null}
         {step.name}
