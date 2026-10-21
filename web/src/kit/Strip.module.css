@@ -1,6 +1,6 @@
 /* Strip: the stages on one grid at the stepper's scale, a segment each in its phase's hue, a gate a
    solid diamond in its own column, a loop a bracket under its stages on the grid's second row;
-   the words after it in the rows' secondary ink */
+   the words after it quiet, as a row's description */
 .strip {
   display: inline-flex;
   align-items: center;
@@ -69,5 +69,5 @@
   text-overflow: ellipsis;
   font-size: var(--fs-3);
   font-weight: 400;
-  color: var(--ink-2);
+  color: var(--ink-3);
 }

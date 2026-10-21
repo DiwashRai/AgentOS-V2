@@ -22,7 +22,6 @@ import {
   Page,
   type PageProps,
   Stack,
-  Surface,
   Text,
 } from "../../kit";
 import type { Draft } from "./draft";
@@ -65,8 +64,8 @@ type Landed = Fresh & { stage: string };
 
 const EVERY = "*";
 
-/** Every stage gets these: the workflow's skills and files as chips, each with a remove; a skill
- *  or a file dropped here goes to every stage. */
+/** Every stage gets these: a line over the lane, the workflow's skills and files as chips, each with
+ *  a remove; a skill or a file dropped here goes to every stage. */
 function ContextStrip({ draft, lib, fresh, land }: Lands & { draft: Draft; lib: Library }) {
   const c = draft.body.context;
   const add = (p: DragPayload) => {
@@ -77,31 +76,27 @@ function ContextStrip({ draft, lib, fresh, land }: Lands & { draft: Draft; lib: 
   };
   return (
     <Drop accept={["skill", "file"]} onDrop={add} label="Give every stage">
-      <Surface level="sheet" pad={5} label="Every stage gets">
-        <Stack dir="row" gap={4} align="center" wrap>
-          <Text variant="meta" tone="2" weight={500}>
-            Every stage gets
-          </Text>
-          {(["skills", "files"] as const).flatMap((kind) =>
-            c[kind].map((id) => {
-              const ref = `${kind}:${id}`;
-              const flash = fresh?.stage === EVERY && fresh.ref === ref;
-              return (
-                <Chip
-                  key={flash ? `${ref}:${String(fresh.n)}` : ref}
-                  lead={kind}
-                  label={refName(lib, kind, id)}
-                  flash={flash}
-                  onRemove={() => {
-                    draft.change((b) => ({ ...b, context: withoutRef(b.context, kind, id) }));
-                  }}
-                />
-              );
-            }),
-          )}
-          <Text variant="meta">Drop a skill or a file here</Text>
-        </Stack>
-      </Surface>
+      <Stack dir="row" gap={4} align="center" wrap>
+        <Text tone="3">Every stage gets</Text>
+        {(["skills", "files"] as const).flatMap((kind) =>
+          c[kind].map((id) => {
+            const ref = `${kind}:${id}`;
+            const flash = fresh?.stage === EVERY && fresh.ref === ref;
+            return (
+              <Chip
+                key={flash ? `${ref}:${String(fresh.n)}` : ref}
+                lead={kind}
+                label={refName(lib, kind, id)}
+                flash={flash}
+                onRemove={() => {
+                  draft.change((b) => ({ ...b, context: withoutRef(b.context, kind, id) }));
+                }}
+              />
+            );
+          }),
+        )}
+        <Text variant="meta">Drop a skill or a file here</Text>
+      </Stack>
     </Drop>
   );
 }

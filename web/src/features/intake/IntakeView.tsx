@@ -17,6 +17,7 @@ import {
   Page,
   Row,
   Stack,
+  Surface,
   Swap,
   Table,
   Text,
@@ -39,23 +40,24 @@ import {
   visible,
 } from "./model";
 
-// One triage inbox, as Linear's: the three queries run on as one list, each opened by a plain
-// label line on the list's hairline (no band). An issue is two lines at one size: the title firm,
-// and under it one muted line led by who has it (a face; Unassigned a dashed empty face, so every
-// line starts on one glyph) and one fact (a priority worth saying, led by its bars, else the Jira
-// status; the rest in its tooltip). At the right the Jira key on the title's line and the age on
-// the meta's ("1h ago", in its largest unit; to the minute in its tooltip), flush on one edge;
-// under the pointer or with focus, Take in takes the age's place. No column head: the cells say
-// what they are.
+// One triage inbox, as Linear's own inbox: each saved query is its own card on the page (its head
+// a band at the card's top, its issues under it), so the three read as three inboxes at a glance.
+// An issue is Linear's inbox row: who has it as a face that leads both lines (Unassigned a dashed
+// empty face, so every row starts on one glyph); the title firm; under it one smaller muted line,
+// the Jira key (a link to it), then who and one fact (a priority worth saying, led by its bars,
+// else the Jira status; the rest in its tooltip). At the right, the age ("1h ago", in its largest
+// unit; to the minute in its tooltip); under the pointer or with focus, Take in takes its place.
+// No column head: the cells say what they are.
 const COLUMNS: readonly Column[] = [
+  { label: "Owner", width: "sm", hug: true },
   { label: "Issue", width: "fill" },
-  { label: "Jira", width: "lg", end: true, hug: true },
+  { label: "Age", width: "lg", end: true, hug: true },
 ];
 
-/** Muted words at the row's own size (14px regular), as Linear sets a row's second line. */
+/** Muted words a step under the title (13px regular), the row's second line. */
 function Quiet({ children, title }: { children: string; title?: string }) {
   return (
-    <Text variant="label" weight={400} tone="3" truncate {...(title ? { title } : {})}>
+    <Text variant="ui" tone="3" truncate {...(title ? { title } : {})}>
       {children}
     </Text>
   );
@@ -65,7 +67,10 @@ function Meta({ issue }: { issue: IntakeIssue }) {
   const fact = metaFact(issue);
   return (
     <Stack dir="row" gap={3} align="center">
-      {issue.assignee ? <Avatar name={issue.assignee} beside /> : <Avatar dashed />}
+      <Button variant="link" href={issue.url} title={`Open ${issue.key} in Jira`}>
+        <Badge kind="key">{issue.key}</Badge>
+      </Button>
+      <Quiet>·</Quiet>
       <Quiet>{issue.assignee ?? "Unassigned"}</Quiet>
       <Quiet>·</Quiet>
       <Stack dir="row" gap={2} align="center">
@@ -79,32 +84,28 @@ function Meta({ issue }: { issue: IntakeIssue }) {
 function IssueRow({ issue, now }: { issue: IntakeIssue; now: number }) {
   return (
     <Row kind="item">
-      <Stack gap={4} grow>
+      {issue.assignee ? (
+        <Avatar name={issue.assignee} size="talk" beside />
+      ) : (
+        <Avatar size="talk" dashed />
+      )}
+      <Stack gap={1} grow>
         <Text variant="label" truncate title={issue.title}>
           {issue.title}
         </Text>
         <Meta issue={issue} />
       </Stack>
-      <Stack gap={4}>
-        <Stack dir="row" justify="end">
-          <Button variant="link" href={issue.url} title={`Open ${issue.key} in Jira`}>
-            <Badge kind="key">{issue.key}</Badge>
+      <Swap
+        hover={
+          <Button size="xs" title={`Take in ${issue.key}`}>
+            Take in
           </Button>
-        </Stack>
-        <Stack dir="row" align="center" justify="end">
-          <Swap
-            hover={
-              <Button size="xs" title={`Take in ${issue.key}`}>
-                Take in
-              </Button>
-            }
-          >
-            <Text variant="label" weight={400} tone="3">
-              <Age text={ageLabel(issue.updated_at, now)} title={ageTitle(issue.updated_at, now)} />
-            </Text>
-          </Swap>
-        </Stack>
-      </Stack>
+        }
+      >
+        <Text variant="ui" tone="3" tabular>
+          <Age text={ageLabel(issue.updated_at, now)} title={ageTitle(issue.updated_at, now)} />
+        </Text>
+      </Swap>
     </Row>
   );
 }
@@ -150,9 +151,9 @@ interface LabelProps {
   toggle: () => void;
 }
 
-/** A group's label: a plain line of the list, as Linear labels a run of its inbox. The chevron,
- *  the muted project key, the name in the row's own size (bold), the count muted; a click
- *  anywhere on it but its end (or Enter on it) folds the group. */
+/** A query card's head: a faint band at the card's top. The chevron, the muted project key, the
+ *  name in the rows' title size (bold), the count muted; a click anywhere on it but its end (or
+ *  Enter on it) folds the card to its head. */
 function GroupLabel({ q, count, jiraUrl, collapsed, toggle }: LabelProps) {
   const prefix = sharedPrefix(q);
   return (
@@ -182,7 +183,7 @@ function Group({ q, query, jiraUrl, now }: GroupProps) {
   const { shown, rest } = visible(issues, expanded);
   const empty = emptyText(q, query.length > 0);
   return (
-    <>
+    <Surface level="list" label={q.name}>
       <GroupLabel
         q={q}
         count={issues.length}
@@ -227,7 +228,7 @@ function Group({ q, query, jiraUrl, now }: GroupProps) {
           ) : null}
         </>
       )}
-    </>
+    </Surface>
   );
 }
 
@@ -255,14 +256,14 @@ export function IntakeView() {
     >
       <Table columns={COLUMNS} head={false} scroll={false}>
         {data ? (
-          <>
+          <Stack gap={8}>
             {data.queries.map((q) => (
               <Group key={q.name} q={q} query={query} jiraUrl={jiraUrl} now={now} />
             ))}
             <Notice kind="status" align="end">
               {footNote(data, now)}
             </Notice>
-          </>
+          </Stack>
         ) : intake.error ? (
           <Notice kind="status" error>
             {`Can't reach the server · ${intake.error.message}`}

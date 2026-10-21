@@ -17,8 +17,8 @@ export type SectionProps = { children: ReactNode } & (
   | {
       /** The heading, and the part's name. */
       title: string;
-      /** Quiet words right after the heading ("2 of 5 done"). */
-      aside?: string;
+      /** Quiet words right after the heading, with a glyph if it has one (a plan's pie, "2/5"). */
+      aside?: ReactNode;
       /** A quiet line under the heading: what the part is for, or its subline (a copy's drift). */
       note?: ReactNode;
       /** At the head's end: who is in it, its one action. */
@@ -39,7 +39,7 @@ export type SectionProps = { children: ReactNode } & (
 interface HeadProps {
   id: string;
   title: string;
-  aside: string | undefined;
+  aside: ReactNode;
   note: ReactNode;
   end: ReactNode;
 }

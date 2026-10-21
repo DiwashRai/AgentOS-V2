@@ -1,5 +1,5 @@
-// One item of a list: its cells on the Table's columns. A line or an item is a flat row on a
-// hairline (Linear's list): hover and focus wash it, the open one a shade more. A rack is a bare
+// One item of a list: its cells on the Table's columns. An item is a flat row on a hairline; a line
+// has none (its group's band parts the runs), its hover, focus and open wash a rounded slab. A rack is a bare
 // entry; a band a board's swimlane. A card on its own surface is a Card. Nothing changes size.
 import { Children, type ReactNode } from "react";
 

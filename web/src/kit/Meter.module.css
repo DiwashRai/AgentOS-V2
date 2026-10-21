@@ -40,33 +40,23 @@
     opacity: 0.9;
   }
 }
-/* edge: an agent card's, one continuous hairline track laid along the bottom edge of the card it
-   is in (the card's summary is its containing block), the finished steps in live, the one in progress a
-   soft live, so it reads as the count beside it says ("3/5": two done, the third under way).
-   Still: a grid of cards would sweep all at once */
-.edge {
-  position: absolute;
-  inset: auto 0 0;
-  gap: 0;
-  height: var(--tile-bar);
-  background: var(--tile-meter-track);
-}
-.edge .seg {
-  height: 100%;
-  border-radius: 0;
-  background: transparent;
-}
-.edge .seg[data-seg="done"] {
-  background: var(--live);
-}
-.edge .seg[data-seg="now"] {
-  background: var(--tile-meter-now);
-}
-.edge .seg[data-seg="now"]::after {
-  content: none;
-}
-.row {
+/* row: inline beside a step count; tile: the same in an agent's card, still (a grid of cards would
+   sweep all at once), the step under way a soft live */
+.row,
+.tile {
   flex: none;
   gap: var(--line-2);
   width: var(--w-meter);
+}
+.tile {
+  width: var(--col-sm);
+}
+.tile .seg[data-seg="done"] {
+  background: var(--live);
+}
+.tile .seg[data-seg="now"] {
+  background: var(--tile-meter-now);
+}
+.tile .seg[data-seg="now"]::after {
+  content: none;
 }

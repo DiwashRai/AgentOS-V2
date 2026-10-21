@@ -13,7 +13,7 @@
   min-width: 0;
   height: calc(100dvh - var(--sp-4) * 2);
   margin: var(--sp-4) var(--sp-4) var(--sp-4) 0;
-  padding: 0 var(--sp-9);
+  padding: 0 var(--gutter);
   overflow-y: auto;
   border-radius: var(--r-4);
   background: var(--page);

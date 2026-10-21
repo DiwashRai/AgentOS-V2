@@ -1,7 +1,7 @@
 // A picker: one of a list (the ticket's owner, an agent's runtime, the theme). Base UI's combobox
 // does the keyboard, filtering and placement; the look is ours: closed, a property chip (face,
-// name, chevron), a form field, or a sidebar row (its glyph, the label, the current choice muted, a
-// chevron pointing up); open, the kit's one popover, a "Change owner…" filter on its first line,
+// name, chevron) or a sidebar row (its glyph, the label, the current choice muted, a chevron
+// pointing up); open, the kit's one popover, a "Change owner…" filter on its first line,
 // each option with its picture, name and muted detail, the current one ticked. The sidebar's opens
 // above the row, anchored to its start, as Linear's sidebar-foot menus do.
 import type { ReactNode } from "react";
@@ -30,9 +30,9 @@ export interface SelectProps {
   value: string;
   options: readonly Option[];
   onChange: (id: string) => void;
-  /** chip: a property chip (the default); field: the form's field box, as wide as its slot (an
-   *  agent's runtime beside its name); side: a sidebar row (the theme). */
-  look?: "chip" | "field" | "side";
+  /** chip: a property chip (the default; an agent's runtime among its properties); side: a sidebar
+   *  row (the theme). */
+  look?: "chip" | "side";
   /** The sidebar row's glyph. */
   icon?: IconName;
 }
@@ -102,7 +102,7 @@ export function Select({ label, value, options, onChange, look = "chip", icon }:
       side={side ? "top" : "bottom"}
       sheet={side ? s.sideSheet : s.sheet}
       trigger={{
-        className: side ? s.side : cx(s.trigger, look === "field" && s.field),
+        className: side ? s.side : s.trigger,
         name: label,
         body: <TriggerBody label={label} current={current} slot={slot} look={look} icon={icon} />,
       }}

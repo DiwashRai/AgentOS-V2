@@ -1,7 +1,7 @@
 // The item editor's side column, a narrow rail ruled off beside the content: the properties (an
-// agent's runtime, model and effort as pickers in the form's field box; read-only facts as plain
-// text), what uses the item (its workflows; its tickets as a count and the first few, the rest one
-// click away), and its latest versions with who wrote each, a person or a ticket's run.
+// agent's runtime, model and effort as Linear's property chips; read-only facts as plain text),
+// what uses the item (its workflows; its tickets as a count and the first few, the rest one click
+// away), and its latest versions with who wrote each, a person or a ticket's run.
 import { type ReactNode, useState } from "react";
 
 import { useNow, useRuntimes } from "../../api/queries";
@@ -35,7 +35,6 @@ function AgentPickers({
     <>
       <FormRow label="Runtime">
         <Select
-          look="field"
           label="Runtime"
           value={agent.runtime}
           options={runtimes.map((r) => ({ id: r.id, label: r.name }))}
@@ -47,7 +46,6 @@ function AgentPickers({
       </FormRow>
       <FormRow label="Model">
         <Select
-          look="field"
           label="Model"
           value={agent.model}
           options={models.map((m) => ({ id: m, label: m }))}
@@ -58,7 +56,6 @@ function AgentPickers({
       </FormRow>
       <FormRow label="Effort">
         <Select
-          look="field"
           label="Effort"
           value={agent.effort}
           options={EFFORTS.map((e) => ({ id: e, label: e }))}

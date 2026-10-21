@@ -117,24 +117,24 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* a line of a two-line item list, in the items' own size (one size a row, as Linear sets it): its
-   glyph in the slot the group labels' chevrons sit in, at the row inset, and its words where the
-   labels' keys start, so an empty group and a failed one start on the same two columns */
+/* a line of a two-line item list, in the items' title size: its glyph centred in the slot of the
+   rows' leading face, and its words where the rows' titles start, so an empty group, a failed one
+   and a row start on the same two columns */
 .empty[data-align="item"],
 .problem[data-align="item"] {
   font-size: var(--fs-4);
 }
 .empty[data-align="item"] {
+  gap: var(--sp-6);
   min-height: var(--h-list-item);
   padding-left: var(--list-inset);
 }
 .empty[data-align="item"] > i {
-  width: var(--notice-slot);
-  height: var(--notice-slot);
+  margin-inline: calc((var(--notice-slot) - var(--notice-mark)) / 2);
 }
 /* in place of the edge, a blocked dot in the glyph slot (Linear's status dot), on the first line */
 .problem[data-align="item"] {
-  padding-left: calc(var(--list-inset) + var(--notice-slot) + var(--sp-4));
+  padding-left: calc(var(--list-inset) + var(--notice-slot) + var(--sp-6));
 }
 .problem[data-align="item"]::before {
   left: calc(var(--list-inset) + var(--notice-slot) / 2);

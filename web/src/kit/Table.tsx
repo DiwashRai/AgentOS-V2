@@ -58,21 +58,22 @@ export interface TableProps {
   /** Run through the padding of the surface it sits in, edge to edge (My queue's lists, whose
    *  surface pads only the agents' cards). */
   bleed?: boolean;
-  /** Hold the head, rows and foot to a reading measure, so a row's far end stays near its words
-   *  (Intake's triage list). */
-  measure?: boolean;
+  /** Out to the main sheet's edges with no surface of its own, under a head ruled off the bar, its
+   *  first cell under the bar's title (Linear's index: the library's lists). */
+  edge?: boolean;
   children: ReactNode;
 }
 
 export function Table(props: TableProps) {
-  const { columns, head = true, scroll = true, foot, bleed, measure, children } = props;
+  const { columns, head = true, scroll = true, foot, bleed, edge, children } = props;
   const cols = columns.map(track);
   return (
     <Columns.Provider value={columns}>
       <Scrolling.Provider value={scroll}>
         <div
-          className={cx(s.table, scroll && s.scroll, bleed && s.bleed, measure && s.measure)}
+          className={cx(s.table, scroll && s.scroll, bleed && s.bleed, edge && s.edge)}
           style={vars({ "--cols": cols.join(" ") })}
+          data-edge={edge}
         >
           {head ? (
             <div className={s.head} aria-hidden="true">

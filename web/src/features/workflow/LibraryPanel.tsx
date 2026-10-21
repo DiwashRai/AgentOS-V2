@@ -1,5 +1,5 @@
 // The editor's library panel, in the column beside the lane: Agents, Skills and Files as tabs, a
-// search box, and the items as small cards to drag onto the lane. A click is the keyboard-friendly
+// search box, and the items as a list's rows to drag onto the lane. A click is the keyboard-friendly
 // alternative, with the same rules as a drop: it adds the item to the selected stage (an agent to
 // a shell stage can't go on it, so it becomes a new stage after it, as a drop on the lane there
 // would). With no stage selected a click does nothing, and the hint says to select one. An item
@@ -137,7 +137,7 @@ export function LibraryPanel({ lib, target, where, pick }: PanelProps) {
             onChange={setQ}
           />
           <Text variant="meta">{hint(tab, target)}</Text>
-          <Stack gap={3}>
+          <Stack gap={1}>
             {shown.map((e) => {
               const at = target ? where(e.kind, e.id) : null;
               const says = clickSays(e.kind, target, at);

@@ -15,6 +15,7 @@ import {
   Button,
   Composer,
   Dialog,
+  Icon,
   Notice,
   Section,
   Stack,
@@ -33,26 +34,34 @@ interface BodyProps {
   t: Ticket;
   me: Person | null;
   now: number;
-  onClose: () => void;
 }
 
-/** The ticket's head, as the ticket page's: key, title, its lead, properties, the stepper. */
-function Head({ t, me, now, onClose, plan }: BodyProps & { plan: readonly PlanItem[] }) {
+/** The panel's bar, pinned over it: the ticket's key (and its Jira issue), then Open ticket, the
+ *  ticket's menu and the close. */
+function Bar({ ticketKey, onClose }: { ticketKey: string; onClose: () => void }) {
+  const t = useTicket(ticketKey).data;
+  return (
+    <Stack dir="row" gap={3} align="center" grow>
+      {t ? <Icon name={t.type} /> : null}
+      <Text tone="2" weight={500} tabular>
+        {t?.source ? `${ticketKey} · Jira ${t.source.ref}` : ticketKey}
+      </Text>
+      <Stack grow />
+      <Button variant="quiet" size="sm" href={`/t/${ticketKey}`}>
+        Open ticket
+      </Button>
+      {t ? <TicketMenu t={t} size="sm" /> : null}
+      <Button variant="quiet" size="sm" icon="close" title="Close peek (Esc)" onClick={onClose} />
+    </Stack>
+  );
+}
+
+/** The ticket's head, as the ticket page's: title, its lead, properties, the stepper. */
+function Head({ t, me, now, plan }: BodyProps & { plan: readonly PlanItem[] }) {
   return (
     <Stack gap={8}>
-      <Stack dir="row" gap={4} align="center">
-        <Text tone="2" weight={500} tabular>
-          {t.source ? `${t.key} · Jira ${t.source.ref}` : t.key}
-        </Text>
-        <Stack grow />
-        <Button size="sm" href={`/t/${t.key}`}>
-          Open ticket
-        </Button>
-        <TicketMenu t={t} size="sm" />
-        <Button size="sm" icon="close" title="Close peek (Esc)" onClick={onClose} />
-      </Stack>
       <Stack gap={4}>
-        <Text variant="title" as="h2">
+        <Text variant="display" as="h2">
           {t.title}
         </Text>
         <Text variant="body" as="p">
@@ -147,9 +156,10 @@ export function Peek() {
       open={key !== null}
       onClose={close}
       // keyed by the ticket: a draft is one ticket's
+      bar={key ? <Bar ticketKey={key} onClose={close} /> : null}
       foot={key ? <Reply key={key} ticketKey={key} /> : null}
     >
-      {key ? <Loaded ticketKey={key} me={me} now={now} onClose={close} /> : null}
+      {key ? <Loaded ticketKey={key} me={me} now={now} /> : null}
     </Dialog>
   );
 }

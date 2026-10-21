@@ -1,7 +1,7 @@
 // The ticket page (/t/:key), as Linear's issue page: the bar (My queue › the key, the crumb the way
-// back; search; the ticket's actions), then one calm column with no cards (the title and lead, the
-// properties, the workflow's stepper with what happens now under it, the tabs) and Talk in the
-// column beside it, its reply box at the window's foot. The tab is in the URL (?tab=), and so is a
+// back; search; the ticket's actions), then one calm column (the title and lead, the workflow's
+// stepper with what happens now under it, the tabs) and the rail beside it, as Linear's issue
+// sidebar: the properties, then Talk, its reply box at the window's foot. The tab is in the URL (?tab=), and so is a
 // full-window editor over the page (?edit=: tabs.ts, overlays.tsx).
 import { type ReactNode, useState } from "react";
 import { useParams } from "react-router";
@@ -74,7 +74,6 @@ function Header({ t, me, now, plan }: HeaderProps) {
           {lead}
         </Text>
       </Stack>
-      <Properties t={t} now={now} owner={{ picker: <Owner t={t} /> }} />
       <Stepper model={stageModel(t, me)} now={<Now t={t} me={me} now={now} plan={plan} />} />
     </Stack>
   );
@@ -108,14 +107,16 @@ function Overview({
   );
 }
 
-/** Talk, in the column beside the page: who is in it, the thread, and the reply box at its foot. */
-function Talk({ t, me }: { t: Ticket; me: Person | null }) {
+/** The rail beside the page, as Linear's issue sidebar: the properties, then Talk (who is in it, the
+ *  thread, and the reply box at its foot). */
+function Rail({ t, me, now }: { t: Ticket; me: Person | null; now: number }) {
   const messages = useMessages(t.key).data?.items ?? [];
   const people = [...new Map(messages.map((m) => [m.author.id, m.author])).values()];
   const others = people.filter((p) => p.id !== me?.id).map((p) => firstName(p.name));
   const [draft, setDraft] = useState("");
   return (
-    <Stack gap={9} grow>
+    <Stack gap={10} grow>
+      <Properties t={t} now={now} owner={{ picker: <Owner t={t} /> }} stack />
       <TalkSection people={people}>
         <Thread messages={messages.map((m) => threadMessage(m, me))} />
       </TalkSection>
@@ -181,7 +182,7 @@ export function TicketView() {
               <TicketMenu key="more" t={t} size="md" />,
             ],
             // keyed by the ticket: a draft is one ticket's, and doesn't follow you to the next
-            side: { content: <Talk key={t.key} t={t} me={me} /> },
+            side: { content: <Rail key={t.key} t={t} me={me} now={now} /> },
           }
         : {})}
     >

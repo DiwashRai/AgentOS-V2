@@ -5,15 +5,8 @@
 .display {
   font-size: var(--fs-ticket);
   font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: var(--track-snug);
-  color: var(--ink-1);
-}
-.title {
-  font-size: var(--fs-6);
-  font-weight: 600;
   line-height: 1.2;
-  letter-spacing: var(--track-snug);
+  letter-spacing: calc(var(--track-snug) * 2);
   color: var(--ink-1);
 }
 .heading {

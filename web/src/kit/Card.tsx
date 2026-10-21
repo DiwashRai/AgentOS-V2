@@ -4,8 +4,7 @@
 //   summary beside it; the summary selects it, and selected it opens in place to its settings (no
 //   dialog). A disabled stage is dimmed; a problem with it is said at its foot.
 // - agent: an agent at work (My queue): its lines one under another, filling the card's height so
-//   cards in a row line up; a queued one recedes to a hairline. A Meter drawn `edge` in it lies
-//   along its bottom edge (its summary, the card's full height, is the Meter's containing block).
+//   cards in a row line up, on a flat grey slab; a queued one recedes to a dashed outline.
 // - ticket: a ticket on a board (All teams): its lines one under another on a hairline card.
 // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
 // ring round the card, and a click anywhere on it for a pointer. What the lines say is the
@@ -42,7 +41,7 @@ export type CardProps = Common &
         look: "agent";
         /** A click (or Enter) opens what the card is of (a peek). */
         onOpen: () => void;
-        /** A queued agent: receded to a hairline. */
+        /** A queued agent: receded to a dashed outline. */
         off?: boolean;
         face?: never;
         open?: never;

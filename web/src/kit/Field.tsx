@@ -21,6 +21,9 @@ export interface FieldProps {
   mono?: boolean;
   /** A search over a list or a view: the search box. */
   search?: boolean;
+  /** A document's own words, unboxed on the page: an item's name as its title, its description as
+   *  the lead under it, a block's name as its heading. */
+  look?: "title" | "lead" | "heading";
 }
 
 /** "/" focuses this search when it is the top layer's. */
@@ -39,7 +42,7 @@ function useSlash(ref: RefObject<HTMLInputElement | null>, on: boolean) {
   }, [ref, on]);
 }
 
-export function Field({ label, value, onChange, placeholder, mono, search }: FieldProps) {
+export function Field({ label, value, onChange, placeholder, mono, search, look }: FieldProps) {
   const ref = useRef<HTMLInputElement>(null);
   const described = useDescribed();
   useSlash(ref, search === true);
@@ -48,7 +51,9 @@ export function Field({ label, value, onChange, placeholder, mono, search }: Fie
       ref={ref}
       type={search ? "search" : "text"}
       aria-keyshortcuts={search ? "/" : undefined}
-      className={search ? s.findInput : cx(s.box, s.field, mono && s.mono)}
+      className={
+        search ? s.findInput : cx(s.box, s.field, mono && s.mono, look && s.ghost, look && s[look])
+      }
       aria-label={label}
       {...described}
       value={value}

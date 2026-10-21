@@ -32,6 +32,12 @@
 .count[data-tone="you"] {
   color: var(--you-text);
 }
+.count[data-tone="live"] {
+  color: var(--live-text);
+}
+.count[data-tone="blocked"] {
+  color: var(--blocked);
+}
 .count[data-tone="done"] {
   color: var(--done-text);
 }

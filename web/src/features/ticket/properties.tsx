@@ -1,7 +1,7 @@
-// A ticket's properties, as Linear's project page lists them: labelled rows of chips, each a muted
-// icon and its value at body size (what it is, where its code lives, how it runs). The ticket page
-// and the peek both draw them; the owner is the screen's own (a picker on the page, a face in the
-// peek).
+// A ticket's properties, as Linear lists them: labelled groups of chips, each a muted icon and its
+// value at body size (what it is, where its code lives, how it runs); in rows across the peek, and
+// stacked in the ticket page's rail as Linear's issue sidebar. The owner is the screen's own (a
+// picker on the page, a face in the peek).
 import type { ReactNode } from "react";
 
 import type { Ticket } from "../../api/types";
@@ -63,11 +63,19 @@ function rows(t: Ticket, now: number, owner: Owner): Row[] {
   ];
 }
 
-export function Properties({ t, now, owner }: { t: Ticket; now: number; owner: Owner }) {
+interface PropertiesProps {
+  t: Ticket;
+  now: number;
+  owner: Owner;
+  /** Each row's head over its values, one a line: the ticket page's rail. */
+  stack?: boolean;
+}
+
+export function Properties({ t, now, owner, stack = false }: PropertiesProps) {
   return (
-    <Stack>
+    <Stack gap={stack ? 6 : 0}>
       {rows(t, now, owner).map((r) => (
-        <Facts key={r.label} label={r.label} items={r.items} />
+        <Facts key={r.label} label={r.label} items={r.items} stack={stack} />
       ))}
     </Stack>
   );

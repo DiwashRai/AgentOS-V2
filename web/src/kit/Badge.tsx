@@ -7,7 +7,7 @@ export type BadgeProps =
   /** A ticket or project key: quiet tabular text. */
   | { kind: "key"; children: string; size?: "sm" | "md"; title?: string }
   /** The bare count of heads and pills. */
-  | { kind: "count"; children: number; tone?: "neutral" | "you" | "done" }
+  | { kind: "count"; children: number; tone?: "neutral" | "you" | "live" | "blocked" | "done" }
   /** A keycap ("/", "Esc", "J"). */
   | { kind: "kbd"; children: string }
   /** The YOU pill: the only YOU form, and the only mono caps in the product. */

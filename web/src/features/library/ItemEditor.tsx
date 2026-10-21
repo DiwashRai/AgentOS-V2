@@ -10,7 +10,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 import { useNow, useSession } from "../../api/queries";
 import type { ItemBody, UsedBy } from "../../api/types";
 import { age } from "../../domain/format";
-import { Button, Chip, Field, FormRow, Page, type PageProps, Stack } from "../../kit";
+import { Button, Chip, Field, Page, type PageProps, Stack } from "../../kit";
 import { Conflict } from "./conflict";
 import { Content } from "./content";
 import type { Draft } from "./draft";
@@ -115,40 +115,39 @@ function Side({ e, props }: { e: Editor; props: ItemEditorProps }) {
   );
 }
 
-/** A library item's name and description, edited together over its content. */
+/** A library item's name and description, the document's title and the lead under it, over its
+ *  content. */
 function Identity({ e, props }: { e: Editor; props: ItemEditorProps }) {
   const { name, description } = props;
   if (!name && description === undefined) return null;
   return (
-    <Stack gap={3}>
+    <Stack gap={2}>
       {name ? (
-        <FormRow label={name.label}>
-          <Field
-            label={name.label}
-            value={e.draft.name}
-            mono={name.mono}
-            onChange={(v) => {
-              e.edit({ name: v });
-            }}
-          />
-        </FormRow>
+        <Field
+          look="title"
+          label={name.label}
+          value={e.draft.name}
+          placeholder={name.label}
+          mono={name.mono}
+          onChange={(v) => {
+            e.edit({ name: v });
+          }}
+        />
       ) : null}
       {description !== undefined ? (
-        <FormRow label="Description">
-          <Field
-            label="Description"
-            value={e.draft.description}
-            placeholder="What it is for"
-            onChange={(v) => {
-              e.edit({ description: v });
-            }}
-          />
-        </FormRow>
+        <Field
+          look="lead"
+          label="Description"
+          value={e.draft.description}
+          placeholder="Add a short summary…"
+          onChange={(v) => {
+            e.edit({ description: v });
+          }}
+        />
       ) : null}
     </Stack>
   );
 }
-
 function Main({ e, props }: { e: Editor; props: ItemEditorProps }) {
   return (
     <Stack gap={9} grow>

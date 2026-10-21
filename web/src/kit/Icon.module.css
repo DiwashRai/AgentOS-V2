@@ -6,6 +6,16 @@
 .icon > svg {
   display: block;
 }
+/* tile: the glyph on a faint square in the quiet ink, a row's lead (Linear's project icon) */
+.tile {
+  align-items: center;
+  justify-content: center;
+  width: var(--h-list-chip);
+  height: var(--h-list-chip);
+  border-radius: var(--r-2);
+  background: var(--list-chip-fill);
+  color: var(--ink-2);
+}
 .line {
   fill: none;
   stroke: currentColor;

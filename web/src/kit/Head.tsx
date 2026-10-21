@@ -15,16 +15,17 @@ export interface HeadProps {
   count?: number | undefined;
   /** Before the name: a status glyph, or a project key. */
   icon?: ReactNode;
-  /** you: the count in the you hue (Needs you); done: in green. The name stays in ink. */
-  tone?: "neutral" | "you" | "done";
+  /** The group's state: its band is washed in that hue and its count written in it (you: Needs
+   *  you; live: running; blocked; done). The name stays in ink. */
+  tone?: "neutral" | "you" | "live" | "blocked" | "done";
   /** Quiet, right after the count ("Longest wait first"). */
   note?: string | undefined;
   /** At the far end: a stat, links. */
   summary?: ReactNode;
   /** group: a list's edge-to-edge band (with or without a fold), its glyph over the rows' first
    *  cell; zone: the same band run through its surface's padding (over My queue's agent cards);
-   *  line: a plain line of the list, on its hairline, lit on hover like a row (it is the row a
-   *  Swap in its summary answers to), its fold reaching across it (Intake's queries). */
+   *  line: a query card's head, a faint band on its hairline, lit on hover like a row (it is the
+   *  row a Swap in its summary answers to), its fold reaching across it (Intake's queries). */
   level?: "zone" | "group" | "line";
   /** Collapsible: whether the group is open, and how to flip it. */
   fold?: { open: boolean; toggle: () => void };
@@ -87,6 +88,7 @@ export function Head(props: HeadProps) {
   return (
     <div
       className={cx(s.head, s[level], sticky && s.sticky)}
+      data-tone={tone}
       data-row={level === "line" ? "" : undefined}
     >
       <Lead fold={fold} title={title} />

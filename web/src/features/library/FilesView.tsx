@@ -1,18 +1,18 @@
 // The library's files (/library/files), AGENTS.md first: each file's path, its size, and what uses
-// it (its workflows, and the tickets on them or that added it). A row opens the file's editor
+// it (how many workflows, and tickets on them or that added it). A row opens the file's editor
 // (AGENTS.md as its named blocks).
 import { useFiles } from "../../api/queries";
 import type { LibraryFile } from "../../api/types";
 import { matches } from "../../domain/format";
 import { type Column, Icon, Text } from "../../kit";
 import { useSearch } from "../shared/useSearch";
-import { LibraryList, LibraryRow, NameCell } from "./list";
-import { sizeText, usedByText } from "./model";
+import { LibraryList, LibraryRow, NameCell, USED, usedCells } from "./list";
+import { sizeText } from "./model";
 
 const COLUMNS: readonly Column[] = [
   { label: "Path", width: "fill", min: "2xl" },
   { label: "Size", width: "md", end: true },
-  { label: "Used by", width: "xl", end: true },
+  ...USED,
 ];
 
 export function FilesView() {
@@ -28,12 +28,11 @@ export function FilesView() {
       search={search}
       total={all.length}
       hrefs={shown.map(href)}
-      measure
     >
       {shown.map((f) => (
         <LibraryRow key={f.id} name={f.path} href={href(f)}>
           <NameCell
-            lead={<Icon name="files" />}
+            lead={<Icon name="files" tile />}
             name={f.path}
             {...(f.body.kind === "blocks"
               ? { after: `${String(f.body.blocks.length)} blocks` }
@@ -42,7 +41,7 @@ export function FilesView() {
           <Text tone="2" tabular>
             {sizeText(f.size)}
           </Text>
-          <Text tone="2">{usedByText(f.used_by)}</Text>
+          {usedCells(f.used_by)}
         </LibraryRow>
       ))}
     </LibraryList>

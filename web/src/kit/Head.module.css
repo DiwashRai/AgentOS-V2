@@ -6,12 +6,27 @@
   white-space: nowrap;
 }
 
-/* group: a dense list's band, edge to edge, rows straight under it (Linear's group head) */
+/* group: a dense list's band, edge to edge, rows straight under it (Linear's group head), washed
+   in its state's hue (a neutral one in ink); the band alone parts one run of rows from the next */
+.head {
+  --band: var(--band-ink);
+}
+.head[data-tone="you"] {
+  --band: var(--band-you);
+}
+.head[data-tone="live"] {
+  --band: var(--band-live);
+}
+.head[data-tone="blocked"] {
+  --band: var(--band-blocked);
+}
+.head[data-tone="done"] {
+  --band: var(--band-done);
+}
 .group {
   height: var(--h-group);
   padding: 0 var(--list-pad);
-  background: var(--list-band);
-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+  background: var(--band);
 }
 .group .toggle {
   /* the chevron hangs in the inset, so the glyph lines up with the rows' first cell */
@@ -27,8 +42,7 @@
   height: var(--h-group);
   margin-inline: calc(var(--pad) * -1);
   padding: 0 var(--list-pad) 0 var(--list-inset);
-  background: var(--list-band);
-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+  background: var(--band);
 }
 /* a fold's heading is no box: its button lays out as the head's own child */
 .holds {
@@ -74,7 +88,7 @@
 }
 .name {
   font-size: var(--fs-3);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--list-band-ink);
 }
 .zone .name {
@@ -105,16 +119,17 @@
   font-size: var(--fs-2);
   color: var(--ink-3);
 }
-/* line: a plain line of the list on its hairline, lit on hover like a row; its fold reaches across
-   it (a click anywhere but the summary folds), the chevron hanging in the inset */
+/* line: a query card's head, a faint band on its hairline, lit on hover like a row; its fold
+   reaches across it (a click anywhere but the summary folds), the chevron hanging in the inset */
 .line {
-  height: var(--h-line);
+  height: var(--h-control-lg);
   padding: 0 var(--list-pad) 0 var(--list-inset);
+  background: var(--list-card-head);
   box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
   transition: background-color var(--dur-fast) ease;
 }
 .line:is(:hover, :focus-within) {
-  background: var(--list-hover);
+  background: linear-gradient(var(--list-hover), var(--list-hover)), var(--list-card-head);
 }
 .line .toggle {
   flex: 1;
@@ -143,5 +158,5 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  background: linear-gradient(var(--list-band), var(--list-band)), var(--ground);
+  background: linear-gradient(var(--band), var(--band)), var(--ground);
 }

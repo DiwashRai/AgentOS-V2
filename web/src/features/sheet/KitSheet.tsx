@@ -98,16 +98,7 @@ const MARKS: readonly MarkKind[] = [
   "queued",
   "idle",
 ];
-const TEXTS: readonly TextVariant[] = [
-  "display",
-  "title",
-  "heading",
-  "body",
-  "label",
-  "ui",
-  "meta",
-  "code",
-];
+const TEXTS: readonly TextVariant[] = ["display", "heading", "body", "label", "ui", "meta", "code"];
 
 const stages = (
   at: number,

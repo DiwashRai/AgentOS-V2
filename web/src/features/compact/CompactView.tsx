@@ -54,6 +54,17 @@ const COLUMNS: readonly Column[] = [
 
 const PLAN_MAX = 6;
 
+/** A group's band takes its state's hue: the ones that call for a look; the waiting ones stay ink. */
+const TONE: Record<Group, "neutral" | "you" | "live" | "blocked" | "done"> = {
+  needs_you: "you",
+  blocked: "blocked",
+  running: "live",
+  queued: "neutral",
+  waiting: "neutral",
+  inbox: "neutral",
+  done: "done",
+};
+
 function Expanded({ t, me, now }: { t: TicketRow; me: Person | null; now: number }) {
   const plan = parsePlan(usePlan(t.key).data ?? "");
   const last = useMessages(t.key).data?.items.at(-1);
@@ -330,7 +341,7 @@ export function CompactView() {
                 name={g.title}
                 count={g.items.length}
                 icon={<Mark kind={g.mark} glyph name={false} />}
-                tone={g.id === "needs_you" ? "you" : g.id === "done" ? "done" : "neutral"}
+                tone={TONE[g.id]}
                 summary={<SummaryText summary={g.summary} />}
                 fold={{
                   open: !collapsed,

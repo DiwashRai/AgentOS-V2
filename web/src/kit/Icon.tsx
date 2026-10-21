@@ -266,9 +266,11 @@ export interface IconProps {
   name: IconName;
   /** The accessible name; without one the icon is decorative (the text beside it says it). */
   label?: string;
+  /** On a faint rounded square, as Linear's project icons lead a row (the library's lists). */
+  tile?: boolean;
 }
 
-export function Icon({ name, label }: IconProps) {
+export function Icon({ name, label, tile }: IconProps) {
   const g: { box: number; view?: number; cls: string | undefined; d: ReactNode } = GLYPHS[name];
   const view = String(g.view ?? g.box);
   const a11y = label
@@ -276,7 +278,7 @@ export function Icon({ name, label }: IconProps) {
     : ({ "aria-hidden": true } as const);
   return (
     <Tip text={label} said>
-      <span className={cx(s.icon, s[name])} {...a11y}>
+      <span className={cx(s.icon, s[name], tile && s.tile)} {...a11y}>
         <svg
           aria-hidden="true"
           className={g.cls}

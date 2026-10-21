@@ -122,8 +122,8 @@ function Body({ t }: { t: TicketRow }) {
   );
 }
 
-/** A card's progress, its last line: what it is doing (or that it waits for a runner), the step
- *  count at the far end, and a running one's track along the card's bottom edge. */
+/** A card's progress, its last line: what it is doing (or that it waits for a runner), then a
+ *  running one's steps and their count at the far end. */
 function Progress({ t }: { t: TicketRow }) {
   const a = t.attention;
   const step = a.kind === "running" ? a.step : "Waiting for a runner";
@@ -135,12 +135,12 @@ function Progress({ t }: { t: TicketRow }) {
           {step}
         </Text>
       </Stack>
+      {p ? <Meter size="tile" done={p.done} total={p.total} /> : null}
       {p ? (
         <Text variant="meta" tone="2" tabular>
           {stepText(p)}
         </Text>
       ) : null}
-      {p ? <Meter size="edge" done={p.done} total={p.total} /> : null}
     </Stack>
   );
 }
@@ -257,6 +257,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
               level="zone"
               icon={<Mark kind="run" glyph name={false} />}
               name="Agents at work"
+              tone="live"
               count={z.agents.length}
               note={atWorkNote(z)}
             />

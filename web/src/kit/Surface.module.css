@@ -16,6 +16,18 @@
   box-shadow: 0 0 0 var(--line-1) var(--tk-card-edge);
   border-radius: var(--r-4);
 }
+/* a list's card (an Intake query): a sheet on a border, not a ring, so a scroller's edge never
+   clips it; its rows run to its edges, clipped to its corners, the last one on its own edge */
+.list {
+  --ground: var(--tk-card);
+  overflow: hidden;
+  background: var(--tk-card);
+  border: var(--line-1) solid var(--tk-card-edge);
+  border-radius: var(--r-4);
+}
+.list > :last-child {
+  box-shadow: none;
+}
 .fill {
   flex: 1;
   min-height: 0;

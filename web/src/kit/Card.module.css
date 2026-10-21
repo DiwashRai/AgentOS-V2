@@ -1,7 +1,8 @@
 /* Card: one object on its own surface, white on a firm hairline with a soft drop (in the dark a
-   slight step above the sheet on a lit hairline). A stage's summary lights on hover like a row;
-   the selected stage is ringed in your move's accent and opens in place, its settings ruled off
-   under the summary. An agent's and a ticket's looks follow below. */
+   slight step above the sheet on a lit hairline). A stage is the exception: words on the page by
+   the lane's axis, its summary washed on hover like a row; selected, it rises onto the card's
+   surface, ringed in your move's accent, its settings ruled off under the summary. An agent's and
+   a ticket's looks follow below. */
 .card {
   position: relative;
   min-width: 0;
@@ -15,6 +16,11 @@
 }
 .card[data-edit]:hover {
   border-color: var(--teams-card-hover-edge);
+}
+.card[data-look="stage"]:not([data-open]) {
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
 }
 .card[data-open],
 .card[data-open]:hover {
@@ -37,7 +43,7 @@
   grid-template-columns: var(--h-chip) minmax(0, 1fr);
 }
 .card[data-edit] .summary:hover {
-  background: var(--teams-card-hover);
+  background: var(--list-hover);
 }
 .card[data-look="stage"][data-off] .summary > :not(.hit) {
   opacity: var(--lane-off);
@@ -60,10 +66,13 @@
 .card[data-edit] .summary {
   cursor: pointer;
 }
+/* on the page's ground, so the lane's axis stops at the face (a shell's glyph too) */
 .face {
   display: grid;
   place-items: center;
   height: var(--h-chip);
+  border-radius: var(--r-pill);
+  background: var(--ground);
   color: var(--ink-2);
 }
 .main {
@@ -118,26 +127,22 @@
   gap: var(--sp-2);
 }
 
-/* agent: an agent's card, a shade off the surface, as tall as its neighbours, its lines one under
-   another down to its foot; a queued one recedes to a fainter hairline with no fill. A Meter in it
-   lies along its bottom edge, clipped to its corners */
+/* agent: an agent's card, a flat slab of the band's grey with no outline, as tall as its
+   neighbours, its lines one under another down to its foot; a queued one is no slab, only a dashed
+   outline, as its glyph is a dashed ring */
 .card[data-look="agent"] {
   align-self: stretch;
-  /* an edge Meter lies along its bottom edge */
-  overflow: hidden;
-  border-color: var(--tile-edge);
-  background: var(--tile);
-  box-shadow: var(--tile-lift);
+  border-color: transparent;
+  background: var(--list-band);
+  box-shadow: none;
 }
 .card[data-look="agent"][data-off] {
-  border-color: var(--tile-quiet-edge);
+  border: var(--line-1) dashed var(--tile-edge);
   background: transparent;
-  box-shadow: none;
 }
 .card[data-look="agent"][data-edit]:hover,
 .card[data-look="agent"]:has(.hit:focus-visible) {
-  border-color: var(--tile-hover-edge);
-  background: var(--tile-hover);
+  background: var(--chip-on);
 }
 .card[data-look="agent"] .summary {
   height: 100%;

@@ -51,13 +51,12 @@
   --list-open: color-mix(in srgb, var(--you) 7%, transparent);
   --list-band: color-mix(in srgb, var(--ink-1) 5.5%, transparent);
   --list-band-ink: color-mix(in srgb, var(--ink-1) 80%, var(--page));
+  --band-tint: 6%; /* how much of its state's hue a group's band takes */
   /* themes · a metadata chip's edge: none, so the chip reads as quiet text and the ladder parts
      the rows (a keycap keeps its field) */
   --list-chip-edge: transparent;
-  /* rows: a row's label chips keep Linear's hairline (Chip), at the strength
-     measured off Linear's own (about 7%, fainter than a control's), a filled chip (Badge tone
-     fill), and the one neutral face of rows and pickers */
-  --list-label-edge: color-mix(in srgb, var(--ink-1) 7%, transparent);
+  /* rows: a row's label chips, a flat tag of faint ink with no outline (Chip), and the one
+     neutral face of rows and pickers */
   --list-chip-fill: color-mix(in srgb, var(--ink-1) 5%, transparent);
   --face: color-mix(in srgb, var(--ink-1) 9%, var(--surface));
   --face-ink: var(--ink-2);
@@ -102,17 +101,19 @@
   --tk-hover: color-mix(in srgb, var(--ink-1) 4.5%, transparent);
   --tk-card: var(--surface);
   --tk-card-edge: color-mix(in srgb, var(--ink-1) 9%, transparent);
-  --tk-mine: color-mix(in srgb, var(--ink-1) 4.5%, var(--surface));
+  --tk-mine: color-mix(in srgb, var(--ink-1) 6%, var(--surface));
   --tk-mine-edge: color-mix(in srgb, var(--ink-1) 6%, transparent);
   --tk-side: var(--surface);
   --tk-scrim: color-mix(in srgb, var(--ink-1) 24%, transparent);
+  --tk-veil: color-mix(in srgb, var(--ink-1) 7%, transparent); /* under the peek: the list reads */
   --tk-ink: var(--ink-1); /* body-size text: a property, a plan item, a message */
   --tk-label: var(--ink-3); /* a property's head, a section head: clearly under the values */
-  --tk-well: color-mix(in srgb, var(--ink-1) 1.8%, var(--surface)); /* the run card, Talk's card */
+  --tk-well: color-mix(in srgb, var(--ink-1) 4.5%, var(--surface)); /* the rail: Linear's sidebar */
   --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
   /* depth: hairlines, almost no shadow */
   --shadow-recess: inset 0 0 0 1px rgba(9, 9, 11, 0.06);
-  --shadow-float: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 16px 40px -16px rgba(9, 9, 11, 0.25);
+  --shadow-float: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 24px 64px -24px rgba(9, 9, 11, 0.35);
+  --shadow-dock: -16px 0 48px -24px rgba(9, 9, 11, 0.22); /* the peek's long shadow on the list */
   --shadow-accent: none;
   /* controls: buttons, filter pills, menus and pickers (Linear's quiet filled controls) */
   --ctl: var(--surface);
@@ -177,9 +178,9 @@
   --list-open: color-mix(in srgb, var(--you) 14%, transparent);
   --list-band: color-mix(in srgb, var(--wash) 5.8%, transparent);
   --list-band-ink: color-mix(in srgb, var(--ink-1) 88%, var(--page));
+  --band-tint: 8%;
   --list-chip-edge: transparent;
-  /* rows: a label chip's hairline, a filled chip, the neutral face */
-  --list-label-edge: color-mix(in srgb, var(--hair) 7.5%, transparent);
+  /* rows: a label chip's fill, the neutral face */
   --list-chip-fill: color-mix(in srgb, var(--ink-1) 7%, transparent);
   --face: color-mix(in srgb, var(--ink-1) 15%, var(--surface));
   --face-ink: var(--ink-1);
@@ -224,11 +225,13 @@
   --tk-side: color-mix(in srgb, var(--ink-1) 3%, var(--page));
   --tk-well: color-mix(in srgb, var(--ink-1) 4%, var(--page));
   --tk-scrim: color-mix(in srgb, #000000 72%, transparent);
+  --tk-veil: color-mix(in srgb, #000000 38%, transparent);
   --tk-label: color-mix(in srgb, var(--ink-3) 70%, var(--page)); /* dark ink-3 sits near ink-2 */
   /* light on dark reads a weight heavier */
   --tk-ink: color-mix(in srgb, var(--ink-1) 55%, var(--ink-2));
   --shadow-recess: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-  --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 40px -16px rgba(0, 0, 0, 0.8);
+  --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 64px -24px rgba(0, 0, 0, 0.9);
+  --shadow-dock: -16px 0 48px -16px rgba(0, 0, 0, 0.7);
   --shadow-accent: none;
   /* controls: buttons, filter pills, menus and pickers (Linear's quiet filled controls) */
   --ctl: color-mix(in srgb, var(--ink-1) 6%, var(--recess));
@@ -382,6 +385,12 @@
   /* rows: a row's Chip, its grey dot or glyph; Unassigned's dashed ring */
   --prop-mark: color-mix(in srgb, var(--ink-3) 72%, transparent);
   --face-dashed: color-mix(in srgb, var(--ink-3) 75%, transparent);
+  /* rows: a group's band washed in its state's hue, so the list's colour says where each run starts */
+  --band-ink: color-mix(in srgb, var(--ink-1) calc(var(--band-tint) * 0.6), transparent);
+  --band-you: color-mix(in srgb, var(--you) var(--band-tint), transparent);
+  --band-live: color-mix(in srgb, var(--live) var(--band-tint), transparent);
+  --band-blocked: color-mix(in srgb, var(--blocked) var(--band-tint), transparent);
+  --band-done: color-mix(in srgb, var(--done) var(--band-tint), transparent);
   /* themes · faces: a hue each, the same in every theme (a person reads the same everywhere), white
      initials on it */
   --id-violet: #7c3aed;
@@ -397,13 +406,10 @@
   --id-rose-row: color-mix(in srgb, var(--id-rose) var(--face-id), var(--page));
   --id-teal-row: color-mix(in srgb, var(--id-teal) var(--face-id), var(--page));
   --id-slate-row: color-mix(in srgb, var(--id-slate) var(--face-id), var(--page));
-  /* agents: a card's bottom-edge track (a faint ink, filled live, the step under way a soft
-     live); a queued card's hairline, fainter than a running one's; its chips' fill and faint edge
-     (Linear's label chip), the stage's dot; the agent's glyph disc in the pill (a live tint) */
-  --tile-meter-track: color-mix(in srgb, var(--ink-1) 9%, transparent);
+  /* agents: a card's meter, the step under way a soft live; the agent's glyph disc in the pill (a
+     live tint) */
   --tile-meter-now: color-mix(in srgb, var(--live) 38%, transparent);
   --tile-agent: color-mix(in srgb, var(--live) 16%, var(--surface));
-  --tile-quiet-edge: color-mix(in srgb, var(--ink-1) 8%, transparent);
   /* teams: All teams' item cards (their fill, edge and drop are per theme, above); a card's
      hover a shade over it. Its badge is Linear's label chip: a pill on a 1px ink hairline with a
      faint ink fill. The team faces: a disc large enough to read its initials, a firm ink step off
@@ -488,14 +494,14 @@
   --h-row: 42px;
   /* rows (Linear lists): a line, a two-line item, a group's band, a row's chip, the status
      glyphs, a face's initials */
-  --h-line: 44px;
+  --h-line: 40px;
   --h-list-item: 44px;
   --h-group: 36px;
   --h-list-head: 32px;
-  --h-list-chip: 22px;
+  --h-list-chip: 20px;
   --list-pad: 24px; /* a list row's inset from the surface edge */
   --list-inset: calc(var(--list-pad) + var(--sp-4)); /* where a row's first cell starts */
-  --w-list: 880px; /* a list held to a measure (Table measure) */
+  --gutter: var(--sp-9); /* the main sheet's sides (an edge Table runs out through it) */
   --glyph-run: 50%; /* a running glyph's pie with no step count */
   --h-face-sm: 16px; /* a face inside a pill */
   --fs-face-sm: 8.5px;
@@ -514,7 +520,6 @@
   --w-talk-max: 500px;
   --h-band: 100px; /* All teams' band */
   --w-meter: 48px; /* a run meter inline in a row */
-  --tile-bar: 2px; /* agents: a card's progress track, along its bottom edge */
   --w-tile-agent-glyph: 12px; /* agents: the agent's glyph inside its disc */
   --col-xs: 44px; /* rows: an age (as wide as "3h 10m"), a run's or a version's number */
   --prop-dot: 7px; /* rows: a property chip's dot */
@@ -529,8 +534,8 @@
   --notice-mark: 12px;
   /* intake · Notice: a problem's reading measure: what went wrong wraps short of the row's end */
   --notice-measure: 72ch;
-  /* intake · Notice: a glyph's slot in an item list, as wide as the group labels' chevron */
-  --notice-slot: 10px;
+  /* intake · Notice: a glyph's slot in an item list, as wide as the rows' leading face */
+  --notice-slot: var(--sp-9);
   /* intake · Notice: a failed query's dot in that slot, on its first line's middle */
   --notice-dot: 6px;
   --notice-dot-top: calc(var(--sp-7) + 0.5lh);
@@ -577,17 +582,17 @@
   --type-square: color-mix(in srgb, var(--ink-1) 8%, transparent);
   --type-glyph: var(--ink-2);
 
-  /* ticket: Linear's issue-page measures, one step above the lists' type */
-  --fs-ticket: 24px; /* the ticket's title */
-  --fs-ticket-lead: 16px; /* the ticket's description */
-  --fs-tk: 15px; /* the page's body: a property, a stage, a tab, a plan item, a message */
-  --w-fact-label: 112px; /* the properties row's head column */
-  --h-fact: 32px; /* a property row */
-  --h-check: 36px; /* a plan row */
-  --h-check-sm: 32px; /* a plan row in the peek */
+  /* ticket: Linear's issue-page measures: a large title over a dense body at the lists' row type */
+  --fs-ticket: 28px; /* the ticket's title */
+  --fs-ticket-lead: 15px; /* the ticket's description */
+  --fs-tk: 14px; /* the page's body: a property, a stage, a plan item, a message */
+  --w-fact-label: 104px; /* the properties row's head column */
+  --h-fact: 30px; /* a property row */
+  --h-check: 34px; /* a plan row */
+  --h-check-sm: 30px; /* a plan row in the peek */
   --h-compose: 24px; /* the composer's text, one line beside Send; it grows as you type */
   --w-ticket: 760px; /* the ticket body's reading width */
-  --h-tab: 40px; /* a section tab, its underline on the list's hairline */
+  --h-tab: 28px; /* a view tab, a quiet button */
   --w-tk-meter: 120px; /* the run's step meter, on the stepper's now line */
 
   /* form: a field's height (a row's control), a code line's height in a text area, a number
@@ -622,16 +627,17 @@
 
 /* lane: a workflow's stages top to bottom (Lane, Card, Chip). The lane's axis runs through the
    cards' faces; between two cards a joint holds the gate's diamond on the axis and the + that
-   inserts a stage; a loop is a bracket round its stages, a faint band on a hairline, its rounds
+   inserts a stage; a loop is a bracket round its stages, a faint band with no edge, its rounds
    at its foot. */
 :root:not([data-theme]),
 [data-theme] {
   --lane-line: color-mix(in srgb, var(--ink-1) 20%, transparent);
-  --loop-fill: color-mix(in srgb, var(--ink-1) 2.5%, transparent);
-  --loop-edge: color-mix(in srgb, var(--ink-1) 11%, transparent);
+  --loop-fill: color-mix(in srgb, var(--ink-1) 4%, transparent);
   --card-open-ring: color-mix(in srgb, var(--you) 22%, transparent);
   --card-problem: color-mix(in srgb, var(--blocked) 8%, transparent);
   --card-problem-edge: color-mix(in srgb, var(--blocked) 45%, var(--teams-card-edge));
+  /* intake · Head: a query card's head, half a group's band, so the card's rows lead */
+  --list-card-head: color-mix(in srgb, var(--list-band) 50%, transparent);
 }
 :root {
   --h-joint: 36px; /* a joint between two cards while editing: the diamond and the + */
@@ -639,6 +645,9 @@
   --gate-dia: 10px; /* the gate's diamond on the lane */
   --h-gate-hit: 24px; /* the diamond's click target */
   --lane-axis: calc(var(--sp-6) + var(--h-chip) / 2); /* the axis, through a card's face */
+  --lane-face: calc(
+    var(--sp-5) + var(--h-chip) / 2
+  ); /* a face's middle, down from its card's top */
   --lane-off: 0.55; /* a disabled stage's card */
   --dur-flash: 1.6s; /* a chip just added: its ring fades out */
 }
@@ -657,7 +666,7 @@
   --strip-off: color-mix(in srgb, var(--ink-1) 34%, transparent);
 }
 :root {
-  --w-strip: 160px;
+  --w-strip: 208px;
   --strip-seg: 6px;
   --strip-dia: 8px;
   --strip-loop: 5px;

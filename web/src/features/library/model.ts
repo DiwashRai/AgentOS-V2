@@ -1,22 +1,12 @@
-// The library screens' pure helpers: who changed an item, what uses it, how an item's content reads
+// The library screens' pure helpers: who changed an item, its size, how an item's content reads
 // as lines (for the version conflict's two sides), and those two sides lined up row by row,
 // each line marked by whether its own side changed it.
-import type { Author, Block, ItemBody, Runtime, UsedBy } from "../../api/types";
-import { plural } from "../../domain/format";
+import type { Author, Block, ItemBody, Runtime } from "../../api/types";
 import { anchors } from "./merge";
 
 /** "Bea Quinn", or "Run #42 on NW-17" for a version a ticket's run wrote. */
 export function authorName(a: Author): string {
   return a.kind === "person" ? a.person.name : `Run #${String(a.run_id)} on ${a.ticket}`;
-}
-
-/** "3 workflows · 2 tickets", or "Nothing yet". */
-export function usedByText(u: UsedBy): string {
-  const parts = [
-    u.workflows.length ? plural(u.workflows.length, "workflow") : "",
-    u.tickets.length ? plural(u.tickets.length, "ticket") : "",
-  ].filter(Boolean);
-  return parts.length ? parts.join(" · ") : "Nothing yet";
 }
 
 /** A size in bytes as people read it: 312 B, 1.4 KB. */

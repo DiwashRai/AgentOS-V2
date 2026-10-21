@@ -1,7 +1,7 @@
-// The item editor's main column: the content, in monospace markdown filling the column (an agent's
-// instructions, a SKILL.md, a file), or AGENTS.md as its named blocks: each with its name in a field
-// at its head, a fold to its first line, Move up and Move down beside it (and its handle, to drag it
-// or step it with ↑ ↓), edited in place.
+// The item editor's main column: the content as the page's own text, monospace markdown filling the
+// column (an agent's instructions, a SKILL.md, a file), or AGENTS.md as its named blocks: each a
+// section of the document under its name as a heading, its length, a fold to its first line,
+// Move up and Move down after it (and its handle, to drag it or step it with ↑ ↓), edited in place.
 import { useState } from "react";
 
 import type { Block, ItemBody } from "../../api/types";
@@ -20,20 +20,15 @@ interface BlockCardProps {
   onMove: (to: number) => void;
 }
 
-/** A block's head: the fold, its name to edit, its length, and the click way to reorder it. */
+/** A block's head: its name to edit as a heading, its length, the fold, and the click way to
+ *  reorder it. */
 function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardProps) {
   const name = block.name || "this block";
   return (
     <Stack dir="row" gap={3} align="center">
-      <Button
-        variant="quiet"
-        size="xs"
-        icon={open ? "chevron" : "right"}
-        title={open ? `Fold ${name}` : `Unfold ${name}`}
-        onClick={onFold}
-      />
       <Stack grow>
         <Field
+          look="heading"
           label="Block name"
           value={block.name}
           placeholder="Block name"
@@ -45,6 +40,13 @@ function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardP
       <Text variant="meta" tone="3" tabular>
         {plural(block.text.split("\n").length, "line")}
       </Text>
+      <Button
+        variant="quiet"
+        size="xs"
+        icon={open ? "caret" : "right"}
+        title={open ? `Fold ${name}` : `Unfold ${name}`}
+        onClick={onFold}
+      />
       <Button
         variant="quiet"
         size="xs"
@@ -82,6 +84,7 @@ function BlockCard(props: BlockCardProps) {
       <BlockHead {...props} />
       {open ? (
         <TextArea
+          bare
           label={`${block.name} block`}
           value={block.text}
           lines={2}
@@ -188,6 +191,7 @@ export function Content({
         <Stack gap={4} grow>
           {head}
           <TextArea
+            bare
             label={title}
             value={body.text}
             fill
@@ -202,6 +206,7 @@ export function Content({
         <Stack gap={4} grow>
           {head}
           <TextArea
+            bare
             label={title}
             value={body.agent.instructions}
             fill

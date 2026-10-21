@@ -27,24 +27,42 @@
 .card {
   min-width: 0;
 }
+/* the axis: one hairline down the lane from the first face to the last joint (or the last face,
+   read only with no gate after it), under the faces and an opened card */
+.row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--lane-axis) - var(--line-1) / 2);
+  width: var(--line-1);
+  background: var(--lane-line);
+}
+.row[data-first]::before {
+  top: var(--lane-face);
+}
+.row[data-last]::before {
+  bottom: calc(var(--h) / 2);
+}
+.row[data-last]:not(:has(.joint))::before {
+  bottom: calc(100% - var(--lane-face));
+}
 
-/* a loop's band, one piece per stage: open at the seams, closed and rounded at its ends; the first
-   piece reaches up past the joint's diamond, the last stops under the loop's foot */
+/* a loop's band, one piece per stage: a faint wash with no edge (the stages are words on the page,
+   so a box round them would be the one box), rounded at its ends; the first piece reaches up past
+   the joint's diamond, the last stops under the loop's foot */
 .band {
   position: absolute;
   inset: 0 calc(var(--sp-5) * -1) 0 calc(var(--out) * -1);
-  border-inline: var(--line-1) solid var(--loop-edge);
   background: var(--loop-fill);
   pointer-events: none;
 }
 .band:is([data-pos="first"], [data-pos="only"]) {
   top: calc(var(--reach) * -1);
-  border-top: var(--line-1) solid var(--loop-edge);
   border-radius: var(--r-5) var(--r-5) 0 0;
 }
 .band:is([data-pos="last"], [data-pos="only"]) {
   bottom: calc(var(--sp-4) * -1);
-  border-bottom: var(--line-1) solid var(--loop-edge);
   border-radius: 0 0 var(--r-5) var(--r-5);
 }
 .band[data-pos="only"] {
@@ -66,7 +84,7 @@
   font-size: var(--fs-2);
 }
 
-/* a joint: the axis through it, the diamond on the axis, the gate's name and the + after it */
+/* a joint: on the axis, the gate's diamond, its name and the + after it */
 .joint {
   position: relative;
   display: flex;
@@ -74,19 +92,6 @@
   gap: var(--sp-3);
   height: var(--h);
   padding-left: calc(var(--lane-axis) - var(--h-gate-hit) / 2);
-}
-.joint::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(var(--lane-axis) - var(--line-1) / 2);
-  width: var(--line-1);
-  background: var(--lane-line);
-}
-/* after the last card: the axis runs only down to the diamond */
-.joint[data-end]::before {
-  bottom: 50%;
 }
 .gate {
   position: relative;

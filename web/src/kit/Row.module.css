@@ -8,14 +8,21 @@
     transform var(--dur-fast) var(--ease-out);
 }
 
-/* lists (a line, an item): flat rows edge to edge, a hairline under each, a faint wash on hover;
-   no card, no shadow, nothing moves */
+/* lists: an item is a flat row edge to edge on a hairline; a line has no hairline, its group's
+   band parts it from the next run, and its wash (hover, open) is a rounded slab held a step in
+   from the edges. No card, no shadow, nothing moves */
 .line,
 .item {
   border-radius: 0;
   background: transparent;
-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
   transition: background-color var(--dur-fast) ease;
+}
+.item {
+  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+}
+.line {
+  margin-inline: var(--sp-3);
+  border-radius: var(--r-2);
 }
 .row:is(.line, .item):is(:hover, :has(:focus-visible)) {
   background: var(--list-hover);
@@ -68,7 +75,7 @@
 .line > .inner {
   column-gap: var(--sp-5);
   min-height: var(--h-line);
-  padding: 0 var(--list-pad) 0 var(--list-inset);
+  padding: 0 calc(var(--list-pad) - var(--sp-3)) 0 calc(var(--list-inset) - var(--sp-3));
 }
 .item > .inner {
   min-height: var(--h-list-item);
@@ -97,7 +104,7 @@
   grid-column-end: -1;
 }
 .more {
-  margin: 0 var(--list-pad) 0 var(--list-inset);
+  margin: 0 calc(var(--list-pad) - var(--sp-3)) 0 calc(var(--list-inset) - var(--sp-3));
   padding: var(--sp-7) 0 var(--sp-8);
   border-top: var(--line-1) solid var(--list-rule);
 }

@@ -71,7 +71,19 @@
 .bleed:last-child {
   margin-bottom: calc(var(--pad) * -1);
 }
-/* measure: the head, the rows and the foot held to a reading width */
-.measure > * {
-  max-width: var(--w-list);
+/* edge: out through the sheet's gutter, no surface; each row's first cell under the bar's title, the
+   head a faint band ruled off the bar, the foot flush with the sheet's rounded foot */
+.edge {
+  --list-pad: var(--gutter);
+  --list-inset: var(--gutter);
+}
+/* its rules run to the sheet's edge: no gutter kept for a scrollbar a short list never shows */
+.edge > * {
+  scrollbar-gutter: auto;
+}
+.edge > .head {
+  background: var(--list-band);
+  box-shadow:
+    inset 0 var(--line-1) 0 var(--list-rule),
+    inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
 }

@@ -21,9 +21,12 @@ export interface TextAreaProps {
   lines?: number;
   /** Fill the height of the column it is in and scroll inside (an item editor's body). */
   fill?: boolean;
+  /** Unboxed, the page's own text (an item editor's content); popped out, it is boxed. */
+  bare?: boolean;
 }
 
-export function TextArea({ label, value, onChange, placeholder, lines = 3, fill }: TextAreaProps) {
+export function TextArea(props: TextAreaProps) {
+  const { label, value, onChange, placeholder, lines = 3, fill, bare } = props;
   const [out, setOut] = useState(false);
   const popped = useRef<HTMLTextAreaElement>(null);
   const description = useDescription();
@@ -43,7 +46,7 @@ export function TextArea({ label, value, onChange, placeholder, lines = 3, fill 
   const area = (full: boolean) => (
     <textarea
       ref={full ? popped : undefined}
-      className={cx(s.box, s.area, (full || fill === true) && s.fill)}
+      className={cx(s.box, s.area, (full || fill === true) && s.fill, bare && !full && s.ghost)}
       style={vars({ "--lines": String(lines) })}
       aria-label={label}
       {...(full ? own : inline)}

@@ -1,12 +1,13 @@
-// What the four library lists share, in the app's list style (Compact's): the bar (the list's name,
-// the Space's Library, search, New), one recessed surface holding a dense table with its column
-// head, rows that open the item's editor on a click or Enter, ↑ ↓ (or j k) moving a selection that
-// Enter opens, and a foot with those keys and the count. A search that matches nothing says so.
+// What the four library lists share, as Linear's index: the bar (the list's name, the Space's
+// Library, search, New), then a table out to the sheet's edges with no surface of its own: a column
+// head ruled off the bar, rows that open the item's editor on a click or Enter, ↑ ↓ (or j k) moving
+// a selection that Enter opens, what uses each item as two counts, and a foot with those keys and the
+// count. A search that matches nothing says so.
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 import { useNow } from "../../api/queries";
-import type { Author, Iso } from "../../api/types";
+import type { Author, Iso, UsedBy } from "../../api/types";
 import { age, firstName, plural } from "../../domain/format";
 import {
   Age,
@@ -19,7 +20,6 @@ import {
   Row,
   type Search,
   Stack,
-  Surface,
   Table,
   Text,
 } from "../../kit";
@@ -36,8 +36,6 @@ interface LibraryListProps {
   total: number;
   /** The rows the search leaves, in order, by the editor each opens. */
   hrefs: readonly string[];
-  /** Held to a reading width, for a list of few columns, so a row's far end stays near its name. */
-  measure?: boolean;
   children: ReactNode;
 }
 
@@ -103,7 +101,7 @@ function useSelection(hrefs: readonly string[]): string | null {
 }
 
 export function LibraryList(props: LibraryListProps) {
-  const { title, noun, columns, search, total, hrefs, measure, children } = props;
+  const { title, noun, columns, search, total, hrefs, children } = props;
   const space = useSpace();
   const selected = useSelection(hrefs);
   return (
@@ -113,21 +111,15 @@ export function LibraryList(props: LibraryListProps) {
       search={search}
       action={<Button>{`New ${noun}`}</Button>}
     >
-      <Surface fill>
-        <Table
-          columns={columns}
-          measure={measure}
-          foot={<Foot noun={noun} total={total} shown={hrefs.length} />}
-        >
-          {hrefs.length === 0 && total > 0 ? (
-            <Notice kind="empty" lead="No match">
-              {`nothing in ${title.toLowerCase()} matches this search`}
-            </Notice>
-          ) : (
-            <Selected.Provider value={selected}>{children}</Selected.Provider>
-          )}
-        </Table>
-      </Surface>
+      <Table columns={columns} edge foot={<Foot noun={noun} total={total} shown={hrefs.length} />}>
+        {hrefs.length === 0 && total > 0 ? (
+          <Notice kind="empty" lead="No match">
+            {`nothing in ${title.toLowerCase()} matches this search`}
+          </Notice>
+        ) : (
+          <Selected.Provider value={selected}>{children}</Selected.Provider>
+        )}
+      </Table>
     </Page>
   );
 }
@@ -180,9 +172,7 @@ export function NameCell({
     <Stack dir="row" gap={4} align="center">
       {lead}
       <Text tone="3" truncate title={title ?? (after ? `${name} ${after}` : name)}>
-        <Text weight={500} tone="1">
-          {name}
-        </Text>
+        <Text variant="label">{name}</Text>
         {mark ? "\u2002" : null}
         {mark}
         {after ? `\u2002${after}` : null}
@@ -215,4 +205,26 @@ export function VersionCell({ version }: { version: number }) {
       {`v${String(version)}`}
     </Text>
   );
+}
+
+/** The two count columns every list ends on: how many workflows and tickets use it. */
+export const USED: readonly Column[] = [
+  { label: "Workflows", width: "sm", end: true },
+  { label: "Tickets", width: "sm", end: true },
+];
+
+/** A count, tabular; none is a quiet dash, as Linear leaves an empty cell. */
+export function CountCell({ n }: { n: number }) {
+  return n ? (
+    <Text tone="2" tabular>
+      {String(n)}
+    </Text>
+  ) : (
+    <Text tone="3">{"\u2013"}</Text>
+  );
+}
+
+/** The cells under USED, spread into a row. */
+export function usedCells(u: UsedBy): ReactNode[] {
+  return [<CountCell key="w" n={u.workflows.length} />, <CountCell key="t" n={u.tickets.length} />];
 }

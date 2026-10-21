@@ -35,7 +35,7 @@ export type NoticeProps = Said &
     | {
         kind: "problem";
         /** item: a line of a two-line item list (Intake), in the items' size; the blocked dot sits
-         *  where the group labels' chevrons do, the words just after it. */
+         *  in the rows' leading face's slot, the words where their titles start. */
         align?: "item";
         /** The problem's second line: what can be done about it. */
         fix?: NoticeFix;
@@ -44,7 +44,7 @@ export type NoticeProps = Said &
       }
     | {
         kind: "empty";
-        /** item: as a problem's, the empty ring in the chevrons' slot. */
+        /** item: as a problem's, the empty ring in the faces' slot. */
         align?: "item";
         error?: never;
         fix?: never;

@@ -4,8 +4,7 @@ import s from "./Text.module.css";
 import { Tip } from "./tip";
 import { cx, type Tone } from "./vars";
 
-export type TextVariant =
-  "display" | "title" | "heading" | "body" | "label" | "ui" | "meta" | "code";
+export type TextVariant = "display" | "heading" | "body" | "label" | "ui" | "meta" | "code";
 
 export interface TextProps {
   children: ReactNode;

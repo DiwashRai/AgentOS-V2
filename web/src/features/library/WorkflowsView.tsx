@@ -6,16 +6,16 @@
 import { useWorkflows } from "../../api/queries";
 import type { Workflow } from "../../api/types";
 import { matches, plural } from "../../domain/format";
-import { Chip, type Column, Icon, Strip, Text } from "../../kit";
+import { Chip, type Column, Icon, Strip } from "../../kit";
 import { useSearch } from "../shared/useSearch";
-import { ChangedCell, LibraryList, LibraryRow, NameCell, VersionCell } from "./list";
+import { ChangedCell, CountCell, LibraryList, LibraryRow, NameCell, VersionCell } from "./list";
 
 const COLUMNS: readonly Column[] = [
   { label: "Workflow", width: "xl" },
   { label: "Stages", width: "fill", min: "2xl" },
   { label: "Version", width: "xs" },
   { label: "Changed", width: "md" },
-  { label: "Used by", width: "sm", end: true },
+  { label: "Tickets", width: "sm", end: true },
 ];
 
 /** "5 stages · loops up to 3 rounds" (with more loops than one, each one's rounds); a stage turned
@@ -60,7 +60,7 @@ export function WorkflowsView() {
       {shown.map((w) => (
         <LibraryRow key={w.id} name={w.name} href={href(w)}>
           <NameCell
-            lead={<Icon name="workflows" />}
+            lead={<Icon name="workflows" tile />}
             name={w.name}
             title={`${w.name} · ${w.description}`}
             mark={
@@ -72,7 +72,7 @@ export function WorkflowsView() {
           <StagesCell w={w} />
           <VersionCell version={w.version} />
           <ChangedCell by={w.updated_by} at={w.updated_at} />
-          <Text tone={w.tickets.length ? "2" : "3"}>{plural(w.tickets.length, "ticket")}</Text>
+          <CountCell n={w.tickets.length} />
         </LibraryRow>
       ))}
     </LibraryList>

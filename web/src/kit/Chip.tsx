@@ -1,5 +1,5 @@
-// Linear's label chip, the kit's one pill: a stage, a repo, a skill on a stage, a property, an
-// agent's state. A pill on a hairline, regular muted words cut at their end, led by a small glyph
+// The kit's one tag: a stage, a repo, a skill on a stage, a property, an agent's state. A flat
+// tag of faint ink with no outline (borders are for controls), regular muted words cut at their end, led by a small glyph
 // or a dot in a state's hue (one or the other), with something quieter after the words (a step
 // count, or an agent's glyph on its live disc and a face), and, where it can be taken off, a
 // remove at its end. A chip that was just added (or clicked for again) scrolls into view and
@@ -33,8 +33,8 @@ export type ChipAfter =
 export type ChipProps = {
   /** Its words (tests, AGENTS.md, Implement, northwind/web). */
   label: string;
-  /** line: a hairline, no fill (the default); fill: a faint fill on the hairline (an agent card's
-   *  chips, a board card's state, a stage's phase); blocked: the words in the blocked ink (a
+  /** line: a faint fill, no outline (the default); fill: a firmer fill (an agent card's chips,
+   *  a board card's state, a stage's phase); blocked: the words in the blocked ink (a
    *  conflict). */
   tone?: "line" | "fill" | "blocked";
   /** The full text on hover, when it says more than the words. */

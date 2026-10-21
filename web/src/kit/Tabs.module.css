@@ -1,47 +1,49 @@
-/* Linear's section tabs: plain words on a hairline, the current one in the strong ink with a 2px
-   underline sitting on the rule; a count trails each in the quiet ink */
+/* Linear's view tabs: plain words as quiet buttons, the current one a filled chip on a hairline
+   ring in the strong ink; a count trails each in the quiet ink */
 .list {
   display: flex;
-  align-items: stretch;
-  gap: var(--sp-9);
-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--tk-card-edge);
+  align-items: center;
+  gap: var(--sp-2);
+  margin-left: calc(var(--sp-5) * -1);
 }
 .tab {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-3);
   height: var(--h-tab);
-  padding: 0;
+  padding: 0 var(--sp-5);
   border: 0;
+  border-radius: var(--r-3);
   background: none;
-  color: var(--tk-label);
-  font-size: var(--fs-tk);
+  color: var(--ink-2);
+  font-size: var(--fs-3);
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
   transition:
     color var(--dur-fast),
-    box-shadow var(--dur-fast);
+    background var(--dur-fast);
 }
 .tab:hover {
   color: var(--ink-1);
+  background: var(--tk-hover);
 }
 .tab:focus-visible {
   outline: var(--line-2) solid var(--focus);
-  outline-offset: var(--focus-out);
-  border-radius: var(--r-1);
+  outline-offset: var(--focus-tight);
 }
 .tab[data-active] {
   color: var(--ink-1);
-  box-shadow: inset 0 calc(var(--line-2) * -1) 0 var(--ink-1);
+  background: var(--tk-mine);
+  box-shadow: inset 0 0 0 var(--line-1) var(--tk-card-edge);
 }
 .count {
-  font-size: var(--fs-4);
+  font-size: var(--fs-2);
   font-weight: 400;
   color: var(--tk-label);
   font-variant-numeric: tabular-nums;
 }
 .panel {
-  padding-top: var(--sp-10);
+  padding-top: var(--sp-9);
   outline: none;
 }

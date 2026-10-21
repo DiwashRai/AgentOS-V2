@@ -1,7 +1,7 @@
 // A workflow's stages top to bottom, as Cards on a lane whose axis runs through their faces.
 // Between two cards a joint: the gate after the stage as a diamond on the axis (the ticket
 // stepper's), and, while editing, the + that inserts a stage there. A loop is a bracket round its
-// stages, a faint band on a hairline with its foot (up to N rounds) under its last card. Editing,
+// stages, a faint band with its foot (up to N rounds) under its last card. Editing,
 // the stages reorder on a Sortable (a handle, a drop line, ↑ ↓) that also takes drops between
 // cards; the diamond is a toggle. Read only, it is the same lane with none of that.
 import type { ReactNode } from "react";
@@ -175,7 +175,7 @@ function Row({ st, i, last, edit, pos, foot }: RowProps) {
   const inside = pos === "first" || pos === "mid";
   const joint = <Joint st={st} i={i} last={last} edit={edit} />;
   return (
-    <div className={s.row}>
+    <div className={s.row} data-first={i === 0 || undefined} data-last={last || undefined}>
       <div className={s.block} data-loop={pos}>
         {pos ? <span className={s.band} data-pos={pos} aria-hidden="true" /> : null}
         <div className={s.card}>{st.content}</div>

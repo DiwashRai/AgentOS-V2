@@ -1,5 +1,5 @@
 // A run's progress: one segment per step; the step in progress sweeps. One form, two sizes: inline
-// in a row (the default), and a hairline track along the bottom edge of the agent Card it is in.
+// in a row (the default), and still beside the step count of the agent Card it is in.
 import s from "./Meter.module.css";
 import { cx } from "./vars";
 
@@ -7,7 +7,7 @@ export interface MeterProps {
   /** Steps finished. */
   done: number;
   total: number;
-  size?: "row" | "edge";
+  size?: "row" | "tile";
 }
 
 type Seg = "done" | "now" | "next";

@@ -1,14 +1,15 @@
 // A modal on the browser's own <dialog>: it holds focus, the rest of the page is inert, and focus
 // goes back to the opener. Esc and the close button ask the screen to close it (`onClose`); the
 // screen closes it by setting `open`, so it can ask first. Two looks:
-// - side: the peek, sliding in from the right. Its parts are Sections, each padded and ruled off
-//   from the next; they scroll inside the panel, over a foot that stays put.
-// - full: the whole window, for editing (a ticket's workflow or item): the close at the top left,
-//   then the view (a Page, so its top bar and body are the same as on its own screen). `ask`
-//   draws a question over it, modal inside it (unsaved changes: Save, Discard, Keep editing).
+// - side: the peek, docked full height at the right edge. Its parts are Sections, padded apart as
+//   one document; they scroll inside the panel, between a bar and a foot that stay put.
+// - full: the whole window, for editing (a ticket's workflow or item): the app's sheet lifted over
+//   it, the close at the top left of its bar, then the view (a Page, so its top bar and body are
+//   the same as on its own screen). `ask` draws a question over it, modal inside it (unsaved
+//   changes: Save, Discard, Keep editing).
 // It sits in the browser's top layer, so the kit's popovers, tooltips and toasts raised inside it
 // mount inside it.
-import { type ReactNode, useEffect, useId, useRef } from "react";
+import { type ReactNode, type RefObject, useEffect, useId, useRef } from "react";
 
 import { Button } from "./Button";
 import s from "./Dialog.module.css";
@@ -28,6 +29,8 @@ export type DialogProps = {
 } & (
   | {
       look?: "side";
+      /** Pinned over the scrolling sections (the peek's key and its buttons). */
+      bar?: ReactNode;
       /** Pinned under the scrolling sections (the peek's reply box). */
       foot?: ReactNode;
       ask?: never;
@@ -36,6 +39,7 @@ export type DialogProps = {
       look: "full";
       /** A question over it, modal inside it; the view under it is inert. */
       ask?: DialogAsk | undefined;
+      bar?: never;
       foot?: never;
     }
 );
@@ -125,7 +129,34 @@ function Full({
   );
 }
 
-export function Dialog({ label, open, onClose, children, foot, look = "side", ask }: DialogProps) {
+/** The side look: the bar, the Sections scrolling as one document, the toasts' dock, the foot. */
+function Side({
+  open,
+  bar,
+  foot,
+  dock,
+  children,
+}: {
+  open: boolean;
+  bar: ReactNode;
+  foot: ReactNode;
+  dock: RefObject<HTMLDivElement | null>;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      {open && bar ? <div className={s.bar}>{bar}</div> : null}
+      <div className={s.body}>
+        <InPanel value>{open ? children : null}</InPanel>
+      </div>
+      <div ref={dock} className={s.dock} />
+      {open && foot ? <div className={s.foot}>{foot}</div> : null}
+    </>
+  );
+}
+
+export function Dialog(props: DialogProps) {
+  const { label, open, onClose, children, bar, foot, look = "side", ask } = props;
   const ref = useRef<HTMLDialogElement>(null);
   // Whether the screen still wants it open: a close it didn't ask for (the browser's own, when it
   // won't let Esc be held) is the user's, and is reported; a close that follows `open` going false
@@ -148,15 +179,6 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
   // the side look's toasts dock above its foot (drawn while closed too, so it is there when the
   // region mounts)
   const dock = useRef<HTMLDivElement>(null);
-  const side = (
-    <>
-      <div className={s.body}>
-        <InPanel value>{open ? children : null}</InPanel>
-      </div>
-      <div ref={dock} className={s.dock} />
-      {open && foot ? <div className={s.foot}>{foot}</div> : null}
-    </>
-  );
   return (
     <dialog
       ref={ref}
@@ -194,7 +216,9 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
               dock={look === "side" ? dock : undefined}
             >
               {look === "side" ? (
-                side
+                <Side open={open} bar={bar} foot={foot} dock={dock}>
+                  {children}
+                </Side>
               ) : open ? (
                 <Full onClose={onClose} ask={ask}>
                   {children}

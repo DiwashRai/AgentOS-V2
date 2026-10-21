@@ -83,6 +83,10 @@
   overflow-y: auto;
   scrollbar-width: thin;
 }
+/* a body that is an edge Table (the library's lists) runs out through the sheet's gutter */
+.body:has(> [data-edge="true"]) {
+  margin-inline: calc(var(--gutter) * -1);
+}
 
 /* counters: the number carries the weight; a zero recedes; a non-zero "need you" takes the accent's
    ink, with no fill, so nothing in the bar is a filled block */
@@ -140,12 +144,14 @@
   min-width: var(--col-lg);
 }
 
-/* a body with a full-height column beside it: each scrolls on its own */
+/* a body with a full-height column beside it, run out to the sheet's right edge: each scrolls on
+   its own */
 .split {
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 30vw, var(--w-talk-max));
+  margin-right: calc(var(--gutter) * -1);
   border-top: var(--line-1) solid var(--tk-card-edge);
 }
 /* a rail of settings (an item editor's properties) is narrower than a reading column, so the
@@ -172,14 +178,16 @@
 .split[data-side="rail"] .measure {
   max-width: none;
 }
-/* the column beside: no card, the page's own ground ruled off by one hairline, full height, so what
-   it holds can pin its foot (Talk's reply box) to the window's bottom */
+/* the column beside: Linear's issue sidebar, a tinted rail ruled off by one hairline and run out to
+   the sheet's edge, full height, so what it holds can pin its foot (Talk's reply box) to the
+   window's bottom */
 .side {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: var(--sp-9) 0 var(--sp-8) var(--sp-9);
+  padding: var(--sp-9) var(--sp-9) var(--sp-8);
   border-left: var(--line-1) solid var(--tk-card-edge);
+  background: var(--tk-well);
   overflow-y: auto;
   scrollbar-width: thin;
 }

@@ -108,7 +108,7 @@
 }
 /* in the run card a ring of the card's ground keeps the diamond off the bars either side */
 .card .knot {
-  outline: var(--line-2) solid var(--tk-well);
+  outline: var(--line-2) solid var(--page);
 }
 .knot[data-state="passed"] {
   background: var(--progress);
@@ -178,12 +178,12 @@
   font-size: var(--fs-2);
 }
 
-/* the run card: the stages and what happens now in one contained card, the composer's radius */
+/* the run card: the stages and what happens now in one card, as Linear's latest update: the page's
+   own ground on a hairline, a larger radius */
 .card {
-  padding: var(--sp-6);
+  padding: var(--sp-6) var(--sp-8);
   border: var(--line-1) solid var(--tk-card-edge);
-  border-radius: var(--r-4);
-  background: var(--tk-well);
+  border-radius: var(--r-5);
 }
 .card .bar {
   margin-top: var(--sp-2);
@@ -193,8 +193,8 @@
 .now {
   grid-column: 1 / -1;
   min-width: 0;
-  margin: var(--sp-6) calc(var(--sp-6) * -1) 0;
-  padding: var(--sp-6) var(--sp-6) 0;
+  margin: var(--sp-6) calc(var(--sp-8) * -1) 0;
+  padding: var(--sp-6) var(--sp-8) 0;
   border-top: var(--line-1) solid var(--tk-card-edge);
   --w-meter: var(--w-tk-meter);
 }

@@ -80,7 +80,6 @@
   font-size: var(--fs-2);
   letter-spacing: 0;
 }
-
 /* TextArea: monospace markdown, at least `--lines` tall, growing with its text; or filling its
    column and scrolling inside */
 .area {
@@ -103,6 +102,37 @@
   field-sizing: fixed;
   resize: none;
 }
+/* a document's own words (Field's looks, a bare TextArea): no box, the text flush with the column
+   (its padding pulled back into the gutter), a faint wash on hover, the ring alone on focus */
+.ghost {
+  width: calc(100% + var(--sp-3) * 2);
+  margin-inline: calc(var(--sp-3) * -1);
+  padding: var(--sp-1) var(--sp-3);
+  border-color: transparent;
+  background: none;
+  resize: none;
+}
+.ghost:is(:hover, :focus-within) {
+  border-color: transparent;
+}
+.field.ghost:hover:not(:focus) {
+  background: var(--ctl-hover);
+}
+.title {
+  height: auto;
+  font-size: var(--fs-ticket);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.lead {
+  font-size: var(--fs-ticket-lead);
+  color: var(--ink-2);
+}
+.heading {
+  font-size: var(--fs-5);
+  font-weight: 600;
+}
+
 /* the pop-out: a quiet button in the area's top right corner, shown on hover and focus */
 .areaWrap {
   position: relative;
@@ -324,6 +354,10 @@
   gap: var(--sp-4);
   min-width: 0;
   min-height: var(--h-field);
+}
+/* a picker's chip (Select) lines its words up with the plain values, its padding in the gap */
+.control:has(> [role="combobox"]:first-child) {
+  margin-left: calc(var(--sp-4) * -1);
 }
 .note {
   color: var(--ink-3);

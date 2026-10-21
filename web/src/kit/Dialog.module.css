@@ -1,23 +1,26 @@
+/* side: the peek, docked full height at the window's right edge, as Linear's issue peek is: one
+   sheet on a hairline and a long soft shadow, the list beside it only veiled, so it still reads */
 .side {
   position: fixed;
-  inset: var(--sp-2) var(--sp-2) var(--sp-2) auto;
-  width: min(var(--w-peek), calc(100vw - var(--sp-9)));
-  height: auto;
+  inset: 0 0 0 auto;
+  width: min(var(--w-peek), calc(100vw - var(--sp-10)));
+  height: 100dvh;
   max-height: none;
   margin: 0;
   padding: 0;
   border: 0;
-  border-radius: var(--r-5);
+  border-left: var(--line-1) solid var(--tk-card-edge);
   background: var(--tk-side);
   color: var(--ink-2);
-  box-shadow: var(--shadow-float);
+  box-shadow: var(--shadow-dock);
   overflow: hidden;
 }
-.side:focus-visible {
+.side:focus-visible,
+.full:focus-visible {
   outline: none;
 }
 .side::backdrop {
-  background: var(--tk-scrim);
+  background: var(--tk-veil);
 }
 .side[open] {
   display: flex;
@@ -34,7 +37,18 @@
     transform: none;
   }
 }
-/* the Sections scroll inside the panel (each draws its own padding and the hairline to the next) */
+/* the bar: the panel's chrome, pinned over the sections the way the foot is under them (the key,
+   then its buttons at the end), ruled off from the document it heads on the line the view's own
+   top bar ends on, so the two read as one bar across the window */
+.bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: calc(var(--h-top) + var(--sp-4));
+  padding: 0 var(--sp-6) 0 var(--sp-9);
+  border-bottom: var(--line-1) solid var(--tk-card-edge);
+}
+/* the Sections scroll inside the panel as one document (each draws its own padding) */
 .body {
   flex: 1;
   min-height: 0;
@@ -61,24 +75,24 @@
   display: none;
 }
 
-/* full: the whole window over the app, for editing. The close sits at the top left, level with
-   the view's top bar; the view (a Page) fills the rest, as the frame's main column does. */
+/* full: the app's main sheet lifted over the whole window, for editing: the same inset and corner
+   as the sheet it covers, on the scrim. Its bar runs edge to edge (the close, a rule, then the
+   view's top bar), one hairline under all of it; the view (a Page) fills the rest. */
 .full {
   position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100dvh;
+  inset: var(--sp-4);
+  width: auto;
+  height: auto;
   max-width: none;
   max-height: none;
   margin: 0;
   padding: 0;
   border: 0;
+  border-radius: var(--r-4);
   background: var(--page);
   color: var(--ink-2);
+  box-shadow: var(--shadow-float);
   overflow: hidden;
-}
-.full:focus-visible {
-  outline: none;
 }
 .full::backdrop {
   background: var(--tk-scrim);
@@ -98,16 +112,30 @@
   }
 }
 .frame {
+  position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  column-gap: var(--sp-4);
   height: 100%;
-  padding: 0 var(--sp-9) 0 var(--sp-6);
+  padding-right: var(--gutter);
+}
+/* the bar's hairline, under the close as well as the view's top bar */
+.frame::before {
+  content: "";
+  position: absolute;
+  inset: var(--h-top) 0 auto;
+  border-top: var(--line-1) solid var(--tk-card-edge);
 }
 .close {
   display: flex;
   align-items: center;
+  gap: var(--sp-6);
   height: var(--h-top);
+  padding: 0 var(--sp-8) 0 var(--sp-6);
+}
+.close::after {
+  content: "";
+  height: var(--sp-9);
+  border-left: var(--line-1) solid var(--tk-card-edge);
 }
 .view {
   display: flex;
