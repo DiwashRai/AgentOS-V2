@@ -58,6 +58,34 @@
   field-sizing: fixed;
   resize: none;
 }
+/* the pop-out: a quiet button in the area's top right corner, shown on hover and focus */
+.areaWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.pop {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-2);
+  opacity: 0;
+  transition: opacity var(--dur-fast) ease;
+}
+.areaWrap:is(:hover, :focus-within) > .pop {
+  opacity: 1;
+}
+/* popped out: the whole window under the bar, at a readable measure */
+.popped {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+  padding-bottom: var(--sp-9);
+}
+.popped > .area {
+  max-width: var(--w-editor);
+}
 
 /* NumberField: − the digits and their unit + in one box, the digits at a fixed width */
 .number {

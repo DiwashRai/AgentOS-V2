@@ -1,19 +1,16 @@
 import s from "./Age.module.css";
-import { cx } from "./vars";
 
 export interface AgeProps {
   /** An age as the screens write it: `38m`, `3h 05m`, `2d`, `now`. */
   text: string;
-  /** The Needs-you age: larger and in ink. */
-  strong?: boolean;
   title?: string;
 }
 
 /** An age: tabular figures, each unit a size smaller. */
-export function Age({ text, strong, title }: AgeProps) {
+export function Age({ text, title }: AgeProps) {
   const parts = text.split(" ").map((p) => /^(\d+)([a-z]+)$/.exec(p));
   return (
-    <span className={cx(s.age, strong && s.strong)} title={title}>
+    <span className={s.age} title={title}>
       {parts.every((m): m is RegExpExecArray => m !== null)
         ? parts.map((m, i) => (
             <span key={i}>

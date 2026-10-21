@@ -159,6 +159,11 @@ const GLYPHS = {
   // a section heading's fold caret, Linear's small solid triangle
   caret: { ...LINE10, d: <path d="M2.75 3.75h4.5L5 6.5z" className={s.caret} /> },
   out: { ...LINE10, d: <path d="M2.5 7.5 7.5 2.5M3.5 2.5h4v4" /> },
+  // two corners pulled apart: edit in the whole window
+  expand: {
+    ...LINE10,
+    d: <path d="M6 1.5h2.5V4M4 8.5H1.5V6M8.5 1.5 5.75 4.25M1.5 8.5l2.75-2.75" />,
+  },
   // the ticket's properties: where it lives, its base branch, its workflow, when it opened
   repo: {
     ...LINE14,

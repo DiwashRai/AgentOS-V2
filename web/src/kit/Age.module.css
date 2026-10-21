@@ -7,7 +7,3 @@
   font-size: var(--fs-1);
   font-weight: 500;
 }
-.strong {
-  font-weight: 500;
-  color: var(--ink-1);
-}

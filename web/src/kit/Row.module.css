@@ -226,35 +226,6 @@
   border-radius: var(--r-1);
 }
 
-/* the status edge: a short inset tick */
-.row[data-edge] > .inner::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: var(--sp-6);
-  bottom: var(--sp-6);
-  width: var(--line-2);
-  border-radius: 0 var(--line-2) var(--line-2) 0;
-  background: var(--edge);
-}
-.line[data-edge] > .inner::before {
-  top: var(--sp-5);
-  bottom: var(--sp-5);
-}
-.row[data-edge="you"] {
-  --edge: var(--you);
-}
-.row[data-edge="live"] {
-  --edge: var(--live);
-}
-.row[data-edge="blocked"] {
-  --edge: var(--blocked);
-}
-.row[data-edge="done"],
-.row[data-edge="quiet"] {
-  --edge: transparent;
-}
-
 .cell {
   display: flex;
   align-items: center;

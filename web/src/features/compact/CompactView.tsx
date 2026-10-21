@@ -62,7 +62,7 @@ function Expanded({ t, me, now }: { t: TicketRow; me: Person | null; now: number
   const [, setParams] = useSearchParams();
   return (
     <Stack gap={8}>
-      <Stepper model={stageModel(t, me)} look="steps" compact />
+      <Stepper model={stageModel(t, me)} compact />
       <Stack dir="row" gap={10}>
         <Stack grow gap={8}>
           <Stack gap={2}>

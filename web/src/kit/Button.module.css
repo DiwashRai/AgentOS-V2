@@ -46,11 +46,6 @@
   height: var(--h-control-sm);
   padding: 0 var(--sp-5);
 }
-.lg {
-  height: var(--h-control-lg);
-  padding: 0 var(--sp-8);
-  font-size: var(--fs-4);
-}
 .square {
   padding: 0;
   width: var(--h-control);
@@ -116,20 +111,6 @@
   background: var(--ctl-hover);
   border-color: transparent;
   color: var(--ink-1);
-}
-.lit {
-  background: transparent;
-  border-color: var(--ctl-edge-hover);
-  box-shadow: none;
-}
-.lit:hover {
-  background: var(--ctl-hover);
-}
-/* lit: fills like `you` while the row around it is hovered or keyboard-focused (Take in) */
-:is([data-row]:hover, [data-row]:has(:focus-visible)) .lit {
-  background: var(--you);
-  border-color: var(--you);
-  color: var(--you-ink);
 }
 .link,
 .link:hover {

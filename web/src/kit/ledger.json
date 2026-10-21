@@ -33,9 +33,6 @@
         "text": {
           "why": "The age as the screens write it (38m, 3h 05m, now)."
         },
-        "strong": {
-          "why": "An age that stands out in ink (the kit sheet; list rows keep every age at one weight)."
-        },
         "title": {
           "why": "The full time on hover."
         }
@@ -78,7 +75,6 @@
             "count": "The bare count after a head's or a filter pill's name.",
             "kbd": "A keycap in key hints.",
             "tag": "A label chip on a hairline: the agent reads' tags, an agent card's chips, All teams' item badge.",
-            "status": "A Jira status, which we only know by name.",
             "prop": "A list row's quiet property (its stage, its source): a grey dot or a small glyph, then the words, no outline, so the row's one chip stays its only edged thing (Linear's label without its pill).",
             "you": "The YOU pill: the one mono-caps form."
           }
@@ -90,15 +86,11 @@
           "why": "Keys sit in rows, group heads and the ticket kicker.",
           "values": {
             "sm": "Compact's foot and an agent card's key.",
-            "md": "Rows.",
-            "lg": "The ticket page's kicker."
+            "md": "Rows."
           }
         },
         "title": {
           "why": "The full text or what a click does, on hover."
-        },
-        "href": {
-          "why": "A Jira key opens the issue; V1's small arrow shows on hover, outside the layout, so linked and plain keys end on one edge."
         },
         "icon": {
           "why": "A property's glyph in place of its dot (the repo glyph before a row's source)."
@@ -140,7 +132,6 @@
             "you": "The gate primary (Approve).",
             "accent": "Only Dispatch run, only on a ticket.",
             "quiet": "A borderless button (+N, icon buttons in a bar).",
-            "lit": "A row's one call to action, outlined until its row is hovered, then filled like you (Intake's Take in drew it; only the kit sheet does now, so it retires once the sheet drops it).",
             "link": "A bare text action in secondary ink, primary on hover (Show all, Open ticket)."
           }
         },
@@ -149,8 +140,7 @@
           "values": {
             "xs": "24px: quiet inline buttons.",
             "sm": "28px: row actions.",
-            "md": "34px: the top bar and the ticket header.",
-            "lg": "40px: a page's lone action."
+            "md": "34px: the top bar and the ticket header."
           }
         },
         "icon": {
@@ -543,12 +533,8 @@
           "why": "V1's three sizes.",
           "values": {
             "tile": "A running agent card's: one still 2px track along the card's bottom edge, the finished steps live and the one under way a soft live, under the progress line's count (a queued card draws none).",
-            "row": "Inline in a row (48px): the ticket's Now line.",
-            "strip": "A run's steps each named under its segment; drawn on the kit sheet only, since the ticket page dropped it."
+            "row": "Inline in a row (48px): the ticket's Now line."
           }
-        },
-        "names": {
-          "why": "The strip's step names."
         }
       }
     },
@@ -667,16 +653,6 @@
             "raised": "In flight or needs action.",
             "flat": "Settled: done or closed; a queued agent's card, on a fainter hairline; a board's column head (a band).",
             "you": "Needs you: drawn as raised; the row's glyph and chip say it."
-          }
-        },
-        "edge": {
-          "why": "The 3px status edge (the kit sheet; the screens' list rows say a state by its glyph).",
-          "values": {
-            "you": "Needs you.",
-            "live": "Running.",
-            "blocked": "Blocked or abandoned.",
-            "done": "Complete.",
-            "quiet": "Queued, waiting, inbox."
           }
         },
         "kind": {
@@ -828,7 +804,7 @@
       }
     },
     "Stepper": {
-      "why": "A ticket's way through its workflow: V1's stage glyph and labelled stepper on one model.",
+      "why": "A ticket's way through its workflow as the labelled stepper (the ticket page, the peek, an expanded row): a column per stage, a gate's diamond where its stage ends.",
       "props": {
         "model": {
           "why": "Its stages and gates, as the board says.",
@@ -862,13 +838,6 @@
                 }
               }
             }
-          }
-        },
-        "look": {
-          "why": "Rows show the glyph, the ticket and the peek the labelled steps.",
-          "values": {
-            "glyph": "The rows' 81px glyph with the stage's name.",
-            "steps": "The labelled stepper: an equal column per stage, its name under its own segment at body size, a gate's diamond where its stage ends."
           }
         },
         "compact": {
@@ -1050,10 +1019,10 @@
       }
     },
     "TextArea": {
-      "why": "Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of AGENTS.md), growing with its text.",
+      "why": "Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of AGENTS.md), growing with its text; any area pops out to the whole window for long text.",
       "props": {
         "label": {
-          "why": "Its accessible name."
+          "why": "Its accessible name, and the popped-out window's title."
         },
         "value": {
           "why": "The text."
@@ -1186,6 +1155,7 @@
         "right": "The chevron turned right: a folded block's unfold (AGENTS.md's blocks, whose head is a name field, not a Head).",
         "caret": "A sidebar section's fold, Linear's small solid caret.",
         "out": "Opens in Jira.",
+        "expand": "A text area's pop-out: edit it in the whole window.",
         "repo": "The ticket's properties: its repo.",
         "branch": "The ticket's properties: its base branch.",
         "workflow": "The ticket's properties: its workflow, a stepped path.",

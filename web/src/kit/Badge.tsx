@@ -6,7 +6,7 @@ import { cx } from "./vars";
 
 export type BadgeProps =
   /** A ticket or project key: quiet tabular text. */
-  | { kind: "key"; children: string; size?: "sm" | "md" | "lg"; title?: string; href?: string }
+  | { kind: "key"; children: string; size?: "sm" | "md"; title?: string }
   /** The bare count of heads and pills. */
   | { kind: "count"; children: number; tone?: "neutral" | "you" | "done" }
   /** A keycap ("/", "Esc", "J"). */
@@ -19,8 +19,6 @@ export type BadgeProps =
       tone?: "neutral" | "blocked" | "quiet" | "fill";
       title?: string;
     }
-  /** A status as another system names it (a Jira status): one neutral ring. */
-  | { kind: "status"; children: string; title?: string }
   /** A row's property chip (its stage, its repo), Linear's label: a pill on a hairline, a dot in
    *  the state's hue (`dot`) or a small glyph, then muted words. */
   | {
@@ -35,18 +33,11 @@ export type BadgeProps =
 
 type KeyProps = Extract<BadgeProps, { kind: "key" }>;
 
-function Key({ children, size = "md", title, href }: KeyProps) {
-  const chip = (
+function Key({ children, size = "md", title }: KeyProps) {
+  return (
     <span className={cx(s.key, s[size])} title={title}>
       {children}
     </span>
-  );
-  if (href === undefined) return chip;
-  return (
-    <a className={s.out} href={href} target="_blank" rel="noopener noreferrer" title={title}>
-      {chip}
-      <Icon name="out" />
-    </a>
   );
 }
 
@@ -79,13 +70,7 @@ export function Badge(props: BadgeProps) {
           {props.children}
         </span>
       );
-    case "status":
-      return (
-        <span className={s.status} title={props.title}>
-          <i aria-hidden="true" />
-          <span>{props.children}</span>
-        </span>
-      );
+
     case "prop":
       return <Prop {...props} />;
     case "you":

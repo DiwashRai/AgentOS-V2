@@ -58,11 +58,7 @@ function Head({ t, me, now, onClose, plan }: BodyProps & { plan: readonly PlanIt
           )
         }
       />
-      <Stepper
-        model={stageModel(t, me)}
-        look="steps"
-        now={<Now t={t} me={me} now={now} plan={plan} />}
-      />
+      <Stepper model={stageModel(t, me)} now={<Now t={t} me={me} now={now} plan={plan} />} />
     </Stack>
   );
 }

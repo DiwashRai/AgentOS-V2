@@ -444,12 +444,6 @@ export function KitSheet() {
                 NW
               </Badge>
               <Badge kind="key">{"NW-14"}</Badge>
-              <Badge kind="key" size="lg">
-                SUP-231
-              </Badge>
-              <Badge kind="key" href="https://northwind.atlassian.example/browse/SUP-252">
-                SUP-252
-              </Badge>
               <Badge kind="count">{3}</Badge>
               <Badge kind="count" tone="you">
                 {2}
@@ -465,7 +459,6 @@ export function KitSheet() {
               <Badge kind="tag" tone="quiet">
                 web
               </Badge>
-              <Badge kind="status">In Progress</Badge>
               <Badge kind="you" />
             </Stack>
           </Section>
@@ -483,7 +476,7 @@ export function KitSheet() {
           </Section>
           <Section name="Button">
             <Stack dir="row" gap={4} wrap align="center">
-              {(["default", "ink", "you", "accent", "quiet", "lit", "link"] as const).map((v) => (
+              {(["default", "ink", "you", "accent", "quiet", "link"] as const).map((v) => (
                 <Button key={v} variant={v}>
                   {v}
                 </Button>
@@ -492,7 +485,7 @@ export function KitSheet() {
               <Button icon="close" title="Close" />
             </Stack>
             <Stack dir="row" gap={4} align="center">
-              {(["xs", "sm", "md", "lg"] as const).map((size) => (
+              {(["xs", "sm", "md"] as const).map((size) => (
                 <Button key={size} size={size}>
                   {size}
                 </Button>
@@ -513,36 +506,21 @@ export function KitSheet() {
                 ]}
               />
               <Age text="3h 10m" />
-              <Age text="38m" strong />
               <Age text="now" />
             </Stack>
           </Section>
           <Section name="Stepper and Meter">
-            {MODELS.map(({ label, model }) => (
-              <Stack key={label} dir="row" gap={9} align="center">
-                <Text variant="meta">{label}</Text>
-                <Stepper model={model} />
-              </Stack>
-            ))}
             <Stepper
               model={MODELS[1]?.model ?? { stages: [], label: "", live: false, closed: false }}
-              look="steps"
             />
             <Stepper
               model={MODELS[0]?.model ?? { stages: [], label: "", live: false, closed: false }}
-              look="steps"
               compact
             />
             <Meter done={2} total={5} />
             <Stack dir="row" gap={6} align="center">
               <Meter size="row" done={1} total={4} />
             </Stack>
-            <Meter
-              size="strip"
-              done={2}
-              total={4}
-              names={["Read the ticket", "Write the test", "Make it pass", "Open the PR"]}
-            />
           </Section>
           <Section name="Table, Head, Row, Notice">
             <Table columns={COLUMNS} scroll={false}>
@@ -553,19 +531,19 @@ export function KitSheet() {
                 summary="summary"
                 fold={{ open: true, toggle: () => undefined }}
               />
-              <Row edge="live">
+              <Row>
                 <Badge kind="key">{"NW-17"}</Badge>
                 <Text variant="label">A raised line</Text>
                 <Age text="now" />
               </Row>
-              <Row look="you" edge="you">
+              <Row look="you">
                 <Badge kind="key">{"NW-14"}</Badge>
                 <Text variant="label" weight={600}>
                   Needs you
                 </Text>
                 <Age text="3h 10m" />
               </Row>
-              <Row look="flat" edge="done" alert="An alert under the row">
+              <Row look="flat" alert="An alert under the row">
                 <Badge kind="key">{"NW-5"}</Badge>
                 <Text variant="label" tone="2">
                   A settled line

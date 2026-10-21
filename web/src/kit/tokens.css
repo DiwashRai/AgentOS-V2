@@ -676,6 +676,7 @@
   --switch-inset: 2px;
   /* overlay: the full-window editor's question (unsaved changes) */
   --w-ask: 400px;
+  --w-editor: 960px; /* a popped-out text area's measure */
   /* drag: a sortable row's handle, in the gutter left of the row */
   --w-grip: 20px;
 }

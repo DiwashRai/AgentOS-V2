@@ -5,11 +5,11 @@ import s from "./Button.module.css";
 import { Icon, type IconName } from "./Icon";
 import { cx } from "./vars";
 
-export type ButtonVariant = "default" | "ink" | "you" | "accent" | "quiet" | "lit" | "link";
+export type ButtonVariant = "default" | "ink" | "you" | "accent" | "quiet" | "link";
 
 interface Common {
   variant?: ButtonVariant;
-  size?: "xs" | "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md";
   /** Why it can't be pressed now (R11): it stays focusable, does nothing, and says why. */
   blocked?: string;
   onClick?: () => void;

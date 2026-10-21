@@ -17,8 +17,6 @@ export interface RowProps {
   children: ReactNode;
   /** raised: actionable (default); flat: settled; you: raised, a list row with a faint you wash. */
   look?: "raised" | "flat" | "you";
-  /** The 3px status edge at the left. */
-  edge?: "you" | "live" | "blocked" | "done" | "quiet";
   /** line: a list's one-line row (Compact, My queue); item: a roomy two-line row (Intake); tile: a
    *  card; rack: a bare entry; band: a board's swimlane. */
   kind?: "line" | "item" | "tile" | "rack" | "band";
@@ -121,23 +119,14 @@ function Tail({
 }
 
 export function Row(props: RowProps) {
-  const {
-    children,
-    look = "raised",
-    edge,
-    kind = "line",
-    action,
-    open = false,
-    more,
-    alert,
-  } = props;
+  const { children, look = "raised", kind = "line", action, open = false, more, alert } = props;
   const columns = useColumns();
   const stack = kind === "tile" || columns.length === 0;
   const cells = useCells(children, stack);
   // A rack line is bare: it has no surface to raise or settle.
   const surface = kind === "rack" ? undefined : s[look];
   return (
-    <div className={cx(s.row, s[kind], surface, open && s.open)} data-row="" data-edge={edge}>
+    <div className={cx(s.row, s[kind], surface, open && s.open)} data-row="">
       <Inner action={action} stack={stack} open={open} more={more}>
         {cells}
       </Inner>
