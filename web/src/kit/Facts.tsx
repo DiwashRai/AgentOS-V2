@@ -7,7 +7,6 @@ import s from "./Facts.module.css";
 import { Icon, type IconName } from "./Icon";
 import { Tip } from "./tip";
 import u from "./unseen.module.css";
-import { cx } from "./vars";
 
 export type Fact = {
   label: string;
@@ -33,8 +32,6 @@ export interface FactsProps {
   items: readonly Fact[];
   /** A head before the chips, as Linear's "Properties". */
   label?: string;
-  /** The head over the values, one a line, as Linear's issue sidebar (the ticket page's rail). */
-  stack?: boolean;
 }
 
 /** A fact's value: a picker as it is, or the glyph, the words and the note in the chip. */
@@ -60,10 +57,10 @@ function Value({ f }: { f: Fact }) {
   );
 }
 
-export function Facts({ items, label, stack = false }: FactsProps) {
+export function Facts({ items, label }: FactsProps) {
   const head = useId();
   return (
-    <div className={cx(s.facts, stack && s.stack)}>
+    <div className={s.facts}>
       {label ? (
         <span className={s.head} id={head}>
           {label}

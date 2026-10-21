@@ -21,8 +21,8 @@
 .chip[data-lead] {
   padding-left: var(--sp-3);
 }
-/* in a list's row or an agent's card: Linear's label chip, a pill on a hairline with no fill */
-:where([data-row], [data-look="agent"]) .chip[data-tone="line"] {
+/* in a list's row: Linear's label chip, a pill on a hairline with no fill */
+:where([data-row]) .chip[data-tone="line"] {
   border: var(--line-1) solid var(--list-chip-edge);
   border-radius: var(--r-pill);
   background: none;
@@ -68,34 +68,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* after the words: a quieter count; or who works on it, the agent's glyph on its live disc and
-   the face of whose ticket it is, tucked to the pill's end */
+/* after the words: a quieter count */
 .count {
   flex: none;
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
-}
-.who {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: var(--sp-1);
-}
-.agent {
-  display: inline-grid;
-  place-items: center;
-  width: var(--h-face-sm);
-  height: var(--h-face-sm);
-  border-radius: 50%;
-  background: var(--tile-agent);
-  color: var(--live-text);
-}
-.agent svg {
-  width: var(--w-tile-agent-glyph);
-  height: var(--w-tile-agent-glyph);
-}
-.chip[data-who] {
-  padding-right: var(--sp-1);
 }
 .chip[data-removable] {
   padding-right: var(--sp-1);

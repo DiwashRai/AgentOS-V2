@@ -28,12 +28,14 @@ export function TicketMenu({ t, size }: { t: Ticket; size: "sm" | "md" }) {
   const take: [MenuItem, ...MenuItem[]] = [
     {
       label: "Copy link",
+      icon: "link",
       run: () => {
         copy(`${window.location.origin}/t/${t.key}`, `Copied the link to ${t.key}`);
       },
     },
     {
       label: "Copy key",
+      icon: "copy",
       run: () => {
         copy(t.key, `Copied ${t.key}`);
       },
@@ -41,7 +43,9 @@ export function TicketMenu({ t, size }: { t: Ticket; size: "sm" | "md" }) {
   ];
   const out: MenuItem[] = [
     ...(t.source ? [{ label: `Open ${t.source.ref} in Jira`, href: t.source.url }] : []),
-    ...(t.pr_url ? [{ label: "Open the pull request", href: t.pr_url }] : []),
+    ...(t.pr_url
+      ? [{ label: "Open the pull request", icon: "branch" as const, href: t.pr_url }]
+      : []),
   ];
   const [first, ...rest] = out;
   return (

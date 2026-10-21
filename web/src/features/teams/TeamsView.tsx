@@ -11,13 +11,13 @@ import type { Person, Phase, TicketRow } from "../../api/types";
 import { groupOf, isMyMove, markOf, STATE_WORD, stepText } from "../../domain/board";
 import { firstName, plural, repoShort } from "../../domain/format";
 import {
-  Avatar,
   Badge,
   Card,
   Button,
   Chip,
   type ChipDot,
   type Column,
+  Icon,
   Mark,
   type MarkKind,
   Notice,
@@ -82,6 +82,24 @@ const LEGEND = [
   ["queued", "Queued"],
 ] as const;
 
+/** The board's foot: where the rest of the work lives, and what each glyph says. */
+function Legend() {
+  return (
+    <>
+      <Text variant="meta">Inbox and merged work live in each repo&apos;s list.</Text>
+      <Stack grow />
+      {LEGEND.map(([kind, word]) => (
+        <Stack key={kind} dir="row" gap={3} align="center">
+          <Mark kind={kind} glyph name={false} />
+          <Text variant="meta" tone="2">
+            {word}
+          </Text>
+        </Stack>
+      ))}
+    </>
+  );
+}
+
 /** Work in flight: inbox and merged work live in each repo's list. */
 function inFlight(t: TicketRow): boolean {
   return t.attention.kind !== "inbox" && t.attention.kind !== "done";
@@ -98,7 +116,7 @@ function parkedAt(t: TicketRow, ask: string): string {
 interface ItemBadge {
   kind: MarkKind;
   text: string;
-  /** A running agent's steps, for its glyph's pie. */
+  /** A running agent's steps, for its glyph's pie and the pill's quieter count. */
   progress?: { done: number; total: number } | null;
 }
 
@@ -125,7 +143,7 @@ function itemBadge(t: TicketRow, me: Person | null): ItemBadge {
   const a = t.attention;
   if (a.kind === "running") {
     const p = a.progress;
-    return { kind: "run", text: p ? `${a.agent} ${stepText(p)}` : a.agent, progress: p };
+    return { kind: "run", text: a.agent, progress: p };
   }
   if (a.kind === "waiting") return waitingBadge(t, a, me);
   const m = markOf(a, me);
@@ -133,19 +151,21 @@ function itemBadge(t: TicketRow, me: Person | null): ItemBadge {
 }
 
 /** A pill's dot: the state's hue, so the pill says it as the glyph does. */
-const DOT: Partial<Record<MarkKind, ChipDot>> = { you: "you", blk: "blocked", done: "done" };
+const DOT: Partial<Record<MarkKind, ChipDot>> = {
+  run: "live",
+  you: "you",
+  blk: "blocked",
+  done: "done",
+};
 
-/** The pill on the key's line: a running agent's name and steps, then its glyph on the live disc
- *  and whose ticket it is (Linear's "Working…" pill); any other state's words after its dot. */
-function Pill({ badge, owner }: { badge: ItemBadge; owner: Person | null }) {
+/** The pill on the key's line, its state's words after its dot (Linear's "Working…" pill): a
+ *  running agent's name, its step a quieter count after it. */
+function Pill({ badge }: { badge: ItemBadge }) {
   if (badge.text === "") return null;
-  if (badge.kind === "run") {
-    const face = owner ? { name: owner.name, seed: String(owner.id) } : undefined;
-    return (
-      <Chip tone="edge" label={badge.text} after={face ? { agent: true, face } : { agent: true }} />
-    );
-  }
-  return <Chip tone="edge" dot={DOT[badge.kind] ?? "neutral"} label={badge.text} />;
+  const dot = DOT[badge.kind] ?? "neutral";
+  const p = badge.progress;
+  if (p) return <Chip tone="edge" dot={dot} label={badge.text} after={{ text: stepText(p) }} />;
+  return <Chip tone="edge" dot={dot} label={badge.text} />;
 }
 
 /** One item, two lines (Linear's board card): its key (12px, muted) with its state's pill at the
@@ -173,7 +193,7 @@ function Item({
         <Badge kind="key" size="sm">
           {t.key}
         </Badge>
-        <Pill badge={badge} owner={t.owner} />
+        <Pill badge={badge} />
       </Stack>
       <Stack dir="row" gap={4} align="baseline">
         <Mark kind={badge.kind} glyph still name={badgeSays(badge)} progress={badge.progress} />
@@ -218,18 +238,23 @@ function Cell({
   );
 }
 
-/** A swimlane's head, one line across the board: the repo, its full name, who works there, how
- *  many of its tickets are in flight (or that none are), and its list at the line's end. */
+/** A swimlane's head, one line across the board (Linear's group head): the repo's glyph and name,
+ *  then one quiet line of its full name, who works there (first names, read at a glance where a
+ *  row of tiny faces isn't) and how many of its tickets are in flight (or that none are); its list
+ *  at the line's end. */
 function LaneHead({ repo, people, n }: { repo: string; people: readonly Person[]; n: number }) {
+  const team = people.map((p) => firstName(p.name)).join(", ");
+  const flight = n > 0 ? `${String(n)} in flight` : "Nothing in flight";
   return (
-    <Stack dir="row" gap={5} align="center">
+    <Stack dir="row" gap={4} align="center">
+      <Text variant="meta">
+        <Icon name="repo" />
+      </Text>
       <Text variant="label" weight={600} as="h2" truncate>
         {repoShort(repo)}
       </Text>
-      <Text variant="meta">{repo}</Text>
-      <Avatar people={people.map((p) => ({ name: p.name, seed: String(p.id) }))} />
-      <Text variant="meta" tabular>
-        {n > 0 ? `${String(n)} in flight` : "Nothing in flight"}
+      <Text variant="meta" truncate tabular>
+        {[repo, team, flight].filter(Boolean).join(" · ")}
       </Text>
       <Stack grow />
       <Button
@@ -277,47 +302,33 @@ export function TeamsView() {
       ]}
       search={search}
     >
-      <Stack gap={6}>
-        {board.pending ? <Notice kind="status">Loading</Notice> : null}
-        {board.error ? (
-          <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
-        ) : null}
-        <Table columns={columnsOf(counts)} head={false} scroll={false}>
-          <Head counts={counts} />
-          {repos.map((repo) => {
-            const work = shown.filter((t) => t.repo === repo.name && inFlight(t));
-            const owners = rows.flatMap((t) => (t.repo === repo.name && t.owner ? [t.owner] : []));
-            const people = [...new Map(owners.map((p) => [p.id, p])).values()];
-            return (
-              <Row key={repo.name} kind="band">
-                <LaneHead repo={repo.name} people={people} n={work.length} />
-                {work.length === 0
-                  ? null
-                  : STAGES.map((st) => (
-                      <Cell
-                        key={st.phase}
-                        items={work.filter((t) => t.phase === st.phase)}
-                        me={me}
-                        onOpen={open}
-                      />
-                    ))}
-              </Row>
-            );
-          })}
-        </Table>
-        <Stack dir="row" gap={8} align="center">
-          <Text variant="meta">Inbox and merged work live in each repo&apos;s list.</Text>
-          <Stack grow />
-          {LEGEND.map(([kind, word]) => (
-            <Stack key={kind} dir="row" gap={3} align="center">
-              <Mark kind={kind} glyph name={false} />
-              <Text variant="meta" tone="2">
-                {word}
-              </Text>
-            </Stack>
-          ))}
-        </Stack>
-      </Stack>
+      {board.pending ? <Notice kind="status">Loading</Notice> : null}
+      {board.error ? (
+        <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
+      ) : null}
+      <Table columns={columnsOf(counts)} head={false} edge foot={<Legend />}>
+        <Head counts={counts} />
+        {repos.map((repo) => {
+          const work = shown.filter((t) => t.repo === repo.name && inFlight(t));
+          const owners = rows.flatMap((t) => (t.repo === repo.name && t.owner ? [t.owner] : []));
+          const people = [...new Map(owners.map((p) => [p.id, p])).values()];
+          return (
+            <Row key={repo.name} kind="band">
+              <LaneHead repo={repo.name} people={people} n={work.length} />
+              {work.length === 0
+                ? null
+                : STAGES.map((st) => (
+                    <Cell
+                      key={st.phase}
+                      items={work.filter((t) => t.phase === st.phase)}
+                      me={me}
+                      onOpen={open}
+                    />
+                  ))}
+            </Row>
+          );
+        })}
+      </Table>
     </Page>
   );
 }

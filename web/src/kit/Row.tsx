@@ -1,6 +1,6 @@
-// One item of a list: its cells on the Table's columns. A line and an item are flat rows on a
-// hairline, washed full width on hover, focus and open. A rack is a bare entry; a band a board's
-// swimlane (its head, then its lanes). A card on its own surface is a Card. Nothing changes size.
+// One item of a list: its cells on the Table's columns. A line, an item and a triage row are flat,
+// washed full width on hover and focus (a line unruled, the others on a hairline). A rack is a bare
+// entry; a band a board's swimlane (its head, then its cells). A card on its own surface is a Card. Nothing changes size.
 import { Children, type ReactNode } from "react";
 
 import { Opener, openOnClick } from "./opener";
@@ -18,11 +18,12 @@ export interface RowProps {
   /** The cells, one per column; with fewer, the last spans the rest, and one past the columns is
    *  not drawn. Outside a table they stack. */
   children: ReactNode;
-  /** line: a list's one-line row (Compact, My queue); item: a roomy two-line row (Intake); rack: a
-   *  bare entry (a run's stage); band: a board's swimlane, its first cell a head line across the
-   *  board and then a cell per column; columns: the board's column head, one short line of stage
-   *  names over the lanes, on the same grid. */
-  kind?: "line" | "item" | "rack" | "band" | "columns";
+  /** line: a list's one-line row (Compact, My queue, the library); item: a roomy two-line row (a
+   *  ticket's context); triage: a tight two-line row led by a face, its hairline between the
+   *  gutters (Intake); rack: a bare entry (a run's stage); band: a board's swimlane, its first cell
+   *  a head line across the board and then a cell per column; columns: the board's column head,
+   *  one short line of stage names over the swimlanes, on the same grid. */
+  kind?: "line" | "item" | "triage" | "rack" | "band" | "columns";
   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
    *  names what it opens, for assistive tech. */
   action?: Action;

@@ -10,7 +10,7 @@
   color: var(--id-on);
   background: var(--id);
 }
-/* inside a pill a face is one neutral disc (initials say who) */
+/* small, a face is one neutral disc (initials say who) */
 .sm {
   color: var(--face-ink);
   background: var(--face);
@@ -36,14 +36,6 @@
 .lg {
   width: var(--h-avatar-lg);
   height: var(--h-avatar-lg);
-  font-size: var(--fs-2);
-}
-/* tile: a library row's lead, the agent's hue on the rounded square the other lists' glyphs sit on */
-.tile {
-  width: var(--h-tile);
-  height: var(--h-tile);
-  border-radius: var(--r-3);
-  background: var(--id-row);
   font-size: var(--fs-2);
 }
 .slot {

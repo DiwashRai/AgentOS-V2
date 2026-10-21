@@ -117,18 +117,18 @@
   border-top: var(--line-1) solid var(--teams-card-edge);
 }
 
-/* ticket: a ticket on a board, its two lines tight under one another, each the card's width */
+/* ticket: a ticket on a board, its two lines under one another, each the card's width */
 .card[data-look="ticket"] {
   border-radius: var(--r-3);
 }
 .card[data-look="ticket"] .summary {
-  padding: var(--sp-4) var(--sp-5);
+  padding: var(--sp-5) var(--sp-6) var(--sp-6);
   border-radius: calc(var(--r-3) - var(--line-1));
 }
 .card[data-look="ticket"] .main {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
+  gap: var(--sp-3);
 }
 
 /* agent: an agent's tile, the surface on a hairline (one treatment, running or queued: the glyph

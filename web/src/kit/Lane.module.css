@@ -1,6 +1,5 @@
 /* Lane: the cards one under another on an axis through their faces (--lane-axis from a card's
-   edge). Editing, the gutter at the left holds each card's handle and the band of a loop reaches
-   round it; read only, the gutter is just the band's. */
+   edge). Read only, the gutter at the left holds a loop's band. */
 .lane {
   --out: var(--sp-5);
   --h: var(--h-joint-read);
@@ -8,11 +7,31 @@
   min-width: 0;
   padding: var(--sp-5) var(--sp-5) var(--sp-4) var(--sp-6);
 }
+/* editing: the cards on the column's own left edge (each card's handle is in its head), a loop's
+   bracket at their right */
 .lane[data-edit] {
-  --out: calc(var(--w-grip) + var(--sp-3));
-  --h: var(--h-joint);
   --reach: var(--sp-5);
-  padding-left: calc(var(--w-grip) + var(--sp-5));
+  padding-left: 0;
+  padding-right: var(--sp-9);
+}
+.lane[data-edit] .band {
+  inset: 0 calc(var(--out) * -1) 0 auto;
+  border-left: 0;
+  border-right: var(--line-2) solid var(--lane-line);
+}
+.lane[data-edit] .band:is([data-pos="first"], [data-pos="only"]) {
+  border-top-left-radius: 0;
+  border-top-right-radius: var(--r-3);
+}
+.lane[data-edit] .band:is([data-pos="last"], [data-pos="only"]) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: var(--r-3);
+}
+/* editing, at rest: only a gate that is on; a card hovered (or holding the focus) shows the toggle
+   and the + under it; the last + always, in words */
+.lane[data-edit] .row:not(:hover, :focus-within) .gate:not([data-on]),
+.lane[data-edit] .row:not(:hover, :focus-within) .joint:not([data-end]) > :last-child:not(.name) {
+  opacity: 0;
 }
 .row,
 .block {

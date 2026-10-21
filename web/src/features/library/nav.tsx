@@ -1,9 +1,10 @@
-// A library item editor's way to its siblings without going back to the list: previous and next
-// (k and j, as a list's rows), where it is in the list, and a picker to jump to any of them.
+// A library item editor's way to its siblings without going back to the list, as Linear's issue
+// header: where it is in the list, previous and next (k and j, as a list's rows), and a menu to
+// jump to any other (the breadcrumb already names this one).
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 
-import { Button, Select, Stack, Text } from "../../kit";
+import { Button, Menu, type MenuItem, Stack, Text } from "../../kit";
 
 export interface Siblings {
   /** One of them (agent), for the buttons' names. */
@@ -48,8 +49,15 @@ export function SiblingNav({ s }: { s: Siblings }) {
     const to = s.items[at + by];
     if (to) go(to.id);
   });
+  const others = s.items
+    .filter((x) => x.id !== s.current)
+    .map((x): MenuItem => ({ label: x.label, href: s.href(x.id) }));
+  const [first, ...rest] = others;
   return (
     <Stack dir="row" gap={2} align="center">
+      <Text variant="meta" tone="3" tabular>
+        {`${String(at + 1)} / ${String(s.items.length)}`}
+      </Text>
       <Button
         variant="quiet"
         size="xs"
@@ -66,15 +74,9 @@ export function SiblingNav({ s }: { s: Siblings }) {
           ? { title: `Next ${s.noun}: ${next.label} (j)`, href: s.href(next.id) }
           : { title: `Next ${s.noun}`, blocked: `This is the last ${s.noun}` })}
       />
-      <Text variant="meta" tone="3" tabular>
-        {`${String(at + 1)} / ${String(s.items.length)}`}
-      </Text>
-      <Select
-        label={`Go to ${s.noun}`}
-        value={s.current}
-        options={s.items.map((x) => ({ id: x.id, label: x.label }))}
-        onChange={go}
-      />
+      {first ? (
+        <Menu label={`Go to another ${s.noun}`} groups={[[first, ...rest]]} size="sm" />
+      ) : null}
     </Stack>
   );
 }

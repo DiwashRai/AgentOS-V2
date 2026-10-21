@@ -1,7 +1,8 @@
 // A list whose rows are reordered by dragging (a workflow's stages, AGENTS.md's blocks): each row
-// has a handle in the gutter at its left; a drag draws a drop line where the row will land. The
-// handle also moves its row with ↑ and ↓, and a polite live region says where it went. It can
-// take drops from outside too (an agent dropped between stages), at the slot the line marks.
+// is handed its handle to place in its own head (no gutter hangs off the list's edge); a drag
+// draws a drop line where the row will land. The handle also moves its row with ↑ and ↓, and a
+// polite live region says where it went. It can take drops from outside too (an agent dropped
+// between stages), at the slot the line marks.
 import { type DragEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 import s from "./Drag.module.css";
@@ -15,7 +16,8 @@ export interface SortItem {
   id: string;
   /** Its name, for the handle ("Move Implement") and what the live region says. */
   label: string;
-  content: ReactNode;
+  /** The row, given its handle to place in its head (at a stage card's or a block's end). */
+  content: (grip: ReactNode) => ReactNode;
 }
 
 export interface SortableProps {
@@ -32,9 +34,6 @@ export interface SortableProps {
   gap?: Space;
   /** Draw the drop line at this slot: a still of a drag in progress. */
   preview?: number;
-  /** Keep the handles' gutter at the list's left (the default); a Lane, which keeps one for its
-   *  loop bands too, turns it off. */
-  gutter?: boolean;
 }
 
 /** Which row draws the drop line for `slot`, and on which side: the row it lands before, or
@@ -60,7 +59,6 @@ export function Sortable({
   label,
   items,
   onMove,
-  gutter = true,
   accept = [],
   onDrop,
   gap = 0,
@@ -78,7 +76,7 @@ export function Sortable({
     refocus.current = null;
     if (id !== null)
       list.current
-        ?.querySelector<HTMLElement>(`[data-sort-id="${CSS.escape(id)}"] > [data-grip]`)
+        ?.querySelector<HTMLElement>(`[data-sort-id="${CSS.escape(id)}"] [data-grip]`)
         ?.focus();
   });
 
@@ -124,7 +122,7 @@ export function Sortable({
         role="list"
         aria-label={label}
         className={s.sortable}
-        data-gutter={gutter ? undefined : "none"}
+
         style={vars({ "--gap": space(gap) })}
         onDragOver={over}
         onDragLeave={(e) => {
@@ -141,36 +139,37 @@ export function Sortable({
             data-drop={lineAt(shown, i, items.length)}
             data-dragging={from === i || undefined}
           >
-            <Tip text="Drag to move, or ↑ ↓">
-              <button
-                type="button"
-                className={s.grip}
-                data-grip
-                draggable
-                aria-label={`Move ${it.label}`}
-                onDragStart={(e) => {
-                  startDrag(e, { kind: own, id: it.id }, "move");
-                  const row = e.currentTarget.parentElement;
-                  const r = row?.getBoundingClientRect();
-                  if (row && r)
-                    e.dataTransfer.setDragImage(row, e.clientX - r.left, e.clientY - r.top);
-                  setFrom(i);
-                }}
-                onDragEnd={() => {
-                  setFrom(null);
-                  setSlot(null);
-                }}
-                onKeyDown={(e) => {
-                  const d = STEP[e.key];
-                  if (d === undefined) return;
-                  e.preventDefault();
-                  move(i, i + d);
-                }}
-              >
-                <Icon name="grip" />
-              </button>
-            </Tip>
-            {it.content}
+            {it.content(
+              <Tip text="Drag to move, or ↑ ↓">
+                <button
+                  type="button"
+                  className={s.grip}
+                  data-grip
+                  draggable
+                  aria-label={`Move ${it.label}`}
+                  onDragStart={(e) => {
+                    startDrag(e, { kind: own, id: it.id }, "move");
+                    const row = e.currentTarget.closest("[data-sort-id]");
+                    const r = row?.getBoundingClientRect();
+                    if (row && r)
+                      e.dataTransfer.setDragImage(row, e.clientX - r.left, e.clientY - r.top);
+                    setFrom(i);
+                  }}
+                  onDragEnd={() => {
+                    setFrom(null);
+                    setSlot(null);
+                  }}
+                  onKeyDown={(e) => {
+                    const d = STEP[e.key];
+                    if (d === undefined) return;
+                    e.preventDefault();
+                    move(i, i + d);
+                  }}
+                >
+                  <Icon name="grip" />
+                </button>
+              </Tip>,
+            )}
           </div>
         ))}
       </div>

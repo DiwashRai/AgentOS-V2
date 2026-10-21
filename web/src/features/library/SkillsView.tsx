@@ -3,11 +3,15 @@
 import { useSkills } from "../../api/queries";
 import type { Skill } from "../../api/types";
 import { matches } from "../../domain/format";
-import { type Column, Icon } from "../../kit";
+import type { Column } from "../../kit";
 import { useSearch } from "../shared/useSearch";
-import { LibraryList, LibraryRow, NameCell, USED, usedCells } from "./list";
+import { AboutCell, LibraryList, LibraryRow, NameCell, USED, usedCells } from "./list";
 
-const COLUMNS: readonly Column[] = [{ label: "Skill", width: "fill", min: "2xl" }, ...USED];
+const COLUMNS: readonly Column[] = [
+  { label: "Skill", width: "xl" },
+  { label: "Description", width: "fill", min: "2xl" },
+  ...USED,
+];
 
 export function SkillsView() {
   const all = useSkills().data?.items ?? [];
@@ -25,7 +29,8 @@ export function SkillsView() {
     >
       {shown.map((s) => (
         <LibraryRow key={s.id} name={s.name} href={href(s)}>
-          <NameCell lead={<Icon name="skills" tile />} name={s.name} under={s.description} />
+          <NameCell glyph="skills" name={s.name} />
+          <AboutCell text={s.description} />
           {usedCells(s.used_by)}
         </LibraryRow>
       ))}

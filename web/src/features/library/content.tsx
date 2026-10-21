@@ -1,8 +1,9 @@
-// The item editor's main column: the content as a sheet, its head strip over monospace markdown
-// filling the column (an agent's instructions, a SKILL.md, a file), or AGENTS.md as its named
-// blocks: each a sheet of its own, its head the fold, its name to edit as a heading, its length and
-// the pair of Move up and Move down (and its handle, to drag it or step it with ↑ ↓).
-import { useState } from "react";
+// The item editor's main column: the content as a section of the document, a ruled head strip over
+// monospace markdown as tall as its lines (an agent's instructions, a SKILL.md, a file), or
+// AGENTS.md as its named blocks: each a section of its own, its head the fold and its name to edit
+// as a heading (folded, its first line and length after it), then at its end the pair of Move up
+// and Move down (shown while it is in use) and its handle, to drag it or step it with ↑ ↓.
+import { type ReactNode, useState } from "react";
 
 import type { Block, ItemBody } from "../../api/types";
 import { plural } from "../../domain/format";
@@ -18,6 +19,8 @@ interface BlockCardProps {
   onFold: () => void;
   onChange: (b: Block) => void;
   onMove: (to: number) => void;
+  /** Its handle, at its head's end. */
+  grip: ReactNode;
 }
 
 const lines = (text: string) => plural(text.split("\n").length, "line");
@@ -56,9 +59,9 @@ interface MoveTo {
   onMove: (to: number) => void;
 }
 
-/** A block's head strip: the fold, its name to edit as a heading (folded, its first line after
- *  it), its length, and the click way to reorder it. */
-function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardProps) {
+/** A block's head strip: the fold, its name to edit as a heading, and folded, its first line and
+ *  its length after it. */
+function BlockHead({ block, open, onFold, onChange }: BlockCardProps) {
   const name = block.name || "this block";
   return (
     <Stack dir="row" gap={4} align="center" grow>
@@ -81,25 +84,32 @@ function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardP
         />
       </Stack>
       {open ? null : (
-        <Stack grow>
-          <Text variant="code" tone="3" truncate>
-            {firstLine(block)}
+        <>
+          <Stack grow>
+            <Text variant="code" tone="3" truncate>
+              {firstLine(block)}
+            </Text>
+          </Stack>
+          <Text variant="meta" tone="3" tabular>
+            {lines(block.text)}
           </Text>
-        </Stack>
+        </>
       )}
-      <Text variant="meta" tone="3" tabular>
-        {lines(block.text)}
-      </Text>
-      <Moves name={name} at={at} of={of} onMove={onMove} />
     </Stack>
   );
 }
 
 function BlockCard(props: BlockCardProps) {
-  const { block, open, onChange } = props;
+  const { block, at, of, open, onChange, onMove, grip } = props;
   return (
     <TextArea
       head={<BlockHead {...props} />}
+      tools={
+        <>
+          <Moves name={block.name || "this block"} at={at} of={of} onMove={onMove} />
+          {grip}
+        </>
+      }
       folded={!open}
       label={`${block.name} block`}
       value={block.text}
@@ -134,17 +144,15 @@ function Blocks({
   return (
     <Sortable
       label="AGENTS.md blocks"
-      gap={5}
-      // the handles hang in the document's margin, so a sheet's edge is the property rows' left edge
-      gutter={false}
       onMove={move}
       items={blocks.map((b, i) => {
         const key = keys[i] ?? b.name;
         return {
           id: key,
           label: b.name,
-          content: (
+          content: (grip: ReactNode) => (
             <BlockCard
+              grip={grip}
               block={b}
               at={i}
               of={blocks.length}
@@ -195,7 +203,7 @@ export function Content({
   switch (body.kind) {
     case "blocks":
       return (
-        <Stack gap={5}>
+        <Stack gap={4}>
           <Text variant="meta" tone="3">
             {title}
           </Text>
@@ -213,7 +221,6 @@ export function Content({
           head={<Head title={title} text={body.text} />}
           label={title}
           value={body.text}
-          fill
           onChange={(text) => {
             onChange({ kind: "text", text });
           }}
@@ -225,7 +232,6 @@ export function Content({
           head={<Head title={title} text={body.agent.instructions} />}
           label={title}
           value={body.agent.instructions}
-          fill
           onChange={(instructions) => {
             onChange({ kind: "agent", agent: { ...body.agent, instructions } });
           }}

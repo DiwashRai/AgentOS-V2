@@ -58,8 +58,8 @@ export interface TableProps {
   /** Run through the padding of the surface it sits in, edge to edge (My queue's lists, whose
    *  surface pads only the agents' cards). */
   bleed?: boolean;
-  /** Out to the main sheet's edges with no surface of its own, under a head ruled off the bar, its
-   *  first cell under the bar's title (Linear's index: the library's lists). */
+  /** Out to the main sheet's edges with no surface of its own, under a head on a grey band, its
+   *  first cell under the bar's title (Linear's lists: the library's, Intake's, All teams'). */
   edge?: boolean;
   children: ReactNode;
 }

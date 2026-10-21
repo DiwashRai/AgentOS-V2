@@ -44,6 +44,8 @@
   /* rows run edge to edge (their focus ring sits inside); room under the last row when scrolled to
      the end, so it doesn't sit on the surface's foot */
   padding: 0 0 var(--sp-10);
+  /* rows passing under the foot fade out rather than being sliced by it */
+  mask-image: linear-gradient(var(--ink-1) calc(100% - var(--sp-10)), transparent);
 }
 /* the foot keeps the list's scrollbar gutter, so its far end lines up with the rows' */
 .foot {
@@ -72,8 +74,8 @@
   margin-bottom: calc(var(--pad) * -1);
 }
 /* edge: out through the sheet's gutter, no surface; each row's first cell under the bar's title, the
-   head bare labels between two rules (no band), spaced as its two-line item rows, the foot flush
-   with the sheet's rounded foot */
+   head a group's grey band (Linear's) with its labels a step up, the foot flush with the page's
+   foot, or right under the last row when the list doesn't fill the page */
 .edge {
   --list-pad: var(--gutter);
   --list-inset: var(--gutter);
@@ -83,8 +85,6 @@
   scrollbar-gutter: auto;
 }
 .edge > .head {
-  column-gap: var(--sp-6);
-  box-shadow:
-    inset 0 var(--line-1) 0 var(--list-rule),
-    inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+  background: var(--list-band);
+  color: var(--ink-2);
 }

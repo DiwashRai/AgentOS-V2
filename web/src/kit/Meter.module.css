@@ -40,16 +40,15 @@
     opacity: 0.9;
   }
 }
-/* row: inline beside a step count; tile: the same in an agent's card, still (a grid of cards would
-   sweep all at once), the step under way a soft live */
-.row,
-.tile {
+/* row: inline beside a step count; tile: an agent's card's whole width at its foot, still (a grid
+   of cards would sweep all at once), the step under way a soft live */
+.row {
   flex: none;
   gap: var(--line-2);
   width: var(--w-meter);
 }
 .tile {
-  width: var(--col-sm);
+  gap: var(--line-2);
 }
 .tile .seg[data-seg="done"] {
   background: var(--live);

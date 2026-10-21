@@ -47,7 +47,8 @@ export function headerActions(actions: readonly Action[]): Action[] {
 
 interface ActionButtonProps {
   action: Action;
-  size?: "sm" | "md";
+  /** xs in a list's dense line, sm elsewhere. */
+  size?: "xs" | "sm" | "md";
   /** On the ticket's header, where Dispatch run takes the accent. */
   header?: boolean;
 }

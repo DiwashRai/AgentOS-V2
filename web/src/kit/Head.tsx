@@ -24,9 +24,9 @@ export interface HeadProps {
   summary?: ReactNode;
   /** group: a list's edge-to-edge band (with or without a fold), its glyph over the rows' first
    *  cell; zone: the same band run through its surface's padding (over My queue's agent cards);
-   *  line: a query's head, a quiet line on a hairline with no fill, held at the list's top, lit on
-   *  hover like a row (it is the row a Swap in its summary answers to), its fold reaching across
-   *  it (Intake's queries). */
+   *  line: a query's head, a grey band edge to edge that parts one run from the next, held at the
+   *  list's top, lit on hover like a row (it is the row a Swap in its summary answers to), its
+   *  fold reaching across it, the chevron in the faces' column (Intake's queries). */
   level?: "zone" | "group" | "line";
   /** Collapsible: whether the group is open, and how to flip it. */
   fold?: { open: boolean; toggle: () => void };

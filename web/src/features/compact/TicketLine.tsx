@@ -1,13 +1,14 @@
 // The cells a ticket's line shares between Compact and My queue, as Linear lists an issue: the
 // priority bars and the key; the one coloured status glyph and the title, with what it waits on
-// receding after it on the same line; then one tight cluster at the far end: the row's label chips
-// (the agent and its step, the stage on its state's dot, the source) hugging the age, and last the
-// owner's face. The age and the face sit on fixed columns, so they end on one edge row after row.
+// receding after it on the same line; then, at the far end, the line's properties as plain words
+// on fixed columns (the stage, the source), the age and the owner's face, so they read down the
+// list as a ledger, not a pile of pills. Each screen sets what leads that end (its Now tag, a
+// row's buttons).
 import type { Person, Priority, TicketRow, TicketType } from "../../api/types";
 import { markOf, type MarkModel, STATE_WORD, stageModel } from "../../domain/board";
 import { age } from "../../domain/format";
-import { Age, Avatar, Badge, Chip, type Column, Icon, Mark, Stack, Text } from "../../kit";
-import { chipWords, sourceText, stageDot, stageWord } from "./model";
+import { Age, Avatar, Badge, type Column, Icon, Mark, Stack, Text } from "../../kit";
+import { sourceText, stageWord } from "./model";
 
 /** High and low priority are said; normal is the bars' resting form, said by nothing. */
 const PRIORITY_SAY: Record<Exclude<Priority, "normal">, string> = {
@@ -15,8 +16,8 @@ const PRIORITY_SAY: Record<Exclude<Priority, "normal">, string> = {
   low: "Low priority",
 };
 
-/** A title glyph's name: on a bookend (Inbox, Done, Closed) the line's stage chip says the state,
- *  so the glyph is drawing alone; elsewhere it is the state's one sign. */
+/** A title glyph's name: on a bookend (Inbox, Done, Closed) the line's stage says the state, so
+ *  the glyph is drawing alone; elsewhere it is the state's one sign. */
 const said = (kind: MarkModel["kind"]) =>
   kind === "idle" || kind === "done" || kind === "abandoned" ? false : STATE_WORD[kind];
 
@@ -27,11 +28,11 @@ const TYPE_WORD: Record<TicketType, string> = {
   task: "Task",
 };
 
-/** The right end every line shares: the chips, as wide as they are and pressed against the age;
- *  the age and the face on fixed columns, so each ends on one edge in every row and group. What
- *  the chips leave goes to the title. */
+/** The right end every line shares, on fixed columns so each ends on one edge in every row and
+ *  group: the stage, the source, the age, the face. What they leave goes to the title. */
 export const LINE_END: readonly Column[] = [
-  { label: "Chips", width: "3xl", hug: true, end: true },
+  { label: "Stage", width: "sm" },
+  { label: "Source", width: "sm" },
   { label: "Age", width: "xs", end: true },
   { label: "Owner", width: "face", end: true },
 ];
@@ -73,32 +74,26 @@ export function TitleCell({ t, me, after }: { t: TicketRow; me: Person | null; a
   );
 }
 
-/** The quiet end of a line, as cells (spread into the Row, one per LINE_END column): the chips
- *  (the row's Now chip, if it has one; the stage on its state's dot, "Review 2/3", the whole way on
- *  hover; the source on the repo glyph), the age, the owner's face (an empty slot keeps its place). */
-export function lineEnd({ t, me, now, age: shown, chip }: LineEndProps) {
-  const m = stageModel(t, me);
-  const stage = stageWord(m);
+/** The quiet end of a line, as cells (spread into the Row, one per LINE_END column): the stage
+ *  ("Review 2/3", the whole way on hover) and the source in plain words, the age, the owner's face
+ *  (Linear's dashed ring when nobody owns it). */
+export function lineEnd({ t, me, now, age: shown }: LineEndProps) {
+  const stage = stageWord(stageModel(t, me));
   const source = sourceText(t);
   return [
-    <Stack key="chips" dir="row" gap={3} align="center" justify="end">
-      {chip?.mark ? (
-        <Chip
-          label={chipWords(chip.mark)}
-          title={[chipWords(chip.mark), chip.count].filter(Boolean).join(" · ")}
-          {...(chip.count ? { after: { text: chip.count } } : {})}
-        />
-      ) : null}
-      <Chip dot={stageDot(t, me)} label={stage.word} title={stage.path} />
-      {source ? <Chip lead="repo" label={source} /> : null}
-    </Stack>,
+    <Text key="stage" variant="meta" tone="2" truncate title={stage.path}>
+      {stage.word}
+    </Text>,
+    <Text key="source" variant="meta" tone="3" truncate title={source}>
+      {source}
+    </Text>,
     <Text key="age" variant="meta" tone="3">
       <Age text={shown ?? age(t.since, now)} />
     </Text>,
     t.owner ? (
       <Avatar key="owner" name={t.owner.name} seed={String(t.owner.id)} />
     ) : (
-      <Avatar key="owner" />
+      <Avatar key="owner" dashed />
     ),
   ];
 }
@@ -109,6 +104,4 @@ interface LineEndProps {
   now: number;
   /** In place of the age since it changed ("now" while it runs). */
   age?: string;
-  /** The row's Now chip (the agent and its step, who it waits on), first in the cluster. */
-  chip?: { mark: MarkModel | null; count: string | null };
 }

@@ -1,9 +1,9 @@
-// What the four library lists share, as Linear's index: the bar (the list's name, the Space's
-// Library, search, New), then a table out to the sheet's edges with no surface of its own: a column
-// head ruled off the bar, two-line rows on hairlines (a tile, the name over what it is, the facts
-// packed at the right) that open the item's editor on a click or Enter, ↑ ↓ (or j k) moving a
-// selection that Enter opens, and a foot with those keys and the count. A search that matches
-// nothing says so.
+// What the four library lists share, as Linear's issue list: the bar (the list's name, the Space's
+// Library, search, New), then a table out to the sheet's edges with no surface of its own: a banded
+// column head, one-line rows on hairlines (a bare glyph and the name, what it is in a column of its
+// own, the facts packed at the right) that open the item's editor on a click or Enter, ↑ ↓ (or j k)
+// moving a selection that Enter opens, and the list closed by a foot with those keys and the
+// count, right under its last row. A search that matches nothing says so.
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -16,6 +16,8 @@ import {
   Badge,
   Button,
   type Column,
+  Icon,
+  type IconName,
   Notice,
   Page,
   Row,
@@ -112,7 +114,12 @@ export function LibraryList(props: LibraryListProps) {
       search={search}
       action={<Button>{`New ${noun}`}</Button>}
     >
-      <Table columns={columns} edge foot={<Foot noun={noun} total={total} shown={hrefs.length} />}>
+      <Table
+        columns={columns}
+        edge
+        scroll={false}
+        foot={<Foot noun={noun} total={total} shown={hrefs.length} />}
+      >
         {hrefs.length === 0 && total > 0 ? (
           <Notice kind="empty" lead="No match">
             {`nothing in ${title.toLowerCase()} matches this search`}
@@ -139,7 +146,7 @@ export function LibraryRow({
   const selected = useContext(Selected);
   return (
     <Row
-      kind="item"
+      kind="line"
       open={selected === href}
       action={{
         label: `Open ${name}`,
@@ -153,42 +160,38 @@ export function LibraryRow({
   );
 }
 
-/** A row's lead, as Linear's project rows: a tile (a glyph, or an agent's face), the name, and
- *  under it a second line (what it is for, or the workflow's stages), each cut at its end. */
+/** A row's lead, as Linear's issue rows: the list's bare glyph in the quiet ink, then the name
+ *  (cut at its end) and a chip after it. */
 export function NameCell({
-  lead,
+  glyph,
   name,
-  under,
   mark,
   title,
 }: {
-  lead: ReactNode;
+  glyph: IconName;
   name: string;
-  under: ReactNode;
   /** A chip after the name (the default workflow's). */
   mark?: ReactNode;
   /** On hover over the name (a workflow's description). */
   title?: string;
 }) {
   return (
-    <Stack dir="row" gap={6} align="center">
-      {lead}
-      <Stack gap={1}>
-        <Stack dir="row" gap={4} align="center">
-          <Text variant="label" truncate title={title ?? name}>
-            {name}
-          </Text>
-          {mark}
-        </Stack>
-        {typeof under === "string" ? (
-          <Text tone="3" truncate title={under}>
-            {under}
-          </Text>
-        ) : (
-          under
-        )}
-      </Stack>
+    <Stack dir="row" gap={5} align="center">
+      <Icon name={glyph} quiet />
+      <Text variant="label" truncate title={title ?? name}>
+        {name}
+      </Text>
+      {mark}
     </Stack>
+  );
+}
+
+/** What it is for, in its own column on the same line: quiet, cut at its end. */
+export function AboutCell({ text }: { text: string }) {
+  return (
+    <Text tone="3" truncate title={text}>
+      {text}
+    </Text>
   );
 }
 
@@ -199,7 +202,7 @@ export function ChangedCell({ by, at }: { by: Author; at: Iso }) {
   return (
     <Stack dir="row" gap={3} align="center">
       {by.kind === "person" ? (
-        <Avatar size="talk" name={by.person.name} seed={String(by.person.id)} />
+        <Avatar size="md" name={by.person.name} seed={String(by.person.id)} />
       ) : null}
       <Text tone="2" truncate>
         {who}

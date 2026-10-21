@@ -1,16 +1,17 @@
-// The library's agents (/library/agents): each agent's face, name and what it is for, how it runs
+// The library's agents (/library/agents): each agent's name and what it is for, how it runs
 // (runtime, model, effort) and what uses it (how many workflows, and tickets on them). A row opens
 // the agent's editor.
 import { useAgents, useRuntimes } from "../../api/queries";
 import type { Agent } from "../../api/types";
 import { matches } from "../../domain/format";
-import { Avatar, type Column, Text } from "../../kit";
+import { type Column, Text } from "../../kit";
 import { useSearch } from "../shared/useSearch";
-import { LibraryList, LibraryRow, NameCell, USED, usedCells } from "./list";
+import { AboutCell, LibraryList, LibraryRow, NameCell, USED, usedCells } from "./list";
 import { runtimeName } from "./model";
 
 const COLUMNS: readonly Column[] = [
-  { label: "Agent", width: "fill", min: "xl" },
+  { label: "Agent", width: "lg" },
+  { label: "Description", width: "fill", min: "md" },
   { label: "Runtime", width: "md" },
   { label: "Model", width: "sm" },
   { label: "Effort", width: "sm" },
@@ -36,11 +37,8 @@ export function AgentsView() {
     >
       {shown.map((a) => (
         <LibraryRow key={a.id} name={a.name} href={href(a)}>
-          <NameCell
-            lead={<Avatar size="tile" name={a.name} seed={`agent:${a.id}`} beside />}
-            name={a.name}
-            under={a.description}
-          />
+          <NameCell glyph="agents" name={a.name} />
+          <AboutCell text={a.description} />
           <Text tone="2">{runtimeName(runtimes, a.runtime)}</Text>
           <Text tone="2">{a.model}</Text>
           <Text tone="2">{a.effort}</Text>

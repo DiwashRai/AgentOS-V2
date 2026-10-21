@@ -41,7 +41,7 @@ const COLUMNS: readonly Column[] = [
 const STAGE_COLUMNS: readonly Column[] = [
   { label: "Stage", width: "lg" },
   { label: "Round", width: "fill" },
-  { label: "Verdict", width: "sm", end: true },
+  { label: "Verdict", width: "md", end: true },
 ];
 
 const RUN_MARK: Record<RunState, { kind: MarkKind; word: string }> = {
@@ -170,7 +170,8 @@ function RunLine({ r, runs, w, now }: RunProps) {
   ];
 }
 
-/** At a stage's right end: a check's verdict, else what it's doing while it has none. */
+/** At a stage's right end: a check's verdict, else what it's doing while it has none; every state
+ *  the same dotted chip in its hue, so the column reads as one. */
 function Verdict({ s }: { s: StageRun }) {
   if (s.verdict)
     return (
@@ -179,17 +180,9 @@ function Verdict({ s }: { s: StageRun }) {
         label={s.verdict === "pass" ? "Passed" : "Failed"}
       />
     );
-  if (s.state === "running")
-    return (
-      <Text variant="meta" tone="live">
-        running
-      </Text>
-    );
-  return (
-    <Text variant="meta" tone="3">
-      {s.state === "pending" ? "pending" : ""}
-    </Text>
-  );
+  if (s.state === "running") return <Chip dot="live" label="Running" />;
+  if (s.state === "pending") return <Chip dot="neutral" label="Pending" />;
+  return <Text variant="meta">{""}</Text>;
 }
 
 function StageLine({ s, w }: { s: StageRun; w: TicketWorkflow | undefined }) {
@@ -234,9 +227,7 @@ function GateLine({ label, signed }: { label: string; signed: ReturnType<typeof 
           ? `${signed.who} signed it off at ${signed.at}; run #${String(signed.run)} went on`
           : ""}
       </Text>
-      <Text variant="meta" tone={signed ? "3" : "you"}>
-        {signed ? "signed off" : "waiting"}
-      </Text>
+      <Chip dot={signed ? "done" : "you"} label={signed ? "Signed off" : "Waiting"} />
     </Row>
   );
 }

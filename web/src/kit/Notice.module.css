@@ -112,22 +112,47 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* a line of a two-line item list, in the items' title size, led from where the rows' titles start
-   by its glyph: an empty ring; in place of the edge, a problem's blocked dot on its first line */
+/* a line of the triage list (Intake), a row's height, its glyph in the faces' column so its words
+   start where the titles do: an empty ring; a problem's blocked dot on a halo, in place of the
+   edge; the +N of a capped run on a grey disc, its Show button after it */
 .empty[data-align="item"],
-.problem[data-align="item"] {
-  min-height: var(--h-list-item);
+.problem[data-align="item"],
+.more[data-align="item"] {
+  gap: var(--sp-4);
+  min-height: var(--h-triage);
   padding-left: var(--list-inset);
-  font-size: var(--fs-4);
+}
+.empty[data-align="item"] > i {
+  margin-inline: calc((var(--triage-face) - var(--notice-mark)) / 2);
 }
 .problem[data-align="item"] {
-  padding-left: calc(var(--list-inset) + var(--notice-dot) + var(--sp-5));
+  justify-content: center;
+  gap: 0;
+  padding-block: var(--sp-5);
+  padding-left: calc(var(--list-inset) + var(--triage-face) + var(--sp-4));
 }
 .problem[data-align="item"]::before {
   left: var(--list-inset);
-  top: var(--notice-dot-top);
-  width: var(--notice-dot);
-  height: var(--notice-dot);
+  top: 50%;
+  width: var(--triage-face);
+  height: var(--triage-face);
   border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    var(--blocked) calc(var(--notice-dot) / 2),
+    var(--notice-halo) calc(var(--notice-dot) / 2 + var(--line-1))
+  );
   transform: translateY(-50%);
+}
+.more[data-align="item"] {
+  min-height: var(--h-control-lg);
+}
+.more[data-align="item"] > b {
+  display: grid;
+  place-items: center;
+  width: var(--triage-face);
+  height: var(--triage-face);
+  border-radius: 50%;
+  background: var(--list-band);
+  font-size: var(--fs-1);
 }

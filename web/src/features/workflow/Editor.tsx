@@ -176,7 +176,7 @@ function stagesOf({ draft, lib, problems, selected, select, fresh, land }: LaneP
       label: s.name,
       gate: s.gate?.label ?? null,
       ...(barred !== undefined ? { noGate: barred } : {}),
-      content: (
+      content: (grip: ReactNode) => (
         <Drop
           accept={s.kind === "agent" ? ["agent", "skill", "file"] : ["skill", "file"]}
           onDrop={(p) => {
@@ -219,6 +219,7 @@ function stagesOf({ draft, lib, problems, selected, select, fresh, land }: LaneP
               lib={lib}
               show={selected === s.id ? "head" : "all"}
               fresh={here}
+              grip={grip}
             />
           </Card>
         </Drop>
@@ -244,8 +245,9 @@ function loopsOf(draft: Draft, problems: Problems): LaneLoop[] {
   }));
 }
 
-/** Undo and Redo (quiet glyphs, a blocked one faded), Discard quiet and Save the bar's one filled
- *  button (faded while there is nothing to save), which says how many problems there are. */
+/** Undo and Redo (quiet glyphs, a blocked one faded), then Discard and Save as a pair: Save the
+ *  bar's one filled button (grey while there is nothing to save), which says how many problems
+ *  there are. */
 function Actions({ draft, problems }: { draft: Draft; problems: number }) {
   const save = problems > 0 ? `Save · ${plural(problems, "problem")}` : "Save";
   return (
@@ -263,7 +265,6 @@ function Actions({ draft, problems }: { draft: Draft; problems: number }) {
         {...(draft.canRedo ? { onClick: draft.redo } : { blocked: "Nothing to redo" })}
       />
       <Button
-        variant="quiet"
         {...(draft.dirty ? { onClick: draft.discard } : { blocked: "No changes to discard" })}
       >
         Discard

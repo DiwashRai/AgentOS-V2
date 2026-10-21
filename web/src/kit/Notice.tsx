@@ -32,8 +32,8 @@ export type NoticeProps = Said &
       }
     | {
         kind: "problem";
-        /** item: a line of a two-line item list (Intake), in the items' size; the blocked dot sits
-         *  in the rows' leading face's slot, the words where their titles start. */
+        /** item: a line of the triage list (Intake); the blocked dot on a halo sits in the rows'
+         *  faces' column, the words where their titles start. */
         align?: "item";
         /** The problem's second line: what can be done about it. */
         fix?: NoticeFix;
@@ -42,7 +42,7 @@ export type NoticeProps = Said &
       }
     | {
         kind: "empty";
-        /** item: as a problem's, the empty ring in the faces' slot. */
+        /** item: as a problem's, the empty ring in the faces' column. */
         align?: "item";
         error?: never;
         fix?: never;
@@ -50,10 +50,11 @@ export type NoticeProps = Said &
       }
     | {
         kind: "more";
-        /** The button that shows the rest ("Show 3 more"), its title saying how many in all. */
+        /** The button that shows the rest ("Show all 11"), its title saying how many in all. */
         more?: { label: string; title: string; run: () => void };
+        /** item: the +N on a disc in the faces' column, the button where the titles start. */
+        align?: "item";
         error?: never;
-        align?: never;
         fix?: never;
       }
   );
@@ -103,13 +104,13 @@ export function Notice(props: NoticeProps) {
   }
   if (kind === "more") {
     return (
-      <div className={s.more}>
+      <div className={s.more} data-align={props.align}>
+        <Said lead={lead}>{children}</Said>
         {props.more ? (
           <Button variant="quiet" size="xs" title={props.more.title} onClick={props.more.run}>
             {props.more.label}
           </Button>
         ) : null}
-        <Said lead={lead}>{children}</Said>
       </div>
     );
   }

@@ -1,6 +1,6 @@
 // Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of
-// AGENTS.md): at least `lines` tall and growing with its text, or filling its column; an item
-// editor's is a framed sheet under its own head strip. Every area
+// AGENTS.md): at least `lines` tall and growing with its text; an item editor's is a section of
+// its document, a ruled head strip over the bare text. Every area
 // can pop out to the whole window, for long text: the same value, edited at a readable measure,
 // and Done or Esc brings it back (inside an overlay too: it opens over it).
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
@@ -20,17 +20,18 @@ export interface TextAreaProps {
   placeholder?: string;
   /** Its least height in lines (3 by default); it grows with its text. */
   lines?: number;
-  /** Fill the height of the column it is in and scroll inside (an item editor's body). */
-  fill?: boolean;
-  /** A sheet: this strip over the text (an item editor's content: its title, or a block's name,
-   *  length and moves), the pop-out at its end, the whole ringed while the text has the focus. */
+  /** A sheet: this strip over the text (an item editor's content: its title and length, or a
+   *  block's fold and name), the pop-out at its end, its rule lit while the text has the focus. */
   head?: ReactNode;
+  /** A sheet's controls at its head's end, before the pop-out (a block's moves, then its handle):
+   *  all but the last show while the sheet is hovered or holds the focus. */
+  tools?: ReactNode;
   /** Folded to its head strip alone (a block of AGENTS.md; its head says the first line). */
   folded?: boolean;
 }
 
 export function TextArea(props: TextAreaProps) {
-  const { label, value, onChange, placeholder, lines = 3, fill, head, folded } = props;
+  const { label, value, onChange, placeholder, lines = 3, head, tools, folded } = props;
   const sheet = head !== undefined;
   const [out, setOut] = useState(false);
   const popped = useRef<HTMLTextAreaElement>(null);
@@ -51,7 +52,13 @@ export function TextArea(props: TextAreaProps) {
   const area = (full: boolean) => (
     <textarea
       ref={full ? popped : undefined}
-      className={cx(s.box, s.area, (full || fill === true) && s.fill, sheet && !full && s.leaf)}
+      className={cx(
+        s.box,
+        s.area,
+        full && s.fill,
+        sheet && !full && s.leaf,
+        folded !== undefined && s.under,
+      )}
       style={vars({ "--lines": String(lines) })}
       aria-label={label}
       {...(full ? own : inline)}
@@ -76,11 +83,12 @@ export function TextArea(props: TextAreaProps) {
     />
   );
   return (
-    <div className={cx(s.areaWrap, fill && s.areaFill, sheet && s.sheet)}>
+    <div className={cx(s.areaWrap, sheet && s.sheet)}>
       {sheet ? (
         <>
           <div className={s.sheetHead}>
             {head}
+            {tools !== undefined ? <span className={s.tools}>{tools}</span> : null}
             {pop}
           </div>
           {folded ? null : area(false)}

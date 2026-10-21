@@ -3,6 +3,9 @@
 // struck through) or its command, the prompt's first line, its own skills and files, and whether
 // it is a check or a maker, as plain words (nothing on a card looks like a button). The ticket's
 // tab draws it compact (no prompt) with the stage's last run as a status glyph before its name.
+// In the editor its handle ends its first line.
+import type { ReactNode } from "react";
+
 import type { Stage } from "../../api/types";
 import { Avatar, Chip, Icon, Mark, type MarkKind, Override, Stack, Text } from "../../kit";
 import { agentOf, type Library, refName, runtimeName } from "./library";
@@ -129,11 +132,13 @@ interface SummaryProps {
   /** The stage's last run (the ticket's tab): a glyph before the name, its words after it. */
   run?: LastRun | null;
   fresh?: Fresh | null;
+  /** The editor's: the stage's handle, at its first line's end. */
+  grip?: ReactNode;
 }
 
 /** The card's first line: the last run's glyph, the name, the phase (unless the name says it), the
- *  run's words; at its end, Skipped and the check or maker mark. */
-function HeadLine({ stage, run }: { stage: Stage; run: LastRun | null }) {
+ *  run's words; at its end, Skipped, the check or maker mark and the editor's handle. */
+function HeadLine({ stage, run, grip }: { stage: Stage; run: LastRun | null; grip: ReactNode }) {
   const phase = phaseWord(stage.phase);
   const samePhase = phase.toLowerCase() === stage.name.toLowerCase();
   return (
@@ -155,15 +160,16 @@ function HeadLine({ stage, run }: { stage: Stage; run: LastRun | null }) {
         </Text>
       )}
       <RoleMark stage={stage} />
+      {grip}
     </Stack>
   );
 }
 
-export function StageSummary({ stage, lib, show = "all", run, fresh }: SummaryProps) {
+export function StageSummary({ stage, lib, show = "all", run, fresh, grip }: SummaryProps) {
   const prompt = stage.kind === "agent" && show === "all" ? stage.prompt : "";
   return (
     <Stack gap={3}>
-      <HeadLine stage={stage} run={run ?? null} />
+      <HeadLine stage={stage} run={run ?? null} grip={grip} />
       <Who stage={stage} lib={lib} />
       {prompt ? (
         <Text variant="code" tone="2" truncate title={prompt}>

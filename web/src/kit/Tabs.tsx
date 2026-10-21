@@ -1,4 +1,4 @@
-// Underline tabs: Base UI does the roving focus and arrow keys; the look is ours.
+// Underline tabs on one hairline: Base UI does the roving focus and arrow keys; the look is ours.
 import { Tabs as Base } from "@base-ui/react/tabs";
 import type { ReactNode } from "react";
 

@@ -1,17 +1,19 @@
-// The library's workflows (/library/workflows): each workflow's name (the default marked; what it is
-// for on hover) over its stages as a strip at the stepper's scale (a segment a stage in its phase's
-// hue, a diamond a gate, a bracket a loop, a turned-off stage dashed), then its version, its last
-// change and how many tickets use it, packed at the right. A row opens the workflow editor. The
-// columns fit a 1024px window; the stage strip's words give way first.
+// The library's workflows (/library/workflows), a line each: the workflow's name (the default
+// marked; what it is for on hover), then in a column of their own its stages as a strip at the
+// stepper's scale (a segment a stage in its phase's hue, a diamond a gate, a bracket a loop, a
+// turned-off stage dashed; the longer the workflow, the longer the strip), then its version, its
+// last change and how many tickets use it, packed at the right. A row opens the workflow editor.
+// The columns fit a 1024px window; the stage strip's words give way first.
 import { useWorkflows } from "../../api/queries";
 import type { Workflow } from "../../api/types";
 import { matches, plural } from "../../domain/format";
-import { Chip, type Column, Icon, Strip } from "../../kit";
+import { Chip, type Column, Strip } from "../../kit";
 import { useSearch } from "../shared/useSearch";
 import { ChangedCell, CountCell, LibraryList, LibraryRow, NameCell, VersionCell } from "./list";
 
 const COLUMNS: readonly Column[] = [
-  { label: "Workflow", width: "fill", min: "2xl" },
+  { label: "Workflow", width: "xl" },
+  { label: "Stages", width: "fill", min: "2xl" },
   { label: "Version", width: "xs" },
   { label: "Changed", width: "md" },
   { label: "Tickets", width: "sm", end: true },
@@ -59,7 +61,7 @@ export function WorkflowsView() {
       {shown.map((w) => (
         <LibraryRow key={w.id} name={w.name} href={href(w)}>
           <NameCell
-            lead={<Icon name="workflows" tile />}
+            glyph="workflows"
             name={w.name}
             title={`${w.name} · ${w.description}`}
             mark={
@@ -67,8 +69,8 @@ export function WorkflowsView() {
                 <Chip label={"Default"} title="New tickets start from it" />
               ) : undefined
             }
-            under={<StagesCell w={w} />}
           />
+          <StagesCell w={w} />
           <VersionCell version={w.version} />
           <ChangedCell by={w.updated_by} at={w.updated_at} />
           <CountCell n={w.tickets.length} />

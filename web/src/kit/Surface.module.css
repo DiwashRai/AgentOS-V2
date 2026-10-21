@@ -16,13 +16,13 @@
   box-shadow: 0 0 0 var(--line-1) var(--tk-card-edge);
   border-radius: var(--r-4);
 }
-/* a run of a list under its own head (an Intake query): no card, flush with the list's edges; runs
-   are parted by room alone, so the last line takes no hairline */
-.list + .list {
-  margin-top: var(--sp-9);
-}
+/* a run of a list under its own head (an Intake query): no card, flush with the list's edges; the
+   next run's band parts it, so its last line takes no hairline */
 .list > :last-child {
   box-shadow: none;
+}
+.list > :last-child::after {
+  content: none;
 }
 .fill {
   flex: 1;

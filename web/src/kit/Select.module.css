@@ -45,8 +45,11 @@
 .trigger[data-popup-open] .chev {
   color: var(--ink-1);
 }
-/* the picker's sheet: wide enough for a full name beside its face */
+/* the picker's sheet: wide enough for a full name beside its face, the faces a size up from a
+   row's so the initials read */
 .sheet {
+  --h-face: var(--h-chip);
+  --fs-face: var(--fs-1);
   min-width: var(--w-pop-filter);
 }
 /* side: a sidebar row (its glyph, the word, the current choice muted, the chevron), as tall as the

@@ -1,6 +1,6 @@
 /* Drag and drop (Drag, Drop, Sortable): a palette's rows; a target ringed in your move's
-   accent with what a drop does on its ring; a list's handle in the gutter at a row's left and the
-   drop line between rows. The thing being dragged stays where it was at half strength. */
+   accent with what a drop does on its ring; a list's handle in its row's head and the drop line
+   between rows. The thing being dragged stays where it was at half strength. */
 /* a palette's row: Linear's list row, bare until hovered */
 .drag {
   display: block;
@@ -56,27 +56,21 @@
   pointer-events: none;
 }
 
-/* a sortable list keeps its handles' gutter at its left itself, unless its owner keeps one (a Lane) */
+/* a sortable list: its rows on one left edge, each row's handle in its own head */
 .sortable {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--gap);
   min-width: 0;
-  padding-left: calc(var(--w-grip) + var(--sp-5));
-}
-.sortable[data-gutter="none"] {
-  padding-left: 0;
 }
 .slot {
   position: relative;
   min-width: 0;
 }
-/* the handle: quiet in the gutter until its row is hovered or it has focus */
+/* the handle: a quiet glyph at its row's head, full strength while its row is hovered */
 .grip {
-  position: absolute;
-  top: var(--sp-3);
-  left: calc(var(--w-grip) * -1);
+  flex: none;
   display: grid;
   place-items: center;
   width: var(--w-grip);
@@ -86,13 +80,13 @@
   border-radius: var(--r-1);
   background: none;
   color: var(--ink-3);
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: grab;
   transition:
     opacity var(--dur-fast) ease,
     background-color var(--dur-fast) ease;
 }
-.slot:hover > .grip,
+.slot:hover .grip,
 .grip:focus-visible {
   opacity: 1;
 }

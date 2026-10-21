@@ -50,7 +50,8 @@ export function Strip(props: StripProps) {
   const { label, stages, loops } = props;
   const col = columns(stages);
   const path = pathOf(props);
-  const cols = stages.flatMap((st) => (st.gate ? ["minmax(0, 1fr)", "auto"] : ["minmax(0, 1fr)"]));
+  const seg = "var(--strip-stage)";
+  const cols = stages.flatMap((st) => (st.gate ? [seg, "auto"] : [seg]));
   return (
     <Tip text={path} said>
       <span className={s.strip} role="img" aria-label={`${label}: ${path}`}>

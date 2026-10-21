@@ -321,9 +321,13 @@ function DragSheet() {
           items={order.map((n) => ({
             id: n,
             label: n,
-            content: (
+            content: (grip: ReactNode) => (
               <Surface level="sheet" pad={5}>
-                <Text weight={500}>{n}</Text>
+                <Stack dir="row" align="center">
+                  <Text weight={500}>{n}</Text>
+                  <Stack grow />
+                  {grip}
+                </Stack>
               </Surface>
             ),
           }))}
@@ -339,7 +343,7 @@ function LaneSheet() {
   const [open, setOpen] = useState<string | null>("build");
   const [gates, setGates] = useState<readonly boolean[]>([true, false, false]);
   const names = ["Plan", "Build", "Check"];
-  const card = (name: string, edit: boolean) => (
+  const card = (name: string, edit: boolean, grip: ReactNode) => (
     <Card
       label={name}
       face={<Avatar name={name} seed={name} />}
@@ -355,7 +359,11 @@ function LaneSheet() {
       open={edit && open === name.toLowerCase() ? <Text tone="2">Its settings</Text> : undefined}
     >
       <Stack gap={3}>
-        <Text variant="label">{name}</Text>
+        <Stack dir="row" align="center">
+          <Text variant="label">{name}</Text>
+          <Stack grow />
+          {grip}
+        </Stack>
         {name === "Build" ? <Override value="xhigh" own="high" /> : null}
         <Stack dir="row" gap={3}>
           <Chip label="tests" lead="skills" />
@@ -370,7 +378,7 @@ function LaneSheet() {
       stages={names.map((n, i) => ({
         id: n.toLowerCase(),
         label: n,
-        content: card(n, edit),
+        content: (grip: ReactNode) => card(n, edit, grip),
         gate: gates[i] ? `${n} sign-off` : null,
         // Build is inside the loop: the sheet says the workflow's rule, as the editor's model does
         ...(n === "Build" ? { noGate: "Gates go after a loop's last stage" } : {}),

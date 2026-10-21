@@ -1,5 +1,6 @@
 // A menu of actions behind a "…" button, as Linear's: the button in the row of buttons it sits in,
-// and on a click the kit's one popover under it, each action a row (a link out ends on its arrow),
+// and on a click the kit's one popover under it, hugging its rows, each action a row led by its
+// glyph (a link out ends on its arrow),
 // a rule between groups. Base UI's menu does the keyboard (arrows, typeahead, Esc), the focus and
 // the placement; the look is the kit's.
 import { Menu as Base } from "@base-ui/react/menu";
@@ -8,15 +9,16 @@ import { Link } from "react-router";
 
 import { inApp } from "./Button";
 import b from "./Button.module.css";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 import { useLayer } from "./layer";
 import s from "./Menu.module.css";
 import p from "./Popover.module.css";
 import { Tip } from "./tip";
 import { cx, tokenPx } from "./vars";
 
-/** One action: something to run, or a link (a path in the app, or a URL opened in a new tab). */
-export type MenuItem = { label: string } & (
+/** One action: something to run, or a link (a path in the app, or a URL opened in a new tab),
+ *  led by its glyph. */
+export type MenuItem = { label: string; icon?: IconName } & (
   { run: () => void; href?: never } | { href: string; run?: never }
 );
 
@@ -29,18 +31,25 @@ export interface MenuProps {
   size?: "sm" | "md";
 }
 
-function Row({ item }: { item: MenuItem }) {
+/** `lead`: some row in the menu has a glyph, so every row keeps its column and the names align. */
+function Row({ item, lead }: { item: MenuItem; lead: boolean }) {
+  const name = (
+    <>
+      {lead ? <span className={s.lead}>{item.icon ? <Icon name={item.icon} /> : null}</span> : null}
+      {item.label}
+    </>
+  );
   if (item.run) {
     return (
       <Base.Item className={p.row} onClick={item.run}>
-        {item.label}
+        {name}
       </Base.Item>
     );
   }
   if (inApp(item.href)) {
     return (
       <Base.LinkItem className={p.row} closeOnClick render={<Link to={item.href} />}>
-        {item.label}
+        {name}
       </Base.LinkItem>
     );
   }
@@ -52,7 +61,7 @@ function Row({ item }: { item: MenuItem }) {
       target="_blank"
       rel="noopener noreferrer"
     >
-      {item.label}
+      {name}
       <span className={s.out}>
         <Icon name="out" />
       </span>
@@ -65,6 +74,7 @@ export function Menu({ label, groups, size = "md" }: MenuProps) {
   // focus given back as the menu closes doesn't bring its tooltip back (Linear's), until the
   // button is left and come back to
   const [rest, setRest] = useState(false);
+  const lead = groups.some((g) => g.some((it) => it.icon !== undefined));
   return (
     <Base.Root
       // only a close that gives the focus back to the button (Esc, a choice); Tab or a click
@@ -92,12 +102,12 @@ export function Menu({ label, groups, size = "md" }: MenuProps) {
       </Tip>
       <Base.Portal {...layer}>
         <Base.Positioner className={p.layer} align="end" sideOffset={() => tokenPx("--sp-2")}>
-          <Base.Popup className={p.sheet} aria-label={label}>
+          <Base.Popup className={cx(p.sheet, s.sheet)} aria-label={label}>
             {groups.map((group, g) => (
               <Base.Group key={g}>
                 {g > 0 ? <Base.Separator className={s.rule} /> : null}
                 {group.map((it, i) => (
-                  <Row key={i} item={it} />
+                  <Row key={i} item={it} lead={lead} />
                 ))}
               </Base.Group>
             ))}

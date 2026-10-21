@@ -70,23 +70,8 @@
 .picker > .note {
   padding-right: var(--sp-4);
 }
+/* the note: quieter than the value but readable, ink-3 in every theme (not the head's fainter ink) */
 .note {
   margin-left: calc(var(--sp-2) * -1);
-  color: var(--tk-label);
-}
-/* stacked: Linear's issue sidebar, the head a small label over its values, one value a line */
-.stack {
-  flex-direction: column;
-  gap: var(--sp-1);
-}
-.stack > .head {
-  width: auto;
-  line-height: var(--h-control-sm);
-  font-size: var(--fs-3);
-  font-weight: 500;
-}
-.stack > .chips {
-  flex-direction: column;
-  align-items: flex-start;
-  margin-left: calc(var(--sp-4) * -1);
+  color: var(--ink-3);
 }

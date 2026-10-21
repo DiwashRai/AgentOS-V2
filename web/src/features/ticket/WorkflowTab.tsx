@@ -50,7 +50,7 @@ function Stages({ w, runs, lib }: { w: TicketWorkflow; runs: readonly Run[]; lib
         id: s.id,
         label: s.name,
         gate: s.gate?.label ?? null,
-        content: (
+        content: () => (
           <Card label={s.name} face={<StageFace stage={s} lib={lib} />} off={!s.enabled}>
             <StageSummary
               stage={s}

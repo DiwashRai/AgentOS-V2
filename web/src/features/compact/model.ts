@@ -224,21 +224,6 @@ export function stageWord(m: GlyphModel): { word: string; path: string } {
   return { word: m.label + round, path };
 }
 
-/** The stage chip's dot: the hue of the state the stage is in (the status glyph's, so a row keeps
- *  one accent), grey while it waits or nobody acts. */
-export type StageDot = "neutral" | "live" | "you" | "blocked" | "done";
-
-const DOT: Partial<Record<MarkModel["kind"], StageDot>> = {
-  run: "live",
-  you: "you",
-  blk: "blocked",
-  done: "done",
-};
-
-export function stageDot(t: TicketRow, me: Person | null): StageDot {
-  return DOT[markOf(t.attention, me).kind] ?? "neutral";
-}
-
 /** The expansion's lead: "Your move", "Waiting on", "Now". */
 export function moveText(t: TicketRow, me: Person | null): { label: string; lead: string } {
   const a = t.attention;

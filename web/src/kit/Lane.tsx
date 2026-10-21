@@ -1,9 +1,11 @@
 // A workflow's stages top to bottom, as Cards on a lane whose axis runs through their faces.
 // Between two cards a joint: the gate after the stage as a diamond on the axis (the ticket
 // stepper's), and, while editing, the + that inserts a stage there. A loop is a bracket round its
-// stages, a faint band with its foot (up to N rounds) under its last card. Editing,
-// the stages reorder on a Sortable (a handle, a drop line, ↑ ↓) that also takes drops between
-// cards; the diamond is a toggle. Read only, it is the same lane with none of that.
+// stages, a faint band with its foot (up to N rounds) under its last card. Editing, the cards
+// stand on the column's own edge, the bracket at their right, and the stages reorder on a
+// Sortable (a handle in each card's head, a drop line, ↑ ↓) that also takes drops between cards;
+// the diamond is a toggle, and it and the + show as their card is hovered. Read only, it is the
+// same lane with none of that.
 import type { ReactNode } from "react";
 
 import { Button } from "./Button";
@@ -17,8 +19,9 @@ export interface LaneStage {
   id: string;
   /** Its name: what its handle, its gate and its + say ("Move Plan", "Add a gate after Plan"). */
   label: string;
-  /** The stage's Card (inside a Drop while editing). */
-  content: ReactNode;
+  /** The stage's Card (inside a Drop while editing), given its handle to place in its head (none
+   *  read only). */
+  content: (grip: ReactNode) => ReactNode;
   /** The gate after it, by name, or none. */
   gate: string | null;
   /** Why no gate can go after it, when none can (the workflow's rule, said by the screen): its
@@ -119,18 +122,18 @@ function Diamond({ st, i, edit }: Omit<JointProps, "last">) {
   );
 }
 
-/** The + after a stage: a new stage there. */
+/** The + after a stage: a new stage there; after the last, it says so in words. */
 function Insert({ st, i, last, edit }: JointProps & { edit: LaneEdit }) {
-  return (
-    <Button
-      variant="quiet"
-      size="xs"
-      icon="plus"
-      title={`${last ? "Add" : "Insert"} a stage after ${st.label}`}
-      onClick={() => {
-        edit.onInsert(i + 1);
-      }}
-    />
+  const add = () => {
+    edit.onInsert(i + 1);
+  };
+  const say = `${last ? "Add" : "Insert"} a stage after ${st.label}`;
+  return last ? (
+    <Button variant="quiet" size="xs" icon="plus" title={say} onClick={add}>
+      Add stage
+    </Button>
+  ) : (
+    <Button variant="quiet" size="xs" icon="plus" title={say} onClick={add} />
   );
 }
 
@@ -167,18 +170,19 @@ function Joint({ st, i, last, edit }: JointProps) {
 interface RowProps extends JointProps {
   pos: Pos | undefined;
   foot: ReactNode;
+  grip: ReactNode;
 }
 
 /** A card and the joint after it; in a loop, its piece of the band (the joint too, unless the
  *  loop ends here, where the loop's foot goes instead). */
-function Row({ st, i, last, edit, pos, foot }: RowProps) {
+function Row({ st, i, last, edit, pos, foot, grip }: RowProps) {
   const inside = pos === "first" || pos === "mid";
   const joint = <Joint st={st} i={i} last={last} edit={edit} />;
   return (
     <div className={s.row} data-first={i === 0 || undefined} data-last={last || undefined}>
       <div className={s.block} data-loop={pos}>
         {pos ? <span className={s.band} data-pos={pos} aria-hidden="true" /> : null}
-        <div className={s.card}>{st.content}</div>
+        <div className={s.card}>{st.content(grip)}</div>
         {foot ? <div className={s.foot}>{foot}</div> : null}
         {inside ? joint : null}
       </div>
@@ -192,7 +196,7 @@ export function Lane({ label, stages, loops, edit }: LaneProps) {
   const rows = stages.map((st, i) => ({
     id: st.id,
     label: st.label,
-    content: (
+    content: (grip: ReactNode) => (
       <Row
         st={st}
         i={i}
@@ -200,6 +204,7 @@ export function Lane({ label, stages, loops, edit }: LaneProps) {
         edit={edit}
         pos={pos.get(i)}
         foot={feet.get(i)}
+        grip={grip}
       />
     ),
   }));
@@ -208,7 +213,6 @@ export function Lane({ label, stages, loops, edit }: LaneProps) {
       {edit ? (
         <Sortable
           label={label}
-          gutter={false}
           items={rows}
           onMove={edit.onMove}
           accept={edit.accept}
@@ -219,7 +223,7 @@ export function Lane({ label, stages, loops, edit }: LaneProps) {
         <div role="list" aria-label={label}>
           {rows.map((r) => (
             <div key={r.id} role="listitem">
-              {r.content}
+              {r.content(null)}
             </div>
           ))}
         </div>

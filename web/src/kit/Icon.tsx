@@ -171,6 +171,19 @@ const GLYPHS = {
   // a section heading's fold caret, Linear's small solid triangle
   caret: { ...LINE10, d: <path d="M2.75 3.75h4.5L5 6.5z" className={s.caret} /> },
   out: { ...LINE10, d: <path d="M2.5 7.5 7.5 2.5M3.5 2.5h4v4" /> },
+  // a menu's take-away actions: a chain's two links (copy a link), two sheets (copy a key)
+  link: {
+    ...LINE14,
+    d: (
+      <path d="M6 8a2.5 2.5 0 0 0 3.5 0l2-2A2.5 2.5 0 0 0 8 2.5l-.7.7M8 6a2.5 2.5 0 0 0-3.5 0l-2 2A2.5 2.5 0 0 0 6 11.5l.7-.7" />
+    ),
+  },
+  copy: {
+    ...LINE14,
+    d: (
+      <path d="M5 4.5V3a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H9.5M3 5h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
+    ),
+  },
   // two corners pulled apart: edit in the whole window
   expand: {
     ...LINE10,
@@ -266,11 +279,11 @@ export interface IconProps {
   name: IconName;
   /** The accessible name; without one the icon is decorative (the text beside it says it). */
   label?: string;
-  /** On a faint rounded square, as Linear's project icons lead a row (the library's lists). */
-  tile?: boolean;
+  /** In the quiet ink, under the name beside it (a library row's lead, as Linear's). */
+  quiet?: boolean;
 }
 
-export function Icon({ name, label, tile }: IconProps) {
+export function Icon({ name, label, quiet }: IconProps) {
   const g: { box: number; view?: number; cls: string | undefined; d: ReactNode } = GLYPHS[name];
   const view = String(g.view ?? g.box);
   const a11y = label
@@ -278,7 +291,7 @@ export function Icon({ name, label, tile }: IconProps) {
     : ({ "aria-hidden": true } as const);
   return (
     <Tip text={label} said>
-      <span className={cx(s.icon, s[name], tile && s.tile)} {...a11y}>
+      <span className={cx(s.icon, s[name], quiet && s.quiet)} {...a11y}>
         <svg
           aria-hidden="true"
           className={g.cls}

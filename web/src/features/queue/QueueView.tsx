@@ -9,7 +9,6 @@ import {
   Badge,
   Button,
   Card,
-  Chip,
   type Column,
   Head,
   Icon,
@@ -32,10 +31,10 @@ import { useSearch } from "../shared/useSearch";
 import { atWorkNote, CAP, shipped, type Zones, zones } from "./model";
 
 // Linear's list, as Compact's: the key and the title on the left, what it waits on receding after
-// the title; a row's buttons hug Compact's end cluster (the chips against the age, then the face),
-// so the title line takes every width they leave and every zone's ends line up. My queue's rows
-// have no Now chip: they are your move, your inbox or done, which the group, the glyph and the
-// stage already say.
+// the title; a row's buttons where Compact has its Now tag, hugging the plain properties at the
+// far end, so the title line takes every width they leave and every zone's ends line up. My
+// queue's rows have no Now tag: they are your move, your inbox or done, which the group, the
+// glyph and the stage already say.
 const ITEM: readonly Column[] = [
   { label: "Key", width: "sm" },
   { label: "Ticket", width: "fill", min: "2xl" },
@@ -61,7 +60,7 @@ function Buttons({ t, me }: { t: TicketRow; me: Person | null }) {
       {shown
         .filter((x) => !blocked || x.id === "retry")
         .map((action) => (
-          <ActionButton key={action.id} action={action} />
+          <ActionButton key={action.id} action={action} size="xs" />
         ))}
     </Stack>
   );
@@ -84,20 +83,6 @@ function Item({ t, me, now, onOpen }: ItemProps) {
     </Row>
   );
 }
-/** A card's state, top right, as Linear's agent pill: the words (the agent and that it runs, or
- *  that it is queued) and a running one's agent glyph on its live disc; then, outside the pill at a
- *  row's size, the face of whose ticket it is. */
-function AgentChip({ t }: { t: TicketRow }) {
-  const a = t.attention;
-  const what = a.kind === "running" ? `${a.agent} running` : "Queued";
-  return (
-    <Stack dir="row" gap={3} align="center">
-      <Chip label={what} {...(a.kind === "running" ? { after: { agent: true } } : {})} />
-      {t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} /> : null}
-    </Stack>
-  );
-}
-
 /** "Implement", or "Implement · round 2 of 3" in a later round (in words, so it never reads as the
  *  step count). */
 function stageText(t: TicketRow, me: Person | null): string {
@@ -105,46 +90,9 @@ function stageText(t: TicketRow, me: Person | null): string {
   return m.round ? `${m.label} · round ${String(m.round.n)} of ${String(m.round.of)}` : m.label;
 }
 
-/** A card's second line: its state glyph (Linear's in-progress ring, a dashed one queued) hanging
- *  before the title, in Geist's regular (its 500 reads bold beside Linear's medium). A queued
- *  card's title is muted, so the state reads down the left edge. */
-function Body({ t }: { t: TicketRow }) {
-  const running = t.attention.kind === "running";
-  return (
-    <Stack dir="row" gap={4} align="baseline">
-      <Mark kind={running ? "run" : "queued"} glyph still name={false} />
-      <Text variant="label" weight={400} tone={running ? "1" : "2"} truncate={2} title={t.title}>
-        {t.title}
-      </Text>
-    </Stack>
-  );
-}
-
-/** A card's progress, its last line: what it is doing (or that it waits for a runner), then a
- *  running one's steps and their count at the far end. */
-function Progress({ t }: { t: TicketRow }) {
-  const a = t.attention;
-  const step = a.kind === "running" ? a.step : "Waiting for a runner";
-  const p = a.kind === "running" ? a.progress : null;
-  return (
-    <Stack dir="row" gap={4} align="center">
-      <Stack grow>
-        <Text variant="meta" tone="3" truncate title={step}>
-          {step}
-        </Text>
-      </Stack>
-      {p ? <Meter size="tile" done={p.done} total={p.total} /> : null}
-      {p ? (
-        <Text variant="meta" tone="2" tabular>
-          {stepText(p)}
-        </Text>
-      ) : null}
-    </Stack>
-  );
-}
-
-/** A card's top line: the key, its run and how long it has run or waited; the state pill at the
- *  end. */
+/** A tile's top line, quiet: the key, its run and how long it has run or waited; at the end who
+ *  works it (the agent in ink, or that it waits in the queue, muted), then the face of whose
+ *  ticket it is. No pill: the tile's one colour is its glyph and its meter. */
 function Top({
   t,
   now,
@@ -152,9 +100,9 @@ function Top({
 }: {
   t: TicketRow;
   now: number;
-  run: { id: number; running: boolean };
+  run: { id: number; agent: string | null };
 }) {
-  const how = run.running ? "running" : "queued";
+  const how = run.agent ? "running" : "queued";
   return (
     <Stack dir="row" gap={4} align="center">
       <Badge kind="key" size="sm">
@@ -171,25 +119,62 @@ function Top({
           {`run #${String(run.id)} · ${age(t.since, now)}`}
         </Text>
       </Stack>
-      <AgentChip t={t} />
+      <Text variant="meta" weight={500} tone={run.agent ? "1" : "3"}>
+        {run.agent ?? "Queued"}
+      </Text>
+      {t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} /> : <Avatar dashed />}
     </Stack>
   );
 }
 
-/** A card's chips: its stage as a label chip led by a dot in the card's state, then its repo. */
-function Chips({ t, me }: { t: TicketRow; me: Person | null }) {
-  const stage = stageText(t, me);
+/** A tile's body: its state glyph (Linear's in-progress ring, a dashed one queued) hanging before
+ *  the title, and under the title where it is (the stage and the repo, plain words). A queued
+ *  tile's title is muted, so the state reads down the left edge. */
+function Body({ t, me }: { t: TicketRow; me: Person | null }) {
   const running = t.attention.kind === "running";
+  const where = [stageText(t, me), t.repo ?? ""].filter(Boolean).join(" · ");
   return (
-    <Stack dir="row" gap={3} align="center" wrap>
-      {stage ? <Chip dot={running ? "live" : "neutral"} label={stage} /> : null}
-      {t.repo ? <Chip lead="repo" label={t.repo} /> : null}
+    <Stack dir="row" gap={4} align="baseline">
+      <Mark kind={running ? "run" : "queued"} glyph still name={false} />
+      <Stack gap={2}>
+        <Text variant="label" tone={running ? "1" : "2"} truncate={2} title={t.title}>
+          {t.title}
+        </Text>
+        <Text variant="meta" tone="3" truncate title={where}>
+          {where}
+        </Text>
+      </Stack>
     </Stack>
   );
 }
 
-/** An agent's card, Linear's lines each in its own space: the key, its run and the agent pill; the
- *  state glyph and the title; the stage and repo chips; then its progress. */
+/** A tile's foot: what it is doing (or that it waits for a runner) and a running one's step count;
+ *  under them its steps, the tile's whole width. */
+function Progress({ t }: { t: TicketRow }) {
+  const a = t.attention;
+  const step = a.kind === "running" ? a.step : "Waiting for a runner";
+  const p = a.kind === "running" ? a.progress : null;
+  return (
+    <Stack gap={3}>
+      <Stack dir="row" gap={4} align="center">
+        <Stack grow>
+          <Text variant="meta" tone="2" truncate title={step}>
+            {step}
+          </Text>
+        </Stack>
+        {p ? (
+          <Text variant="meta" tone="3" tabular>
+            {stepText(p)}
+          </Text>
+        ) : null}
+      </Stack>
+      {p ? <Meter size="tile" done={p.done} total={p.total} /> : null}
+    </Stack>
+  );
+}
+
+/** An agent's tile, Linear's lines each in its own space: the key, its run and who works it; the
+ *  state glyph, the title and where it is; then its progress at the foot. */
 function AgentCard({ t, me, now, onOpen }: ItemProps) {
   const a = t.attention;
   if (a.kind !== "running" && a.kind !== "queued") return null;
@@ -201,13 +186,12 @@ function AgentCard({ t, me, now, onOpen }: ItemProps) {
         onOpen(t.key);
       }}
     >
-      {/* the key line and the title take the free height, so the chips and the progress sink to the
-          foot and line up across a row of cards */}
-      <Stack grow gap={4}>
-        <Top t={t} now={now} run={{ id: a.run_id, running: a.kind === "running" }} />
-        <Body t={t} />
+      {/* the top line and the body take the free height, so the progress sinks to the foot and
+          lines up across a row of tiles */}
+      <Stack grow gap={5}>
+        <Top t={t} now={now} run={{ id: a.run_id, agent: a.kind === "running" ? a.agent : null }} />
+        <Body t={t} me={me} />
       </Stack>
-      <Chips t={t} me={me} />
       <Progress t={t} />
     </Card>
   );
@@ -347,10 +331,10 @@ export function QueueView() {
       action={<NewTicket />}
       counters={[
         { n: z.yourMove.length, label: "your move", mark: "you" },
-        { n: z.mine, label: "runs yours", mark: "run" },
+        { n: z.mine, label: "runs yours" },
         "|",
-        { n: z.running, label: "running", mark: "run" },
-        { n: z.queued, label: "queued", mark: "queued" },
+        { n: z.running, label: "running" },
+        { n: z.queued, label: "queued" },
       ]}
     >
       <Surface pad={8}>

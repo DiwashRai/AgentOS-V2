@@ -27,9 +27,9 @@
 .bar {
   position: relative;
   display: block;
-  height: var(--line-2);
+  height: var(--line-3);
   margin: var(--sp-4) 0 var(--sp-5);
-  border-radius: var(--line-2);
+  border-radius: var(--line-3);
   background: var(--track);
 }
 
@@ -70,6 +70,11 @@
 .live .step[data-state="current"] .bar {
   background: var(--live);
 }
+/* a caption says its state in the state's ink: Live orange (Blocked red, Complete green: below) */
+.live .step[data-state="current"] .sub {
+  color: var(--live-text);
+  font-weight: 500;
+}
 /* skipped: the bar drawn as dashes, as thick as the others so it reads as a stage, not a gap */
 .step[data-state="skipped"] .bar {
   background: repeating-linear-gradient(
@@ -97,7 +102,7 @@
 /* a gate: the diamond centred in the gap after its stage's bar, threading the two bars together */
 .knot {
   position: absolute;
-  top: calc(var(--line-2) / 2 - var(--sp-4) / 2);
+  top: calc(var(--line-3) / 2 - var(--sp-4) / 2);
   right: calc(var(--gap) / -2 - var(--sp-4) / 2);
   width: var(--sp-4);
   height: var(--sp-4);
@@ -181,20 +186,24 @@
 /* the run card: the stages and what happens now in one card, as Linear's latest update: the page's
    own ground on a hairline, a larger radius */
 .card {
-  padding: var(--sp-6) var(--sp-8);
+  padding: var(--sp-7) var(--sp-8) 0;
   border: var(--line-1) solid var(--tk-card-edge);
   border-radius: var(--r-5);
 }
 .card .bar {
   margin-top: var(--sp-2);
 }
-/* the now row: under the stages across all their columns, ruled off edge to edge inside the card;
-   the run's meter on it is drawn long enough to read */
+/* the now row: the card's foot, a tinted band under the stages edge to edge, ruled off, so the
+   live run reads as the card's status bar; the run's meter on it long enough to read, its steps to
+   come on a firmer track */
 .now {
   grid-column: 1 / -1;
   min-width: 0;
-  margin: var(--sp-6) calc(var(--sp-8) * -1) 0;
-  padding: var(--sp-6) var(--sp-8) 0;
+  margin: var(--sp-7) calc(var(--sp-8) * -1) 0;
+  padding: var(--sp-6) var(--sp-8);
   border-top: var(--line-1) solid var(--tk-card-edge);
+  border-radius: 0 0 var(--r-5) var(--r-5);
+  background: var(--tk-well);
   --w-meter: var(--w-tk-meter);
+  --track: var(--rule-strong);
 }

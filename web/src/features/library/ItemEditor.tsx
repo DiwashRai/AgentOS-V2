@@ -64,14 +64,13 @@ const MINUTE = 60_000;
 const ago = (a: string) => (a === "now" ? "just now" : `${a} ago`);
 const FIRST = "Keep yours or take theirs first";
 
-/** Discard quiet, Save the bar's one filled button (faded while there is nothing to save). */
+/** Discard and Save as a pair: Save the bar's one filled button (grey while there is nothing to
+ *  save). */
 function Actions({ e }: { e: Editor }) {
   if (e.theirs)
     return (
       <>
-        <Button variant="quiet" blocked={FIRST}>
-          Discard
-        </Button>
+        <Button blocked={FIRST}>Discard</Button>
         <Button variant="you" blocked={FIRST}>
           Save
         </Button>
@@ -79,18 +78,14 @@ function Actions({ e }: { e: Editor }) {
     );
   return e.dirty ? (
     <>
-      <Button variant="quiet" onClick={e.discard}>
-        Discard
-      </Button>
+      <Button onClick={e.discard}>Discard</Button>
       <Button variant="you" onClick={e.save}>
         Save
       </Button>
     </>
   ) : (
     <>
-      <Button variant="quiet" blocked="No changes to discard">
-        Discard
-      </Button>
+      <Button blocked="No changes to discard">Discard</Button>
       <Button variant="you" blocked="No changes to save">
         Save
       </Button>

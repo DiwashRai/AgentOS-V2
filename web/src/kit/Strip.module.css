@@ -1,4 +1,5 @@
-/* Strip: the stages on one grid at the stepper's scale, a segment each in its phase's hue, a gate a
+/* Strip: the stages on one grid at the stepper's scale, a segment each in its phase's hue, all one
+   length (so the strip is as long as its workflow), a gate a
    solid diamond in its own column, a loop a bracket under its stages on the grid's second row;
    the words after it quiet, as a row's description */
 .strip {
@@ -17,7 +18,6 @@
   align-items: center;
   column-gap: var(--sp-1);
   row-gap: var(--sp-2);
-  width: var(--w-strip);
   /* the bracket's row under the segments: centre the segments on the row's text */
   padding-top: calc(var(--strip-loop) + var(--sp-2));
 }

@@ -15,10 +15,11 @@
    two washes (--wash for fills, --hair for lines); a theme further down sets those and its accent
    and so gets its own hue top to bottom. Each dark theme has its own ladder (page, panel, band,
    hover, hairline about 3.5 CIE L* apart, the hairline the top step so it shows on a band) at its
-   own depth and hue, so each reads from its background alone: Midnight a neutral near-black
-   (panel L* 5.5) set in a lighter ground, Plum a deep aubergine (8.5), Carbon a warm graphite
-   (15), Harbour a lifted navy (18.5). A new colour token is likewise a color-mix of those, or
-   white or black at low alpha, never a raw neutral. */
+   own depth and hue, so each reads from its background alone: Midnight a neutral near-black,
+   Plum a deep aubergine, Carbon a warm graphite, Harbour a lifted navy. The frame is Linear's:
+   the sidebar's ground ruled off the page by a hairline, the main column flush on the page, and a
+   view's recess (the panel) lies flush on it there. A new colour token is likewise a color-mix of
+   those, or white or black at low alpha, never a raw neutral. */
 
 /* Paper · light · default: neutral zinc greys, one indigo for your move, flat surfaces on
    hairlines instead of shadows; colour only where it means a state. */
@@ -26,8 +27,8 @@
 [data-theme="light"],
 [data-theme="mist"] {
   color-scheme: light;
-  /* themes · the ladder's own steps: the page (the main sheet), the panel (a recess on it), a
-     surface (a card); the sidebar's ground sits a shade under the page (--side below) */
+  /* themes · the ladder's own steps: the page (the main column), the panel (a recess, flush on the
+     page in the frame), a surface (a card); the sidebar's ground is --side below */
   --page: #ffffff;
   --recess: #f9f9fa;
   --surface: #ffffff;
@@ -80,20 +81,15 @@
   --done-text: #137337;
   --progress: #16a34a;
   /* ticket types and priority */
-  /* sidebar: a grey ground a clear step (about 4 L*) under the page, so the main column reads as an
-     inset sheet on it, as Linear's light sidebar does; labels near the ink, the nav's weight */
-  --side: color-mix(in srgb, var(--ink-1) 5%, var(--page));
+  /* sidebar: a grey ground a step (about 3 L*) under the page, ruled off from it by a hairline,
+     as Linear's light sidebar is; labels near the ink, the nav's weight */
+  --side: color-mix(in srgb, var(--ink-1) 4%, var(--page));
   --side-ink: color-mix(in srgb, var(--ink-1) 88%, var(--side));
   --side-hover: color-mix(in srgb, var(--ink-1) 4%, transparent);
   --side-on: color-mix(in srgb, var(--ink-1) 7.5%, transparent);
   --side-on-ink: var(--ink-1);
-  /* sidebar: a view's count on the page's white, ringed to lift off the grey; new ticket's ring */
-  --side-count-fill: var(--page);
-  --side-count-ring: color-mix(in srgb, var(--ink-1) 10%, transparent);
+  /* sidebar: new ticket's ring */
   --side-tool-ring: color-mix(in srgb, var(--ink-1) 14%, transparent);
-  /* themes · the main sheet stands off the ground by its tone and a soft shadow, no ring: one
-     container (the panel inside) carries a hairline, not two */
-  --panel-ring: 0 1px 3px rgba(9, 9, 11, 0.06), 0 0 0 1px rgba(9, 9, 11, 0.045);
   /* ticket: the ticket page and the peek (Linear's issue page), mixed from the theme's own hues */
   --tk-hover: color-mix(in srgb, var(--ink-1) 4.5%, transparent);
   --tk-card: var(--surface);
@@ -122,12 +118,12 @@
   --pop-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
   --pop-rule: color-mix(in srgb, var(--ink-1) 7%, transparent);
   --shadow-pop: 0 2px 4px rgba(9, 9, 11, 0.04), 0 12px 32px rgba(9, 9, 11, 0.12);
-  /* agents: My queue's agent tiles, the surface on a hairline */
-  --tile: var(--surface);
-  --tile-edge: color-mix(in srgb, var(--ink-1) 12%, transparent);
-  --tile-hover: color-mix(in srgb, var(--ink-1) 2.5%, var(--surface));
-  --tile-hover-edge: color-mix(in srgb, var(--ink-1) 18%, transparent);
-  --tile-lift: 0 1px 2px rgba(9, 9, 11, 0.05);
+  /* agents: My queue's agent tiles, a faint slab of ink set into the sheet, its edge barely there */
+  --tile: color-mix(in srgb, var(--ink-1) 2.5%, var(--surface));
+  --tile-edge: color-mix(in srgb, var(--ink-1) 5%, transparent);
+  --tile-hover: color-mix(in srgb, var(--ink-1) 4.5%, var(--surface));
+  --tile-hover-edge: color-mix(in srgb, var(--ink-1) 10%, transparent);
+  --tile-lift: 0 0 0 transparent;
   /* teams: All teams' item cards, white on a firm ink hairline with a soft drop, so each card is
      its own object on the white sheet; the titles in ink */
   --teams-card: var(--surface);
@@ -137,9 +133,9 @@
 }
 
 /* Carbon · dark · default: a warm neutral grey (page L* 7.5, panel 10.5), your move Linear's
-   indigo. The ladder: ground (sidebar) under the page (the main sheet), the panel on it, then a
+   indigo. The ladder: the page (the main column), the sidebar's ground a step over it, then a
    row's hover (+3.5 L*), a group's band and an agent's card (+5.5) and the hairline (+9 to 11),
-   each the theme's wash (--wash for fills, --hair for lines) over the panel; an open row takes a
+   each the theme's wash (--wash for fills, --hair for lines) over the page; an open row takes a
    wash of your move, so it reads as a level of its own. Midnight, Harbour and Plum take this
    block and set its steps, washes, inks and accent. */
 [data-theme="dark"],
@@ -197,17 +193,15 @@
   --done-ink: #052e14;
   --done-text: #86efac;
   --progress: #4ade80;
-  /* sidebar: the ground a shade under the page; the sheet stands off it by tone alone */
-  --side: color-mix(in srgb, #000000 30%, var(--page));
+  /* sidebar: the ground a step over the page (about 2.5 L*), as Linear's dark sidebar sits a
+     shade lighter than the flush list beside it, the hairline between them */
+  --side: color-mix(in srgb, var(--wash) 3.5%, var(--page));
   --side-ink: color-mix(in srgb, var(--ink-1) 85%, var(--side));
   --side-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
   --side-on: color-mix(in srgb, var(--ink-1) 9%, transparent);
   --side-on-ink: var(--ink-1);
-  /* sidebar: a view's count on a lit tint, a faint ring round it; new ticket's ring */
-  --side-count-fill: color-mix(in srgb, var(--ink-1) 10%, transparent);
-  --side-count-ring: color-mix(in srgb, var(--ink-1) 5%, transparent);
+  /* sidebar: new ticket's ring */
   --side-tool-ring: color-mix(in srgb, var(--ink-1) 16%, transparent);
-  --panel-ring: 0 0 0 1px rgba(0, 0, 0, 0.5);
   /* ticket */
   --tk-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
   --tk-card: color-mix(in srgb, var(--ink-1) 2.5%, var(--page));
@@ -229,16 +223,17 @@
   --ctl-edge: color-mix(in srgb, var(--ink-1) 9%, transparent);
   --ctl-edge-hover: color-mix(in srgb, var(--ink-1) 15%, transparent);
   --ctl-hover: color-mix(in srgb, var(--ink-1) 6%, transparent);
-  --ctl-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-  /* controls · the popover: Linear's lifted layer, only a few percent over the page (not a grey
-     slab), told from what it covers by its edge: a crisp lit hairline (about 8% white) inside a
-     dark ring, and a large soft drop under it; a row lights a 6% tint */
-  --pop: color-mix(in srgb, var(--wash) 5.5%, var(--recess));
-  --pop-edge: color-mix(in srgb, var(--hair) 9%, transparent);
-  --pop-hover: color-mix(in srgb, var(--wash) 6%, transparent);
-  --pop-rule: color-mix(in srgb, var(--hair) 8%, transparent);
+  --ctl-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 1px rgba(0, 0, 0, 0.3); /* lit top */
+  /* controls · the popover: Linear's lifted layer, a clear step (about 6 L*) over anything it
+     opens on, a lit hairline inside a dark ring, a lit top edge and a deep drop; a row lights an
+     8% tint */
+  --pop: color-mix(in srgb, var(--wash) 9.5%, var(--recess));
+  --pop-edge: color-mix(in srgb, var(--hair) 12%, transparent);
+  --pop-hover: color-mix(in srgb, var(--wash) 8%, transparent);
+  --pop-rule: color-mix(in srgb, var(--hair) 9%, transparent);
   --shadow-pop:
-    0 0 0 1px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.35), 0 16px 48px rgba(0, 0, 0, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 8px 16px rgba(0, 0, 0, 0.35), 0 24px 56px rgba(0, 0, 0, 0.6);
   /* agents: a raised card a step over the panel (about band height) on a firm hairline */
   --tile: color-mix(in srgb, var(--wash) 6%, var(--recess));
   --tile-edge: color-mix(in srgb, var(--hair) 12%, transparent);
@@ -253,12 +248,11 @@
   --teams-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
-/* themes · Mist · light: Linear's Ash. A cool blue-grey shell (ground and page) round white
-   panels, the reverse of Paper's white page on a grey recess; inks lean slate; your move is a
-   deeper, bluer indigo. Takes the Paper block and sets only its steps and hues. */
+/* themes · Mist · light: Linear's Ash. A cool blue-grey sidebar ruled off a white page, where
+   Paper's ground is a neutral grey; inks lean slate; your move is a deeper, bluer indigo. Takes
+   the Paper block and sets only its ground and hues. */
 [data-theme="mist"] {
-  --page: #eaedf3;
-  --recess: #ffffff;
+  --side: #edeef3;
   --ink-1: #1a1f2e;
   --ink-2: #474e61;
   --ink-3: #545c6f;
@@ -270,18 +264,16 @@
   --live-text: #a8390b;
   --done-text: #116a33;
   --blocked: #b42323;
-  --side: color-mix(in srgb, var(--ink-1) 4%, var(--page));
   /* the white panel needs its band a step firmer to read off the rows (about 4 L* under them) */
   --list-band: color-mix(in srgb, var(--ink-1) 5.5%, transparent);
   --list-hover: color-mix(in srgb, var(--ink-1) 3.8%, transparent);
 }
 
-/* themes · Midnight · dark: a cool blue-black, the deepest theme. A black sheet (L* 2.5) set
-   into a slate ground a shade lighter than it (the reverse of Carbon), the panel 4.5, then hover
-   8, band and cards 10, hairline 14, all leaning blue (hue about 250°) and washed with a cold
-   steel; inks run whiter. Your move is a royal blue with white on it. */
+/* themes · Midnight · dark: a cool blue-black, the deepest theme. A black page (L* 2.5) beside a
+   slate ground a shade lighter, then hover, band and cards, hairline, all leaning blue (hue about
+   250°) and washed with a cold steel; inks run whiter. Your move is a royal blue with white on
+   it. */
 [data-theme="midnight"] {
-  --side: #13161c;
   --page: #08090b;
   --recess: #0e1014;
   --surface: #171a20;
@@ -299,7 +291,6 @@
   --tile: color-mix(in srgb, var(--wash) 6%, var(--recess));
   --tile-edge: color-mix(in srgb, var(--hair) 12%, transparent);
   --tile-hover: color-mix(in srgb, var(--wash) 9%, var(--recess));
-  --panel-ring: 0 0 0 1px color-mix(in srgb, var(--hair) 7%, transparent);
   --you: #2563eb;
   --you-text: #9db9ff;
   --focus: #5b8cff;
@@ -307,10 +298,9 @@
 
 /* themes · Harbour · dark: a lifted navy, the lightest dark theme. Every step a navy (hue about
    215°) a good way up from black: page L* 15, panel 18.5, hover 22, band and cards 24, hairline
-   28, a soft shadow under the sheet. Washed and lined with a sky blue. Your move is a deep
+   28. Washed and lined with a sky blue. Your move is a deep
    harbour teal with white on it. */
 [data-theme="harbour"] {
-  --side: #122032;
   --page: #182739;
   --recess: #1f2e41;
   --surface: #2a394d;
@@ -327,7 +317,6 @@
   --tile: color-mix(in srgb, var(--wash) 7.2%, var(--recess));
   --tile-edge: color-mix(in srgb, var(--hair) 14%, transparent);
   --tile-hover: color-mix(in srgb, var(--wash) 10.5%, var(--recess));
-  --panel-ring: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 12px 32px -18px rgba(0, 0, 0, 0.55);
   /* the lifted navy needs blocked's red a step lighter on a popover */
   --blocked: #ffa0a0;
   --you: #0e7c7b;
@@ -337,10 +326,9 @@
 
 /* themes · Plum · dark: aubergine velvet, deep and warm. Every step a deep red-violet (hue about
    300°): page L* 5.5, panel 8.5, hover 12, band 14, hairline 19.5, washed and lined with orchid;
-   the agents' cards stand clearly raised off the panel, the sheet sunk in a deep shadow; inks
+   the agents' cards stand clearly raised off the page; inks
    lean pink. Your move is an orchid with white on it, well clear of running's orange. */
 [data-theme="plum"] {
-  --side: #160515;
   --page: #1e0b1d;
   --recess: #251224;
   --surface: #301c2e;
@@ -358,7 +346,6 @@
   --tile-edge: color-mix(in srgb, var(--hair) 10%, transparent);
   --tile-hover: color-mix(in srgb, var(--wash) 12%, var(--recess));
   --list-open: color-mix(in srgb, var(--you) 11%, transparent);
-  --panel-ring: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 24px 60px -24px rgba(0, 0, 0, 0.9);
   --you: #9333c0;
   --you-text: #e3b0f5;
   --focus: #d08cf0;
@@ -369,11 +356,18 @@
 :root:not([data-theme]),
 [data-theme] {
   --ring-you: color-mix(in srgb, var(--you) 20%, transparent);
+  /* rows: a gate's primary in a list's row, a soft wash of your move */
+  --gate-soft: color-mix(in srgb, var(--you) 14%, transparent);
+  --gate-soft-hover: color-mix(in srgb, var(--you) 22%, transparent);
   --sweep-live: color-mix(in srgb, var(--live) 30%, transparent);
   --ring-ink: color-mix(in srgb, var(--ink-1) 22%, transparent);
+  /* sidebar: the hairline that rules it off the page */
+  --side-edge: color-mix(in srgb, var(--ink-1) 8%, var(--side));
   /* rows: a row's Chip, its grey dot or glyph; Unassigned's dashed ring */
   --prop-mark: color-mix(in srgb, var(--ink-3) 72%, transparent);
   --face-dashed: color-mix(in srgb, var(--ink-3) 75%, transparent);
+  /* intake · Notice: a failed query's halo, the blocked dot's disc in the faces' column */
+  --notice-halo: color-mix(in srgb, var(--blocked) 15%, transparent);
   --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
   /* themes · faces: a hue each, the same in every theme (a person reads the same everywhere), white
      initials on it */
@@ -390,20 +384,13 @@
   --id-rose-row: color-mix(in srgb, var(--id-rose) var(--face-id), var(--page));
   --id-teal-row: color-mix(in srgb, var(--id-teal) var(--face-id), var(--page));
   --id-slate-row: color-mix(in srgb, var(--id-slate) var(--face-id), var(--page));
-  /* agents: a card's meter, the step under way a soft live; the agent's glyph disc in the pill (a
-     live tint) */
+  /* agents: a card's meter, the step under way a soft live */
   --tile-meter-now: color-mix(in srgb, var(--live) 38%, transparent);
-  --tile-agent: color-mix(in srgb, var(--live) 16%, var(--surface));
-  /* teams: All teams' item cards (their fill, edge and drop are per theme, above) stand on a
-     stage's lane, a faint slab of ink under them (Linear's board column) */
-  --teams-lane: color-mix(in srgb, var(--ink-1) 3%, transparent);
   /* controls: chips (filter chips, a picker's trigger, a tag): a light fill on hover, a firmer
      one when on, and a pill's lit hairline */
   --chip-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
   --chip-on: color-mix(in srgb, var(--ink-1) 9%, transparent);
   --chip-on-edge: color-mix(in srgb, var(--ink-1) 14%, transparent);
-  /* controls · filter chips share one recessed track; the pressed one is a control raised in it */
-  --seg: color-mix(in srgb, var(--ink-1) 6%, transparent);
   /* controls · a popover row's aside (a descriptor, a count), its section label and its filter's
      placeholder: a step under ink-3 on the popover's own surface, so the names lead */
   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
@@ -474,17 +461,16 @@
   --h-row: 42px;
   /* rows (Linear lists): a line, a two-line item, a group's band, a row's chip, the status
      glyphs, a face's initials */
-  --h-line: 42px;
+  --h-line: 36px;
   --h-list-item: 44px;
   --h-group: 36px;
   --h-list-head: 32px;
   --h-list-chip: 20px;
-  --h-tile: 32px; /* a library row's lead: an item's glyph tile, an agent's face */
   --list-pad: 24px; /* a list row's inset from the surface edge */
   --list-inset: calc(var(--list-pad) + var(--sp-4)); /* where a row's first cell starts */
   --gutter: var(--sp-9); /* the main sheet's sides (an edge Table runs out through it) */
   --glyph-run: 50%; /* a running glyph's pie with no step count */
-  --h-face-sm: 16px; /* a face inside a pill */
+  --h-face-sm: 16px; /* a small face: a run's starter */
   --fs-face-sm: 8.5px;
   --glyph: 14px;
   --glyph-sm: 10px;
@@ -500,7 +486,6 @@
   --w-talk-min: 400px; /* the ticket page's Talk column */
   --w-talk-max: 500px;
   --w-meter: 48px; /* a run meter inline in a row */
-  --w-tile-agent-glyph: 12px; /* agents: the agent's glyph inside its disc */
   --col-xs: 44px; /* rows: an age (as wide as "3h 10m"), a run's or a version's number */
   --prop-dot: 7px; /* rows: a property chip's dot */
   --h-face: 18px; /* rows: a face in a row or a picker */
@@ -514,21 +499,22 @@
   --notice-mark: 12px;
   /* intake · Notice: a problem's reading measure: what went wrong wraps short of the row's end */
   --notice-measure: 72ch;
-  /* intake · Notice: a failed query's dot hung in the gutter, on its first line's middle */
+  /* intake · Notice: a failed query's dot, centred in its halo */
   --notice-dot: 6px;
-  --notice-dot-top: calc(var(--sp-7) + 0.5lh);
+  /* intake: a triage row, a face over two tight lines; the faces' column, which the query heads'
+     chevron and the notices' glyphs share, so every line's words start on one edge */
+  --h-triage: 52px;
+  --triage-face: var(--sp-9);
   /* controls */
   --w-pop: 304px; /* the theme menu */
-  --w-pop-filter: 248px; /* a picker's list, a filter chip's overflow popover */
+  --w-pop-filter: 220px; /* a picker's list, a filter chip's overflow popover */
   /* themes: the theme menu's swatch, the frame in miniature, and its sidebar's width */
   --w-swatch: 34px;
   --h-swatch: 22px;
   --w-swatch-side: 9px;
-  --h-pop-item: 34px; /* a menu's or picker's row, at the body's size */
-  --h-pop-find: 44px; /* a picker's filter field */
+  --h-pop-item: 32px; /* a menu's or picker's row, Linear's 13px on 32 */
+  --h-pop-find: 40px; /* a picker's filter field */
   --h-pop-head: 28px; /* a menu's section label */
-  --h-pill: 34px; /* a filter chip: a segment of its track, as tall as the bar's buttons */
-  --seg-inset: 3px; /* the pressed chip's raised fill, inset from the track's edge */
 
   /* motion: transform and opacity only, and only on live things */
   --dur-fast: 0.16s;
@@ -536,22 +522,19 @@
   --dur-sweep: 1.7s; /* a running meter's sweep */
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
 
-  /* sidebar: Linear's labelled sidebar: 240px wide, items 32px tall 2px apart (a 34px pitch), three
-     groups (the views, the sections, the foot) 24px apart, a section's label hugging its entries */
-  --w-side: 240px;
-  --h-side-item: 32px;
-  --h-side-title: 32px; /* a section's heading, 8px of it open above the label */
-  --side-title-open: 8px;
-  --side-tile: 20px; /* the Space's tile */
-  --side-gap: 24px;
-  --side-head-pull: -18px;
-  /* the muted step: a section's label, quieter than the labels (AA on --side) */
-  --side-title: color-mix(in srgb, var(--side-ink) 80%, var(--side));
-  --side-icon: color-mix(in srgb, var(--side-ink) 78%, var(--side)); /* a glyph, under its label */
-  --side-count: var(--side-ink); /* a view's count, in the labels' ink on its pill */
-  --side-count-on: var(--side-on-ink); /* the current row's count */
-  --side-count-h: 20px; /* a count's badge: its height and least width */
-  --side-tool: 26px; /* the head's search and new-ticket buttons */
+  /* sidebar: Linear's dense labelled sidebar: 228px wide, items 28px tall 1px apart, three groups
+     (the views, the sections, the foot) 20px apart, a section's label hugging its entries */
+  --w-side: 228px;
+  --h-side-item: 28px;
+  --h-side-title: 26px; /* a section's heading, 6px of it open above the label */
+  --side-title-open: 6px;
+  --side-tile: 18px; /* the Space's tile */
+  --side-gap: 20px;
+  --side-head-pull: -14px;
+  /* the muted step: a section's label and a view's count, quieter than the labels (AA on --side) */
+  --side-title: color-mix(in srgb, var(--side-ink) 72%, var(--side));
+  --side-icon: color-mix(in srgb, var(--side-ink) 72%, var(--side)); /* a glyph, under its label */
+  --side-tool: 28px; /* the head's search and new-ticket buttons */
   --side-account-w: 224px; /* the switcher's sheet */
   /* sidebar · Icon: grey, as Linear's: a priority's lit and unlit bars, a type's faint square and
      its glyph, so a row's status glyph is its one colour */
@@ -616,8 +599,7 @@
   --card-problem-edge: color-mix(in srgb, var(--blocked) 45%, var(--teams-card-edge));
 }
 :root {
-  --h-joint: 36px; /* a joint between two cards while editing: the diamond and the + */
-  --h-joint-read: 28px; /* the same, read only */
+  --h-joint-read: 28px; /* a joint between two cards: the gate's diamond (and, editing, the + that shows on hover) */
   --gate-dia: 10px; /* the gate's diamond on the lane */
   --h-gate-hit: 24px; /* the diamond's click target */
   --lane-axis: calc(var(--sp-6) + var(--h-chip) / 2); /* the axis, through a card's face */
@@ -643,7 +625,7 @@
   --strip-off: color-mix(in srgb, var(--ink-1) 34%, transparent);
 }
 :root {
-  --w-strip: 208px;
+  --strip-stage: 24px; /* a stage's segment: a strip runs as long as its workflow */
   --strip-seg: 6px;
   --strip-dia: 8px;
   --strip-loop: 5px;

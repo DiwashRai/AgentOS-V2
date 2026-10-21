@@ -37,7 +37,7 @@
 }
 .code {
   font-family: var(--font-mono);
-  font-size: var(--fs-1);
+  font-size: var(--fs-2);
   color: var(--ink-3);
 }
 .truncate {

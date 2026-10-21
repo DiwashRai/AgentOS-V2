@@ -132,42 +132,36 @@
   font-weight: 600;
 }
 
-/* a sheet (an item editor's content): a framed panel, its head strip ruled off over the text; the
-   edge firms on hover, and while the text has the focus the whole is ringed in your move's accent */
+/* a sheet (an item editor's content): a section of the document, not a box. A hairline over its
+   head strip, the text under it on the column's own edge (a folding block's under its name, past
+   the fold) as tall as its lines; while the text has the focus the hairline is your move's accent */
 .sheet {
-  border: var(--line-1) solid var(--tk-card-edge);
-  border-radius: var(--r-4);
-  background: var(--tk-card);
+  border-top: var(--line-1) solid var(--rule);
   transition:
     border-color var(--dur-fast) ease,
     box-shadow var(--dur-fast) ease;
 }
-.sheet:hover {
-  border-color: var(--ctl-edge-hover);
-}
 .sheet:has(> .leaf:focus) {
-  border-color: var(--you);
-  box-shadow: 0 0 0 var(--line-3) var(--card-open-ring);
+  border-top-color: var(--you);
+  box-shadow: 0 calc(var(--line-1) * -1) 0 var(--you);
 }
 .sheetHead {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  min-height: calc(var(--h-field) + var(--sp-5));
-  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-6);
-  border-bottom: var(--line-1) solid var(--tk-card-edge);
-}
-.sheetHead:last-child {
-  border-bottom: 0;
+  min-height: calc(var(--h-field) + var(--sp-6));
 }
 .leaf,
 .leaf:is(:hover, :focus-within) {
-  padding: var(--sp-6) var(--sp-8) var(--sp-8);
+  padding: 0 0 var(--sp-9);
   border: 0;
-  border-radius: 0 0 var(--r-4) var(--r-4);
+  border-radius: 0;
   background: none;
   outline: none;
   resize: none;
+}
+.leaf.under {
+  padding-left: calc(var(--h-chip) + var(--sp-4));
 }
 
 /* the pop-out: a quiet button in the area's top right corner, shown on hover and focus */
@@ -179,11 +173,14 @@
   width: 100%;
   min-width: 0;
 }
-/* filling its column: the wrapper takes the height, the area fills the wrapper */
-.areaFill {
-  flex: 1;
-  height: 100%;
-  min-height: 0;
+/* a sheet's controls: the last (a block's handle) always; the rest while the sheet is in use */
+.tools {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.sheet:not(:hover, :focus-within) .tools > :not(:last-child) {
+  display: none;
 }
 /* clear of the area's scrollbar */
 .pop {

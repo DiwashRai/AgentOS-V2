@@ -85,6 +85,17 @@
 .you:hover {
   background: var(--you-lift);
 }
+/* in a list's row, the gate primary is a soft wash of your move in its ink, so the row's title and
+   the group still lead the eye down a list of asks */
+:where([data-row]) .you:not([aria-disabled="true"]) {
+  background: var(--gate-soft);
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--you-text);
+}
+:where([data-row]) .you:not([aria-disabled="true"]):hover {
+  background: var(--gate-soft-hover);
+}
 .accent {
   background: var(--accent);
   border-color: var(--accent);
@@ -122,7 +133,8 @@
   color: var(--ink-1);
 }
 /* blocked (R11): an empty dashed outline in muted ink that hover leaves alone; a quiet one is its
-   faded glyph alone (no box), and the gate primary keeps its fill, faded, so it still leads its bar */
+   faded glyph alone (no box), and the gate primary a flat grey fill with its words in muted ink
+   (readable, plainly not lit) */
 .btn[aria-disabled="true"],
 .btn[aria-disabled="true"]:hover {
   background: transparent;
@@ -137,7 +149,6 @@
   opacity: var(--blocked-fade);
 }
 .btn.you[aria-disabled="true"] {
-  border-color: var(--you);
-  background: var(--you);
-  color: var(--you-ink);
+  background: var(--seg);
+  opacity: 1;
 }
