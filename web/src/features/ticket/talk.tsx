@@ -1,19 +1,26 @@
-// Talk's head, the same on the ticket page and in the peek: its name and who is in it on one line,
-// what it is for under them.
-import type { Person } from "../../api/types";
-import { Avatar, Stack, Text } from "../../kit";
+// Talk, the same on the ticket page and in the peek: its name and who is in it on one line, what it
+// is for under them, then the conversation.
+import type { ReactNode } from "react";
 
-export function TalkHead({ people }: { people: readonly Person[] }) {
+import type { Person } from "../../api/types";
+import { Avatar, Section } from "../../kit";
+
+export function TalkSection({
+  people,
+  children,
+}: {
+  people: readonly Person[];
+  children: ReactNode;
+}) {
   return (
-    <Stack gap={2}>
-      <Stack dir="row" gap={5} align="center">
-        <Text variant="heading" as="h2">
-          Talk
-        </Text>
-        <Stack grow />
+    <Section
+      title="Talk"
+      note="Just people here. Agents don't read this."
+      end={
         <Avatar size="talk" people={people.map((p) => ({ name: p.name, seed: String(p.id) }))} />
-      </Stack>
-      <Text tone="3">Just people here. Agents don&apos;t read this.</Text>
-    </Stack>
+      }
+    >
+      {children}
+    </Section>
   );
 }

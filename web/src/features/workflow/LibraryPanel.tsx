@@ -8,7 +8,7 @@
 import { useState } from "react";
 
 import { matches, terms } from "../../domain/format";
-import { Avatar, Drag, Field, Icon, Stack, Tabs, Text } from "../../kit";
+import { Avatar, Drag, Field, Icon, Section, Stack, Tabs, Text } from "../../kit";
 import { type Library, runtimeName } from "./library";
 import type { RefKind } from "./model";
 
@@ -115,10 +115,7 @@ export function LibraryPanel({ lib, target, where, pick }: PanelProps) {
   const [q, setQ] = useState("");
   const shown = entries(lib, tab).filter((e) => matches([e.name, e.about], terms(q)));
   return (
-    <Stack gap={6}>
-      <Text variant="heading" as="h2">
-        Library
-      </Text>
+    <Section title="Library">
       <Tabs
         label="Library"
         value={tab}
@@ -164,6 +161,6 @@ export function LibraryPanel({ lib, target, where, pick }: PanelProps) {
           </Stack>
         </Stack>
       </Tabs>
-    </Stack>
+    </Section>
   );
 }

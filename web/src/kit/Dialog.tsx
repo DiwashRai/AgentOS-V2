@@ -1,8 +1,8 @@
 // A modal on the browser's own <dialog>: it holds focus, the rest of the page is inert, and focus
 // goes back to the opener. Esc and the close button ask the screen to close it (`onClose`); the
 // screen closes it by setting `open`, so it can ask first. Two looks:
-// - side: the peek, sliding in from the right. Each direct child is one section, ruled off from
-//   the next; they scroll inside the panel, over a foot that stays put.
+// - side: the peek, sliding in from the right. Its parts are Sections, each padded and ruled off
+//   from the next; they scroll inside the panel, over a foot that stays put.
 // - full: the whole window, for editing (a ticket's workflow or item): the close at the top left,
 //   then the view (a Page, so its top bar and body are the same as on its own screen). `ask`
 //   draws a question over it, modal inside it (unsaved changes: Save, Discard, Keep editing).
@@ -13,6 +13,7 @@ import { type ReactNode, useEffect, useId, useRef } from "react";
 import { Button } from "./Button";
 import s from "./Dialog.module.css";
 import { Layer } from "./layer";
+import { InPanel } from "./Section";
 import { Tips } from "./tip";
 import { Toasts } from "./toast";
 
@@ -22,8 +23,7 @@ export type DialogProps = {
   open: boolean;
   /** Esc or the close button: the screen decides (close, or ask first). */
   onClose: () => void;
-  /** Beside the page: its sections, each top element the children draw (a component may return
-   *  several in a fragment), padded and ruled apart. Full: the one view. */
+  /** Beside the page: its Sections, each one of the panel's parts. Full: the one view. */
   children: ReactNode;
 } & (
   | {
@@ -150,7 +150,9 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
   const dock = useRef<HTMLDivElement>(null);
   const side = (
     <>
-      <div className={s.body}>{open ? children : null}</div>
+      <div className={s.body}>
+        <InPanel value>{open ? children : null}</InPanel>
+      </div>
       <div ref={dock} className={s.dock} />
       {open && foot ? <div className={s.foot}>{foot}</div> : null}
     </>

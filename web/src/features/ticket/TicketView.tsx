@@ -12,11 +12,11 @@ import { stageModel } from "../../domain/board";
 import { firstName } from "../../domain/format";
 import { parsePlan, type PlanItem } from "../../domain/plan";
 import {
-  Checklist,
   Chip,
   Composer,
   Notice,
   Page,
+  Section,
   Select,
   Stack,
   Stepper,
@@ -30,11 +30,12 @@ import { TicketMenu } from "../shared/TicketMenu";
 import { useSearch } from "../shared/useSearch";
 import { ContextTab } from "./ContextTab";
 import { Now } from "./now";
+import { PlanSection } from "./plan";
 import { TicketOverlays } from "./overlays";
 import { Properties } from "./properties";
 import { RunsTab } from "./RunsTab";
 import { type TabId, useTicketUrl } from "./tabs";
-import { TalkHead } from "./talk";
+import { TalkSection } from "./talk";
 import { WorkflowTab } from "./WorkflowTab";
 
 /** The owner, as a picker in its chip. */
@@ -88,7 +89,6 @@ function Overview({
   items: readonly string[];
 }) {
   const rest = t.description.split("\n\n").slice(1);
-  const done = plan.filter((i) => i.done).length;
   return (
     <Stack gap={10}>
       {rest.map((p, i) => (
@@ -96,31 +96,14 @@ function Overview({
           {p}
         </Text>
       ))}
-      <Stack gap={5}>
-        <Stack dir="row" gap={4} align="baseline">
-          <Text variant="heading" as="h2">
-            Plan
-          </Text>
-          {plan.length > 0 ? (
-            <Text variant="meta">{`${String(done)} of ${String(plan.length)} done`}</Text>
-          ) : null}
-        </Stack>
-        {plan.length > 0 ? (
-          <Checklist items={plan} look="page" />
-        ) : (
-          <Text tone="3">No plan yet.</Text>
-        )}
-      </Stack>
-      <Stack gap={5}>
-        <Text variant="heading" as="h2">
-          The agent reads
-        </Text>
+      <PlanSection plan={plan} look="page" />
+      <Section title="The agent reads">
         <Stack dir="row" gap={3} wrap>
           {items.map((name) => (
             <Chip key={name} label={name} />
           ))}
         </Stack>
-      </Stack>
+      </Section>
     </Stack>
   );
 }
@@ -133,8 +116,9 @@ function Talk({ t, me }: { t: Ticket; me: Person | null }) {
   const [draft, setDraft] = useState("");
   return (
     <Stack gap={9} grow>
-      <TalkHead people={people} />
-      <Thread messages={messages.map((m) => threadMessage(m, me))} />
+      <TalkSection people={people}>
+        <Thread messages={messages.map((m) => threadMessage(m, me))} />
+      </TalkSection>
       <Composer
         label={others.length > 0 ? `Say something to ${others.join(" and ")}` : "Say something"}
         value={draft}

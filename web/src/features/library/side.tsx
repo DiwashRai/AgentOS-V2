@@ -7,7 +7,7 @@ import { type ReactNode, useState } from "react";
 import { useNow, useRuntimes } from "../../api/queries";
 import type { AgentSettings, Effort, RuntimeId, UsedBy, Version } from "../../api/types";
 import { age, plural } from "../../domain/format";
-import { Age, Avatar, Button, FormRow, Icon, Select, Stack, Text } from "../../kit";
+import { Age, Avatar, Button, FormRow, Icon, Section, Select, Stack, Text } from "../../kit";
 import { authorName } from "./model";
 
 const EFFORTS: readonly Effort[] = ["low", "medium", "high", "xhigh", "max"];
@@ -18,17 +18,6 @@ const FEW = 3;
 export interface Fact {
   label: string;
   value: ReactNode;
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <Stack gap={5}>
-      <Text variant="heading" as="h2">
-        {title}
-      </Text>
-      {children}
-    </Stack>
-  );
 }
 
 /** An agent's runtime, model and effort, each a picker in place; a new runtime starts on its first

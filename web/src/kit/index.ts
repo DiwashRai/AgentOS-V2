@@ -33,6 +33,7 @@ export { Override, type OverrideProps } from "./Override";
 export { type Counter, Page, type PageProps, type Search } from "./Page";
 export { Radio, type RadioOption, type RadioProps } from "./Radio";
 export { type Action, Row, type RowProps } from "./Row";
+export { Section, type SectionProps } from "./Section";
 export { type Segment, Segmented, type SegmentedProps } from "./Segmented";
 export { type Option, Select, type SelectProps } from "./Select";
 export { Sortable, type SortableProps, type SortItem } from "./Sortable";

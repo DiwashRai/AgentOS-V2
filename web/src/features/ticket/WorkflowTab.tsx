@@ -6,7 +6,7 @@
 // Edit opens the editor full window over the ticket (?edit=workflow); nothing is edited here.
 import { useNow, useRuns, useTicketWorkflow } from "../../api/queries";
 import type { Run, Ticket, TicketWorkflow } from "../../api/types";
-import { Button, Card, Chip, Lane, Notice, Stack, Text } from "../../kit";
+import { Button, Card, Chip, Lane, Notice, Section, Stack, Text } from "../../kit";
 import { LoopFoot } from "../workflow/Editor";
 import { type Library, refName, useLibrary } from "../workflow/library";
 import { type LastRun, StageFace, StageSummary } from "../workflow/StageCard";
@@ -98,26 +98,20 @@ export function WorkflowTab({ t }: { t: Ticket }) {
     );
   const copy = w.data;
   return (
-    <Stack gap={7}>
-      <Stack gap={3}>
-        <Stack dir="row" gap={4} align="center">
-          <Text variant="heading" as="h2">
-            {copyTitle(copy.ticket, copy.name, copy.from.version)}
-          </Text>
-          <Stack grow />
-          <Button icon="compose" href={ticketHref(t.key, "workflow", WORKFLOW)}>
-            Edit
-          </Button>
-        </Stack>
-        <Stack dir="row" gap={4} align="center" wrap>
-          <DriftChips w={copy} />
-          <Text variant="meta">
-            {`Edited by ${authorText(copy.updated_by, copy.updated_at, now)}`}
-          </Text>
-        </Stack>
+    <Section
+      title={copyTitle(copy.ticket, copy.name, copy.from.version)}
+      end={
+        <Button icon="compose" href={ticketHref(t.key, "workflow", WORKFLOW)}>
+          Edit
+        </Button>
+      }
+    >
+      <Stack dir="row" gap={4} align="center" wrap>
+        <DriftChips w={copy} />
+        <Text variant="meta">{`Edited by ${authorText(copy.updated_by, copy.updated_at, now)}`}</Text>
       </Stack>
       <Context w={copy} lib={lib} />
       <Stages w={copy} runs={runs} lib={lib} />
-    </Stack>
+    </Section>
   );
 }

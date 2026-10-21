@@ -13,9 +13,10 @@ import { parsePlan, type PlanItem } from "../../domain/plan";
 import {
   Avatar,
   Button,
-  Checklist,
   Composer,
   Dialog,
+  Notice,
+  Section,
   Stack,
   Stepper,
   Text,
@@ -24,8 +25,9 @@ import {
 import { threadMessage, useBoard } from "../shared/board";
 import { TicketMenu } from "../shared/TicketMenu";
 import { Now } from "../ticket/now";
+import { PlanSection } from "../ticket/plan";
 import { Properties } from "../ticket/properties";
-import { TalkHead } from "../ticket/talk";
+import { TalkSection } from "../ticket/talk";
 
 interface BodyProps {
   t: Ticket;
@@ -76,35 +78,13 @@ function Head({ t, me, now, onClose, plan }: BodyProps & { plan: readonly PlanIt
   );
 }
 
-function Plan({ plan }: { plan: readonly PlanItem[] }) {
-  const done = plan.filter((i) => i.done).length;
-  return (
-    <Stack gap={5}>
-      <Stack dir="row" gap={4} align="baseline">
-        <Text variant="heading" as="h2">
-          Plan
-        </Text>
-        {plan.length > 0 ? (
-          <Text variant="meta">{`${String(done)} of ${String(plan.length)} done`}</Text>
-        ) : null}
-      </Stack>
-      {plan.length > 0 ? (
-        <Checklist items={plan} look="peek" />
-      ) : (
-        <Text tone="3">No plan yet.</Text>
-      )}
-    </Stack>
-  );
-}
-
 function Talk({ t, me }: { t: Ticket; me: Person | null }) {
   const messages = useMessages(t.key).data?.items ?? [];
   const people = [...new Map(messages.map((m) => [m.author.id, m.author])).values()];
   return (
-    <Stack gap={8}>
-      <TalkHead people={people} />
+    <TalkSection people={people}>
       <Thread messages={messages.map((m) => threadMessage(m, me))} />
-    </Stack>
+    </TalkSection>
   );
 }
 
@@ -112,9 +92,11 @@ function Body(props: BodyProps) {
   const plan = parsePlan(usePlan(props.t.key).data ?? "");
   return (
     <>
-      <Head {...props} plan={plan} />
+      <Section label={props.t.key}>
+        <Head {...props} plan={plan} />
+      </Section>
       <Talk t={props.t} me={props.me} />
-      <Plan plan={plan} />
+      <PlanSection plan={plan} look="peek" />
     </>
   );
 }
@@ -122,10 +104,12 @@ function Body(props: BodyProps) {
 function Loaded({ ticketKey, ...rest }: Omit<BodyProps, "t"> & { ticketKey: string }) {
   const ticket = useTicket(ticketKey);
   if (ticket.data) return <Body t={ticket.data} {...rest} />;
-  return ticket.isError ? (
-    <Text tone="blocked">{`Ticket not found · ${ticketKey}`}</Text>
-  ) : (
-    <Text tone="3">Loading</Text>
+  return (
+    <Section label={ticketKey}>
+      <Notice kind="status" error={ticket.isError}>
+        {ticket.isError ? `Ticket not found · ${ticketKey}` : `Loading ${ticketKey}`}
+      </Notice>
+    </Section>
   );
 }
 

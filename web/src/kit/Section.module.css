@@ -1,0 +1,59 @@
+/* A section: its head (the heading at the type scale's heading size, quiet words after it on its
+   baseline, its end item at the far edge, a quiet line under it), then the body. In a side panel,
+   one of the panel's parts: padded to the panel's gutter and ruled off from the next. */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+.part {
+  flex: none;
+  padding: var(--sp-8) var(--sp-9);
+  border-bottom: var(--line-1) solid var(--tk-card-edge);
+}
+.part:last-child {
+  border-bottom: 0;
+}
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+/* the end item centred on the line; the heading and its quiet words share a baseline */
+.line {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+.title,
+.aside {
+  align-self: baseline;
+}
+.title {
+  margin: 0;
+  font-size: var(--fs-5);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink-1);
+}
+.aside {
+  font-size: var(--fs-2);
+  line-height: 1.35;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.end {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-left: auto;
+}
+.note {
+  margin: 0;
+  font-size: var(--fs-3);
+  line-height: 1.35;
+  color: var(--ink-3);
+}

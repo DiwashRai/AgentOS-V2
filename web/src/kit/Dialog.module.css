@@ -34,8 +34,7 @@
     transform: none;
   }
 }
-/* the sections scroll inside the panel, one hairline between each and the next; a section is each
-   top element the children draw (Dialog's children say so) */
+/* the Sections scroll inside the panel (each draws its own padding and the hairline to the next) */
 .body {
   flex: 1;
   min-height: 0;
@@ -43,14 +42,6 @@
   flex-direction: column;
   overflow-y: auto;
   scrollbar-width: thin;
-}
-.body > * {
-  flex: none;
-  padding: var(--sp-8) var(--sp-9);
-  border-bottom: var(--line-1) solid var(--tk-card-edge);
-}
-.body > :last-child {
-  border-bottom: 0;
 }
 /* where the panel's toasts dock: a line between the sections and the foot, the toasts rising from
    it over the sections' end, inside the panel and clear of the reply box */
