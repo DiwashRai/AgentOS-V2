@@ -48,6 +48,9 @@ export function Tips({ children }: { children: ReactNode }) {
           if (open) {
             const el = details.trigger;
             if (el?.hasAttribute("data-tip-cut") && !cutShort(el)) details.cancel();
+            // a popup's trigger given focus back as it closed (`data-tip-rest`, Menu's)
+            if (details.reason === "trigger-focus" && el?.hasAttribute("data-tip-rest"))
+              details.cancel();
             return;
           }
           if (details.reason !== "escape-key") return;

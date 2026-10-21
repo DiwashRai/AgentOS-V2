@@ -14,6 +14,9 @@ const OFF = {
 /** @type {import("stylelint").Config} */
 export default {
   rules: {
+    // a token defined twice in one block: the later silently wins (a checkbox's size once took a
+    // plan row's height)
+    "declaration-block-no-duplicate-custom-properties": true,
     "color-no-hex": true,
     "color-named": "never",
     "function-disallowed-list": [

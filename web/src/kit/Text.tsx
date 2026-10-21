@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { isValidElement, type ReactNode } from "react";
 
 import s from "./Text.module.css";
 import { Tip } from "./tip";
@@ -23,7 +23,18 @@ export interface TextProps {
   as?: "span" | "p" | "h1" | "h2";
 }
 
-/** All text on a screen: a role from the type scale, never a raw size. */
+/** The words a node draws, its strings in order (a nested Text's too). */
+function wordsOf(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(wordsOf).join("");
+  if (isValidElement<{ children?: ReactNode }>(node)) return wordsOf(node.props.children);
+  return "";
+}
+
+const squash = (t: string) => t.replace(/\s+/g, " ").trim();
+
+/** All text on a screen: a role from the type scale, never a raw size. A title that only repeats
+ *  its words is a tip while they are cut short, and isn't said again. */
 export function Text({
   children,
   variant = "ui",
@@ -36,7 +47,7 @@ export function Text({
 }: TextProps) {
   const Tag = as ?? "span";
   return (
-    <Tip text={title} cut={title === children}>
+    <Tip text={title} cut={title !== undefined && squash(title) === squash(wordsOf(children))}>
       <Tag
         className={cx(
           s.text,

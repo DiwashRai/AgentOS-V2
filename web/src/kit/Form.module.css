@@ -254,8 +254,8 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  width: var(--h-check);
-  height: var(--h-check);
+  width: var(--h-box);
+  height: var(--h-box);
   /* on the words' first line */
   margin-top: var(--sp-1);
   border: var(--line-1) solid var(--ctl-edge-hover);
@@ -288,8 +288,8 @@
   display: inline-flex;
 }
 .mark svg {
-  width: var(--h-check);
-  height: var(--h-check);
+  width: var(--h-box);
+  height: var(--h-box);
 }
 .pip {
   width: var(--h-pip);

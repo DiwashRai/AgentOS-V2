@@ -25,7 +25,7 @@ function useCopy() {
 
 export function TicketMenu({ t, size }: { t: Ticket; size: "sm" | "md" }) {
   const copy = useCopy();
-  const take: MenuItem[] = [
+  const take: [MenuItem, ...MenuItem[]] = [
     {
       label: "Copy link",
       run: () => {
@@ -43,7 +43,12 @@ export function TicketMenu({ t, size }: { t: Ticket; size: "sm" | "md" }) {
     ...(t.source ? [{ label: `Open ${t.source.ref} in Jira`, href: t.source.url }] : []),
     ...(t.pr_url ? [{ label: "Open the pull request", href: t.pr_url }] : []),
   ];
+  const [first, ...rest] = out;
   return (
-    <Menu label={`More on ${t.key}`} groups={out.length > 0 ? [take, out] : [take]} size={size} />
+    <Menu
+      label={`More on ${t.key}`}
+      groups={first ? [take, [first, ...rest]] : [take]}
+      size={size}
+    />
   );
 }

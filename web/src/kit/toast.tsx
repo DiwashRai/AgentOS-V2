@@ -1,13 +1,14 @@
 // Toasts (internal, raised with `useToast`): a short word that something happened, as Linear's,
-// in a small sheet at the window's bottom right that goes by itself after a few seconds (the
-// pointer over it holds it). Base UI's toast does the timing, the polite announcement, F6 into
-// the region and the swipe away; the look is the kit's popover sheet. The frame has the region,
-// and each dialog has its own, in the top layer with it, so a toast raised inside one shows over it
-// (and goes with it when it closes). The kit's quiet language holds: a toast says what was done,
-// or that an action with no place of its own on the screen didn't happen (a copy the browser
-// refused); never a spinner, or a problem a screen should say in place.
+// in a small sheet at the bottom left of the main column that goes by itself after a few seconds
+// (the pointer over it holds it; a swipe left takes it away). Base UI's toast does the timing, the
+// polite announcement, F6 into the region and the swipe; the look is the kit's popover sheet. The
+// frame has the region, and each dialog has its own, in the top layer with it, so a toast raised
+// inside one shows over it (and goes with it when it closes); a side panel's docks inside the
+// panel, over its foot. The kit's quiet language holds: a toast says what was done, or that an
+// action with no place of its own on the screen didn't happen (a copy the browser refused); never
+// a spinner, or a problem a screen should say in place.
 import { Toast } from "@base-ui/react/toast";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, type RefObject, useEffect, useState } from "react";
 
 import { Icon } from "./Icon";
 import { useLayer } from "./layer";
@@ -18,7 +19,7 @@ import { cx } from "./vars";
 function List() {
   const { toasts } = Toast.useToastManager();
   return toasts.map((t) => (
-    <Toast.Root key={t.id} toast={t} className={cx(p.sheet, s.toast)}>
+    <Toast.Root key={t.id} toast={t} swipeDirection="left" className={cx(p.sheet, s.toast)}>
       <Toast.Content className={s.content}>
         <Toast.Title className={s.title} />
         <Toast.Description className={s.note} />
@@ -30,8 +31,17 @@ function List() {
   ));
 }
 
+interface ToastsProps {
+  children: ReactNode;
+  /** A dialog asking its question: the region stays in view, its toasts running their time, but
+   *  inert, so neither Tab nor F6 can leave the question for it. */
+  held?: boolean;
+  /** Where a side panel's toasts dock, inside the panel (else the window's bottom left). */
+  dock?: RefObject<HTMLElement | null> | undefined;
+}
+
 /** The region the toasts raised under it show in: the frame's, and each dialog's own. */
-export function Toasts({ children, held = false }: { children: ReactNode; held?: boolean }) {
+export function Toasts({ children, held = false, dock }: ToastsProps) {
   const layer = useLayer();
   // a dialog's region mounts once the dialog itself is there (its element is set after the things
   // inside it), or it would land in the body, under the dialog
@@ -42,11 +52,9 @@ export function Toasts({ children, held = false }: { children: ReactNode; held?:
   return (
     <Toast.Provider>
       {children}
-      {/* held (a dialog asking its question): the region is gone, so neither Tab nor F6 can leave
-          the question for it; its toasts show once the question is answered */}
-      {placed && !held ? (
-        <Toast.Portal {...layer}>
-          <Toast.Viewport className={s.region}>
+      {placed ? (
+        <Toast.Portal {...(dock ? { container: dock } : layer)}>
+          <Toast.Viewport className={cx(s.region, dock && s.docked)} inert={held}>
             <List />
           </Toast.Viewport>
         </Toast.Portal>

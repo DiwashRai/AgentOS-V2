@@ -1,7 +1,8 @@
-/* The toasts: a column at the bottom left of the main column (clear of the sidebar's foot, a
-   peek's reply box and the Talk column's), the newest at the foot, each the kit's popover sheet as
-   wide as a menu: its words, and a quiet close at its end. One rises in and fades out; a swipe to
-   the right takes it away. A dialog's region sits in the same place: its fixed box is the window. */
+/* The toasts: a column at the bottom left of the main column (clear of the sidebar's foot and the
+   Talk column's reply box), the newest at the foot, each the kit's popover sheet as wide as a
+   menu: its words, and a quiet close at its end. One rises in and fades out; a swipe to the left
+   takes it away. A full dialog's region sits in the same place (its fixed box is the window); a
+   side panel's docks inside the panel, over its foot. */
 .region {
   position: fixed;
   left: calc(var(--w-side) + var(--sp-9));
@@ -13,6 +14,12 @@
   gap: var(--sp-4);
   width: var(--w-menu);
   outline: none;
+}
+/* in a side panel: on the panel's own edge, risen from its foot */
+.docked {
+  position: absolute;
+  left: var(--sp-9);
+  bottom: var(--sp-4);
 }
 .toast {
   display: flex;

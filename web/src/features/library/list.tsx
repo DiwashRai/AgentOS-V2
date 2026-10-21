@@ -179,7 +179,7 @@ export function NameCell({
   return (
     <Stack dir="row" gap={4} align="center">
       {lead}
-      <Text tone="3" truncate title={title ?? (after ? `${name} · ${after}` : name)}>
+      <Text tone="3" truncate title={title ?? (after ? `${name} ${after}` : name)}>
         <Text weight={500} tone="1">
           {name}
         </Text>

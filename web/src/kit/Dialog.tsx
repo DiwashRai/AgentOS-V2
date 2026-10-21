@@ -145,9 +145,13 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
     }
     if (!open && d.open) d.close();
   });
+  // the side look's toasts dock above its foot (drawn while closed too, so it is there when the
+  // region mounts)
+  const dock = useRef<HTMLDivElement>(null);
   const side = (
     <>
       <div className={s.body}>{open ? children : null}</div>
+      <div ref={dock} className={s.dock} />
       {open && foot ? <div className={s.foot}>{foot}</div> : null}
     </>
   );
@@ -178,7 +182,7 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
     >
       <Layer.Provider value={ref}>
         <Tips>
-          <Toasts held={ask !== undefined}>
+          <Toasts held={ask !== undefined} dock={look === "side" ? dock : undefined}>
             {look === "side" ? (
               side
             ) : open ? (

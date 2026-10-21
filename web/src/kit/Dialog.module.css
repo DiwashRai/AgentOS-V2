@@ -52,6 +52,14 @@
 .body > :last-child {
   border-bottom: 0;
 }
+/* where the panel's toasts dock: a line between the sections and the foot, the toasts rising from
+   it over the sections' end, inside the panel and clear of the reply box */
+.dock {
+  position: relative;
+  flex: none;
+  height: 0;
+  z-index: var(--z-pop);
+}
 /* the foot: pinned under the sections, ruled off where they scroll away under it */
 .foot {
   flex: none;
