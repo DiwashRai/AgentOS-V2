@@ -10,7 +10,7 @@
 // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
 // ring round the card, and a click anywhere on it for a pointer. What the lines say is the
 // screen's.
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import s from "./Card.module.css";
 import { Opener, openOnClick } from "./opener";
@@ -28,8 +28,9 @@ export type CardProps = Common &
         look?: "stage";
         /** A stage's face (an agent's, a shell's glyph), on the lane's axis. */
         face: ReactNode;
-        /** Its settings, drawn opened under the summary: the selected card. */
-        open?: ReactNode;
+        /** Its settings, drawn opened under the summary: the selected card. An element or nothing,
+         *  never a boolean, so a card is open only with settings to show. */
+        open?: ReactElement | undefined;
         /** A click (or Enter) selects it; none: read only. */
         onOpen?: () => void;
         /** A disabled stage: dimmed. */
@@ -80,7 +81,7 @@ function caseOf(props: CardProps) {
     const off = props.look === "agent" && props.off === true;
     return { face: undefined, open: undefined, off, problem: undefined, say: props.label };
   }
-  const opened = props.open !== undefined && props.open !== null;
+  const opened = props.open !== undefined;
   return {
     face: props.face,
     open: opened ? props.open : undefined,
