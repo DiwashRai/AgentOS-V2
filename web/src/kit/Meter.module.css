@@ -43,6 +43,30 @@
     opacity: 0.9;
   }
 }
+/* a tile's: one continuous hairline track as wide as its place (an agent card lays it along its
+   bottom edge), the finished steps in live, the one in progress a soft live, so it reads as the
+   count beside it says ("3/5": two done, the third under way). Still: a grid of cards would sweep
+   all at once */
+.tile {
+  gap: 0;
+  width: 100%;
+  height: var(--tile-bar);
+  background: var(--tile-meter-track);
+}
+.tile .seg {
+  height: 100%;
+  border-radius: 0;
+  background: transparent;
+}
+.tile .seg[data-seg="done"] {
+  background: var(--live);
+}
+.tile .seg[data-seg="now"] {
+  background: var(--tile-meter-now);
+}
+.tile .seg[data-seg="now"]::after {
+  content: none;
+}
 .row {
   flex: none;
   gap: var(--line-2);

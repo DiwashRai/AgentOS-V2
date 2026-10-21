@@ -1,110 +1,329 @@
+/* the ground: the sidebar sits on it, the main column is an inset sheet ringed off it; the sheet
+   is a sized flex column with no foot padding, so a screen that fills it (flex: 1) scrolls to its
+   rounded edge, as Linear's does */
 .app {
   display: grid;
-  grid-template-columns: var(--w-rail) minmax(0, 1fr);
-  min-height: 100vh;
+  grid-template-columns: var(--w-side) minmax(0, 1fr);
+  min-height: 100dvh;
+  background: var(--side);
 }
 .main {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 0 var(--sp-9) var(--sp-9);
+  height: calc(100dvh - var(--sp-4) * 2);
+  margin: var(--sp-4) var(--sp-4) var(--sp-4) 0;
+  padding: 0 var(--sp-9);
+  overflow-y: auto;
+  border-radius: var(--r-4);
+  background: var(--page);
+  box-shadow: var(--panel-ring);
 }
 
-/* the brand rail: dark in both themes; current = a lighter pad plus a marker on the left edge */
-.rail {
+/* the sidebar: Linear's labelled list on the ground; 14px medium labels on 32px rows, 16px icons in the
+   label's ink, the current view a filled pill */
+.side {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  gap: var(--side-gap);
+  min-width: 0;
+  padding: var(--sp-4) var(--sp-6);
+  overflow-y: auto;
+  scrollbar-width: none;
+  color: var(--side-ink);
+}
+
+/* the head, level with the top bar: the Space's switcher (its tile, its name, a chevron), the
+   signed-in person's face beside it and, at the row's end, Linear's two icon buttons, search bare
+   and new ticket ringed */
+.head {
+  flex: none;
+  display: flex;
   align-items: center;
-  gap: var(--sp-5);
-  padding: var(--sp-7) 0;
-  background: var(--rail);
-  border-right: var(--line-1) solid var(--rail-edge);
+  gap: var(--sp-1);
+  height: var(--h-top);
+  margin-bottom: var(--side-head-pull);
 }
-.logo {
+.switcher {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+  height: var(--h-side-item);
+  padding: 0 var(--sp-2) 0 var(--sp-3);
+  border: 0;
+  border-radius: var(--r-3);
+  background: none;
+  font: inherit;
+  color: var(--side-on-ink);
+  transition: background-color var(--dur-fast);
+}
+.switcher:hover,
+.switcher[data-popup-open] {
+  background: var(--side-hover);
+}
+.switcher svg {
+  flex: none;
+  margin-left: calc(var(--sp-2) * -1);
+  color: var(--side-title);
+}
+/* who is signed in: their face on their own hue, a ring of the ground's hover round it on hover */
+.me {
   flex: none;
   display: grid;
   place-items: center;
-  width: var(--h-avatar-lg);
-  height: var(--h-avatar-lg);
-  margin-bottom: var(--sp-1);
-  border-radius: var(--r-3);
-  background: var(--accent);
-}
-.logo > i {
-  width: var(--sp-5);
-  height: var(--sp-5);
+  margin-right: auto;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  border: var(--line-2) solid var(--accent-ink);
+  background: none;
+  transition: box-shadow var(--dur-fast);
 }
-.link {
-  position: relative;
+.me:hover,
+.me[data-popup-open] {
+  box-shadow: 0 0 0 var(--line-2) var(--side-on);
+}
+.tool {
   flex: none;
   display: grid;
   place-items: center;
-  width: var(--h-rail-item);
-  height: var(--h-rail-item);
+  width: var(--side-tool);
+  height: var(--side-tool);
+  padding: 0;
+  border: 0;
   border-radius: var(--r-3);
-  color: var(--rail-ink);
+  background: none;
+  color: var(--side-icon);
   transition:
     background-color var(--dur-fast),
     color var(--dur-fast);
 }
-.link:hover,
-.link[aria-current] {
-  background: var(--rail-on);
-  color: var(--rail-on-ink);
+.tool svg {
+  width: var(--sp-8);
+  height: var(--sp-8);
 }
-.link:focus-visible {
-  outline-color: var(--rail-on-ink);
+.tool:hover {
+  background: var(--side-hover);
+  color: var(--side-on-ink);
 }
-.link[aria-current]::before {
-  content: "";
-  position: absolute;
-  left: calc(var(--sp-6) * -1);
-  top: var(--sp-4);
-  bottom: var(--sp-4);
-  width: var(--line-3);
-  border-radius: 0 var(--line-3) var(--line-3) 0;
-  background: var(--rail-on-ink);
-}
-.badge {
-  position: absolute;
-  top: var(--sp-3);
-  right: var(--sp-3);
-  width: var(--sp-3);
-  height: var(--sp-3);
+/* new ticket: Linear's compose, a round button on a hairline ring, filled only under the pointer */
+.create {
   border-radius: 50%;
-  background: var(--you);
-  box-shadow: 0 0 0 var(--line-2) var(--rail);
+  box-shadow: inset 0 0 0 var(--line-1) var(--side-tool-ring);
+  color: var(--side-ink);
+}
+.create:hover {
+  background: var(--side-hover);
+}
+.space {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--side-tile);
+  height: var(--side-tile);
+  border-radius: var(--r-2);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--fs-2);
+  font-weight: 600;
+  line-height: 1;
+}
+.spaceName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-4);
+  font-weight: 600;
+  letter-spacing: var(--track-snug);
+}
+/* the switcher's sheet: the Space's label, then who is signed in, their face on their own hue */
+.account {
+  min-width: var(--side-account-w);
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-2) var(--sp-4) var(--sp-4);
+}
+.whoText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.whoName {
+  font-size: var(--fs-3);
+  font-weight: 500;
+  letter-spacing: var(--track-snug);
+}
+.whoNote {
+  font-size: var(--fs-2);
+  color: var(--pop-aside);
+}
+
+/* a group of rows: 2px between them; the groups stand apart by --side-gap, so the views, a
+   section and the foot read as three */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+/* a section's heading: Linear's muted 13px label with its caret; its text sits low, so it hugs its
+   entries and the open space falls above it. It folds the section away */
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  align-self: flex-start;
+  height: var(--h-side-title);
+  padding: var(--side-title-open) var(--sp-4) 0;
+  border: 0;
+  border-radius: var(--r-2);
+  background: none;
+  font: inherit;
+  font-size: var(--fs-3);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--side-title);
+  transition: color var(--dur-fast);
+}
+.title:hover {
+  color: var(--side-ink);
+}
+.title svg {
+  transition: transform var(--dur-fast);
+}
+.title[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  min-width: 0;
+  height: var(--h-side-item);
+  padding: 0 var(--sp-3) 0 var(--sp-4);
+  border-radius: var(--r-3);
+  font-size: var(--fs-4);
+  font-weight: 500;
+  letter-spacing: var(--track-snug);
+  color: var(--side-ink);
+  transition:
+    background-color var(--dur-fast),
+    color var(--dur-fast);
+}
+.item svg {
+  flex: none;
+  width: var(--sp-8);
+  height: var(--sp-8);
+  color: var(--side-icon);
+  transition: color var(--dur-fast);
+}
+.item:hover {
+  background: var(--side-hover);
+}
+.item[aria-current] {
+  background: var(--side-on);
+  color: var(--side-on-ink);
+}
+.item[aria-current] svg {
+  color: var(--side-on-ink);
+}
+.item:focus-visible {
+  outline-offset: calc(var(--line-2) * -1);
+}
+/* an entry with no screen yet: the views' ink and weight, but no hover and no pointer */
+.stub {
+  cursor: default;
+}
+.stub:hover {
+  background: none;
+}
+.label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* a count: Linear's small badge at the row's end, tabular numerals centred on a rounded pill at
+   least as wide as it is tall, lifted off the ground on a hairline (in light, the page's white on
+   the grey); on the current row it takes the label's ink */
+.count {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: var(--side-count-h);
+  height: var(--side-count-h);
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-2);
+  background: var(--side-count-fill);
+  box-shadow: inset 0 0 0 var(--line-1) var(--side-count-ring);
+  font-size: var(--fs-2);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--side-count);
+  /* its own layer, so Chrome smooths it in grey: a lone "1" stem fringes blue or orange under
+     subpixel smoothing and reads as a coloured count */
+  will-change: transform;
+}
+.item[aria-current] .count {
+  color: var(--side-count-on);
 }
 .spacer {
   flex: 1;
+  margin-top: calc(var(--side-gap) * -1);
 }
 
-/* the theme menu's swatches */
+/* themes · the theme menu's swatch: the frame in miniature (ground, page, a panel holding a line
+   of ink and one of your move), ringed so a light one reads on a light menu */
 .swatches {
   display: inline-flex;
-  gap: var(--line-3);
-  background: none;
+  width: var(--w-swatch);
+  height: var(--h-swatch);
+  padding: var(--line-2) var(--line-2) var(--line-2) var(--w-swatch-side);
+  border-radius: var(--r-1);
+  background: var(--side);
+  box-shadow: 0 0 0 var(--line-1) var(--ring-ink);
 }
-.swatches > i {
-  width: var(--sp-6);
-  height: var(--sp-6);
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 var(--line-1) var(--ring);
+.swatches i {
+  display: block;
 }
-.swPage {
+.swatches .swPage {
+  display: flex;
+  flex: 1;
+  padding: var(--line-2);
+  border-radius: var(--line-2);
   background: var(--page);
 }
-.swInk {
-  background: var(--ink-1);
+.swatches .swPanel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--line-2);
+  padding: 0 var(--line-3);
+  border-radius: var(--line-1);
+  background: var(--recess);
+  box-shadow: inset 0 0 0 var(--line-1) var(--list-rule);
 }
-.swAccent {
-  background: var(--accent);
+.swInk,
+.swYou {
+  height: var(--line-2);
+  border-radius: var(--line-1);
+}
+.swInk {
+  background: var(--ink-2);
 }
 .swYou {
+  width: 60%;
   background: var(--you);
 }

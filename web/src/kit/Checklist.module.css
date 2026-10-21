@@ -1,7 +1,7 @@
+/* A plan as Linear lists sub-issues: a ring or a tick, the text, section heads as group rows */
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -9,14 +9,16 @@
 .item {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2);
   min-width: 0;
 }
 .section {
-  margin-top: var(--sp-3);
+  display: flex;
+  align-items: center;
+  min-height: var(--h-control-sm);
+  margin-top: var(--sp-4);
   font-size: var(--fs-2);
   font-weight: 500;
-  color: var(--ink-3);
+  color: var(--ink-2);
 }
 .item:first-child > .section {
   margin-top: 0;
@@ -25,13 +27,13 @@
   display: grid;
   grid-template-columns: var(--sp-7) minmax(0, 1fr);
   align-items: center;
-  gap: var(--sp-4);
-  min-height: calc(var(--h-chip-sm) + var(--line-1));
+  gap: var(--sp-5);
+  min-height: var(--h-control-sm);
   font-size: var(--fs-3);
   color: var(--ink-1);
 }
 .item[data-done="true"] .line {
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 .text {
   overflow: hidden;
@@ -45,7 +47,45 @@
   box-shadow: inset 0 0 0 var(--line-mark) var(--rule-strong);
 }
 .more {
-  padding-left: calc(var(--sp-7) + var(--sp-4));
+  padding-left: calc(var(--sp-7) + var(--sp-5));
   font-size: var(--fs-2);
   color: var(--ink-3);
+}
+
+/* large: the ticket's and the peek's plan as Linear lists sub-issues: rows at body size on the
+   page's own ground, no card and no rules; a section head is a quiet label with room above it;
+   done items recede a step. The peek's rows are a little shorter */
+.large .section {
+  min-height: var(--h-control-sm);
+  margin-top: var(--sp-6);
+  font-size: var(--fs-3);
+  color: var(--tk-label);
+}
+.large .item:first-child > .section {
+  margin-top: 0;
+}
+.large .line {
+  gap: var(--sp-6);
+  min-height: var(--h-check);
+  margin-inline: calc(var(--sp-4) * -1);
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-2);
+  font-size: var(--fs-tk);
+  color: var(--tk-ink);
+  transition: background var(--dur-fast);
+}
+.large .line:hover {
+  background: var(--tk-hover);
+}
+.large .item[data-done="true"] .line {
+  color: var(--ink-2);
+}
+.large .more {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-check);
+  padding-left: calc(var(--sp-7) + var(--sp-6));
+}
+.peek .line {
+  min-height: var(--h-check-sm);
 }

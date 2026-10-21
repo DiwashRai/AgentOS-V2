@@ -10,8 +10,24 @@ export interface Column {
   width: Width;
   /** Right-align the column (ages, actions). */
   end?: boolean;
-  /** A vertical hairline between two halves of a row; it takes no cell. */
-  rule?: boolean;
+  /** As wide as each row's own content, up to width: the free width goes to the fill columns.
+   *  Each row sizes it alone, so it suits a list without a column head (Linear's right cluster). */
+  hug?: boolean;
+  /** A fill column's floor: it keeps this width before a hugging column takes more (a title over
+   *  its chips, when the list is narrow). */
+  min?: Width;
+  /** Never narrower than its content (a row's buttons): when the list is narrow, the chips give
+   *  way, not the buttons. */
+  keep?: boolean;
+  /** Its width while there is room, less only when the list is too narrow for the fill column's
+   *  floor (a row's quiet properties, which then cut their words). */
+  give?: boolean;
+}
+
+function track(c: Column): string {
+  if (c.hug) return `fit-content(${width(c.width)})`;
+  if (c.min) return `minmax(${width(c.min)}, 1fr)`;
+  return c.give ? `minmax(0, ${width(c.width)})` : width(c.width);
 }
 
 /** The columns rows lay their cells on; a Row resets it for what it holds. */
@@ -29,14 +45,24 @@ export interface TableProps {
   scroll?: boolean;
   /** A bar under the list: key hints, a summary. */
   foot?: ReactNode;
+  /** Run through the padding of the surface it sits in, edge to edge (My queue's lists, whose
+   *  surface pads only the agents' cards). */
+  bleed?: boolean;
+  /** Hold the head, rows and foot to a reading measure, so a row's far end stays near its words
+   *  (Intake's triage list). */
+  measure?: boolean;
   children: ReactNode;
 }
 
-export function Table({ columns, head = true, scroll = true, foot, children }: TableProps) {
-  const cols = columns.map((c) => width(c.width)).join(" ");
+export function Table(props: TableProps) {
+  const { columns, head = true, scroll = true, foot, bleed, measure, children } = props;
+  const cols = columns.map(track);
   return (
     <Columns.Provider value={columns}>
-      <div className={cx(s.table, scroll && s.scroll)} style={vars({ "--cols": cols })}>
+      <div
+        className={cx(s.table, scroll && s.scroll, bleed && s.bleed, measure && s.measure)}
+        style={vars({ "--cols": cols.join(" ") })}
+      >
         {head ? (
           <div className={s.head} aria-hidden="true">
             {columns.map((c, i) => (

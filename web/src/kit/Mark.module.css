@@ -1,18 +1,31 @@
+/* a mark keeps its width beside plain text (the text gives way first), and truncates only alone */
 .mark {
+  --g: var(--glyph);
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   gap: var(--sp-3);
   min-width: 0;
+  max-width: 100%;
   white-space: nowrap;
   vertical-align: middle;
   font-size: var(--fs-3);
 }
+/* the glyph: Linear's status circle, one form per state, drawn in CSS */
 .mark > i {
   position: relative;
   flex: none;
   display: inline-block;
-  width: var(--sp-4);
-  height: var(--sp-4);
+  box-sizing: border-box;
+  width: var(--g);
+  height: var(--g);
+  border-radius: 50%;
+}
+/* the pie inside a ring: how far along a state is */
+.mark > i::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--glyph-ring) * 2);
   border-radius: 50%;
 }
 .mark > b {
@@ -35,9 +48,12 @@
   font-weight: 500;
 }
 
-/* running: a live dot that breathes */
+/* running: an orange ring, its pie as far as the run is (half with no count), its halo breathing */
 .run > i {
-  background: var(--live);
+  box-shadow: inset 0 0 0 var(--glyph-ring) var(--live);
+}
+.run > i::before {
+  background: conic-gradient(var(--live) 0 var(--fill, var(--glyph-run)), transparent 0);
 }
 .run > i::after {
   content: "";
@@ -54,18 +70,21 @@
 }
 @keyframes breathe {
   0% {
-    transform: scale(0.45);
-    opacity: 0.75;
+    transform: scale(0.6);
+    opacity: 0.6;
   }
   100% {
-    transform: scale(1.45);
+    transform: scale(1.3);
     opacity: 0;
   }
 }
 
-/* waiting on someone: a blue ring; the name in ink, since blue text means you */
+/* waiting on someone else: a grey ring three quarters filled (indigo means you) */
 .wait > i {
-  box-shadow: inset 0 0 0 var(--line-mark) var(--you);
+  box-shadow: inset 0 0 0 var(--glyph-ring) var(--ink-3);
+}
+.wait > i::before {
+  background: conic-gradient(var(--ink-3) 0 75%, transparent 0);
 }
 .wait > b {
   color: var(--ink-1);
@@ -74,22 +93,29 @@
   color: var(--ink-2);
 }
 
-/* waiting on you: the YOU pill, then the ask in the you hue */
+/* waiting on you: the YOU pill, then the ask in the you hue; alone, a blue ring filled whole */
 .you .ask {
   font-weight: 600;
   color: var(--you-text);
 }
 .you > i {
+  box-shadow: inset 0 0 0 var(--glyph-ring) var(--you);
+}
+.you > i::before {
   background: var(--you);
 }
 
-/* blocked: one crimson bar */
+/* blocked: a crimson disc with a bar across it */
 .blk > i {
-  width: var(--line-3);
-  height: var(--sp-5);
-  margin: 0 var(--sp-1);
-  border-radius: var(--line-1);
   background: var(--blocked);
+}
+.blk > i::before {
+  inset: calc(50% - var(--line-1)) auto auto 50%;
+  width: var(--glyph-bar);
+  height: var(--line-2);
+  border-radius: var(--line-1);
+  background: var(--surface);
+  transform: translateX(-50%);
 }
 .blk > b,
 .blk .ask {
@@ -97,27 +123,38 @@
   font-weight: 600;
 }
 
-/* done: the green tick */
+/* done: a green disc with a tick */
+.done > i {
+  background: var(--done);
+}
+.done > i::before {
+  inset: 45% auto auto 50%;
+  width: var(--glyph-check-w);
+  height: var(--glyph-check-h);
+  border-radius: 0;
+  border: solid var(--done-ink);
+  border-width: 0 var(--line-mark) var(--line-mark) 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
 .done > b,
 .done .ask {
   color: var(--done-text);
   font-weight: 600;
 }
 
-/* abandoned: a crimson cross */
+/* abandoned: a grey disc with a cross; the name stays crimson */
 .abandoned > i {
-  border-radius: 0;
+  background: var(--ink-3);
 }
 .abandoned > i::before,
 .abandoned > i::after {
   content: "";
   position: absolute;
-  left: calc(50% - var(--line-1));
-  top: 0;
-  width: var(--line-2);
-  height: 100%;
+  inset: 25% auto auto calc(50% - var(--line-1) / 2);
+  width: var(--line-1);
+  height: 50%;
   border-radius: var(--line-1);
-  background: var(--blocked);
+  background: var(--surface);
   transform: rotate(45deg);
 }
 .abandoned > i::after {
@@ -131,39 +168,50 @@
 
 /* queued: a dotted ring, waiting for a runner */
 .queued > i {
-  border: var(--line-mark) dotted var(--ink-3);
+  border: var(--glyph-ring) dashed var(--ink-3);
 }
 .queued > b,
 .queued .ask {
   color: var(--ink-3);
 }
 
-/* inbox: nobody acting, neutral */
+/* inbox: nobody acting, an empty grey ring */
 .idle > i {
-  box-shadow: inset 0 0 0 var(--line-mark) var(--rule-strong);
+  box-shadow: inset 0 0 0 var(--glyph-ring) var(--ink-3);
 }
 .idle > b,
 .idle .ask {
   color: var(--ink-3);
 }
 
-/* the small glyph: 6px dots, the inbox ring 7px */
-.small > i {
-  width: var(--sp-3);
-  height: var(--sp-3);
+/* the small glyph of counters, pills and heads: the same forms, a size down, no halo */
+.small {
+  --g: var(--glyph-sm);
 }
-.small.run > i {
-  box-shadow: 0 0 0 var(--line-3) var(--ring-live);
+.small:is(.run, .wait, .you) > i::before {
+  inset: var(--line-mark);
 }
 .small.run > i::after {
   display: none;
 }
-.small.blk > i {
-  width: var(--line-3);
-  height: var(--sp-5);
-  margin: 0;
+
+/* chip: in a row, the label in a neutral pill on a hairline, no colour of its own (the row's
+   status glyph is its one accent) */
+.chip {
+  flex-shrink: 1;
+  gap: var(--sp-3);
+  height: var(--h-list-chip);
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-pill);
+  box-shadow: inset 0 0 0 var(--line-1) var(--list-label-edge);
+  color: var(--ink-2);
+  font-size: var(--fs-2);
 }
-.small.idle > i {
-  box-shadow: none;
-  border: var(--line-mark) solid var(--ink-3);
+.chip > b {
+  font-weight: 400;
+}
+.chip > .text {
+  flex: none;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
 }

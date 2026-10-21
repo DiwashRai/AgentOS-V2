@@ -1,6 +1,6 @@
-// One item of a list: its cells on the Table's columns. Raised items are actionable, flat ones
-// settled; a status edge says what the item waits on. Hover and focus light a line up and lift an
-// item, a tile or a rack line; nothing ever changes size.
+// One item of a list: its cells on the Table's columns. A line or an item is a flat row on a
+// hairline (Linear's list): hover and focus wash it, the open one a shade more. A tile is a card;
+// a band a board's swimlane. Raised items are actionable, flat ones settled; nothing changes size.
 import { Children, type MouseEvent, type ReactNode } from "react";
 
 import s from "./Row.module.css";
@@ -13,15 +13,14 @@ export interface Action {
 }
 
 export interface RowProps {
-  /** The cells, one per column (a rule column takes none); with fewer, the last spans the rest.
-   *  A tile stacks them. */
+  /** The cells, one per column; with fewer, the last spans the rest. A tile stacks them. */
   children: ReactNode;
-  /** raised: actionable (default); flat: settled; you: raised with the needs-you wash. */
+  /** raised: actionable (default); flat: settled; you: raised, a list row with a faint you wash. */
   look?: "raised" | "flat" | "you";
   /** The 3px status edge at the left. */
   edge?: "you" | "live" | "blocked" | "done" | "quiet";
-  /** line: a dense list's row (lights up); item: My queue's taller row (lifts); tile: a card
-   *  (lifts); rack: a bare entry (lifts); band: a board's tall row, its cells ruled apart. */
+  /** line: a list's one-line row (Compact, My queue); item: a roomy two-line row (Intake); tile: a
+   *  card; rack: a bare entry; band: a board's swimlane. */
   kind?: "line" | "item" | "tile" | "rack" | "band";
   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
    *  names what it opens, for assistive tech. */
@@ -37,27 +36,20 @@ function useCells(children: ReactNode, stack: boolean): ReactNode[] {
   const columns = useColumns();
   const cells = Children.toArray(children);
   if (stack) return cells;
-  const out: ReactNode[] = [];
-  let next = 0;
-  columns.forEach((col, i) => {
-    if (col.rule) {
-      out.push(<span key={`rule${String(i)}`} className={s.rule} aria-hidden="true" />);
-      return;
-    }
-    if (next >= cells.length) return;
-    const last = next === cells.length - 1 && columns.slice(i + 1).some((c) => !c.rule);
-    out.push(
+  return cells.slice(0, columns.length).map((cell, i) => {
+    const last = i === cells.length - 1 && i < columns.length - 1;
+    const column = last ? columns[columns.length - 1] : columns[i];
+    return (
       <span
         key={i}
         className={cx(s.cell, last && s.rest)}
-        data-end={(last ? columns[columns.length - 1] : col)?.end}
+        data-end={column?.end}
+        data-keep={column?.keep}
       >
-        {cells[next]}
-      </span>,
+        {cell}
+      </span>
     );
-    next += 1;
   });
-  return out;
 }
 
 /** What the row does, for the keyboard and assistive tech: a real button, visually hidden (the

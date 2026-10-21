@@ -1,6 +1,6 @@
-// The head over a zone (My queue), a group (Compact, Intake) or a rack group: name, count pill,
-// note, hairline, and a summary slot. A head with `fold` collapses its group; the screen then
-// leaves the group's rows out.
+// The head over a group (Compact, Intake, My queue's lists), a zone (My queue's cards) or a rack
+// group: name, count, note, and a summary slot at the far end. A zone or group head is a band. A
+// head with `fold` collapses its group; the screen then leaves the group's rows out.
 import type { ReactNode } from "react";
 
 import { Badge } from "./Badge";
@@ -13,13 +13,15 @@ export interface HeadProps {
   count?: number;
   /** Before the name: a status glyph, or a project key. */
   icon?: ReactNode;
-  /** you: the name and count in the you hue (Needs you); done: in green. */
+  /** you: the count in the you hue (Needs you); done: in green. The name stays in ink. */
   tone?: "neutral" | "you" | "done";
   /** Quiet, right after the count ("Longest wait first"). */
   note?: string;
-  /** After the hairline: a stat, links. */
+  /** At the far end: a stat, links. */
   summary?: ReactNode;
-  /** zone: My queue's 15px heading; group: the dense lists' head; rack: a small static head. */
+  /** group: a list's edge-to-edge band (with or without a fold), its glyph over the rows' first
+   *  cell; zone: the same band run through its surface's padding (over My queue's agent cards);
+   *  rack: a small static head on a hairline. */
   level?: "zone" | "group" | "rack";
   /** Collapsible: whether the group is open, and how to flip it. */
   fold?: { open: boolean; toggle: () => void };
@@ -47,7 +49,7 @@ export function Head({
     </>
   );
   return (
-    <div className={cx(s.head, s[level], s[tone])}>
+    <div className={cx(s.head, s[level], s[tone])} data-head={level}>
       {fold ? (
         <button type="button" className={s.toggle} aria-expanded={fold.open} onClick={fold.toggle}>
           <span className={s.chev}>

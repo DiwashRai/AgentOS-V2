@@ -37,7 +37,13 @@ export function Thread({ messages, look = "full", compose }: ThreadProps) {
                   <time title={m.full}>{m.at}</time>
                 </span>
               )}
-              <span className={s.bubble}>{m.body}</span>
+              <span className={s.bubble}>
+                {m.body.split("\n").map((line, j) => (
+                  <span key={j} className={s.para}>
+                    {line}
+                  </span>
+                ))}
+              </span>
             </span>
           </li>
         );

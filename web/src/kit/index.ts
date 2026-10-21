@@ -24,6 +24,7 @@ export { type Option, Select, type SelectProps } from "./Select";
 export { Stack, type StackProps } from "./Stack";
 export { type Step, type StepGate, Stepper, type StepperModel, type StepperProps } from "./Stepper";
 export { Surface, type SurfaceProps } from "./Surface";
+export { Swap, type SwapProps } from "./Swap";
 export { type Tab, Tabs, type TabsProps } from "./Tabs";
 export { type Column, Table, type TableProps } from "./Table";
 export { Text, type TextProps, type TextVariant } from "./Text";

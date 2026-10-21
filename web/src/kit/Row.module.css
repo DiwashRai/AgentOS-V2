@@ -7,40 +7,51 @@
     box-shadow var(--dur-fast) ease,
     transform var(--dur-fast) var(--ease-out);
 }
-.line + .line {
-  margin-top: var(--sp-2);
-}
-.item + .item {
-  margin-top: var(--sp-3);
-}
-.raised,
-.you {
+
+/* cards (a tile, a band): raised on an edge and a shadow, lit with a halo */
+.raised:where(.tile, .band),
+.you:where(.tile, .band) {
   background: var(--row-raised);
   box-shadow:
     0 0 0 var(--line-1) var(--row-raised-edge),
     var(--shadow-row);
 }
-.flat {
+.flat:where(.tile, .band) {
   background: var(--row-flat);
   box-shadow: inset 0 0 0 var(--line-1) var(--row-flat-edge);
 }
-
-/* a row lights up on hover and focus, never moves */
-.row:not(.rack):is(:hover, :has(:focus-visible)) {
+.row:where(.tile, .band):is(:hover, :has(:focus-visible)) {
   z-index: 1;
   background: var(--row-hover);
   box-shadow:
     0 0 0 var(--line-1) var(--row-hover-edge),
     var(--shadow-halo);
 }
-.rack:is(:hover, :has(:focus-visible)) > .inner {
-  background: var(--field);
-}
-.open {
+.open:where(.tile, .band) {
   background: var(--row-hover);
   box-shadow:
     0 0 0 var(--line-1) var(--row-hover-edge),
     var(--shadow-float);
+}
+
+/* lists (a line, an item): flat rows edge to edge, a hairline under each, a faint wash on hover;
+   no card, no shadow, nothing moves */
+.line,
+.item {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+  transition: background-color var(--dur-fast) ease;
+}
+.row:is(.line, .item):is(:hover, :has(:focus-visible)) {
+  background: var(--list-hover);
+}
+.row:is(.line, .item).open {
+  background: var(--list-open);
+}
+
+.rack:is(:hover, :has(:focus-visible)) > .inner {
+  background: var(--list-hover);
 }
 /* the row's own button, for the keyboard: visually hidden; the ring goes round the row */
 .hit {
@@ -57,6 +68,10 @@
   outline: var(--line-2) solid var(--focus);
   outline-offset: var(--line-2);
 }
+/* a list row runs to the list's edges: its ring goes inside */
+.row:is(.line, .item):has(.hit:focus-visible) {
+  outline-offset: calc(var(--line-2) * -1);
+}
 /* a pointer opens it anywhere but on its own controls */
 .opens {
   cursor: pointer;
@@ -70,39 +85,145 @@
   align-items: center;
   border-radius: var(--r-3);
 }
-.line > .inner {
-  min-height: var(--h-row);
-  padding: 0 var(--sp-7);
+.line > .inner,
+.item > .inner {
+  column-gap: var(--sp-6);
+  border-radius: 0;
 }
-.line.flat > .inner {
-  min-height: var(--h-row-flat);
+/* a list row's first cell starts at the inset, under its group head's glyph; its cells sit a
+   step closer, as Linear packs a row's end */
+.line > .inner {
+  column-gap: var(--sp-5);
+  min-height: var(--h-line);
+  padding: 0 var(--list-pad) 0 var(--list-inset);
 }
 .item > .inner {
-  min-height: calc(var(--h-row) + var(--sp-7));
-  padding: var(--sp-4) var(--sp-6) var(--sp-4) var(--sp-7);
+  min-height: var(--h-list-item);
+  padding: var(--sp-7) var(--list-pad) var(--sp-7) var(--list-inset);
 }
-.item.flat > .inner {
-  min-height: calc(var(--h-row) + var(--line-2));
-  padding-top: var(--sp-3);
-  padding-bottom: var(--sp-3);
-}
+/* tile: an agent's card (Linear's agent card). A hairline card a shade off the surface, as tall
+   as its neighbours, each line in its own space: the key line with the agent pill at its end; the
+   state glyph and the title; the chips; then the progress line (what it is doing, the step count)
+   over a hairline track along the card's bottom edge. The chips and progress sink to the foot so
+   they line up across a row. Raised is a running agent; flat a queued one, on a fainter hairline,
+   no fill. */
 .tile {
+  --tile-under: var(--tile);
+  align-self: stretch;
   border-radius: var(--r-4);
+}
+.tile.raised {
+  background: var(--tile);
+  box-shadow:
+    inset 0 0 0 var(--line-1) var(--tile-edge),
+    var(--tile-lift);
+}
+.tile.flat {
+  --tile-under: var(--surface);
+  background: transparent;
+  box-shadow: inset 0 0 0 var(--line-1) var(--tile-quiet-edge);
+}
+.tile:is(.raised, .flat):is(:hover, :has(:focus-visible)) {
+  --tile-under: var(--tile-hover);
+  background: var(--tile-hover);
+  box-shadow:
+    inset 0 0 0 var(--line-1) var(--tile-hover-edge),
+    var(--tile-lift);
 }
 .tile > .inner {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: calc(var(--sp-3) + var(--line-1));
-  padding: var(--sp-5) var(--sp-6) var(--sp-4);
+  justify-content: flex-start;
+  gap: var(--sp-4);
+  height: 100%;
+  padding: var(--sp-7) var(--sp-8) var(--sp-8);
   border-radius: var(--r-4);
+  overflow: hidden;
+}
+/* the chips sink to the foot, the progress line under them, so both line up across a row */
+.tile > .inner > :nth-last-child(2) {
+  margin-top: auto;
+}
+/* a running card's track lies along its bottom edge, clipped to its corners */
+.tile > .inner > :last-child > [role="img"] {
+  position: absolute;
+  inset: auto 0 0;
+}
+/* the state glyph hangs before the title, down to its first line; still, no breathing halo (a
+   grid of cards would pulse all at once) */
+.tile [data-dir="row"][data-align="start"] > :first-child {
+  margin-top: var(--tile-glyph-drop);
+}
+.row.tile i[role="img"]::after {
+  content: none;
+}
+/* the agent pill on top, Linear's: a faint hairline, no fill, regular muted words, then inside it
+   the agent's glyph on a live disc with the owner's face tucked under it, each ringed in the
+   card's own colour */
+.tile > .inner > div:first-of-type > [data-tone="quiet"] {
+  flex: none;
+  gap: var(--sp-3);
+  height: var(--h-tile-pill);
+  padding: 0 var(--sp-1) 0 var(--sp-4);
+  background: transparent;
+  box-shadow: inset 0 0 0 var(--line-1) var(--tile-chip-edge);
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  font-weight: 400;
+}
+.tile > .inner > div:first-of-type > [data-tone="quiet"] > [role="img"] {
+  width: var(--h-tile-face);
+  height: var(--h-tile-face);
+  border-radius: 50%;
+  box-shadow: 0 0 0 var(--line-2) var(--tile-under);
+  font-size: var(--fs-tile-face);
+}
+.tile > .inner > div:first-of-type > [data-tone="quiet"] > [role="img"]:has(> svg) {
+  place-items: center;
+  justify-content: center;
+  align-items: center;
+  background: var(--tile-agent);
+  color: var(--live-text);
+}
+.tile > .inner > div:first-of-type > [data-tone="quiet"] > [role="img"] > svg {
+  width: var(--w-tile-agent-glyph);
+  height: var(--w-tile-agent-glyph);
+}
+/* the face lies over the agent's glyph, its ring cutting the disc */
+.tile > .inner > div:first-of-type > [data-tone="quiet"] > [role="img"]:has(> svg) + [role="img"] {
+  position: relative;
+  margin-left: var(--tile-face-overlap);
+}
+/* the chips are Linear's label chips: a faint fill on a faint edge, regular muted words, the
+   stage's led by a dot in the card's state (live running, grey queued) */
+.tile > .inner > :nth-last-child(2) > [data-tone] {
+  gap: var(--sp-3);
+  height: var(--h-tile-chip);
+  padding: 0 var(--sp-4);
+  background: var(--tile-chip);
+  box-shadow: inset 0 0 0 var(--line-1) var(--tile-chip-edge);
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  font-weight: 400;
+}
+.tile > .inner > :nth-last-child(2) > [data-tone="fill"]::before {
+  content: "";
+  flex: none;
+  width: var(--w-tile-dot);
+  height: var(--w-tile-dot);
+  border-radius: 50%;
+  background: var(--live);
+}
+.tile.flat > .inner > :nth-last-child(2) > [data-tone="fill"]::before {
+  background: var(--tile-dot-idle);
 }
 .rack > .inner {
   column-gap: var(--sp-4);
   height: var(--h-avatar-lg);
   margin: 0 calc(var(--sp-3) * -1);
   padding: 0 var(--sp-3);
-  border-radius: var(--r-2);
+  border-radius: var(--r-1);
 }
 
 /* the status edge: a short inset tick */
@@ -115,6 +236,10 @@
   width: var(--line-2);
   border-radius: 0 var(--line-2) var(--line-2) 0;
   background: var(--edge);
+}
+.line[data-edge] > .inner::before {
+  top: var(--sp-5);
+  bottom: var(--sp-5);
 }
 .row[data-edge="you"] {
   --edge: var(--you);
@@ -138,21 +263,16 @@
 .cell[data-end="true"] {
   justify-content: flex-end;
 }
+.cell[data-keep="true"] {
+  min-width: auto;
+}
 .rest {
   grid-column-end: -1;
 }
-.rule {
-  width: var(--line-1);
-  height: var(--sp-10);
-  background: var(--rule);
-}
-.flat .rule {
-  visibility: hidden;
-}
 .more {
-  margin: 0 var(--sp-7);
+  margin: 0 var(--list-pad) 0 var(--list-inset);
   padding: var(--sp-7) 0 var(--sp-8);
-  border-top: var(--line-1) solid var(--rule-soft);
+  border-top: var(--line-1) solid var(--list-rule);
 }
 .alert {
   margin: 0;
@@ -161,6 +281,9 @@
   font-size: var(--fs-2);
   color: var(--blocked);
   overflow-wrap: anywhere;
+}
+.row:is(.line, .item) > .alert {
+  padding: 0 var(--list-pad) var(--sp-4);
 }
 
 /* a row outside a table, or a tile: its cells one under another */
@@ -176,25 +299,111 @@
   min-height: calc(var(--h-row) + var(--line-2));
 }
 
-/* band: a board's tall row; each cell a column of its own, ruled from the next */
+/* band: a board's swimlane. No surface of its own: the first cell names it, every other cell is
+   a stage's lane, its items stacked as cards straight on the page (a lane with no card is bare
+   page). The cells run the full width of the board,
+   and swimlanes are ruled apart. A flat band is the board's column head: one short line of stage
+   names over the lanes, on the same grid. */
+.band,
+.row.band:is(:hover, :has(:focus-visible)) {
+  z-index: auto;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+/* the focus ring goes round the focused card, not the whole swimlane */
+.row.band:has(.hit:focus-visible) {
+  outline: none;
+}
 .band > .inner {
   align-items: stretch;
-  column-gap: 0;
+  column-gap: var(--sp-5);
   min-height: var(--h-band);
+  padding: var(--sp-4) 0;
+  border-radius: 0;
+}
+.band.flat > .inner {
+  align-items: center;
+  min-height: var(--h-list-head);
+  padding: 0;
+}
+.band + .band {
+  border-top: var(--line-1) solid var(--list-rule);
 }
 .band .cell {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  gap: var(--sp-1);
-  padding: var(--sp-6) var(--sp-4);
+  gap: var(--sp-3);
 }
-.band .cell + .cell {
-  box-shadow: inset var(--line-1) 0 0 var(--rule-soft);
+.band:not(.flat) .cell:first-child {
+  padding-top: var(--sp-3);
 }
-.band .cell:first-child {
-  padding: var(--sp-8) var(--sp-8) var(--sp-7);
+.band:not(.flat) .cell:first-child > :last-child {
+  margin-top: var(--sp-2);
 }
-.band + .band {
-  margin-top: var(--sp-4);
+/* the team's faces: discs large enough to read their initials, a little apart */
+.band .cell:first-child [role="group"] {
+  gap: var(--sp-2);
+}
+.band .cell:first-child [role="group"] > [role="img"] {
+  width: var(--teams-face);
+  height: var(--teams-face);
+  font-size: var(--teams-face-fs);
+  font-weight: 500;
+  color: var(--teams-face-ink);
+  background: var(--teams-face-fill);
+}
+/* a lane with no card in this team is bare page, as an empty column on Linear's board: the cards
+   are the board's only raised surface. A team with nothing in flight says so in its first lane,
+   where a card's key would sit */
+.band:not(.flat) .cell:not(:first-child) > :only-child:not(.row) {
+  padding: var(--sp-5) var(--sp-6);
+}
+/* the stage names sit over the cards' own text, inset as the cards' keys are */
+.band.flat .cell {
+  justify-content: center;
+  padding: 0 var(--sp-6);
+}
+.band.flat .cell:first-child {
+  padding: 0;
+}
+/* an item: one hairline card a step above the page, its key, title and badge one under another */
+.band .rack > .inner {
+  gap: var(--sp-2);
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: var(--sp-5) var(--sp-6);
+  border-radius: var(--r-3);
+  background: var(--teams-card);
+  box-shadow:
+    inset 0 0 0 var(--line-1) var(--teams-card-edge),
+    var(--teams-card-shadow);
+}
+/* the title runs the card's full inner width and wraps only at its edge, in the theme's title ink
+   (a touch under full on dark, so both themes read the same weight) */
+.band .rack > .inner > :nth-last-child(2) {
+  color: var(--teams-title);
+}
+/* the badge: Linear's label chip, as wide as its words, a pill on a 1px hairline with a faint
+   fill, its glyph and words padded inside; the glyph still (a board of them would pulse at once) */
+.band .rack > .inner > :last-child {
+  align-self: flex-start;
+  max-width: 100%;
+  margin-top: var(--sp-2);
+  padding: 0 var(--sp-4) 0 var(--sp-3);
+  background: var(--teams-badge);
+  box-shadow: inset 0 0 0 var(--line-1) var(--teams-badge-edge);
+  color: var(--ink-2);
+  text-overflow: ellipsis;
+}
+.band .rack > .inner > :last-child i::after {
+  content: none;
+}
+.band .rack:is(:hover, :has(:focus-visible)) > .inner {
+  background: var(--teams-card-hover);
+  box-shadow:
+    inset 0 0 0 var(--line-1) var(--teams-card-hover-edge),
+    var(--teams-card-shadow);
 }

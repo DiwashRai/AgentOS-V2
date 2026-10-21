@@ -8,9 +8,10 @@
       // Apply the saved theme before first paint (no flash). Keep in sync with src/kit/theme.ts.
       (function () {
         var theme = "light";
+        var themes = ["light", "mist", "dark", "midnight", "harbour", "plum"];
         try {
           var saved = localStorage.getItem("agentos-theme");
-          if (saved === "light" || saved === "dark") theme = saved;
+          if (themes.indexOf(saved) >= 0) theme = saved;
         } catch (e) {
           // Storage blocked: use the default.
         }

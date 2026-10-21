@@ -1,16 +1,25 @@
 // Themes: `data-theme` on <html>. index.html applies the saved one before first paint with the
-// same key and values, so keep the two in sync.
-export type ThemeId = "light" | "dark";
+// same key and values, so keep the two in sync. Each id has a block in tokens.css.
+export type ThemeId = "light" | "mist" | "dark" | "midnight" | "harbour" | "plum";
 
 const KEY = "agentos-theme";
 
 export const THEMES: readonly { id: ThemeId; name: string; mode: string }[] = [
-  { id: "light", name: "Type Case Cool", mode: "Light · default" },
-  { id: "dark", name: "Harbour", mode: "Dark · default" },
+  { id: "light", name: "Paper", mode: "Light · white" },
+  { id: "mist", name: "Mist", mode: "Light · cool grey" },
+  { id: "dark", name: "Carbon", mode: "Dark · warm graphite" },
+  { id: "midnight", name: "Midnight", mode: "Dark · near-black" },
+  { id: "harbour", name: "Harbour", mode: "Dark · lifted navy" },
+  { id: "plum", name: "Plum", mode: "Dark · aubergine" },
 ];
 
+/** A theme id from outside (the menu's choice, the attribute); anything unknown is the default. */
+export function themeOf(id: string | undefined): ThemeId {
+  return THEMES.find((t) => t.id === id)?.id ?? "light";
+}
+
 export function currentTheme(): ThemeId {
-  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+  return themeOf(document.documentElement.dataset.theme);
 }
 
 export function applyTheme(id: ThemeId): void {

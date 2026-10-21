@@ -17,18 +17,20 @@
   fill: currentColor;
   stroke: none;
 }
+/* the caret: filled, its corners rounded by its own stroke */
+.line .caret {
+  fill: currentColor;
+}
+/* priority's signal bars, Linear's grey: the lit ones in the quiet ink, the rest unlit */
 .high,
 .low {
-  fill: none;
-  stroke-width: var(--line-mark);
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  fill: var(--priority-on);
 }
-.high {
-  stroke: var(--priority-high);
+.low .off {
+  fill: var(--priority-off);
 }
-.low {
-  stroke: var(--priority-low);
+.normal {
+  fill: var(--priority-none);
 }
 .tick circle {
   fill: var(--done);
@@ -40,25 +42,17 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+/* a ticket's type: its glyph on a faint square, both grey; the glyph alone tells the types apart */
+.type rect {
+  fill: var(--type-square);
+}
 .type .fill {
-  fill: var(--type-ink);
+  fill: var(--type-glyph);
 }
 .type .glyph {
   fill: none;
-  stroke: var(--type-ink);
+  stroke: var(--type-glyph);
   stroke-width: var(--line-mark);
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-.feature rect {
-  fill: var(--type-feature);
-}
-.bug rect {
-  fill: var(--type-bug);
-}
-.improvement rect {
-  fill: var(--type-improvement);
-}
-.task rect {
-  fill: var(--type-task);
 }

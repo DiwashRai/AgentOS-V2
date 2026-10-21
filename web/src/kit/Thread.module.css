@@ -1,51 +1,67 @@
+/* Linear's comments: a face, the name and time on one line, the text plain under it at body size;
+   mine sit on the right in a quiet raised bubble, as Linear's chat draws your own message */
 .thread {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-6);
+  gap: var(--sp-9);
   margin: 0;
   padding: 0;
   list-style: none;
   min-width: 0;
 }
+/* an empty thread draws only its composer (the peek pins it at the panel's foot) */
+.thread:empty {
+  display: none;
+}
 .msg {
   display: grid;
   grid-template-columns: var(--sp-9) minmax(0, 1fr);
-  gap: var(--sp-4);
+  gap: var(--sp-5);
   min-width: 0;
 }
 .same {
-  margin-top: calc(var(--sp-4) * -1);
+  margin-top: calc(var(--sp-8) * -1);
 }
 .body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--sp-1);
+  gap: var(--sp-2);
   min-width: 0;
 }
 .who {
   display: flex;
   align-items: baseline;
-  gap: var(--sp-4);
-  font-size: var(--fs-3);
-  font-weight: 600;
+  gap: var(--sp-3);
+  min-height: var(--sp-9);
+  padding-top: var(--sp-1);
+  font-size: var(--fs-tk);
+  font-weight: 500;
   color: var(--ink-1);
 }
 .who > time {
-  font-size: var(--fs-2);
+  font-size: var(--fs-3);
   font-weight: 400;
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
+.who > time::before {
+  content: "· ";
+}
 .bubble {
-  max-width: 94%;
-  padding: var(--sp-3) var(--sp-6);
-  border-radius: var(--r-1) var(--r-5) var(--r-5) var(--r-5);
-  background: var(--bubble);
-  color: var(--bubble-ink);
-  font-size: var(--fs-3);
-  line-height: 1.45;
-  overflow-wrap: anywhere;
+  max-width: 100%;
+  color: var(--tk-ink);
+  font-size: var(--fs-tk);
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+/* each line of a message its own paragraph, filled to the column and kept from ending on one word */
+.para {
+  display: block;
+  text-wrap: pretty;
+}
+.same .bubble {
+  margin-top: calc(var(--sp-2) * -1);
 }
 .last .bubble {
   display: -webkit-box;
@@ -54,7 +70,11 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-/* mine: on the right, ink bubble, no face */
+.last .bubble,
+.last .who {
+  font-size: var(--fs-3);
+}
+/* mine: on the right, a raised bubble, no face */
 .mine {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -66,30 +86,48 @@
 }
 .mine .who {
   flex-direction: row-reverse;
+  min-height: 0;
+}
+.mine .who > time::before {
+  content: none;
+}
+.mine .who > time::after {
+  content: " ·";
 }
 .mine .bubble {
-  border-radius: var(--r-5) var(--r-1) var(--r-5) var(--r-5);
-  background: var(--bubble-mine);
-  color: var(--bubble-mine-ink);
+  max-width: 88%;
+  padding: var(--sp-4) var(--sp-6);
+  border-radius: var(--r-4);
+  background: var(--tk-mine);
+  box-shadow: inset 0 0 0 var(--line-1) var(--tk-mine-edge);
 }
 .talk {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-7);
+  gap: var(--sp-9);
   min-width: 0;
 }
-.talk > .thread {
-  flex: 1;
+/* in a full-height column the reply box sits at its foot, and stays there while the thread scrolls */
+.talk > .compose {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
 }
+/* the composer: Linear's reply box, one line of text with Send at its right end, growing as you type */
 .compose {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--sp-4);
   padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-6);
-  border: var(--line-1) solid var(--rule);
+  border: var(--line-1) solid var(--tk-card-edge);
   border-radius: var(--r-4);
-  background: var(--raised);
+  background: var(--tk-card);
+  cursor: text;
+  transition: border-color var(--dur-fast);
+}
+.compose:hover {
+  border-color: var(--rule-strong);
 }
 .compose:focus-within {
   border-color: var(--rule-strong);
@@ -98,14 +136,17 @@
 }
 .compose > textarea {
   flex: 1;
+  align-self: center;
   min-width: 0;
+  min-height: var(--h-compose);
+  field-sizing: content;
   resize: none;
   border: 0;
   padding: var(--sp-2) 0;
   background: transparent;
   outline: none;
-  font-size: var(--fs-3);
-  line-height: 1.45;
+  font-size: var(--fs-tk);
+  line-height: 1.55;
   color: var(--ink-1);
 }
 .compose > textarea::placeholder {
@@ -113,10 +154,14 @@
 }
 .send {
   flex: none;
-  padding: var(--sp-2) var(--sp-5);
+  display: inline-flex;
+  align-items: center;
+  height: var(--h-control-sm);
+  padding: 0 var(--sp-6);
   border-radius: var(--r-3);
-  background: var(--ink-1);
-  color: var(--bubble-mine-ink);
+  background: var(--tk-send);
+  box-shadow: inset 0 0 0 var(--line-1) var(--tk-chip-edge);
+  color: var(--ink-1);
   font-size: var(--fs-3);
-  font-weight: 600;
+  font-weight: 500;
 }

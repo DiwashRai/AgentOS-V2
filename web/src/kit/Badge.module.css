@@ -1,74 +1,48 @@
-/* key: mono on the project's identity tint */
+/* key: an issue id as Linear writes one, quiet tabular text, no chip */
 .key {
   display: inline-flex;
   align-items: center;
   flex: none;
   height: var(--h-chip);
-  padding: 0 var(--sp-3);
-  border-radius: var(--r-1);
-  background: var(--id-tint);
-  color: var(--id-text);
-  font-family: var(--font-mono);
-  font-size: var(--fs-1);
-  font-weight: 500;
+  color: var(--ink-3);
+  font-size: var(--fs-3);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--track-snug);
   line-height: 1;
   white-space: nowrap;
 }
 .sm {
   height: var(--h-chip-sm);
+  font-size: var(--fs-2);
 }
 .lg {
   height: var(--sp-9);
-  padding: 0 var(--sp-4);
-  font-size: var(--fs-2);
-}
-.violet {
-  --id-tint: var(--id-violet-tint);
-  --id-text: var(--id-violet-text);
-}
-.plum {
-  --id-tint: var(--id-plum-tint);
-  --id-text: var(--id-plum-text);
-}
-.rose {
-  --id-tint: var(--id-rose-tint);
-  --id-text: var(--id-rose-text);
-}
-.gold {
-  --id-tint: var(--id-gold-tint);
-  --id-text: var(--id-gold-text);
-}
-.olive {
-  --id-tint: var(--id-olive-tint);
-  --id-text: var(--id-olive-text);
+  font-size: var(--fs-4);
+  font-weight: 500;
+  color: var(--ink-2);
 }
 
-/* count pill */
+/* count: a bare quiet number after the name, as Linear counts a group */
 .count {
   display: inline-grid;
   place-items: center;
   flex: none;
-  min-width: var(--h-chip);
   height: var(--h-chip-sm);
-  padding: 0 var(--sp-3);
-  border-radius: var(--r-pill);
-  background: var(--field);
-  color: var(--ink-2);
-  font-size: var(--fs-2);
-  font-weight: 600;
+  color: var(--ink-3);
+  font-size: var(--fs-3);
+  font-weight: 400;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 .count[data-tone="you"] {
-  background: var(--you-tint);
   color: var(--you-text);
 }
 .count[data-tone="done"] {
-  background: var(--done-tint);
   color: var(--done-text);
 }
 
-/* keycap: a real key, 1px edge and a 2px base */
+/* keycap: a flat key on a hairline */
 .kbd {
   display: inline-grid;
   place-items: center;
@@ -76,10 +50,9 @@
   height: var(--h-chip-sm);
   padding: 0 var(--sp-2);
   border-radius: var(--r-1);
-  background: var(--raised);
+  background: var(--field);
   color: var(--ink-2);
-  border: var(--line-1) solid var(--rule-strong);
-  border-bottom-width: var(--line-2);
+  border: var(--line-1) solid var(--list-chip-edge);
   font-family: var(--font-mono);
   font-size: var(--fs-1);
   font-weight: 600;
@@ -87,18 +60,20 @@
   white-space: nowrap;
 }
 
-/* kicker tag */
+/* kicker tag: Linear's label chip, a pill on a hairline */
 .tag {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-3);
-  height: var(--sp-9);
+  height: var(--h-list-chip);
   padding: 0 var(--sp-4);
-  border-radius: var(--r-1);
-  background: var(--field);
-  box-shadow: inset 0 0 0 var(--line-1) var(--rule-soft);
+  border-radius: var(--r-pill);
+  background: transparent;
+  box-shadow: inset 0 0 0 var(--line-1) var(--list-label-edge);
+  min-width: 0;
+  overflow: hidden;
   color: var(--ink-1);
-  font-size: var(--fs-3);
+  font-size: var(--fs-2);
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
@@ -106,22 +81,32 @@
 .tag[data-tone="blocked"] {
   color: var(--blocked);
 }
-.tag[data-tone="quiet"] {
+.tag:is([data-tone="quiet"], [data-tone="fill"]) {
   color: var(--ink-2);
   font-weight: 400;
 }
+/* fill: a filled chip with no edge (an agent card's state and repo); a face at its end sits
+   nearly at the pill's edge */
+.tag[data-tone="fill"] {
+  height: var(--h-chip);
+  background: var(--list-chip-fill);
+  box-shadow: none;
+}
+.tag[data-tone="fill"]:has(> [role="img"]) {
+  padding-right: var(--sp-1);
+}
 
-/* another system's status: one neutral ring */
+/* another system's status: one neutral ring, on a pill */
 .status {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-3);
   max-width: 100%;
   height: var(--h-chip);
-  padding: 0 var(--sp-4);
-  border-radius: var(--r-1);
-  background: var(--field);
-  box-shadow: inset 0 0 0 var(--line-1) var(--rule-soft);
+  padding: 0 var(--sp-4) 0 var(--sp-3);
+  border-radius: var(--r-pill);
+  background: transparent;
+  box-shadow: inset 0 0 0 var(--line-1) var(--list-chip-edge);
   color: var(--ink-2);
   font-size: var(--fs-2);
   font-weight: 500;
@@ -129,12 +114,58 @@
 }
 .status > i {
   flex: none;
-  width: var(--sp-4);
-  height: var(--sp-4);
+  width: var(--glyph-sm);
+  height: var(--glyph-sm);
   border-radius: 50%;
-  border: var(--line-mark) solid var(--ink-3);
+  border: var(--glyph-ring) solid var(--ink-3);
 }
 .status > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* prop: a row's property, Linear's label chip: a pill on a hairline, a dot in the state's hue or a
+   small grey glyph, then regular muted words, cut at their end */
+.prop {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  max-width: 100%;
+  height: var(--h-list-chip);
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-pill);
+  box-shadow: inset 0 0 0 var(--line-1) var(--list-label-edge);
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  line-height: 1;
+  white-space: nowrap;
+}
+.prop > i {
+  flex: none;
+  width: var(--prop-dot);
+  height: var(--prop-dot);
+  border-radius: 50%;
+  background: var(--prop-mark);
+}
+.prop > i[data-dot="live"] {
+  background: var(--live);
+}
+.prop > i[data-dot="you"] {
+  background: var(--you);
+}
+.prop > i[data-dot="blocked"] {
+  background: var(--blocked);
+}
+.prop > i[data-dot="done"] {
+  background: var(--done);
+}
+.prop > [aria-hidden="true"]:not(i) {
+  color: var(--prop-mark);
+}
+.prop > span:last-child {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -155,15 +186,28 @@
   line-height: 1.2;
 }
 
-/* a key that opens elsewhere (Jira): the chip and a small arrow */
+/* a key that opens elsewhere (Jira): the key, and a small arrow shown on hover outside the
+   layout, so linked and plain keys end on one edge; the key takes the link's ink */
 .out {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: var(--sp-2);
   min-width: 0;
   color: var(--ink-3);
   border-radius: var(--r-1);
 }
-.out:hover {
+.out > .key {
+  color: inherit;
+}
+.out > :last-child {
+  position: absolute;
+  left: calc(100% + var(--sp-2));
+  opacity: 0;
+  transition: opacity var(--dur-fast) ease;
+}
+.out:is(:hover, :focus-visible) {
   color: var(--ink-1);
+}
+.out:is(:hover, :focus-visible) > :last-child {
+  opacity: 1;
 }

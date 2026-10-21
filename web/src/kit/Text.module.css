@@ -3,10 +3,10 @@
   min-width: 0;
 }
 .display {
-  font-size: var(--fs-7);
+  font-size: var(--fs-ticket);
   font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: var(--track-tight);
+  line-height: 1.25;
+  letter-spacing: var(--track-snug);
   color: var(--ink-1);
 }
 .title {
@@ -23,8 +23,8 @@
   color: var(--ink-1);
 }
 .body {
-  font-size: var(--fs-4);
-  line-height: 1.62;
+  font-size: var(--fs-ticket-lead);
+  line-height: 1.6;
   color: var(--ink-2);
 }
 .label {
@@ -76,6 +76,9 @@
 }
 .text[data-tone="live"] {
   color: var(--live-text);
+}
+.text[data-weight="400"] {
+  font-weight: 400;
 }
 .text[data-weight="500"] {
   font-weight: 500;

@@ -1,15 +1,17 @@
 // Pure selection for Compact: every ticket, one line each, grouped by what it waits on (for this
 // viewer), filtered by `?f=` and the search.
-import type { Person, Progress, TicketRow } from "../../api/types";
+import type { Person, TicketRow } from "../../api/types";
 import {
   GROUP_ORDER,
   GROUP_WORD,
+  type GlyphModel,
   type Group,
   groupOf,
   isMine,
   isMyMove,
   markOf,
   type MarkModel,
+  stepText,
 } from "../../domain/board";
 import { age, matches, minutesSince, prefixOf, repoShort } from "../../domain/format";
 
@@ -175,26 +177,33 @@ export function sourceText(t: TicketRow): string {
   return [t.source ? "Jira" : "", t.repo ? repoShort(t.repo) : ""].filter(Boolean).join(" · ");
 }
 
-/** The Now column. */
-export type NowCell =
-  | { kind: "run"; agent: string; step: string; progress: Progress | null }
-  | { kind: "outcome"; abandoned: boolean; word: string; note: string }
-  | { kind: "empty" }
-  | { kind: "mark"; mark: MarkModel; text: string };
+/** What a line says it waits on: a chip only where it names more than the status glyph, the group
+ *  and the stage do (the agent and its step count, who it waits on and for what), and the words
+ *  after the title. Your move has none: its glyph, its group and its stage already say the ask. */
+export interface NowLine {
+  chip: MarkModel | null;
+  count: string | null;
+  after: string;
+}
 
-export function nowCell(t: TicketRow, me: Person | null): NowCell {
+export function nowLine(t: TicketRow, me: Person | null): NowLine {
   const a = t.attention;
   switch (a.kind) {
     case "running":
-      return { kind: "run", agent: a.agent, step: a.step, progress: a.progress };
+      return {
+        chip: markOf(a, me),
+        count: a.progress ? stepText(a.progress) : null,
+        after: a.step,
+      };
+    case "waiting":
+      return { chip: isMyMove(a.on, me) ? null : markOf(a, me), count: null, after: t.now };
     case "done":
-      return { kind: "outcome", ...OUTCOME[a.outcome], note: a.note ?? "" };
-    case "inbox":
-      return { kind: "empty" };
+      return { chip: null, count: null, after: a.note ?? OUTCOME[a.outcome].word };
     case "blocked":
-      return { kind: "mark", mark: markOf(a, me), text: a.reason };
-    default:
-      return { kind: "mark", mark: markOf(a, me), text: t.now };
+      return { chip: null, count: null, after: a.reason };
+    case "inbox":
+    case "queued":
+      return { chip: null, count: null, after: t.now };
   }
 }
 
@@ -202,6 +211,33 @@ const OUTCOME = {
   completed: { abandoned: false, word: "Complete" },
   abandoned: { abandoned: true, word: "Abandoned" },
 } as const;
+
+/** The Stage column's word ("Review 2/3", "Sign-off"), and the whole way for its hover. */
+export function stageWord(m: GlyphModel): { word: string; path: string } {
+  const round = m.round ? ` ${String(m.round.n)}/${String(m.round.of)}` : "";
+  const path = m.stages
+    .flatMap((st) => [
+      st.name + (st.state === "skipped" ? " (skipped)" : ""),
+      ...(st.gate ? [`◆ ${st.gate.label}`] : []),
+    ])
+    .join(" → ");
+  return { word: m.label + round, path };
+}
+
+/** The stage chip's dot: the hue of the state the stage is in (the status glyph's, so a row keeps
+ *  one accent), grey while it waits or nobody acts. */
+export type StageDot = "neutral" | "live" | "you" | "blocked" | "done";
+
+const DOT: Partial<Record<MarkModel["kind"], StageDot>> = {
+  run: "live",
+  you: "you",
+  blk: "blocked",
+  done: "done",
+};
+
+export function stageDot(t: TicketRow, me: Person | null): StageDot {
+  return DOT[markOf(t.attention, me).kind] ?? "neutral";
+}
 
 /** The expansion's lead: "Your move", "Waiting on", "Now". */
 export function moveText(t: TicketRow, me: Person | null): { label: string; lead: string } {

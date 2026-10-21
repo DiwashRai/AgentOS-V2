@@ -1,8 +1,9 @@
 .page {
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-width: 0;
-  height: calc(100dvh - var(--sp-9));
+  min-height: 0;
 }
 .top {
   flex: none;
@@ -33,6 +34,47 @@
 .grow {
   flex: 1;
 }
+/* a crumb: Linear's breadcrumb, the Space then the title as its last step */
+.crumb {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-right: calc(var(--sp-4) * -1);
+  font-size: var(--fs-4);
+  font-weight: 500;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.crumb > a {
+  margin-inline: calc(var(--sp-3) * -1);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-2);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background var(--dur-fast),
+    color var(--dur-fast);
+}
+.crumb > a:hover {
+  background: var(--tk-hover);
+  color: var(--ink-1);
+}
+.crumb > a:focus-visible {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--line-1);
+}
+.title.step {
+  font-size: var(--fs-4);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
 .body {
   flex: 1;
   min-height: 0;
@@ -42,7 +84,8 @@
   scrollbar-width: thin;
 }
 
-/* counters: the number carries the weight; a zero recedes; a non-zero "need you" is the one pill */
+/* counters: the number carries the weight; a zero recedes; a non-zero "need you" takes the accent's
+   ink, with no fill, so nothing in the bar is a filled block */
 .counters {
   flex: 0 0.001 auto;
   display: flex;
@@ -78,11 +121,8 @@
   font-size: var(--fs-3);
 }
 .you {
-  padding: var(--line-3) var(--sp-5) var(--line-3) var(--sp-4);
-  border-radius: var(--r-pill);
-  background: var(--you-tint);
   color: var(--you-text);
-  font-weight: 600;
+  font-weight: 500;
 }
 .you > b {
   color: var(--you-text);
@@ -141,11 +181,26 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 36vw, var(--w-talk-max));
-  gap: var(--sp-10);
+  grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 30vw, var(--w-talk-max));
+  border-top: var(--line-1) solid var(--tk-card-edge);
 }
+/* the body: one calm reading column, room under its last line when scrolled to the end */
+.split > .body {
+  padding: var(--sp-10) var(--sp-10) calc(var(--sp-10) * 2) 0;
+}
+.split > .body > * {
+  width: 100%;
+  max-width: var(--w-ticket);
+  margin-inline: auto;
+}
+/* the column beside: no card, the page's own ground ruled off by one hairline, full height, so what
+   it holds can pin its foot (Talk's reply box) to the window's bottom */
 .side {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  padding: var(--sp-9) 0 var(--sp-8) var(--sp-9);
+  border-left: var(--line-1) solid var(--tk-card-edge);
+  overflow-y: auto;
+  scrollbar-width: thin;
 }

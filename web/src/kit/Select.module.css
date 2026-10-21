@@ -1,22 +1,38 @@
+/* The trigger: a borderless property chip (face, name, chevron) in the type of its neighbours in
+   a properties row (it takes the row's size, weight and ink), 28px with the chip's padding; hover
+   lights it like a Linear property button, open fills it a step firmer */
 .trigger {
   display: inline-flex;
   align-items: center;
-  gap: var(--sp-3);
+  gap: var(--sp-4);
   min-width: 0;
   max-width: 100%;
-  color: var(--ink-1);
-  font-size: var(--fs-3);
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
+  height: var(--h-control-sm);
+  padding: 0 var(--sp-4);
   border: 0;
-  border-radius: var(--r-1);
+  border-radius: var(--r-2);
   background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: var(--track-snug);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease;
 }
-.trigger:hover .text {
-  text-decoration: underline;
-  text-decoration-color: var(--rule-strong);
-  text-underline-offset: var(--line-3);
+/* no one: Linear's empty face, a dashed ring in the muted ink, the size of a face */
+.nobody {
+  flex: none;
+  width: var(--h-chip);
+  height: var(--h-chip);
+  border: var(--line-1) dashed var(--ink-3);
+  border-radius: var(--r-pill);
+}
+.trigger:hover {
+  background: var(--chip-hover);
+}
+.trigger[data-popup-open] {
+  background: var(--chip-on);
 }
 .text {
   min-width: 0;
@@ -27,34 +43,17 @@
 .chev {
   display: inline-flex;
   color: var(--ink-3);
+  transition: color var(--dur-fast) ease;
 }
-.popup {
-  min-width: var(--col-xl);
-  padding: var(--sp-2);
-  background: var(--raised);
-  border: var(--line-1) solid var(--rule);
-  border-radius: var(--r-4);
-  box-shadow: var(--shadow-float);
-  outline: none;
+.chev svg {
+  width: var(--sp-6);
+  height: var(--sp-6);
 }
-.item {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-4);
-  padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--r-3);
+.trigger:hover .chev,
+.trigger[data-popup-open] .chev {
   color: var(--ink-1);
-  font-size: var(--fs-3);
-  outline: none;
-  cursor: default;
 }
-.item[data-highlighted] {
-  background: var(--field);
-}
-.item[data-selected] {
-  font-weight: 500;
-}
-.check {
-  display: inline-flex;
-  margin-left: auto;
+/* the picker's sheet: wide enough for a full name beside its face */
+.sheet {
+  min-width: var(--w-pop-filter);
 }

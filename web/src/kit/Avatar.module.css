@@ -3,45 +3,74 @@
   display: inline-grid;
   place-items: center;
   border-radius: 50%;
-  font-size: var(--fs-1);
+  font-size: var(--fs-face);
   font-weight: 600;
+  letter-spacing: var(--track-snug);
   line-height: 1;
   color: var(--id-on);
   background: var(--id);
 }
+/* inside a pill and on a team a face is one neutral disc (initials say who) */
+.sm,
+.mid {
+  color: var(--face-ink);
+  background: var(--face);
+}
+.mid {
+  width: var(--sp-9);
+  height: var(--sp-9);
+  font-size: var(--fs-1);
+}
+/* in rows and pickers: Linear's small face, a solid disc of the person's hue (a touch toned into
+   the page on dark) with white initials that read */
 .md {
-  width: var(--h-chip);
-  height: var(--h-chip);
+  width: var(--h-face);
+  height: var(--h-face);
+  background: var(--id-row);
+  font-size: var(--fs-face);
+}
+.sm {
+  width: var(--h-face-sm);
+  height: var(--h-face-sm);
+  font-size: var(--fs-face-sm);
 }
 .talk {
   width: var(--sp-9);
   height: var(--sp-9);
+  font-size: var(--fs-1);
 }
 .lg {
   width: var(--h-avatar-lg);
   height: var(--h-avatar-lg);
+  font-size: var(--fs-2);
 }
 .slot {
   background: none;
 }
+/* Unassigned: Linear's dashed circle, at the strength of a quiet glyph */
 .dashed {
-  border: var(--line-1) dashed var(--rule-strong);
+  border: var(--line-mark) dashed var(--face-dashed);
 }
 .violet {
   --id: var(--id-violet);
+  --id-row: var(--id-violet-row);
 }
 .plum {
   --id: var(--id-plum);
+  --id-row: var(--id-plum-row);
 }
 .rose {
   --id: var(--id-rose);
+  --id-row: var(--id-rose-row);
 }
 .gold {
   --id: var(--id-gold);
+  --id-row: var(--id-gold-row);
   --id-on: var(--id-gold-on);
 }
 .olive {
   --id: var(--id-olive);
+  --id-row: var(--id-olive-row);
 }
 .faces {
   display: inline-flex;

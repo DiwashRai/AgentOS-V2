@@ -1,5 +1,6 @@
-// A running run's progress: one segment per step; the step in progress sweeps. One form, three sizes:
-// a tile's full width, inline in a row, and the ticket's strip with each step's name under it.
+// A run's progress: one segment per step; the step in progress sweeps. One form, three sizes:
+// a hairline track along an agent card's bottom edge; inline in a row; and the strip with each
+// step's name under it.
 import s from "./Meter.module.css";
 import { cx } from "./vars";
 

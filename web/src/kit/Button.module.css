@@ -1,5 +1,6 @@
-/* V1's buttons (the refresh): raised with a rule edge; hover only strengthens the edge; the weight
-   never changes by state. `you` is the gate primary, `accent` only Dispatch run on a ticket. */
+/* Linear's controls: a quiet filled button on a hairline edge; hover lifts the fill a step and firms
+   the edge; the weight never changes by state. `you` is the gate primary, `accent` only Dispatch run
+   on a ticket. */
 .btn {
   flex: none;
   display: inline-flex;
@@ -7,14 +8,15 @@
   justify-content: center;
   gap: var(--sp-3);
   height: var(--h-control);
-  padding: 0 var(--sp-7);
+  padding: 0 var(--sp-6);
   border-radius: var(--r-2);
-  border: var(--line-1) solid var(--rule);
-  background: var(--raised);
-  box-shadow: var(--shadow-row);
+  border: var(--line-1) solid var(--ctl-edge);
+  background: var(--ctl);
+  box-shadow: var(--ctl-shadow);
   color: var(--ink-1);
   font-size: var(--fs-3);
   font-weight: 500;
+  letter-spacing: var(--track-snug);
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
@@ -23,19 +25,22 @@
     background-color var(--dur-fast) ease,
     color var(--dur-fast) ease;
 }
+.glyph {
+  display: inline-flex;
+  color: var(--ink-3);
+}
 .btn:hover {
-  border-color: var(--rule-strong);
+  background: var(--ctl-lift);
+  border-color: var(--ctl-edge-hover);
 }
-.btn[aria-disabled="true"] {
-  opacity: 0.45;
-  cursor: default;
+.btn:hover .glyph {
+  color: var(--ink-1);
 }
-
 .xs {
   height: var(--sp-9);
   padding: 0 var(--sp-4);
+  gap: var(--sp-2);
   font-size: var(--fs-2);
-  font-weight: 500;
 }
 .sm {
   height: var(--h-control-sm);
@@ -49,7 +54,10 @@
 .square {
   padding: 0;
   width: var(--h-control);
-  color: var(--ink-3);
+  color: var(--ink-2);
+}
+.square:hover {
+  color: var(--ink-1);
 }
 .square.sm {
   width: var(--h-control-sm);
@@ -59,24 +67,31 @@
   height: var(--h-chip);
   border-radius: var(--r-1);
 }
-.square:hover {
-  color: var(--ink-1);
-}
 
+/* icon-only and filled buttons draw their glyph in the button's own ink */
+.square .glyph,
+:is(.ink, .you, .accent) .glyph,
+.btn:is(.ink, .you, .accent):hover .glyph,
+.btn[aria-disabled="true"] .glyph {
+  color: inherit;
+}
+/* ink: a primary that isn't a gate, a firmer neutral fill (the solid one is accent's alone) */
 .ink {
-  background: var(--ink-1);
-  border-color: var(--ink-1);
-  color: var(--bubble-mine-ink);
+  background: var(--ctl-strong);
+  border-color: var(--ctl-edge-hover);
+  font-weight: 600;
 }
 .ink:hover {
-  background: var(--ink-hover);
-  border-color: var(--ink-hover);
+  background: var(--ctl-strong-hover);
 }
 .you,
 .you:hover {
   background: var(--you);
   border-color: var(--you);
   color: var(--you-ink);
+}
+.you:hover {
+  background: var(--you-lift);
 }
 .accent {
   background: var(--accent);
@@ -89,37 +104,51 @@
   border-color: var(--accent-hover);
 }
 .quiet,
-.quiet:hover,
 .link {
   background: transparent;
   border-color: transparent;
   box-shadow: none;
 }
+.quiet {
+  color: var(--ink-2);
+}
 .quiet:hover {
-  background: var(--field);
+  background: var(--ctl-hover);
+  border-color: transparent;
+  color: var(--ink-1);
 }
 .lit {
   background: transparent;
-  border-color: transparent;
-  box-shadow: inset 0 0 0 var(--line-1) var(--rule-strong);
+  border-color: var(--ctl-edge-hover);
+  box-shadow: none;
+}
+.lit:hover {
+  background: var(--ctl-hover);
 }
 /* lit: fills like `you` while the row around it is hovered or keyboard-focused (Take in) */
 :is([data-row]:hover, [data-row]:has(:focus-visible)) .lit {
   background: var(--you);
   border-color: var(--you);
   color: var(--you-ink);
-  box-shadow: none;
 }
-.link {
+.link,
+.link:hover {
   height: auto;
   padding: 0;
   border: 0;
   background: none;
+  color: var(--ink-2);
   font-size: var(--fs-2);
-  text-decoration: underline;
-  text-decoration-color: var(--rule-strong);
-  text-underline-offset: var(--line-3);
 }
 .link:hover {
-  text-decoration-color: var(--ink-1);
+  color: var(--ink-1);
+}
+/* blocked (R11): whatever its variant, an empty dashed outline in muted ink that hover leaves alone */
+.btn[aria-disabled="true"],
+.btn[aria-disabled="true"]:hover {
+  background: transparent;
+  border: var(--line-1) dashed var(--ctl-edge-hover);
+  box-shadow: none;
+  color: var(--ink-3);
+  cursor: not-allowed;
 }

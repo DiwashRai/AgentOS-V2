@@ -63,7 +63,11 @@ export function Button(props: ButtonProps) {
   const name = square ? title : undefined;
   const body = (
     <>
-      {icon ? <Icon name={icon} /> : null}
+      {icon ? (
+        <span className={s.glyph}>
+          <Icon name={icon} />
+        </span>
+      ) : null}
       {children}
       {variant === "accent" ? <Icon name="arrow" /> : null}
     </>

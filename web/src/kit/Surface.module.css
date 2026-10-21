@@ -7,9 +7,10 @@
   box-shadow: var(--shadow-recess);
   border-radius: var(--r-5);
 }
+/* a sheet is Linear's card: one hairline, a near-flat fill, no lift */
 .sheet {
-  background: var(--surface);
-  box-shadow: var(--shadow-surface);
+  background: var(--tk-card);
+  box-shadow: 0 0 0 var(--line-1) var(--tk-card-edge);
   border-radius: var(--r-4);
 }
 .fill {

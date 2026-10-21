@@ -1,6 +1,6 @@
 .side {
   position: fixed;
-  inset: var(--sp-6) var(--sp-6) var(--sp-6) auto;
+  inset: var(--sp-2) var(--sp-2) var(--sp-2) auto;
   width: min(var(--w-peek), calc(100vw - var(--sp-9)));
   height: auto;
   max-height: none;
@@ -8,19 +8,20 @@
   padding: 0;
   border: 0;
   border-radius: var(--r-5);
-  background: var(--surface);
+  background: var(--tk-side);
   color: var(--ink-2);
-  box-shadow: var(--shadow-surface);
-  overflow: hidden auto;
-  scrollbar-width: thin;
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
 }
 .side:focus-visible {
   outline: none;
 }
 .side::backdrop {
-  background: var(--scrim);
+  background: var(--tk-scrim);
 }
 .side[open] {
+  display: flex;
+  flex-direction: column;
   animation: slide var(--dur-fast) var(--ease-out);
 }
 @keyframes slide {
@@ -33,20 +34,29 @@
     transform: none;
   }
 }
+/* the sections scroll inside the panel, one hairline between each and the next */
 .body {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 .body > * {
   flex: none;
-  padding: var(--sp-7) var(--sp-9);
-  border-bottom: var(--line-1) solid var(--rule);
-}
-.body > :first-child {
-  padding-top: var(--sp-8);
+  padding: var(--sp-8) var(--sp-9);
+  border-bottom: var(--line-1) solid var(--tk-card-edge);
 }
 .body > :last-child {
-  margin-top: auto;
   border-bottom: 0;
+}
+/* the foot: pinned under the sections, ruled off where they scroll away under it */
+.foot {
+  flex: none;
+  padding: var(--sp-6) var(--sp-9) var(--sp-8);
+  border-top: var(--line-1) solid var(--tk-card-edge);
+}
+.foot:empty {
+  display: none;
 }

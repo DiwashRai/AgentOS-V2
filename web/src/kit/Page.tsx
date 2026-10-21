@@ -1,6 +1,7 @@
 // A view: the top bar (title, context, counters, the view's own middle, search, one button) and the
 // body under it, which fills the rest of the window.
 import { type ReactNode, useEffect, useRef } from "react";
+import { Link } from "react-router";
 
 import { Badge } from "./Badge";
 import { Icon } from "./Icon";
@@ -21,7 +22,9 @@ export interface Search {
 }
 
 export interface PageProps {
-  title: string;
+  /** The view's name; a pair is Linear's breadcrumb (the ticket: the view it came from, a link back,
+   *  then its key), the last step the name, drawn at crumb size rather than as a view's heading. */
+  title: string | readonly [{ label: string; href: string }, string];
   /** After the title, quiet: the Space, a scope. */
   context?: string;
   /** The number carries the weight, a zero recedes; "|" draws a separator. */
@@ -29,9 +32,9 @@ export interface PageProps {
   /** The view's own controls after the counters (filter pills, a crumb). */
   middle?: ReactNode;
   search?: Search;
-  /** The bar's one button (New ticket, a close). */
+  /** The bar's buttons at its right end (New ticket; a ticket's actions). */
   action?: ReactNode;
-  /** A full-height column beside the body (the ticket's Talk). */
+  /** A full-height column beside the body, ruled off by one hairline (the ticket's Talk). */
   side?: ReactNode;
   children: ReactNode;
 }
@@ -111,19 +114,26 @@ export function Page({
   side,
   children,
 }: PageProps) {
+  const [crumb, name] = typeof title === "string" ? [null, title] : title;
   useEffect(() => {
-    document.title = `${title} · AgentOS`;
-  }, [title]);
+    document.title = `${name} · AgentOS`;
+  }, [name]);
   return (
     <div className={s.page}>
       <header className={s.top}>
-        <h1 className={s.title}>{title}</h1>
+        {crumb !== null ? (
+          <span className={s.crumb}>
+            <Link to={crumb.href}>{crumb.label}</Link>
+            <span aria-hidden="true">›</span>
+          </span>
+        ) : null}
+        <h1 className={cx(s.title, crumb !== null && s.step)}>{name}</h1>
         {context ? <span className={s.context}>{context}</span> : null}
         {counters ? <Counters items={counters} /> : null}
         {middle}
         <span className={s.grow} />
         {search ? <SearchField {...search} /> : null}
-        {action}
+        {action ? <span className={s.actions}>{action}</span> : null}
       </header>
       {side ? (
         <div className={s.split}>

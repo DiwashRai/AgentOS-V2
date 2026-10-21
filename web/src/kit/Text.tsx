@@ -11,7 +11,8 @@ export interface TextProps {
   /** The type role: its size, weight, line height and default ink. */
   variant?: TextVariant;
   tone?: Tone;
-  weight?: 500 | 600;
+  /** 400 sets a label-sized line in the regular weight (a run's step, a card's title). */
+  weight?: 400 | 500 | 600;
   /** One line (or two), cut with an ellipsis; give the full text as `title`. */
   truncate?: boolean | 2;
   /** Figures of one width, so counts and times line up. */

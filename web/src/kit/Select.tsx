@@ -1,11 +1,13 @@
-// A picker: one of a list (the ticket's owner). Base UI does the keyboard, typeahead and
-// placement; the look is ours: inline in a line of facts, a quiet value with a chevron.
-import { Select as Base } from "@base-ui/react/select";
+// A picker: one of a list (the ticket's owner). Base UI's combobox does the keyboard, filtering and
+// placement; the look is ours: a property chip in a properties row (face, name, chevron); open,
+// the kit's one popover, a "Change owner…" filter on its first line, the current one ticked.
+import { Combobox as Base } from "@base-ui/react/combobox";
 
 import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
+import p from "./Popover.module.css";
 import s from "./Select.module.css";
-import { tokenPx } from "./vars";
+import { cx, tokenPx } from "./vars";
 
 export interface Option {
   id: string;
@@ -21,48 +23,56 @@ export interface SelectProps {
   onChange: (id: string) => void;
 }
 
-function Label({ option }: { option: Option | undefined }) {
+/** `slot`: others in the list have faces, so a faceless one (Unassigned) gets Linear's no-one
+ *  glyph, a dashed ring in the muted ink, firm enough to read on the popover. */
+function Label({ option, slot }: { option: Option | null; slot: boolean }) {
   if (!option) return null;
   return (
     <>
       {option.face ? <Avatar name={option.label} seed={option.id} /> : null}
+      {!option.face && slot ? <span className={s.nobody} aria-hidden="true" /> : null}
       <span className={s.text}>{option.label}</span>
     </>
   );
 }
 
 export function Select({ label, value, options, onChange }: SelectProps) {
-  const current = options.find((o) => o.id === value);
+  const current = options.find((o) => o.id === value) ?? null;
+  const slot = options.some((o) => o.face);
   return (
     <Base.Root
-      value={value}
-      items={options.map((o) => ({ value: o.id, label: o.label }))}
-      onValueChange={(v) => {
-        if (v !== null) onChange(v);
+      items={options}
+      value={current}
+      itemToStringLabel={(o: Option) => o.label}
+      isItemEqualToValue={(a: Option, b: Option) => a.id === b.id}
+      onValueChange={(o: Option | null) => {
+        if (o !== null) onChange(o.id);
       }}
     >
       <Base.Trigger className={s.trigger} aria-label={label}>
-        <Label option={current} />
+        <Label option={current} slot={slot} />
         <Base.Icon className={s.chev}>
           <Icon name="chevron" />
         </Base.Icon>
       </Base.Trigger>
       <Base.Portal>
-        <Base.Positioner
-          sideOffset={() => tokenPx("--sp-2")}
-          alignItemWithTrigger={false}
-          align="start"
-        >
-          <Base.Popup className={s.popup}>
+        <Base.Positioner sideOffset={() => tokenPx("--sp-2")} align="start">
+          <Base.Popup className={cx(p.sheet, s.sheet)} aria-label={label}>
+            <Base.Input
+              className={p.find}
+              placeholder={`Change ${label.toLowerCase()}…`}
+              aria-label={label}
+            />
+            <Base.Empty className={p.empty}>No match</Base.Empty>
             <Base.List>
-              {options.map((o) => (
-                <Base.Item key={o.id} value={o.id} className={s.item}>
-                  <Label option={o} />
-                  <Base.ItemIndicator className={s.check}>
+              {(o: Option) => (
+                <Base.Item key={o.id} value={o} className={p.row}>
+                  <Label option={o} slot={slot} />
+                  <Base.ItemIndicator className={p.check}>
                     <Icon name="check" />
                   </Base.ItemIndicator>
                 </Base.Item>
-              ))}
+              )}
             </Base.List>
           </Base.Popup>
         </Base.Positioner>

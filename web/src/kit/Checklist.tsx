@@ -1,6 +1,7 @@
 // A plan's items: a green tick or an open ring, with an optional section head and "+N more".
 import { Icon } from "./Icon";
 import s from "./Checklist.module.css";
+import { cx } from "./vars";
 
 export interface CheckItem {
   text: string;
@@ -13,11 +14,14 @@ export interface ChecklistProps {
   items: readonly CheckItem[];
   /** Items left out after these. */
   more?: number;
+  /** bare: an expanded row's list; page: rows at body size (the ticket's plan); peek: the same, a
+   *  little shorter. */
+  look?: "bare" | "page" | "peek";
 }
 
-export function Checklist({ items, more = 0 }: ChecklistProps) {
+export function Checklist({ items, more = 0, look = "bare" }: ChecklistProps) {
   return (
-    <ul className={s.list}>
+    <ul className={cx(s.list, look !== "bare" && s.large, look === "peek" && s.peek)}>
       {items.map((it, i) => (
         <li key={i} className={s.item} data-done={it.done}>
           {it.section ? <span className={s.section}>{it.section}</span> : null}

@@ -1,9 +1,21 @@
 {
   "budget": {
-    "components": 25,
+    "components": 26,
     "props": 8,
-    "lines": 4068
+    "lines": 5810
   },
+  "raises": [
+    {
+      "budget": "components",
+      "to": 26,
+      "why": "The Linear-style revamp (owner approved, to be trimmed before use)"
+    },
+    {
+      "budget": "lines",
+      "to": 5810,
+      "why": "The Linear-style revamp (owner approved, to be trimmed before use)"
+    }
+  ],
   "components": {
     "Age": {
       "why": "An age with each unit a size smaller, as V1 draws every age.",
@@ -12,7 +24,7 @@
           "why": "The age as the screens write it (38m, 3h 05m, now)."
         },
         "strong": {
-          "why": "The Needs-you age is larger and in ink."
+          "why": "An age that stands out in ink (the kit sheet; list rows keep every age at one weight)."
         },
         "title": {
           "why": "The full time on hover."
@@ -20,24 +32,26 @@
       }
     },
     "Avatar": {
-      "why": "A person's face on their identity hue, the empty slot that keeps columns aligned, or a row of faces.",
+      "why": "A person's face: a neutral disc with initials in rows, heads, pills and pickers (so a row's status glyph stays its one colour), on their identity hue in the conversation; the empty slot that keeps columns aligned, or a row of faces.",
       "props": {
         "name": {
           "why": "Initials on the face and its accessible name; none for an empty slot."
         },
         "seed": {
-          "why": "A stable hue per person (an id, or a Jira assignee's name)."
+          "why": "A stable hue per person (an id, or a Jira assignee's name), for the faces that keep one (the conversation, the large face)."
         },
         "size": {
-          "why": "Three places draw faces at three sizes.",
+          "why": "Five places draw faces at five sizes.",
           "values": {
-            "md": "Rows and heads (20px).",
-            "lg": "The rail's own face (30px).",
-            "talk": "The conversation (24px)."
+            "sm": "A face inside a pill (16px): an agent card's state chip.",
+            "md": "Rows, heads and pickers (20px), neutral.",
+            "mid": "A neutral face whose initials must read (24px): All teams' team faces.",
+            "lg": "A larger face (30px): the kit sheet's; no screen draws it now.",
+            "talk": "The conversation and the sidebar head's signed-in face (24px), on the person's hue."
           }
         },
         "dashed": {
-          "why": "An unassigned issue shows a dashed empty face."
+          "why": "The owner picker's Unassigned choice shows a dashed empty face (a row's missing owner is the invisible slot)."
         },
         "people": {
           "why": "Who works on a repo, who is in a conversation: one row, named together."
@@ -50,11 +64,12 @@
         "kind": {
           "why": "V1 had a component per chip; one component with a kind each.",
           "values": {
-            "key": "A ticket or project key, tinted by its project.",
-            "count": "The count pill of heads and filter pills.",
+            "key": "A ticket or project key, as quiet tabular text (how Linear writes an issue id).",
+            "count": "The bare count after a head's or a filter pill's name.",
             "kbd": "A keycap in key hints.",
-            "tag": "The ticket page's kicker tags.",
+            "tag": "A label chip on a hairline: the agent reads' tags, an agent card's chips, All teams' item badge.",
             "status": "A Jira status, which we only know by name.",
+            "prop": "A list row's quiet property (its stage, its source): a grey dot or a small glyph, then the words, no outline, so the row's one chip stays its only edged thing (Linear's label without its pill).",
             "you": "The YOU pill: the one mono-caps form."
           }
         },
@@ -64,7 +79,7 @@
         "size": {
           "why": "Keys sit in rows, group heads and the ticket kicker.",
           "values": {
-            "sm": "Group heads and the rack.",
+            "sm": "Compact's foot and an agent card's key.",
             "md": "Rows.",
             "lg": "The ticket page's kicker."
           }
@@ -73,7 +88,20 @@
           "why": "The full text or what a click does, on hover."
         },
         "href": {
-          "why": "A Jira key opens the issue, with V1's small arrow."
+          "why": "A Jira key opens the issue; V1's small arrow shows on hover, outside the layout, so linked and plain keys end on one edge."
+        },
+        "icon": {
+          "why": "A property's glyph in place of its dot (the repo glyph before a row's source)."
+        },
+        "dot": {
+          "why": "A property's dot in the hue of the state it belongs to (a row's stage on its state's dot), so the stage reads with the row's glyph without a coloured chip.",
+          "values": {
+            "neutral": "Waiting on someone else, queued, in the inbox or abandoned: the grey dot (the default).",
+            "live": "Its run is under way: running's orange.",
+            "you": "It waits on you: your move's accent.",
+            "blocked": "Blocked: red.",
+            "done": "Done: green."
+          }
         },
         "tone": {
           "why": "Count pills and tags take their head's or meaning's hue.",
@@ -82,13 +110,14 @@
             "you": "Needs-you heads.",
             "done": "Done heads.",
             "blocked": "A high-priority tag.",
-            "quiet": "A repo or item name, receded."
+            "quiet": "An agent card's state pill and repo, the ticket page's item names: regular muted text on the hairline.",
+            "fill": "An agent card's state and repo: a filled chip with no edge, a face at its end."
           }
         }
       }
     },
     "Button": {
-      "why": "Every button and button-like link, in V1's refresh form.",
+      "why": "Every button and button-like link, as Linear's quiet filled controls.",
       "props": {
         "children": {
           "why": "The label; none makes an icon-only button."
@@ -96,13 +125,13 @@
         "variant": {
           "why": "V1's gate primacy: at most one strong button per group.",
           "values": {
-            "default": "A raised button with a rule edge.",
-            "ink": "A primary that isn't a gate (Retry).",
+            "default": "A filled button on a hairline edge.",
+            "ink": "A primary that isn't a gate (Retry): a firmer neutral fill.",
             "you": "The gate primary (Approve).",
             "accent": "Only Dispatch run, only on a ticket.",
             "quiet": "A borderless button (+N, icon buttons in a bar).",
-            "lit": "Take in: fills blue while its row is hovered.",
-            "link": "An underlined text action (Show all, Open ticket)."
+            "lit": "A row's one call to action, outlined until its row is hovered, then filled like you (Intake's Take in drew it; only the kit sheet does now, so it retires once the sheet drops it).",
+            "link": "A bare text action in secondary ink, primary on hover (Show all, Open ticket)."
           }
         },
         "size": {
@@ -139,6 +168,14 @@
         },
         "more": {
           "why": "How many were left out (+N more)."
+        },
+        "look": {
+          "why": "A row's expansion keeps the bare list; the ticket's and the peek's plan are rows at body size on the page's own ground, as Linear lists sub-issues (no card, no rules).",
+          "values": {
+            "bare": "An expanded row's list (the default).",
+            "page": "The ticket page's plan: 36px rows at body size, quiet section heads.",
+            "peek": "The peek's plan: the same, in shorter rows so its conversation fits beside it."
+          }
         }
       }
     },
@@ -156,32 +193,55 @@
           "why": "Esc or the close button."
         },
         "children": {
-          "why": "Its sections, ruled apart."
+          "why": "Its sections, one hairline apart; they scroll inside the panel."
+        },
+        "foot": {
+          "why": "Pinned under the scrolling sections, as Linear's reply box sits at its panel's foot (the peek's composer)."
         }
       }
     },
     "Facts": {
-      "why": "A line of facts (Owner Ada · Workflow Standard), V1's six key-value lines.",
+      "why": "A ticket's properties as one of Linear's labelled property rows: the values at body size, each a muted icon and its words, as chips; each label in its tooltip.",
+      "single": "The ticket page and the peek both draw it, through the one properties composition the ticket feature shares with the peek.",
       "props": {
         "items": {
-          "why": "The facts: a label and a value each."
+          "why": "The facts: a label, a value, and quiet words after it (main, from the repo)."
+        },
+        "label": {
+          "why": "The row's head, as Linear's \"Properties\" (Properties, Code, Workflow on the ticket page and the peek)."
         }
       }
     },
     "Frame": {
-      "why": "The app's frame: the dark brand rail (views, theme, settings, you) and the main column.",
+      "why": "The app's frame: the labelled sidebar in three groups (the views; the headed sections; Settings and the theme at the foot) under its head (the Space's switcher, then search, which takes you to the view's search field, and new ticket, inert until W4 as the page's own button is, as Linear's two icon buttons), and the main column as an inset sheet.",
       "single": "There is one frame: the app's layout draws it around every screen.",
       "props": {
+        "space": {
+          "why": "The Space's name and initial on the head's switcher, the sidebar's one menu, as Linear's workspace name."
+        },
         "nav": {
-          "why": "The views at the top of the rail.",
+          "why": "The views at the top of the sidebar, each labelled, with the count of what waits on you there on a small muted badge at the row's end, as Linear's.",
           "items": {
             "icon": {
               "why": "The view's glyph (IconName)."
             }
           }
         },
+        "sections": {
+          "why": "Headed groups under the views (Context: Agents, Skills), each folding under its heading; an entry with no screen yet (no to) is drawn like a view but leads nowhere and takes no hover.",
+          "items": {
+            "items": {
+              "why": "The section's entries.",
+              "items": {
+                "icon": {
+                  "why": "The entry's glyph (IconName)."
+                }
+              }
+            }
+          }
+        },
         "foot": {
-          "why": "Settings, under the theme menu.",
+          "why": "Settings, over the theme row (the theme menu's row trigger, naming the current theme) at the sidebar's foot; Settings has no screen yet, so it is an entry only.",
           "items": {
             "icon": {
               "why": "The entry's glyph (IconName)."
@@ -189,7 +249,7 @@
           }
         },
         "me": {
-          "why": "The signed-in face at the rail's foot."
+          "why": "The signed-in person, inside the Space's switcher as Linear's account is: their face on their own hue and their whole name (W0 has no sign-in, so nothing to sign out of)."
         },
         "children": {
           "why": "The current view."
@@ -209,7 +269,7 @@
           "why": "A status glyph or a project key before the name."
         },
         "tone": {
-          "why": "Needs you and Done heads take their hue.",
+          "why": "Needs you and Done heads count in their hue; the name stays in ink.",
           "values": {
             "neutral": "The default.",
             "you": "Needs you.",
@@ -225,8 +285,8 @@
         "level": {
           "why": "Three sizes of head in V1.",
           "values": {
-            "zone": "My queue's 15px zone heads.",
-            "group": "Compact's and Intake's collapsible group heads.",
+            "zone": "A band run through its surface's padding, edge to edge (My queue's Agents at work, over its cards).",
+            "group": "A list's band edge to edge (Linear's group head): Compact's and Intake's fold, My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
             "rack": "The rack's small static heads."
           }
         },
@@ -236,7 +296,7 @@
       }
     },
     "Icon": {
-      "why": "Every glyph: V1's line icons, the ticket-type squares, the priority chevrons and the tick.",
+      "why": "Every glyph: the sidebar's (its head's search and new-ticket compose too) and V1's line icons, the ticket's property glyphs, a section's fold caret, the ticket-type squares and the priority bars (both grey, as Linear's; normal is Linear's three dashes, so the slot's left edge holds), and the tick.",
       "props": {
         "name": {
           "why": "One glyph each (IconName)."
@@ -253,7 +313,7 @@
           "why": "One form per state (MarkKind): R12's attention, plus the outcomes."
         },
         "name": {
-          "why": "Who or what, in the state's colour."
+          "why": "Who or what, in the state's colour (in a chip, in ink on the state's dot)."
         },
         "ask": {
           "why": "What it waits for (Sign off the plan)."
@@ -262,22 +322,31 @@
           "why": "Plain text after the label."
         },
         "glyph": {
-          "why": "The glyph alone: counters, legends, heads."
+          "why": "The glyph alone: before a row's title (its one accent), counters, legends, heads."
         },
         "small": {
-          "why": "The 6px dot of counters, pills and heads."
+          "why": "The glyph a size down, for counters, pills and heads."
+        },
+        "chip": {
+          "why": "In a list row, what the state names beyond the glyph, the group and the stage (the agent and its step, who it waits on and for what) as Linear's label chip: a neutral pill on a hairline, no colour of its own, the row's one outlined thing, its step count inside it in a quieter ink."
+        },
+        "progress": {
+          "why": "A running glyph's pie fills as far as its run is (Linear's in-progress circle), so a row needs no meter beside it."
         }
       }
     },
     "Menu": {
-      "why": "A menu of choices, one current: Base UI's keyboard, typeahead and placement, our look; on the rail.",
+      "why": "A menu of choices, one current: Base UI's combobox keyboard, filter and placement, the kit's one popover opening on its filter, as every kit list of choices does; in the sidebar's foot, opening above its row, its chevron pointing up.",
       "single": "Frame's theme menu draws it today; the ticket's run-from and the dispatch target use it in W4 and W7.",
       "props": {
         "label": {
-          "why": "The trigger's name and the menu's heading."
+          "why": "The trigger's name, and the filter's prompt (Change theme…)."
         },
         "icon": {
           "why": "The trigger's glyph."
+        },
+        "text": {
+          "why": "The trigger as a sidebar row: the glyph, this word, the current choice and a chevron (the foot's Theme row)."
         },
         "items": {
           "why": "The choices."
@@ -302,9 +371,9 @@
         "size": {
           "why": "V1's three sizes.",
           "values": {
-            "tile": "A run tile's full width.",
-            "row": "Inline in a row (48px).",
-            "strip": "The ticket's strip, each step named under it."
+            "tile": "A running agent card's: one still 2px track along the card's bottom edge, the finished steps live and the one under way a soft live, under the progress line's count (a queued card draws none).",
+            "row": "Inline in a row (48px): the ticket's Now line.",
+            "strip": "A run's steps each named under its segment; drawn on the kit sheet only, since the ticket page dropped it."
           }
         },
         "names": {
@@ -319,33 +388,43 @@
           "why": "Four quiet lines V1 drew about 25 ways.",
           "values": {
             "status": "Loading, or a failed read.",
-            "empty": "The dashed row of an empty zone.",
-            "problem": "What went wrong under a head (a failing query).",
-            "more": "+N more under a capped list."
+            "empty": "The quiet row of an empty zone (All quiet — nothing new matches this query).",
+            "problem": "What went wrong under a head (Intake's failing query): a line marked blocked (an edge; in an item list, a dot), at a reading measure.",
+            "more": "+N more, or Show N more, under a capped list."
           }
         },
         "lead": {
-          "why": "The lead word in 600 (All quiet)."
+          "why": "The lead words a step firmer than the rest, set off by a dash (All quiet, All clear, +3 more)."
         },
         "children": {
           "why": "What it says after the lead."
         },
         "error": {
           "why": "A status line that reports a failure."
+        },
+        "align": {
+          "why": "Intake's notices are lines of its triage list, not of a banded group: they sit on the list's own columns.",
+          "values": {
+            "item": "Intake's two-line items: the row's size, an empty ring or a problem's blocked dot in the group labels' chevron slot, the words after it.",
+            "end": "A status that closes a list, its words ending on the rows' far edge (Intake's checked 2m ago)."
+          }
+        },
+        "fix": {
+          "why": "A problem says what went wrong and, on a muted line of its own, what can be done about it (An admin can fix the query in Settings › Intake), so neither wraps into the other."
         }
       }
     },
     "Page": {
-      "why": "A view: the top bar (title, context, counters, the view's controls, search, one button) and the body.",
+      "why": "A view: the top bar (title, context, counters, the view's controls, search, its buttons) and the body.",
       "props": {
         "title": {
-          "why": "The view's name, and the tab's."
+          "why": "The view's name, and the tab's; a list is Linear's breadcrumb, its last step the name; a pair's first step is a link back (the ticket: My queue › NW-17, the way back to the queue)."
         },
         "context": {
           "why": "Quiet after the title: the Space, a scope, who."
         },
         "counters": {
-          "why": "The bar's counts; a zero recedes, a non-zero need-you is a pill.",
+          "why": "The bar's counts; a zero recedes, a non-zero need-you takes the accent's ink, with no fill.",
           "items": {
             "mark": {
               "why": "The state the count is of (MarkKind)."
@@ -359,10 +438,10 @@
           "why": "The search field, with / and Esc."
         },
         "action": {
-          "why": "The bar's one button."
+          "why": "The bar's buttons at its right end (New ticket; the ticket's actions)."
         },
         "side": {
-          "why": "A full-height column beside the body (the ticket's Talk)."
+          "why": "A full-height column beside the body, ruled off by one hairline with no card, so what it holds can pin its foot to the window's bottom (the ticket's Talk and its reply box)."
         },
         "children": {
           "why": "The body."
@@ -370,7 +449,7 @@
       }
     },
     "Row": {
-      "why": "One item of a list: its cells on the table's columns, raised or flat, with a status edge.",
+      "why": "One item of a list: its cells on the table's columns; a flat row on a hairline (Linear's list), a card or a swimlane.",
       "props": {
         "children": {
           "why": "The cells."
@@ -379,12 +458,12 @@
           "why": "Actionable rows are raised, settled ones flat (V1's refresh).",
           "values": {
             "raised": "In flight or needs action.",
-            "flat": "Settled: done or closed.",
-            "you": "Raised with the needs-you wash."
+            "flat": "Settled: done or closed; a queued agent's card, on a fainter hairline; a board's column head (a band).",
+            "you": "Needs you: drawn as raised; the row's glyph and chip say it."
           }
         },
         "edge": {
-          "why": "The 3px status edge.",
+          "why": "The 3px status edge (the kit sheet; the screens' list rows say a state by its glyph).",
           "values": {
             "you": "Needs you.",
             "live": "Running.",
@@ -396,11 +475,11 @@
         "kind": {
           "why": "The five shapes V1's lists take.",
           "values": {
-            "line": "A dense list's row (Compact, Intake): lights up on hover.",
-            "item": "My queue's taller row: lifts.",
-            "tile": "A run tile: a card that lifts.",
-            "rack": "A bare entry (the rack, a team's items): lifts.",
-            "band": "A board's tall row with ruled cells (All teams)."
+            "line": "A list's row (Compact, My queue): one line on a hairline, edge to edge, its first cell under the group head's glyph, washed on hover.",
+            "item": "A two-line row (Intake): roomy, on a hairline, washed on hover.",
+            "tile": "An agent card (My queue's Agents at work, Linear's agent card), each line in its own space: the key line with Linear's agent pill at its end (a hairline label, then the agent's glyph on a live disc under the owner's face); the title at regular weight, a still state glyph hanging before it; faint filled label chips (the stage's led by a dot in the card's state); and the progress line (the step, its count) over a track along the bottom edge. The chips and progress sink to the foot so they line up across a row.",
+            "rack": "A bare entry (a team's items): lights up.",
+            "band": "A board's swimlane: the team, then its stage lanes to the board's edge, its items stacked as cards, the board's only raised surface (a slight step above the page on a hairline), their titles wrapping only at the card's edge in a per-theme title ink (one weight in light and dark), each item's badge (a Badge tag) drawn as Linear's label chip, a pill on a hairline with a faint fill (All teams); every stage an equal lane, and a lane with no card bare page (Linear's empty column); the team's faces drawn as readable discs on a firm ink step; a team with nothing in flight says so in its first lane, where a card's key would sit; a flat band is the board's column head on the same grid (stage names and card counts)."
           }
         },
         "action": {
@@ -418,17 +497,17 @@
       }
     },
     "Segmented": {
-      "why": "Filter pills on a recessed track (Compact's top bar).",
+      "why": "Filter chips, one row on the bar that never clips: bare words but for the pressed one, filled on a hairline; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
       "single": "Compact's filter today; Settings › Mappings' Try it and the settings nav use it in W8 and W9.",
       "props": {
         "label": {
-          "why": "The group's name."
+          "why": "The group's name, and the overflow filter's prompt (Change filter…)."
         },
         "items": {
-          "why": "The pills, each with a count and mark.",
+          "why": "The chips, each with a count and mark.",
           "items": {
             "mark": {
-              "why": "The state a pill filters by (MarkKind)."
+              "why": "The state a pill filters by (MarkKind), a small glyph in the muted ink."
             }
           }
         },
@@ -441,17 +520,17 @@
       }
     },
     "Select": {
-      "why": "A picker (one of a list) inline in a line of facts: Base UI's keyboard, typeahead and placement, our look.",
+      "why": "A picker (one of a list) as a property chip in a properties row: Base UI's combobox keyboard, filter and placement, the kit's one popover.",
       "single": "The ticket's owner today; repos, runtimes and the defaults pick with it in W8 and W9.",
       "props": {
         "label": {
-          "why": "Its accessible name."
+          "why": "Its accessible name, and the filter's prompt (Change owner…)."
         },
         "value": {
           "why": "The picked one."
         },
         "options": {
-          "why": "The list, each optionally with a face."
+          "why": "The list, each optionally with a face (a faceless one among faces, Unassigned, gets a dashed no-one ring)."
         },
         "onChange": {
           "why": "A pick."
@@ -519,7 +598,7 @@
                     "done": "Finished: green.",
                     "current": "Where it is now: the long segment.",
                     "upcoming": "Not reached yet (or stale): grey.",
-                    "skipped": "Skipped by the workflow: struck through.",
+                    "skipped": "Skipped by the workflow: a dashed hairline and a Skipped caption.",
                     "failed": "Where it stopped: crimson."
                   }
                 },
@@ -529,7 +608,7 @@
                     "state": {
                       "why": "Whether the gate has been passed, and who it waits for.",
                       "values": {
-                        "pending": "Not reached yet: hollow.",
+                        "pending": "Not reached yet: grey.",
                         "passed": "Signed off: green.",
                         "waiting": "Parked, waiting on someone else: a blue ring.",
                         "you": "Parked, waiting on you: filled blue."
@@ -545,11 +624,14 @@
           "why": "Rows show the glyph, the ticket and the peek the labelled steps.",
           "values": {
             "glyph": "The rows' 81px glyph with the stage's name.",
-            "steps": "The labelled stepper."
+            "steps": "The labelled stepper: an equal column per stage, its name under its own segment at body size, a gate's diamond where its stage ends."
           }
         },
         "compact": {
-          "why": "Bare diamonds for gates the ticket isn't parked at (the peek)."
+          "why": "Smaller words and bare diamonds for gates the ticket isn't parked at (an expanded row)."
+        },
+        "now": {
+          "why": "What happens now (the live run, its step and its Cancel, a gate's ask, a blocked reason) as a full-width line under the stages, set off by space alone (no card), so the stepper and the run read as one strip (the ticket page and the peek)."
         }
       }
     },
@@ -563,7 +645,7 @@
           "why": "Sunken zone or raised panel.",
           "values": {
             "recess": "The view's sunken zone.",
-            "sheet": "A raised panel (Talk, the run band)."
+            "sheet": "A hairline card, as Linear's latest-update card."
           }
         },
         "fill": {
@@ -577,8 +659,20 @@
         }
       }
     },
+    "Swap": {
+      "why": "A row's end slot in two states, as Linear's triage rows: quiet at rest, the row's one action under the pointer or focus, in the same cell so nothing moves.",
+      "single": "Intake's Take in today; My queue's and Compact's row actions can take it up.",
+      "props": {
+        "children": {
+          "why": "What the slot shows at rest (nothing, or a quiet value)."
+        },
+        "hover": {
+          "why": "The action that takes its place while the row is hovered or holds focus (Take in)."
+        }
+      }
+    },
     "Tabs": {
-      "why": "Underline tabs: Base UI's roving focus and arrow keys, our look.",
+      "why": "Underline tabs on a hairline, as Linear's section tabs (plain words, the current one underlined on the rule): Base UI's roving focus and arrow keys, our look.",
       "single": "The ticket page's sections today; Settings' areas use them in W8.",
       "props": {
         "label": {
@@ -602,10 +696,13 @@
       "why": "A dense list on one grid: column head, rows in groups, a foot; rows line up across groups.",
       "props": {
         "columns": {
-          "why": "The grid: widths as tokens, which align right, where a rule sits.",
+          "why": "The grid: widths as tokens, which align right, which hug their content (a list without a head).",
           "items": {
             "width": {
               "why": "A column's width, a width token (Width)."
+            },
+            "min": {
+              "why": "A fill column's floor: a list row's title keeps this width before its chips take more."
             }
           }
         },
@@ -620,6 +717,12 @@
         },
         "children": {
           "why": "The groups and rows."
+        },
+        "bleed": {
+          "why": "Run through the padding of the surface it sits in, edge to edge, flush at its top and foot (My queue's lists, whose surface pads the agents' cards)."
+        },
+        "measure": {
+          "why": "Hold the head, rows and foot to a reading width, so a row's far end stays near its words (Intake's triage list asks for it)."
         }
       }
     },
@@ -632,10 +735,10 @@
         "variant": {
           "why": "The type roles.",
           "values": {
-            "display": "The ticket's title (34px).",
+            "display": "The ticket's title (28px).",
             "title": "The peek's title (20px).",
             "heading": "Section and band headings (15px).",
-            "body": "A description (14px, loose).",
+            "body": "A description (16px, loose).",
             "label": "Row titles (14px, 500).",
             "ui": "The default (13px).",
             "meta": "Notes and captions (12px).",
@@ -648,6 +751,7 @@
         "weight": {
           "why": "Weight beside the variant's own.",
           "values": {
+            "400": "Regular: a label-sized line that shouldn't read bold (a run's step).",
             "500": "Medium: names, a title in a list.",
             "600": "Semibold: a lead word, a count."
           }
@@ -676,7 +780,7 @@
       }
     },
     "Thread": {
-      "why": "The conversation: faces and bubbles, mine on the right, and the composer.",
+      "why": "The conversation as Linear's comments: faces and plain text, mine on the right in a bubble, and the composer.",
       "props": {
         "messages": {
           "why": "The messages."
@@ -689,7 +793,7 @@
           }
         },
         "compose": {
-          "why": "A composer under it, with this placeholder."
+          "why": "A composer under it, with this placeholder; in a full-height column it sits at the foot. With no messages only the composer draws (the peek pins it at its panel's foot)."
         }
       }
     }
@@ -756,21 +860,29 @@
     "IconName": {
       "why": "Every glyph the kit draws (Icon).",
       "values": {
-        "teams": "The rail: All teams.",
-        "queue": "The rail: My queue.",
-        "compact": "The rail: Compact.",
-        "intake": "The rail: Intake.",
-        "settings": "The rail: Settings.",
-        "theme": "The rail: the theme menu.",
-        "search": "The search field.",
+        "teams": "The sidebar: All teams.",
+        "queue": "The sidebar: My queue.",
+        "compact": "The sidebar: Compact.",
+        "intake": "The sidebar: Intake.",
+        "agents": "The sidebar's Context: Agents.",
+        "skills": "The sidebar's Context: Skills.",
+        "settings": "The sidebar: Settings.",
+        "theme": "The sidebar: the theme row, the theme menu's trigger.",
+        "search": "The search field; the sidebar head's search button.",
+        "compose": "The sidebar head's new-ticket button, Linear's compose.",
         "arrow": "Dispatch run's arrow; the Inbox note.",
         "check": "The selected item in a menu or picker.",
         "plus": "New, folded to an icon.",
         "close": "Leave the ticket page.",
-        "chevron": "A group head's fold; a picker.",
+        "chevron": "A group head's fold; a picker; the sidebar's Space switcher and theme row, menus.",
+        "caret": "A sidebar section's fold, Linear's small solid caret.",
         "out": "Opens in Jira.",
-        "high": "High priority.",
-        "low": "Low priority.",
+        "repo": "The ticket's properties: its repo.",
+        "branch": "The ticket's properties: its base branch.",
+        "workflow": "The ticket's properties: its workflow, a stepped path.",
+        "clock": "The ticket's properties: when it opened.",
+        "high": "High priority: all three signal bars lit.",
+        "low": "Low priority: the first of three signal bars lit, so it never reads as a fold chevron.",
         "normal": "Normal priority: an empty slot, so titles share one x.",
         "tick": "Done, in a plan and the stepper's last stage.",
         "tick-sm": "Done, inline in a mark or a head.",

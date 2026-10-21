@@ -1,6 +1,7 @@
 // A modal panel on the browser's own <dialog>: it holds focus, Esc closes it, the rest of the page
 // is inert, and focus goes back to the opener. It slides in from the right (the peek). Each
-// direct child is one section, ruled off from the next.
+// direct child is one section, ruled off from the next; they scroll inside the panel, over a foot
+// that stays put.
 import { type ReactNode, useEffect, useRef } from "react";
 
 import s from "./Dialog.module.css";
@@ -11,9 +12,11 @@ export interface DialogProps {
   open: boolean;
   onClose: () => void;
   children: ReactNode;
+  /** Pinned under the scrolling sections (the peek's reply box). */
+  foot?: ReactNode;
 }
 
-export function Dialog({ label, open, onClose, children }: DialogProps) {
+export function Dialog({ label, open, onClose, children, foot }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   // Whether the screen still wants it open: a close it didn't ask for (Esc) is the user's, and is
   // reported; a close that follows `open` going false is the screen's own, and isn't.
@@ -35,6 +38,7 @@ export function Dialog({ label, open, onClose, children }: DialogProps) {
       }}
     >
       <div className={s.body}>{open ? children : null}</div>
+      {open && foot ? <div className={s.foot}>{foot}</div> : null}
     </dialog>
   );
 }

@@ -7,14 +7,17 @@ export interface AvatarProps {
   name?: string;
   /** Who it is, for a stable hue: a person's id, or a name when there is no id (a Jira assignee). */
   seed?: string;
-  size?: "md" | "lg" | "talk";
+  /** sm, md and mid are the neutral disc; talk and lg keep the person's hue. */
+  size?: "sm" | "md" | "mid" | "lg" | "talk";
   /** An empty face drawn dashed (Unassigned); otherwise an empty slot is an invisible spacer. */
   dashed?: boolean;
   /** A row of faces instead, named together (who is on a team, in a conversation). */
   people?: readonly { name: string; seed: string }[];
 }
 
-function Face({ name, seed, size }: { name: string; seed: string; size: "md" | "lg" | "talk" }) {
+type Size = NonNullable<AvatarProps["size"]>;
+
+function Face({ name, seed, size }: { name: string; seed: string; size: Size }) {
   return (
     <span
       className={cx(s.av, s[size], s[hueOf(`person:${seed}`)])}
@@ -27,7 +30,8 @@ function Face({ name, seed, size }: { name: string; seed: string; size: "md" | "
   );
 }
 
-/** A person's face (initials on their identity hue), an empty slot, or a row of faces. */
+/** A person's face (a neutral disc in rows; the conversation's on their identity hue), an empty
+ *  slot, or a row of faces. */
 export function Avatar({ name, seed, size = "md", dashed, people }: AvatarProps) {
   if (people) {
     const names = people.map((p) => p.name).join(", ");

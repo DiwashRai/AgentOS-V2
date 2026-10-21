@@ -19,9 +19,9 @@
   grid-template-columns: var(--cols);
   column-gap: var(--sp-7);
   align-items: center;
-  height: var(--h-row-flat);
-  margin: 0 var(--sp-5);
-  padding: 0 var(--sp-7);
+  height: var(--h-list-head);
+  padding: 0 var(--list-pad) 0 var(--list-inset);
+  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
   font-size: var(--fs-2);
   font-weight: 500;
   color: var(--ink-3);
@@ -40,22 +40,45 @@
 .scroll > .list {
   flex: 1;
   overflow: hidden auto;
-  /* room for a lit row's halo and the focus ring at the sides */
-  padding: 0 var(--sp-5) var(--sp-8);
+  /* rows run edge to edge (their focus ring sits inside); room at the end, as tall as the fade the
+     rows scroll out under, so the last row clears it */
+  padding: 0 0 var(--sp-10);
+  mask-image: var(--list-fade);
 }
+/* a scrolling list's group heads stay at its top while their rows pass under them (Linear's) */
+.scroll > .list > [data-head="group"] {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(var(--list-band), var(--list-band)), var(--recess);
+}
+/* the foot keeps the list's scrollbar gutter, so its far end lines up with the rows' */
 .foot {
   flex: none;
   display: flex;
   align-items: center;
   gap: var(--sp-8);
   min-height: var(--h-control-lg);
-  padding: var(--sp-5) var(--sp-9);
-  border-top: var(--line-1) solid var(--rule);
+  padding: var(--sp-5) var(--list-pad);
+  overflow: hidden;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  border-top: var(--line-1) solid var(--list-rule);
   font-size: var(--fs-2);
   color: var(--ink-3);
   white-space: nowrap;
 }
-/* a table in a longer page: its head lines up with rows that have no list padding */
-.table:not(.scroll) > .head {
-  margin: 0;
+/* bleed: through the surface's padding to its edges; first or last in it, to its top or foot */
+.bleed {
+  margin-inline: calc(var(--pad) * -1);
+}
+.bleed:first-child {
+  margin-top: calc(var(--pad) * -1);
+}
+.bleed:last-child {
+  margin-bottom: calc(var(--pad) * -1);
+}
+/* measure: the head, the rows and the foot held to a reading width */
+.measure > * {
+  max-width: var(--w-list);
 }

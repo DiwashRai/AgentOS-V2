@@ -5,7 +5,7 @@ import { cx } from "./vars";
 
 // V1's glyphs (its kit's `I` set and the refresh's type squares). Colour comes from the CSS:
 // line icons draw in currentColor, type squares and the tick in their tokens.
-const LINE18 = { box: 18, cls: s.line };
+const LINE16 = { box: 16, cls: s.line };
 const LINE14 = { box: 14, cls: s.line };
 const LINE12 = { box: 12, cls: s.line };
 const LINE10 = { box: 10, cls: s.line };
@@ -18,49 +18,78 @@ const TICK = (
   </>
 );
 
+// The sidebar's glyphs: drawn on a 16 grid at 16px, so their strokes land whole, in Linear's
+// rounded line style.
 const GLYPHS = {
   teams: {
-    ...LINE18,
+    ...LINE16,
     d: (
       <>
-        <rect x="3" y="3" width="5" height="5" rx="1.2" />
-        <rect x="10" y="3" width="5" height="5" rx="1.2" />
-        <rect x="3" y="10" width="5" height="5" rx="1.2" />
-        <rect x="10" y="10" width="5" height="5" rx="1.2" />
+        <rect x="2" y="2" width="5" height="5" rx="1.5" />
+        <rect x="9" y="2" width="5" height="5" rx="1.5" />
+        <rect x="2" y="9" width="5" height="5" rx="1.5" />
+        <rect x="9" y="9" width="5" height="5" rx="1.5" />
       </>
     ),
   },
   queue: {
-    ...LINE18,
+    ...LINE16,
     d: (
       <>
-        <path d="M3 4.5h12M3 9h7M3 13.5h7" />
-        <circle cx="13.5" cy="12" r="1.8" />
-        <path d="M11 16c.4-1.2 1.4-1.8 2.5-1.8s2.1.6 2.5 1.8" />
+        <path d="M2 5.5v-2A1.5 1.5 0 0 1 3.5 2h2M10.5 2h2A1.5 1.5 0 0 1 14 3.5v2M14 10.5v2a1.5 1.5 0 0 1-1.5 1.5h-2M5.5 14h-2A1.5 1.5 0 0 1 2 12.5v-2" />
+        <circle cx="8" cy="8" r="2" className={s.solid} />
       </>
     ),
   },
-  compact: { ...LINE18, d: <path d="M3 4h12M3 7.3h12M3 10.6h12M3 14h12" /> },
+  compact: { ...LINE16, d: <path d="M2.5 3.5h11M2.5 6.5h11M2.5 9.5h11M2.5 12.5h11" /> },
   intake: {
-    ...LINE18,
-    d: <path d="M3 11.5l2.5-7h7l2.5 7M3 11.5v3h12v-3M3 11.5h3.5l1 1.5h3l1-1.5H15" />,
+    ...LINE16,
+    d: (
+      <>
+        <rect x="2" y="2.5" width="12" height="11" rx="2.5" />
+        <path d="M2 9h3.25l1 1.5h3.5l1-1.5H14" />
+      </>
+    ),
   },
   settings: {
-    ...LINE18,
+    ...LINE16,
     d: (
       <>
-        <circle cx="9" cy="9" r="2.3" />
-        <path d="M9 2.5v2M9 13.5v2M2.5 9h2M13.5 9h2M4.4 4.4l1.4 1.4M12.2 12.2l1.4 1.4M4.4 13.6l1.4-1.4M12.2 5.8l1.4-1.4" />
+        <circle cx="8" cy="8" r="2" />
+        <path d="M12.73 8.44 14.1 9.38l-.81 1.95-1.63-.3-.63.63.3 1.63-1.95.81-.94-1.37h-.88l-.94 1.37-1.95-.81.3-1.63-.63-.63-1.63.3-.81-1.95 1.37-.94v-.88L1.9 6.62l.81-1.95 1.63.3.63-.63-.3-1.63 1.95-.81.94 1.37h.88l.94-1.37 1.95.81-.3 1.63.63.63 1.63-.3.81 1.95-1.37.94z" />
       </>
     ),
   },
-  theme: {
-    ...LINE18,
+  agents: {
+    ...LINE16,
     d: (
       <>
-        <circle cx="9" cy="9" r="6.2" />
-        <path d="M9 2.8a6.2 6.2 0 0 1 0 12.4z" className={s.solid} />
+        <rect x="2.25" y="5" width="11.5" height="8.75" rx="2.5" />
+        <path d="M8 5V2.75" />
+        <circle cx="8" cy="2.25" r="1" className={s.solid} />
+        <circle cx="5.75" cy="9.25" r="1" className={s.solid} />
+        <circle cx="10.25" cy="9.25" r="1" className={s.solid} />
       </>
+    ),
+  },
+  skills: {
+    ...LINE16,
+    d: <path d="M8 1.75 13.75 5v6L8 14.25 2.25 11V5zM2.25 5 8 8.25 13.75 5M8 8.25v6" />,
+  },
+  theme: {
+    ...LINE16,
+    d: (
+      <>
+        <circle cx="8" cy="8" r="6" />
+        <path d="M8 2a6 6 0 0 1 0 12z" className={s.solid} />
+      </>
+    ),
+  },
+  // new ticket, the sidebar head's: Linear's compose, a page with a pen across its open corner
+  compose: {
+    ...LINE16,
+    d: (
+      <path d="M7.5 2.5h-3a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-3M11.9 2.35a1.3 1.3 0 0 1 1.85 1.85L8.4 9.55l-2.45.6.6-2.45z" />
     ),
   },
   search: {
@@ -77,10 +106,82 @@ const GLYPHS = {
   plus: { ...LINE12, d: <path d="M6 1.75v8.5M1.75 6h8.5" /> },
   close: { ...LINE12, d: <path d="M3 3l6 6M9 3l-6 6" /> },
   chevron: { ...LINE10, d: <path d="M2.5 4l2.5 2.5L7.5 4" /> },
+  // a section heading's fold caret, Linear's small solid triangle
+  caret: { ...LINE10, d: <path d="M2.75 3.75h4.5L5 6.5z" className={s.caret} /> },
   out: { ...LINE10, d: <path d="M2.5 7.5 7.5 2.5M3.5 2.5h4v4" /> },
-  high: { box: 12, cls: s.high, d: <path d="M2.5 6.2 6 3l3.5 3.2M2.5 9.7 6 6.5l3.5 3.2" /> },
-  low: { box: 12, cls: s.low, d: <path d="M2.5 4.5 6 7.7l3.5-3.2" /> },
-  normal: { box: 12, cls: s.low, d: null },
+  // the ticket's properties: where it lives, its base branch, its workflow, when it opened
+  repo: {
+    ...LINE14,
+    d: (
+      <path d="M3 12V3.5A1.5 1.5 0 0 1 4.5 2H11v11.5H4.5A1.5 1.5 0 0 1 3 12a1.5 1.5 0 0 1 1.5-1.5H11" />
+    ),
+  },
+  branch: {
+    ...LINE14,
+    d: (
+      <>
+        <circle cx="4" cy="3" r="1.5" />
+        <circle cx="4" cy="11" r="1.5" />
+        <circle cx="10" cy="3.5" r="1.5" />
+        <path d="M4 4.5v5M10 5a4 4 0 0 1-4 4H4" />
+      </>
+    ),
+  },
+  workflow: {
+    ...LINE14,
+    d: (
+      <>
+        <circle cx="3.5" cy="3" r="1.5" />
+        <circle cx="10.5" cy="11" r="1.5" />
+        <path d="M3.5 4.5V6A1.5 1.5 0 0 0 5 7.5h4A1.5 1.5 0 0 1 10.5 9v.5" />
+      </>
+    ),
+  },
+  clock: {
+    ...LINE14,
+    d: (
+      <>
+        <circle cx="7" cy="7" r="5.5" />
+        <path d="M7 4.25V7l1.75 1.25" />
+      </>
+    ),
+  },
+  // priority as Linear's signal bars: high lights all three, low the first
+  high: {
+    box: 12,
+    cls: s.high,
+    d: (
+      <>
+        <rect x="1.5" y="7" width="2.5" height="3.5" rx="0.75" />
+        <rect x="4.75" y="4.5" width="2.5" height="6" rx="0.75" />
+        <rect x="8" y="2" width="2.5" height="8.5" rx="0.75" />
+      </>
+    ),
+  },
+  low: {
+    box: 12,
+    cls: s.low,
+    d: (
+      <>
+        <rect x="1.5" y="7" width="2.5" height="3.5" rx="0.75" />
+        <rect x="4.75" y="4.5" width="2.5" height="6" rx="0.75" className={s.off} />
+        <rect x="8" y="2" width="2.5" height="8.5" rx="0.75" className={s.off} />
+      </>
+    ),
+  },
+  // normal: Linear's three grey dashes, so a row without a raised or lowered priority keeps the
+  // slot's left edge
+  normal: {
+    box: 12,
+    cls: s.normal,
+    d: (
+      <>
+        <rect x="1.5" y="5.25" width="2.5" height="1.5" rx="0.75" />
+        <rect x="4.75" y="5.25" width="2.5" height="1.5" rx="0.75" />
+        <rect x="8" y="5.25" width="2.5" height="1.5" rx="0.75" />
+      </>
+    ),
+  },
   tick: { box: 14, cls: s.tick, d: TICK },
   "tick-sm": { box: 12, view: 14, cls: s.tick, d: TICK },
   feature: {

@@ -1,9 +1,13 @@
 // A ticket's way through its workflow: one segment per stage, a diamond per gate. `glyph` is the
 // rows' 81px slot with the stage's name beside it; `steps` is the labelled stepper of the ticket
-// page and the peek. It lays out the model the screen built; it never decides a stage's state.
+// page and the peek: one equal column per stage, its name under its own segment, a gate's diamond
+// where its stage ends; with what happens now, the stages and that line share one run card. It
+// lays out the model the screen built; it never decides a stage's state.
+import type { ReactNode } from "react";
+
 import { Icon } from "./Icon";
 import s from "./Stepper.module.css";
-import { cx, tokenPx } from "./vars";
+import { cx, tokenPx, vars } from "./vars";
 
 export interface StepGate {
   label: string;
@@ -30,8 +34,11 @@ export interface StepperModel {
 export interface StepperProps {
   model: StepperModel;
   look?: "glyph" | "steps";
-  /** steps only: every inactive gate a bare diamond (the peek, an expanded row). */
+  /** steps only: smaller names, every inactive gate a bare diamond (an expanded row). */
   compact?: boolean;
+  /** steps only: what happens now (the live run, a gate's ask, a blocked reason), a full-width
+   *  line under the stages, the two in one run card so they read as one object. */
+  now?: ReactNode;
 }
 
 type Item = { gate: false; step: Step; i: number } | { gate: true; g: StepGate; i: number };
@@ -131,21 +138,27 @@ const GATE_SUB: Record<StepGate["state"], (g: StepGate) => string> = {
   passed: () => "",
 };
 
-/** A gate's diamond; bare (its name in the title only) when the stepper is compact and it isn't
- *  where the ticket is parked. */
-function GateStep({ g, bare }: { g: StepGate; bare: boolean }) {
-  const plain = bare && !parked(g);
+/** A gate: its diamond on the track where its stage ends, its name a caption under the stage's;
+ *  bare (the diamond only, the name in its title) when compact and the ticket isn't parked there. */
+function GateCaption({ g, bare }: { g: StepGate; bare: boolean }) {
+  if (bare && !parked(g)) return null;
   const sub = GATE_SUB[g.state](g);
   return (
-    <li className={cx(s.gate, plain && s.bare)} data-state={g.state} title={g.label}>
-      <u />
-      {plain ? null : <span className={s.name}>{g.short}</span>}
-      {!plain && sub ? <span className={s.sub}>{sub}</span> : null}
-    </li>
+    <span className={s.gatecap} data-state={g.state} title={g.label}>
+      <span>{g.short}</span>
+      {sub ? <b>{sub}</b> : null}
+    </span>
   );
 }
 
-function StageStep({ step, final, text }: { step: Step; final: boolean; text: string }) {
+interface StageProps {
+  step: Step;
+  final: boolean;
+  text: string;
+  bare: boolean;
+}
+
+function StageStep({ step, final, text, bare }: StageProps) {
   const at = step.state === "current" || step.state === "failed";
   return (
     <li
@@ -153,39 +166,56 @@ function StageStep({ step, final, text }: { step: Step; final: boolean; text: st
       data-state={step.state}
       aria-current={at ? "step" : undefined}
     >
-      <span className={s.bar} />
-      <span className={s.name}>
-        {final ? <Icon name="tick" /> : null}
+      <span className={s.bar}>
+        {step.gate ? (
+          <span className={s.knot} data-state={step.gate.state} title={step.gate.label} />
+        ) : null}
+      </span>
+      <span className={s.name} title={step.name}>
+        {final ? <Icon name="tick-sm" /> : null}
         {step.name}
       </span>
       {text ? <span className={s.sub}>{text}</span> : null}
       {step.round && at ? <span className={s.sub}>{roundText(step.round)}</span> : null}
+      {step.gate ? <GateCaption g={step.gate} bare={bare} /> : null}
     </li>
   );
 }
 
-function Steps({ model, compact }: { model: StepperModel; compact: boolean }) {
+function Steps({ model, compact, now }: { model: StepperModel; compact: boolean; now: ReactNode }) {
   const done = finished(model);
   const bare = compact || model.stages.filter((st) => st.gate).length > 2;
   const last = model.stages.length - 1;
   return (
-    <ol className={cx(s.steps, model.live && s.live, bare && s.compact)} aria-label="Workflow">
-      {items(model.stages).map((it) =>
-        it.gate ? (
-          <GateStep key={`g${String(it.i)}`} g={it.g} bare={bare} />
-        ) : (
-          <StageStep
-            key={`s${String(it.i)}`}
-            step={it.step}
-            final={it.i === last && done}
-            text={caption(it.step, it.i === last, model, done)}
-          />
-        ),
+    <div
+      className={cx(
+        s.flow,
+        model.live && s.live,
+        compact && s.compact,
+        now !== undefined && s.card,
       )}
-    </ol>
+      style={vars({ "--n": String(model.stages.length) })}
+    >
+      <ol className={s.steps} aria-label="Workflow">
+        {model.stages.map((step, i) => (
+          <StageStep
+            key={i}
+            step={step}
+            final={i === last && done}
+            text={caption(step, i === last, model, done)}
+            bare={bare}
+          />
+        ))}
+      </ol>
+      {now !== undefined ? <div className={s.now}>{now}</div> : null}
+    </div>
   );
 }
 
-export function Stepper({ model, look = "glyph", compact = false }: StepperProps) {
-  return look === "glyph" ? <Glyph model={model} /> : <Steps model={model} compact={compact} />;
+export function Stepper({ model, look = "glyph", compact = false, now }: StepperProps) {
+  return look === "glyph" ? (
+    <Glyph model={model} />
+  ) : (
+    <Steps model={model} compact={compact} now={now} />
+  );
 }

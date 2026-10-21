@@ -5,20 +5,10 @@ import { useSearchParams } from "react-router";
 
 import { useMessages, usePlan } from "../../api/queries";
 import type { Person, TicketRow } from "../../api/types";
-import {
-  edgeOf,
-  groupOf,
-  type Group,
-  runLine,
-  stageModel,
-  stagesText,
-  stepText,
-} from "../../domain/board";
-import { age, plural, repoShort } from "../../domain/format";
+import { groupOf, type Group, runLine, stageModel, stagesText } from "../../domain/board";
+import { plural, repoShort } from "../../domain/format";
 import { parsePlan, unsectioned } from "../../domain/plan";
 import {
-  Age,
-  Avatar,
   Badge,
   Button,
   Checklist,
@@ -26,7 +16,6 @@ import {
   Head,
   Icon,
   Mark,
-  Meter,
   Notice,
   Page,
   Row,
@@ -45,71 +34,25 @@ import { useSearch } from "../shared/useSearch";
 import {
   footOf,
   moveText,
-  nowCell,
+  nowLine,
   parseFilter,
   pills,
   searched,
   sections,
-  sourceText,
   type Summary,
 } from "./model";
+import { KeyCell, LINE_END, lineEnd, TitleCell } from "./TicketLine";
 
+// Linear's list: the key and the title on the left, what it waits on receding after the title;
+// at the far end one tight cluster (the chips against the age, then the face), so the title line
+// takes every width they leave. The cells say what they are: no column head.
 const COLUMNS: readonly Column[] = [
   { label: "Ref", width: "sm" },
-  { label: "Stage", width: "xl" },
-  { label: "Ticket", width: "fill" },
-  { label: "Now", width: "fill" },
-  { label: "Source", width: "lg" },
-  { label: "People", width: "xs" },
-  { label: "Upd", width: "xs", end: true },
+  { label: "Ticket", width: "fill", min: "2xl" },
+  ...LINE_END,
 ];
 
 const PLAN_MAX = 6;
-
-function NowText({ t, me }: { t: TicketRow; me: Person | null }) {
-  const cell = nowCell(t, me);
-  switch (cell.kind) {
-    case "run":
-      return (
-        <Stack dir="row" gap={4} align="center">
-          <Text tone="live" weight={500}>
-            {cell.agent}
-          </Text>
-          <Text tone="2" truncate title={cell.step}>
-            {cell.step}
-          </Text>
-          {cell.progress ? (
-            <>
-              <Meter size="row" done={cell.progress.done} total={cell.progress.total} />
-              <Text variant="meta" tabular>
-                {stepText(cell.progress)}
-              </Text>
-            </>
-          ) : null}
-        </Stack>
-      );
-    case "outcome":
-      return (
-        <Text tone="2" truncate>
-          <Text {...(cell.abandoned ? { tone: "blocked" as const, weight: 600 as const } : {})}>
-            {cell.word}
-          </Text>
-          {cell.note ? ` · ${cell.note}` : null}
-        </Text>
-      );
-    case "empty":
-      return null;
-    case "mark":
-      return (
-        <Stack dir="row" gap={3} align="center">
-          <Mark {...cell.mark} />
-          <Text tone="2" truncate title={cell.text}>
-            {cell.text}
-          </Text>
-        </Stack>
-      );
-  }
-}
 
 function Expanded({ t, me, now }: { t: TicketRow; me: Person | null; now: number }) {
   const plan = parsePlan(usePlan(t.key).data ?? "");
@@ -118,64 +61,68 @@ function Expanded({ t, me, now }: { t: TicketRow; me: Person | null; now: number
   const a = t.attention;
   const [, setParams] = useSearchParams();
   return (
-    <Stack dir="row" gap={10}>
-      <Stack grow gap={2}>
-        <Text variant="meta" weight={500}>
-          {move.label}
-        </Text>
-        <Text variant="label">{move.lead}</Text>
-        <Text tone="3">{`Owner ${t.owner?.name ?? "nobody"} · ${stagesText(t)}`}</Text>
-        <Stack dir="row" gap={3} wrap>
-          {expandedActions(t.actions).map((action) => (
-            <ActionButton key={action.id} action={action} />
-          ))}
-          <Button
-            size="sm"
-            onClick={() => {
-              setParams((p) => {
-                const out = new URLSearchParams(p);
-                out.set("peek", t.key);
-                return out;
-              });
-            }}
-          >
-            Peek
-          </Button>
-          <Button size="sm" href={`/t/${t.key}`}>
-            Open ticket
-          </Button>
-        </Stack>
-      </Stack>
-      <Stack grow gap={4}>
-        {a.kind === "running" ? (
-          <Stack dir="row" gap={3} align="center">
-            <Mark kind="run" glyph />
-            <Text variant="meta" tone="live" weight={500}>
-              {runLine(t, now)}
+    <Stack gap={8}>
+      <Stepper model={stageModel(t, me)} look="steps" compact />
+      <Stack dir="row" gap={10}>
+        <Stack grow gap={8}>
+          <Stack gap={2}>
+            <Text variant="meta" weight={500}>
+              {move.label}
             </Text>
+            <Text variant="label">{move.lead}</Text>
+            <Text tone="3">{`Owner ${t.owner?.name ?? "nobody"} · ${stagesText(t)}`}</Text>
           </Stack>
-        ) : (
-          <Text variant="meta" weight={500}>
-            {t.plan ? `Plan · ${String(t.plan.done)} of ${String(t.plan.total)} done` : "Plan"}
-          </Text>
-        )}
-        {plan.length > 0 ? (
-          <Checklist
-            items={unsectioned(plan).slice(0, PLAN_MAX)}
-            more={Math.max(0, plan.length - PLAN_MAX)}
-          />
-        ) : (
-          <Text tone="3">No plan yet.</Text>
-        )}
-        <Stepper model={stageModel(t, me)} look="steps" compact />
-      </Stack>
-      <Stack grow gap={4}>
-        <Text variant="meta" weight={500}>{`Talk · ${plural(t.messages, "message")}`}</Text>
-        {last ? (
-          <Thread look="last" messages={[threadMessage(last, me)]} />
-        ) : (
-          <Text tone="3">Nobody has said anything yet.</Text>
-        )}
+          <Stack dir="row" gap={3} wrap>
+            {expandedActions(t.actions).map((action) => (
+              <ActionButton key={action.id} action={action} />
+            ))}
+            <Button
+              size="sm"
+              onClick={() => {
+                setParams((p) => {
+                  const out = new URLSearchParams(p);
+                  out.set("peek", t.key);
+                  return out;
+                });
+              }}
+            >
+              Peek
+            </Button>
+            <Button size="sm" href={`/t/${t.key}`}>
+              Open ticket
+            </Button>
+          </Stack>
+          <Stack gap={4}>
+            <Text variant="meta" weight={500}>{`Talk · ${plural(t.messages, "message")}`}</Text>
+            {last ? (
+              <Thread look="last" messages={[threadMessage(last, me)]} />
+            ) : (
+              <Text tone="3">Nobody has said anything yet.</Text>
+            )}
+          </Stack>
+        </Stack>
+        <Stack grow gap={4}>
+          {a.kind === "running" ? (
+            <Stack dir="row" gap={3} align="center">
+              <Mark kind="run" glyph />
+              <Text variant="meta" tone="live" weight={500}>
+                {runLine(t, now)}
+              </Text>
+            </Stack>
+          ) : (
+            <Text variant="meta" weight={500}>
+              {t.plan ? `Plan · ${String(t.plan.done)} of ${String(t.plan.total)} done` : "Plan"}
+            </Text>
+          )}
+          {plan.length > 0 ? (
+            <Checklist
+              items={unsectioned(plan).slice(0, PLAN_MAX)}
+              more={Math.max(0, plan.length - PLAN_MAX)}
+            />
+          ) : (
+            <Text tone="3">No plan yet.</Text>
+          )}
+        </Stack>
       </Stack>
     </Stack>
   );
@@ -195,40 +142,23 @@ function CompactRow({
   onToggle: () => void;
 }) {
   const g = groupOf(t, me);
+  const line = nowLine(t, me);
   return (
     <Row
       look={g === "done" ? "flat" : g === "needs_you" ? "you" : "raised"}
-      edge={edgeOf(t, me)}
       action={{ label: `${t.key}: ${t.title}`, run: onToggle }}
       open={open}
       more={<Expanded t={t} me={me} now={now} />}
     >
-      <Badge kind="key">{t.key}</Badge>
-      <Stepper model={stageModel(t, me)} />
-      <Stack dir="row" gap={3} align="center">
-        <Icon name={t.type} />
-        <Icon name={t.priority} />
-        <Text
-          variant="label"
-          weight={g === "needs_you" ? 600 : 500}
-          tone={g === "done" ? "2" : "1"}
-          truncate
-          title={t.title}
-        >
-          {t.title}
-        </Text>
-      </Stack>
-      <NowText t={t} me={me} />
-      <Text variant="meta" truncate>
-        {sourceText(t)}
-      </Text>
-      {t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} /> : <Avatar />}
-      <Text
-        tone={g === "needs_you" ? "1" : g === "done" ? "3" : "2"}
-        weight={g === "needs_you" ? 600 : undefined}
-      >
-        <Age text={g === "running" ? "now" : age(t.since, now)} />
-      </Text>
+      <KeyCell t={t} />
+      <TitleCell t={t} me={me} after={line.after} />
+      {lineEnd({
+        t,
+        me,
+        now,
+        chip: { mark: line.chip, count: line.count },
+        ...(g === "running" ? { age: "now" } : {}),
+      })}
     </Row>
   );
 }
@@ -344,6 +274,7 @@ export function CompactView() {
       <Surface fill>
         <Table
           columns={COLUMNS}
+          head={false}
           foot={
             <>
               {[
@@ -399,7 +330,7 @@ export function CompactView() {
                 key={`head-${g.id}`}
                 name={g.title}
                 count={g.items.length}
-                icon={<Mark kind={g.mark} glyph small />}
+                icon={<Mark kind={g.mark} glyph />}
                 tone={g.id === "needs_you" ? "you" : g.id === "done" ? "done" : "neutral"}
                 summary={<SummaryText summary={g.summary} />}
                 fold={{

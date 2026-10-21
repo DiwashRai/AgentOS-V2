@@ -5,22 +5,32 @@ import s from "./Facts.module.css";
 export interface Fact {
   label: string;
   value: ReactNode;
+  /** Quiet words after the value ("from the repo"). */
+  note?: string;
 }
 
 export interface FactsProps {
   items: readonly Fact[];
+  /** A head before the chips, as Linear's "Properties". */
+  label?: string;
 }
 
-/** A line of facts: "Owner **Ada** · Workflow **Standard**". */
-export function Facts({ items }: FactsProps) {
+/** A ticket's properties as Linear draws them: one row of chips, each label in its tooltip. */
+export function Facts({ items, label }: FactsProps) {
   return (
-    <dl className={s.facts}>
-      {items.map((f) => (
-        <div key={f.label} className={s.fact}>
-          <dt>{f.label}</dt>
-          <dd>{f.value}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className={s.facts}>
+      {label ? <span className={s.head}>{label}</span> : null}
+      <dl className={s.chips}>
+        {items.map((f) => (
+          <div key={f.label} className={s.fact} title={f.label}>
+            <dt>{f.label}</dt>
+            <dd>
+              {f.value}
+              {f.note ? <span className={s.note}>{f.note}</span> : null}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }

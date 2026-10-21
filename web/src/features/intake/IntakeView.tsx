@@ -1,24 +1,22 @@
 // Intake: per saved query, the Jira issues not taken in yet, each a "Take in" away from the Inbox.
-// Every row is raised and lights up on hover; the key opens Jira; the button takes it in. W0 is
+// Every row lights up on hover; the key opens Jira; the button takes it in. W0 is
 // static, so Take in does nothing yet.
 import { useState } from "react";
 
 import { useIntake, useNow, useSession } from "../../api/queries";
 import type { IntakeIssue, IntakeQuery } from "../../api/types";
-import { age } from "../../domain/format";
 import {
   Age,
   Avatar,
   Badge,
   Button,
   type Column,
-  Head,
   Icon,
   Notice,
   Page,
   Row,
   Stack,
-  Surface,
+  Swap,
   Table,
   Text,
 } from "../../kit";
@@ -26,65 +24,148 @@ import { useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
 import {
+  ageLabel,
+  ageTitle,
   emptyText,
   footNote,
   headSummary,
+  issueFacts,
   issuesOf,
   jqlHref,
+  metaFact,
   sharedPrefix,
   toTakeIn,
-  TYPE_WORD,
   visible,
 } from "./model";
 
+// One triage inbox, as Linear's: the three queries run on as one list, each opened by a plain
+// label line on the list's hairline (no band). An issue is two lines at one size: the title firm,
+// and under it one muted line led by who has it (a face; Unassigned a dashed empty face, so every
+// line starts on one glyph) and one fact (a priority worth saying, led by its bars, else the Jira
+// status; the rest in its tooltip). At the right the Jira key on the title's line and the age on
+// the meta's ("1h ago", in its largest unit; to the minute in its tooltip), flush on one edge;
+// under the pointer or with focus, Take in takes the age's place. No column head: the cells say
+// what they are.
 const COLUMNS: readonly Column[] = [
-  { label: "Jira", width: "md" },
-  { label: "Type", width: "md" },
   { label: "Issue", width: "fill" },
-  { label: "Jira status", width: "lg" },
-  { label: "Assignee", width: "xl" },
-  { label: "Upd", width: "xs", end: true },
-  { label: "", width: "sm", end: true },
+  { label: "Jira", width: "lg", end: true, hug: true },
 ];
+
+/** Muted words at the row's own size (14px regular), as Linear sets a row's second line. */
+function Quiet({ children, title }: { children: string; title?: string }) {
+  return (
+    <Text variant="label" weight={400} tone="3" truncate {...(title ? { title } : {})}>
+      {children}
+    </Text>
+  );
+}
+
+function Meta({ issue }: { issue: IntakeIssue }) {
+  const fact = metaFact(issue);
+  return (
+    <Stack dir="row" gap={3} align="center">
+      {issue.assignee ? <Avatar name={issue.assignee} /> : <Avatar dashed />}
+      <Quiet>{issue.assignee ?? "Unassigned"}</Quiet>
+      <Quiet>·</Quiet>
+      <Stack dir="row" gap={2} align="center">
+        {fact.priority ? <Icon name={fact.priority} /> : null}
+        <Quiet title={issueFacts(issue)}>{fact.text}</Quiet>
+      </Stack>
+    </Stack>
+  );
+}
 
 function IssueRow({ issue, now }: { issue: IntakeIssue; now: number }) {
   return (
-    <Row>
-      <Badge kind="key" href={issue.url} title={`Open ${issue.key} in Jira`}>
-        {issue.key}
-      </Badge>
-      <Stack dir="row" gap={4} align="center">
-        <Icon name={issue.type} />
-        <Text tone="2">{TYPE_WORD[issue.type]}</Text>
-      </Stack>
-      <Stack dir="row" gap={3} align="center">
-        <Icon name={issue.priority} />
+    <Row kind="item">
+      <Stack gap={4} grow>
         <Text variant="label" truncate title={issue.title}>
           {issue.title}
         </Text>
+        <Meta issue={issue} />
       </Stack>
-      <Badge kind="status" title={`Jira status: ${issue.status}`}>
-        {issue.status}
-      </Badge>
-      {issue.assignee ? (
-        <Stack dir="row" gap={4} align="center">
-          <Avatar name={issue.assignee} />
-          <Text tone="1" weight={500} truncate>
-            {issue.assignee}
-          </Text>
+      <Stack gap={4}>
+        <Stack dir="row" justify="end">
+          <Button variant="link" href={issue.url} title={`Open ${issue.key} in Jira`}>
+            <Badge kind="key">{issue.key}</Badge>
+          </Button>
         </Stack>
-      ) : (
-        <Stack dir="row" gap={4} align="center">
-          <Avatar dashed />
-          <Text tone="3">Unassigned</Text>
+        <Stack dir="row" align="center" justify="end">
+          <Swap
+            hover={
+              <Button size="xs" title={`Take in ${issue.key}`}>
+                Take in
+              </Button>
+            }
+          >
+            <Text variant="label" weight={400} tone="3">
+              <Age text={ageLabel(issue.updated_at, now)} title={ageTitle(issue.updated_at, now)} />
+            </Text>
+          </Swap>
         </Stack>
-      )}
-      <Text tone="2">
-        <Age text={age(issue.updated_at, now)} />
-      </Text>
-      <Button variant="lit" size="sm" title={`Take in ${issue.key}`}>
-        Take in
-      </Button>
+      </Stack>
+    </Row>
+  );
+}
+
+/** The far end of a group's label: "50 of 73 match" at rest; under the pointer, the query itself,
+ *  opened in Jira. With no Jira to open, the JQL stays in view. */
+function LabelEnd({ q, jiraUrl }: { q: IntakeQuery; jiraUrl: string | null }) {
+  const summary = headSummary(q);
+  const said = summary ? <Quiet>{summary}</Quiet> : null;
+  if (!jiraUrl) {
+    return (
+      <Stack dir="row" gap={6} align="center" justify="end">
+        {said}
+        <Text variant="code" tone="3" truncate title={q.jql}>
+          {q.jql}
+        </Text>
+      </Stack>
+    );
+  }
+  return (
+    <Swap
+      hover={
+        <Button
+          variant="link"
+          icon="out"
+          title={`Open in Jira: ${q.jql}`}
+          href={jqlHref(jiraUrl, q.jql)}
+        >
+          Open in Jira
+        </Button>
+      }
+    >
+      {said}
+    </Swap>
+  );
+}
+
+interface LabelProps {
+  q: IntakeQuery;
+  count: number;
+  jiraUrl: string | null;
+  collapsed: boolean;
+  toggle: () => void;
+}
+
+/** A group's label: a plain line of the list, as Linear labels a run of its inbox. The chevron,
+ *  the muted project key, the name in the row's own size (bold), the count muted; a click
+ *  anywhere on it (or Enter on it) folds the group. */
+function GroupLabel({ q, count, jiraUrl, collapsed, toggle }: LabelProps) {
+  const prefix = sharedPrefix(q);
+  return (
+    <Row kind="line" action={{ label: `${collapsed ? "Show" : "Hide"} ${q.name}`, run: toggle }}>
+      <Stack dir="row" gap={4} align="center">
+        <Icon name={collapsed ? "arrow" : "chevron"} />
+        {prefix ? <Quiet>{prefix}</Quiet> : null}
+        <Text variant="label" weight={600} truncate>
+          {q.name}
+        </Text>
+        {count > 0 ? <Quiet>{String(count)}</Quiet> : null}
+        {q.result.kind === "error" ? <Quiet>didn&apos;t answer</Quiet> : null}
+      </Stack>
+      <LabelEnd q={q} jiraUrl={jiraUrl} />
     </Row>
   );
 }
@@ -101,52 +182,36 @@ function Group({ q, query, jiraUrl, now }: GroupProps) {
   const [expanded, setExpanded] = useState(false);
   const issues = issuesOf(q, query);
   const { shown, rest } = visible(issues, expanded);
-  const prefix = sharedPrefix(q);
-  const summary = headSummary(q);
   const empty = emptyText(q, query.length > 0);
   return (
     <>
-      <Head
-        name={q.name}
-        icon={
-          prefix ? (
-            <Badge kind="key" size="sm">
-              {prefix}
-            </Badge>
-          ) : undefined
-        }
-        count={q.result.kind === "issues" ? issues.length : undefined}
-        summary={
-          <>
-            {summary ? <Text variant="meta">{summary} ·</Text> : null}
-            <Text variant="code" truncate title={q.jql}>
-              {q.jql}
-            </Text>
-            {jiraUrl ? (
-              <Button
-                variant="quiet"
-                size="xs"
-                icon="out"
-                title="Open in Jira"
-                href={jqlHref(jiraUrl, q.jql)}
-              />
-            ) : null}
-          </>
-        }
-        fold={{
-          open: !collapsed,
-          toggle: () => {
-            setCollapsed((c) => !c);
-          },
+      <GroupLabel
+        q={q}
+        count={issues.length}
+        jiraUrl={jiraUrl}
+        collapsed={collapsed}
+        toggle={() => {
+          setCollapsed((c) => !c);
         }}
       />
       {collapsed ? null : q.result.kind === "error" ? (
-        <Notice kind="problem" lead="Jira didn't answer">
-          <Text>{q.result.message}</Text>
-          <Text tone="3">An admin can fix the query in Settings › Intake</Text>
+        <Notice
+          kind="problem"
+          align="item"
+          fix={
+            <>
+              {"An admin can fix the query in "}
+              <Button variant="link" href="/settings">
+                Settings › Intake
+              </Button>
+              .
+            </>
+          }
+        >
+          {q.result.message}
         </Notice>
       ) : issues.length === 0 ? (
-        <Notice kind="empty" lead={empty.lead}>
+        <Notice kind="empty" align="item" lead={empty.lead}>
           {empty.note}
         </Notice>
       ) : (
@@ -155,15 +220,16 @@ function Group({ q, query, jiraUrl, now }: GroupProps) {
             <IssueRow key={issue.key} issue={issue} now={now} />
           ))}
           {rest > 0 ? (
-            <Notice kind="more" lead={`+${String(rest)} more`}>
-              <Stack grow />
+            <Notice kind="more" align="item">
               <Button
-                variant="link"
+                variant="quiet"
+                size="xs"
+                title={`Show all ${String(issues.length)}`}
                 onClick={() => {
                   setExpanded(true);
                 }}
               >
-                {`Show all ${String(issues.length)}`}
+                {`Show ${String(rest)} more`}
               </Button>
             </Notice>
           ) : null}
@@ -195,38 +261,26 @@ export function IntakeView() {
         : {})}
       search={search}
     >
-      <Surface fill>
-        <Table
-          columns={COLUMNS}
-          foot={
-            <>
-              <Stack dir="row" gap={3} align="center">
-                <Badge kind="kbd">/</Badge>
-                <Text variant="meta">Search</Text>
-              </Stack>
-              <Stack dir="row" gap={3} align="center">
-                <Badge kind="kbd">Esc</Badge>
-                <Text variant="meta">Clear</Text>
-              </Stack>
-              <Stack grow />
-              {data ? <Text variant="meta">{footNote(data, now)}</Text> : null}
-            </>
-          }
-        >
-          {data ? (
-            data.queries.map((q) => (
+      <Table columns={COLUMNS} head={false} scroll={false}>
+        {data ? (
+          <>
+            {data.queries.map((q) => (
               <Group key={q.name} q={q} query={query} jiraUrl={jiraUrl} now={now} />
-            ))
-          ) : intake.error ? (
-            <Notice
-              kind="status"
-              error
-            >{`Can't reach the server · ${intake.error.message}`}</Notice>
-          ) : (
-            <Notice kind="status">Loading</Notice>
-          )}
-        </Table>
-      </Surface>
+            ))}
+            <Notice kind="status" align="end">
+              {footNote(data, now)}
+            </Notice>
+          </>
+        ) : intake.error ? (
+          <Notice kind="status" align="item" error>
+            {`Can't reach the server · ${intake.error.message}`}
+          </Notice>
+        ) : (
+          <Notice kind="status" align="item">
+            Loading
+          </Notice>
+        )}
+      </Table>
     </Page>
   );
 }
