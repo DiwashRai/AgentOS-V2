@@ -76,7 +76,7 @@ function Full({
         }}
       >
         <span className={s.close}>
-          <Button variant="quiet" icon="close" title="Close  Esc" onClick={onClose} />
+          <Button variant="quiet" icon="close" title="Close (Esc)" onClick={onClose} />
         </span>
         <div className={s.view}>{children}</div>
       </div>
@@ -134,15 +134,17 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
       onKeyDown={(e) => {
         if (e.key !== "Escape" || e.defaultPrevented) return;
         e.preventDefault();
-        onClose();
+        // a held key asks once (its repeats are still kept from the browser)
+        if (!e.repeat) onClose();
       }}
+      // React hands a nested dialog's cancel and close to this one too: only its own count
       onCancel={(e) => {
-        if (!e.cancelable) return; // the browser closes it anyway: `onClose` below reports it
+        if (e.target !== e.currentTarget || !e.cancelable) return; // `onClose` below reports it
         e.preventDefault();
         onClose();
       }}
-      onClose={() => {
-        if (wanted.current) onClose();
+      onClose={(e) => {
+        if (e.target === e.currentTarget && wanted.current) onClose();
       }}
     >
       <Layer.Provider value={ref}>

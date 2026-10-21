@@ -144,7 +144,9 @@ function Reply({ ticketKey }: { ticketKey: string }) {
 
 export function Peek() {
   const [params, setParams] = useSearchParams();
-  const key = params.get("peek");
+  // an empty ?peek= is no peek
+  const asked = params.get("peek");
+  const key = asked === "" ? null : asked;
   const { me, now } = useBoard();
   const close = () => {
     setParams((p) => {

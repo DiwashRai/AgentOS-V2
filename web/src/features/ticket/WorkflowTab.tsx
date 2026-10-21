@@ -28,7 +28,6 @@ function lastRun(runs: readonly Run[], stage: string, rounds: number): LastRun |
     const round = rounds > 1 ? ` · round ${String(at.round)} of ${String(rounds)}` : "";
     return {
       kind,
-      word: WORD[kind],
       text: `${WORD[kind]}${round}`,
       title: `Run #${String(run.id)}`,
     };

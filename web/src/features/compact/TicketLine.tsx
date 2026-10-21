@@ -3,11 +3,17 @@
 // receding after it on the same line; then one tight cluster at the far end: the row's label chips
 // (the agent and its step, the stage on its state's dot, the source) hugging the age, and last the
 // owner's face. The age and the face sit on fixed columns, so they end on one edge row after row.
-import type { Person, TicketRow, TicketType } from "../../api/types";
+import type { Person, Priority, TicketRow, TicketType } from "../../api/types";
 import { markOf, type MarkModel, stageModel } from "../../domain/board";
 import { age } from "../../domain/format";
 import { Age, Avatar, Badge, Chip, type Column, Icon, Mark, Stack, Text } from "../../kit";
 import { chipWords, sourceText, stageDot, stageWord } from "./model";
+
+/** High and low priority are said; normal is the bars' resting form, said by nothing. */
+const PRIORITY_SAY: Record<Exclude<Priority, "normal">, string> = {
+  high: "High priority",
+  low: "Low priority",
+};
 
 const TYPE_WORD: Record<TicketType, string> = {
   feature: "Feature",
@@ -29,7 +35,10 @@ export const LINE_END: readonly Column[] = [
 export function KeyCell({ t }: { t: TicketRow }) {
   return (
     <Stack dir="row" gap={4} align="center">
-      <Icon name={t.priority} />
+      <Icon
+        name={t.priority}
+        {...(t.priority === "normal" ? {} : { label: PRIORITY_SAY[t.priority] })}
+      />
       <Badge kind="key" title={`${t.key} · ${TYPE_WORD[t.type]}`}>
         {t.key}
       </Badge>

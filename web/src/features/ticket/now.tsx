@@ -38,7 +38,7 @@ export function Now({ t, me, now, plan }: NowProps) {
   return (
     <Stack gap={5}>
       <Stack dir="row" gap={4} align="center">
-        <Mark kind="run" glyph name={`${run}, running`} progress={p ?? null} />
+        <Mark kind="run" glyph name="Running" progress={p ?? null} />
         <Text tone="1" truncate title={`${run} · ${a.step}`}>
           {`${run} · `}
           <Text tone="2">{a.step}</Text>

@@ -30,6 +30,11 @@
   background: var(--list-band);
   box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
 }
+/* a fold's heading is no box: its button lays out as the head's own child */
+.holds {
+  display: contents;
+  font: inherit;
+}
 .toggle,
 .static {
   display: inline-flex;

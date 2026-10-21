@@ -11,7 +11,8 @@ import { isCheck, phaseWord, type RefKind } from "./model";
 export function StageFace({ stage, lib }: { stage: Stage; lib: Library }) {
   if (stage.kind === "shell") return <Icon name="shell" label="Shell stage" />;
   const a = agentOf(lib, stage.agent);
-  return <Avatar name={a?.name ?? stage.agent} seed={`agent:${stage.agent}`} />;
+  // the card writes the agent's name under it: the face is drawing alone
+  return <Avatar name={a?.name ?? stage.agent} seed={`agent:${stage.agent}`} beside />;
 }
 
 function markText(s: Stage): string {
@@ -114,7 +115,7 @@ export function StageChips({
 /** A stage's last run on the ticket: its glyph's state, and its words (the stepper's). */
 export interface LastRun {
   kind: Extract<MarkKind, "run" | "blk" | "done">;
-  word: string;
+  /** Its words, its state's first ("Live · round 2 of 3"): the glyph beside them is drawing. */
   text: string;
   title: string;
 }
@@ -137,7 +138,7 @@ function HeadLine({ stage, run }: { stage: Stage; run: LastRun | null }) {
   const samePhase = phase.toLowerCase() === stage.name.toLowerCase();
   return (
     <Stack dir="row" gap={4} align="center">
-      {run ? <Mark kind={run.kind} glyph small name={run.word} /> : null}
+      {run ? <Mark kind={run.kind} glyph small name={false} /> : null}
       <Text variant="label" truncate>
         {stage.name}
       </Text>

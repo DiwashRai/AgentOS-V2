@@ -23,7 +23,7 @@ export function Meter({ done, total, size = "row" }: MeterProps) {
     <span
       className={cx(s.meter, s[size])}
       role="img"
-      aria-label={`${String(done)}/${String(total)} steps`}
+      aria-label={`${String(done)} of ${String(total)} steps done`}
     >
       {segments(done, total).map((seg, i) => (
         <i key={i} className={s.seg} data-seg={seg} />

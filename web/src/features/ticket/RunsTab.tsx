@@ -243,7 +243,11 @@ function RunDetail({ r, runs, w, now }: RunProps) {
   return (
     <Stack gap={6}>
       <Stack dir="row" gap={3} align="center">
-        {r.by ? <Avatar size="sm" name={r.by.name} seed={String(r.by.id)} /> : <Avatar size="sm" />}
+        {r.by ? (
+          <Avatar size="sm" name={r.by.name} seed={String(r.by.id)} beside />
+        ) : (
+          <Avatar size="sm" />
+        )}
         <Text tone="3">
           <Text tone="1">{r.by?.name ?? "Nobody"}</Text>
           {` ${r.started_at ? `started it at ${clock(r.started_at)}` : "queued it"} · ${ROUTE[r.route]} · ${end}`}

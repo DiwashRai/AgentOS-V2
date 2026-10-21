@@ -54,16 +54,19 @@ function Title({ name, count, icon, tone, note }: TitleProps) {
   );
 }
 
-/** The title as the fold's button, or as a heading when the group doesn't fold. */
+/** The title as a heading; when the group folds, the heading holds the fold's button (the
+ *  disclosure pattern), so heading navigation finds every group. */
 function Lead({ fold, title }: { fold: HeadProps["fold"]; title: ReactNode }) {
   if (!fold) return <h2 className={s.static}>{title}</h2>;
   return (
-    <button type="button" className={s.toggle} aria-expanded={fold.open} onClick={fold.toggle}>
-      <span className={s.chev}>
-        <Icon name="chevron" />
-      </span>
-      {title}
-    </button>
+    <h2 className={s.holds}>
+      <button type="button" className={s.toggle} aria-expanded={fold.open} onClick={fold.toggle}>
+        <span className={s.chev}>
+          <Icon name="chevron" />
+        </span>
+        {title}
+      </button>
+    </h2>
   );
 }
 

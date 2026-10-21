@@ -93,7 +93,7 @@ function AgentChip({ t }: { t: TicketRow }) {
   const face = t.owner ? { name: t.owner.name, seed: String(t.owner.id) } : undefined;
   const who =
     a.kind === "running"
-      ? { after: { agent: a.agent, ...(face ? { face } : {}) } }
+      ? { after: { agent: true as const, ...(face ? { face } : {}) } }
       : face
         ? { after: { face } }
         : {};

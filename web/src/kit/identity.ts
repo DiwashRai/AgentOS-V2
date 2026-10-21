@@ -1,8 +1,8 @@
 // A person's face: its hue, a stable hash of who they are over the five `--id-*` hues (V1's, so
 // the same person reads in the same colour), and its initials. Project keys are neutral. Pure.
 
-export const HUES = ["violet", "blue", "rose", "teal", "slate"] as const;
-export type Hue = (typeof HUES)[number];
+const HUES = ["violet", "blue", "rose", "teal", "slate"] as const;
+type Hue = (typeof HUES)[number];
 
 /** FNV-1a (32-bit) over the UTF-16 code units: small, stable and well spread for short strings. */
 function fnv1a(text: string): number {

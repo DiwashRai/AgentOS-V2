@@ -1,7 +1,7 @@
 // A ticket's properties as Linear draws them: one row of chips, each label in its tooltip and its
 // screen-reader term. A fact is one of: its words, after a muted glyph; other content (a face and a
 // name); or a picker, which brings its own padding and hover.
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 
 import s from "./Facts.module.css";
 import { Icon, type IconName } from "./Icon";
@@ -57,10 +57,15 @@ function Value({ f }: { f: Fact }) {
 }
 
 export function Facts({ items, label }: FactsProps) {
+  const head = useId();
   return (
     <div className={s.facts}>
-      {label ? <span className={s.head}>{label}</span> : null}
-      <dl className={s.chips}>
+      {label ? (
+        <span className={s.head} id={head}>
+          {label}
+        </span>
+      ) : null}
+      <dl className={s.chips} aria-labelledby={label ? head : undefined}>
         {items.map((f) => (
           <div
             key={f.label}

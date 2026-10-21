@@ -21,11 +21,12 @@ interface Face {
   seed: string;
 }
 
-/** After the words, one of: a count; or who works on it, an agent (with whose ticket it is) or a
- *  person's face alone. Never a count and a who together, never a who with no one. */
+/** After the words, one of: a count; or who works on it, an agent's glyph (the words name the
+ *  agent; with whose ticket it is) or a person's face alone. Never a count and a who together,
+ *  never a who with no one. */
 export type ChipAfter =
   | { text: string; agent?: never; face?: never }
-  | { agent: string; face?: Face; text?: never }
+  | { agent: true; face?: Face; text?: never }
   | { face: Face; agent?: never; text?: never };
 
 export type ChipProps = {
@@ -88,9 +89,9 @@ function After({ after }: { after: ChipAfter }) {
   if (after.text !== undefined) return <span className={s.count}>{after.text}</span>;
   return (
     <span className={s.who}>
-      {after.agent !== undefined ? (
+      {after.agent ? (
         <span className={s.agent}>
-          <Icon name="agents" label={`${after.agent} agent`} />
+          <Icon name="agents" label="agent" />
         </span>
       ) : null}
       {after.face ? <Avatar name={after.face.name} seed={after.face.seed} size="sm" /> : null}

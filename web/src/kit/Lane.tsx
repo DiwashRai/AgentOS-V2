@@ -130,6 +130,23 @@ function Insert({ st, i, last, edit }: JointProps & { edit: LaneEdit }) {
   );
 }
 
+/** A gate's name on the axis: read only, it says it is a gate; editing, the diamond's toggle says
+ *  it all, so the name is drawing alone. */
+function GateName({ name, editing }: { name: string; editing: boolean }) {
+  if (editing)
+    return (
+      <span className={s.name} aria-hidden="true">
+        {name}
+      </span>
+    );
+  return (
+    <span className={s.name}>
+      <span className={u.unseen}>Gate: </span>
+      {name}
+    </span>
+  );
+}
+
 /** Between a card and the next: the axis, the gate's diamond and name, and the + while editing. */
 function Joint({ st, i, last, edit }: JointProps) {
   const gated = st.gate !== null;
@@ -137,12 +154,7 @@ function Joint({ st, i, last, edit }: JointProps) {
   return (
     <div className={s.joint} data-end={last || undefined}>
       {edit || gated ? <Diamond st={st} i={i} edit={edit} /> : null}
-      {gated ? (
-        <span className={s.name}>
-          <span className={u.unseen}>Gate: </span>
-          {st.gate}
-        </span>
-      ) : null}
+      {st.gate === null ? null : <GateName name={st.gate} editing={edit !== undefined} />}
       {edit ? <Insert st={st} i={i} last={last} edit={edit} /> : null}
     </div>
   );

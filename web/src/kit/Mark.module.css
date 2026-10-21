@@ -87,7 +87,7 @@
   color: var(--ink-2);
 }
 
-/* waiting on you: the YOU pill, then the ask in the you hue; alone, a blue ring filled whole */
+/* waiting on you: the YOU pill, then the ask in the you hue; alone, a ring filled whole in that accent */
 .you .ask {
   font-weight: 600;
   color: var(--you-text);

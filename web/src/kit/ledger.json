@@ -50,7 +50,7 @@
         "size": {
           "why": "Five places draw faces at five sizes.",
           "values": {
-            "sm": "A face inside a pill (16px): an agent card's state chip.",
+            "sm": "16px: a face in a pill (an agent card's state chip), a run's starter.",
             "md": "Rows, heads and pickers (18px): Linear's small face, a disc in the person's own hue.",
             "mid": "A neutral face whose initials must read (24px): All teams' team faces.",
             "lg": "The signed-in face in the sidebar's account popover (30px).",
@@ -268,7 +268,7 @@
           "why": "Esc or the close button: the screen closes it by `open`, or asks first (unsaved changes)."
         },
         "children": {
-          "why": "Its sections, one hairline apart; they scroll inside the panel."
+          "why": "Beside the page: its sections, each top element the children draw, padded and ruled apart; full window: the one view."
         },
         "foot": {
           "why": "Pinned under the scrolling sections, as Linear's reply box sits at its panel's foot (the peek's composer); the side look only."
@@ -612,7 +612,7 @@
       "why": "A view: the top bar (title, context, counters, the view's controls, search, its buttons) and the body.",
       "props": {
         "title": {
-          "why": "The view's name, and the tab's; a list is Linear's breadcrumb, its last step the name; a pair's first step is a link back (the ticket: My queue › NW-17, the way back to the queue)."
+          "why": "The view's name, and the tab's; a pair is Linear's breadcrumb, its last step the name; a pair's first step is a link back (the ticket: My queue › NW-17, the way back to the queue)."
         },
         "context": {
           "why": "Quiet after the title: the Space, a scope, who."
@@ -838,8 +838,8 @@
                       "values": {
                         "pending": "Not reached yet: grey.",
                         "passed": "Signed off: green.",
-                        "waiting": "Parked, waiting on someone else: a blue ring.",
-                        "you": "Parked, waiting on you: filled blue."
+                        "waiting": "Parked, waiting on someone else: a ring in the your-move accent.",
+                        "you": "Parked, waiting on you: filled in the your-move accent."
                       }
                     }
                   }
@@ -1148,7 +1148,7 @@
       "values": {
         "run": "Running: an orange ring, its pie as far as the run is, its halo breathing.",
         "wait": "Waiting on someone else: a grey ring three quarters filled.",
-        "you": "Needs you: the YOU pill; alone, a blue ring filled whole.",
+        "you": "Needs you: the YOU pill; alone, a ring filled whole in the your-move accent.",
         "blk": "Blocked: a crimson disc with a bar across it.",
         "done": "Complete: a green disc with a tick.",
         "abandoned": "Abandoned: a grey disc with a cross, its name in crimson.",
@@ -1185,7 +1185,7 @@
         "clock": "The ticket's properties: when it opened.",
         "high": "High priority: all three signal bars lit.",
         "low": "Low priority: the first of three signal bars lit, so it never reads as a fold chevron.",
-        "normal": "Normal priority: an empty slot, so titles share one x.",
+        "normal": "Normal priority: three dashes, the bars' resting form.",
         "tick": "Done: a plan step's tick (the Checklist).",
         "tick-sm": "Done, inline in a mark or a head.",
         "feature": "Ticket type: feature.",
