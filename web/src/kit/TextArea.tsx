@@ -1,6 +1,7 @@
 // Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of
 // AGENTS.md): at least `lines` tall and growing with its text; an item editor's is a section of
-// its document, a ruled head strip over the bare text. Every area
+// its document, a ruled head strip over its text read as a document (headings, lists, `code`, front
+// matter, a fenced block) over its hidden source, which a click edits in place. Every area
 // can pop out to the whole window, for long text: the same value, edited at a readable measure,
 // and Done or Esc brings it back (inside an overlay too: it opens over it).
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
@@ -91,7 +92,11 @@ export function TextArea(props: TextAreaProps) {
             {tools !== undefined ? <span className={s.tools}>{tools}</span> : null}
             {pop}
           </div>
-          {folded ? null : area(false)}
+          {folded ? null : (
+            <Read value={value} under={folded !== undefined}>
+              {area(false)}
+            </Read>
+          )}
         </>
       ) : (
         <>
@@ -134,6 +139,19 @@ function Pop({ label, corner, onPop }: { label: string; corner: boolean; onPop: 
   );
 }
 
+/** A sheet's source (`children`) under its text read as a document, which hides while the source
+ *  has the focus. */
+function Read({ value, under, children }: { value: string; under: boolean; children: ReactNode }) {
+  return (
+    <div className={s.read}>
+      {children}
+      <div className={cx(s.leaf, s.prose, under && s.under)} aria-hidden>
+        {prose(value)}
+      </div>
+    </div>
+  );
+}
+
 /** The popped-out area with its own copies of the row's note and problem under it. */
 function Words({ id, note, problem, children }: WordsProps) {
   return (
@@ -159,3 +177,33 @@ interface WordsProps {
   problem: string | undefined;
   children: ReactNode;
 }
+
+/** A run of words: its `code` a chip, its **strong** words strong (the split's odd parts). */
+function span(w: string, i: number): ReactNode {
+  const Tag = w.startsWith("`") ? "code" : "strong";
+  return i % 2 ? <Tag key={i}>{w.replace(/^(`|\*\*)|(`|\*\*)$/g, "")}</Tag> : w;
+}
+const runs = (text: string) => text.split(/(`[^`\n]+`|\*\*[^*\n]+\*\*)/).map(span);
+
+const item = (l: string) => <li key={l}>{runs(l.slice(2))}</li>;
+
+/** A paragraph: front matter as a code block, a list when every line is an item, a heading, or
+ *  plain words. */
+function para(text: string, key: string): ReactNode {
+  if (text.startsWith("---")) return <pre key={key}>{text}</pre>;
+  const items = text.split("\n");
+  if (items.every((l) => /^[-*] /.test(l))) return <ul key={key}>{items.map(item)}</ul>;
+  const Tag = text.startsWith("#") ? "h4" : "p";
+  return <Tag key={key}>{runs(text.replace(/^#+\s*/, ""))}</Tag>;
+}
+
+/** Markdown read as a document: its paragraphs, and its fences' insides (the split's odd parts)
+ *  as code blocks. */
+const prose = (text: string) =>
+  text
+    .split(/^```.*$/m)
+    .flatMap((part, i) =>
+      i % 2
+        ? [<pre key={i}>{part.replace(/^\n|\n$/g, "")}</pre>]
+        : (part.match(/\S.*(\n.+)*/g) ?? []).map((p, k) => para(p, `${String(i)}.${String(k)}`)),
+    );

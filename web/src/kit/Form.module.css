@@ -141,7 +141,7 @@
     border-color var(--dur-fast) ease,
     box-shadow var(--dur-fast) ease;
 }
-.sheet:has(> .leaf:focus) {
+.sheet:has(.leaf:focus) {
   border-top-color: var(--you);
   box-shadow: 0 calc(var(--line-1) * -1) 0 var(--you);
 }
@@ -163,7 +163,42 @@
 .leaf.under {
   padding-left: calc(var(--h-chip) + var(--sp-4));
 }
-
+/* at rest, a sheet's markdown is read as a document over its hidden source, in the body face:
+   `code` a faint chip, a fence a tinted block of mono; a click lands in the source and edits it */
+.read {
+  display: grid;
+}
+.read > * {
+  grid-row: 1;
+  grid-column: 1;
+}
+.read:not(:focus-within) > .area {
+  color: transparent;
+}
+.read:focus-within > .prose {
+  visibility: hidden;
+}
+.prose {
+  font-size: var(--fs-tk);
+  line-height: 1.6;
+  pointer-events: none;
+}
+.prose > * {
+  margin: 0 0 var(--sp-4);
+}
+.prose ul {
+  padding-left: var(--sp-9);
+}
+.prose :is(code, pre) {
+  padding: var(--line-1) var(--sp-2);
+  border-radius: var(--r-1);
+  background: var(--chip-hover);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2);
+}
+.prose pre {
+  padding: var(--sp-5) var(--sp-6);
+}
 /* the pop-out: a quiet button in the area's top right corner, shown on hover and focus */
 .areaWrap {
   position: relative;

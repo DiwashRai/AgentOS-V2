@@ -2,8 +2,8 @@
 // Library, search, New), then a table out to the sheet's edges with no surface of its own: a banded
 // column head, one-line rows on hairlines (a bare glyph and the name, what it is in a column of its
 // own, the facts packed at the right) that open the item's editor on a click or Enter, ↑ ↓ (or j k)
-// moving a selection that Enter opens, and the list closed by a foot with those keys and the
-// count, right under its last row. A search that matches nothing says so.
+// moving a selection that Enter opens, and a foot with those keys and the count pinned to the
+// pane's bottom, the rows scrolling above it. A search that matches nothing says so.
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -114,12 +114,7 @@ export function LibraryList(props: LibraryListProps) {
       search={search}
       action={<Button>{`New ${noun}`}</Button>}
     >
-      <Table
-        columns={columns}
-        edge
-        scroll={false}
-        foot={<Foot noun={noun} total={total} shown={hrefs.length} />}
-      >
+      <Table columns={columns} edge foot={<Foot noun={noun} total={total} shown={hrefs.length} />}>
         {hrefs.length === 0 && total > 0 ? (
           <Notice kind="empty" lead="No match">
             {`nothing in ${title.toLowerCase()} matches this search`}

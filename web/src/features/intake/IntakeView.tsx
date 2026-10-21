@@ -41,14 +41,14 @@ import {
 } from "./model";
 
 // One triage inbox, as Linear's Inbox: no cards. The list runs out to the sheet's edges under the
-// bar, each saved query a run of it under a grey band (chevron, project key, name, count) that
-// stays at the top while its run scrolls past and parts it from the run before. An issue is a
-// tight two-line row led by who has it (a face, Unassigned a dashed ring): the title firm; under
-// it the Jira key (a link to it), the assignee and one fact (a priority worth saying, led by its
-// bars, else the Jira status; the rest in its tooltip); across from both the age ("1h ago", in its
-// largest unit; to the minute in its tooltip). Under the pointer or with focus, Take in takes the
-// age's place. When the queries were checked closes the list, right under its last run. No
-// column head: the cells say what they are.
+// bar, each saved query a run of it under a label row a hair off the page (chevron, project key,
+// name, count) that stays at the top while its run scrolls past and parts it from the run before.
+// An issue is a tight two-line row led by who has it (a face, Unassigned a dashed ring): the title
+// firm; under it the Jira key (a link to it), the assignee and one fact (a priority worth saying,
+// led by its bars, else the Jira status; the rest in its tooltip); across from both the age ("1h
+// ago", in its largest unit; to the minute in its tooltip). Under the pointer or with focus, Take
+// in takes the age's place. When the queries were checked sits at the page's foot, a status line.
+// No column head: the cells say what they are.
 const COLUMNS: readonly Column[] = [
   { label: "Issue", width: "fill" },
   { label: "Age", width: "lg", end: true, hug: true },
@@ -264,6 +264,7 @@ export function IntakeView() {
         head={false}
         edge
         scroll={false}
+        pin
         {...(data ? { foot: footNote(data, now) } : {})}
       >
         {data ? (

@@ -88,3 +88,10 @@
   background: var(--list-band);
   color: var(--ink-2);
 }
+/* pin: the table takes the page's height, its foot at the bottom however short the list */
+.pin {
+  flex: 1 0 auto;
+}
+.pin > .foot {
+  margin-top: auto;
+}

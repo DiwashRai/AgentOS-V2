@@ -85,17 +85,6 @@
 .you:hover {
   background: var(--you-lift);
 }
-/* in a list's row, the gate primary is a soft wash of your move in its ink, so the row's title and
-   the group still lead the eye down a list of asks */
-:where([data-row]) .you:not([aria-disabled="true"]) {
-  background: var(--gate-soft);
-  border-color: transparent;
-  box-shadow: none;
-  color: var(--you-text);
-}
-:where([data-row]) .you:not([aria-disabled="true"]):hover {
-  background: var(--gate-soft-hover);
-}
 .accent {
   background: var(--accent);
   border-color: var(--accent);
