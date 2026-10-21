@@ -12,6 +12,7 @@ import {
   createContext,
   type ReactNode,
   type RefObject,
+  useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
@@ -57,23 +58,31 @@ interface ToastsProps {
 /** The raiser for the things under a region: the provider's own manager (there before any of
  *  their effects run), holding what is raised while the region is held. */
 function Raising({ held, children }: { held: boolean; children: ReactNode }) {
-  const toasts = Toast.useToastManager();
+  // this re-renders with every toast; what it hands down doesn't change (Base UI's `add` is
+  // stable), so an effect that lists the raiser runs once, not once per toast
+  const { add } = Toast.useToastManager();
   const waiting = useRef<[string, string | undefined][]>([]);
   // read when a toast is raised, not when its raiser was taken (a copy that finishes later); set
   // in a layout effect, so it is current before any effect under it raises one
   const holding = useRef(held);
-  const show = (title: string, note: string | undefined) => {
-    toasts.add({ title, ...(note ? { description: note } : {}) });
-  };
+  const show = useCallback(
+    (title: string, note: string | undefined) => {
+      add({ title, ...(note ? { description: note } : {}) });
+    },
+    [add],
+  );
   useLayoutEffect(() => {
     holding.current = held;
     if (held) return;
     for (const [title, note] of waiting.current.splice(0)) show(title, note);
   });
-  const raise: Raise = (title, note) => {
-    if (holding.current) waiting.current.push([title, note]);
-    else show(title, note);
-  };
+  const raise = useCallback<Raise>(
+    (title, note) => {
+      if (holding.current) waiting.current.push([title, note]);
+      else show(title, note);
+    },
+    [show],
+  );
   return <Raiser value={raise}>{children}</Raiser>;
 }
 
