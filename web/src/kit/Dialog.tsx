@@ -7,7 +7,7 @@
 //   then the view (a Page, so its top bar and body are the same as on its own screen). `ask`
 //   draws a question over it, modal inside it (unsaved changes: Save, Discard, Keep editing).
 // It sits in the browser's top layer, so the kit's popovers opened inside it mount inside it.
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactElement, type ReactNode, useEffect, useId, useRef } from "react";
 
 import { Button } from "./Button";
 import s from "./Dialog.module.css";
@@ -31,11 +31,29 @@ export type DialogProps = {
     }
   | {
       look: "full";
-      /** A question over it, modal inside it; the view under it is inert. */
-      ask?: ReactNode;
+      /** A question over it, modal inside it; the view under it is inert. An element or nothing (null),
+       *  never a boolean, so there is no empty question. */
+      ask?: ReactElement | null;
       foot?: never;
     }
 );
+
+/** The question shown: named by its own heading, so it asks one question, not two (one with no
+ *  heading keeps its aria-label, "Close …?"), and focused on its first button. */
+function showAsk(box: HTMLElement, id: string) {
+  const head = box.querySelector<HTMLElement>("h1, h2, h3");
+  if (head) {
+    head.id ||= id;
+    box.setAttribute("aria-labelledby", head.id);
+  }
+  box.querySelector<HTMLElement>("button")?.focus();
+}
+
+/** The question gone: focus back where the person was, else on the dialog. */
+function giveBack(was: HTMLElement | null, frame: HTMLElement | null) {
+  if (was?.isConnected) was.focus();
+  else frame?.closest("dialog")?.focus();
+}
 
 /** The full look: the close at the top left, the view beside it, and the question over both. */
 function Full({
@@ -47,24 +65,21 @@ function Full({
   label: string;
   onClose: () => void;
   children: ReactNode;
-  ask: ReactNode;
+  ask: ReactElement | null | undefined;
 }) {
   const asking = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
   // where the person was in the view, to go back to when the question is dismissed (the view is
   // inert while it is asked, so its focus is lost)
   const was = useRef<HTMLElement | null>(null);
-  const hasAsk = ask !== undefined && ask !== null;
+  const hasAsk = ask != null;
   const asked = useRef(false);
+  const named = useId();
   useEffect(() => {
-    if (hasAsk) asking.current?.querySelector<HTMLElement>("button")?.focus();
-    else if (asked.current) {
-      const back = was.current;
-      if (back?.isConnected) back.focus();
-      else frame.current?.closest("dialog")?.focus();
-    }
+    if (hasAsk && asking.current) showAsk(asking.current, named);
+    else if (asked.current) giveBack(was.current, frame.current);
     asked.current = hasAsk;
-  }, [hasAsk]);
+  }, [hasAsk, named]);
   return (
     <>
       <div
@@ -112,7 +127,7 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
       d.showModal();
       // the full look opens on itself, not its close; Tab goes on from there (not while it asks:
       // the question has the focus)
-      if (look === "full" && (ask === undefined || ask === null)) d.focus();
+      if (look === "full" && ask == null) d.focus();
     }
     if (!open && d.open) d.close();
   });

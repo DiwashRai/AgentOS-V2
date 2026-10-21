@@ -7,7 +7,7 @@ import { useSearchParams } from "react-router";
 
 import { useSettings } from "../../api/queries";
 import type { Person, Phase, TicketRow } from "../../api/types";
-import { groupOf, isMyMove, markOf, stepText } from "../../domain/board";
+import { groupOf, isMyMove, markOf, STATE_WORD, stepText } from "../../domain/board";
 import { firstName, plural, repoShort } from "../../domain/format";
 import {
   Avatar,
@@ -120,6 +120,12 @@ function waitingBadge(t: TicketRow, a: Waiting, me: Person | null): ItemBadge {
   return { kind: "wait", text: `${parkedAt(t, a.ask)} · ${who}` };
 }
 
+/** The glyph's name: a running or waiting item's badge names who, so its glyph says the state;
+ *  any other badge says the state itself, and its glyph is drawing alone. */
+function badgeSays(badge: ItemBadge): string | false {
+  return badge.kind === "run" || badge.kind === "wait" ? STATE_WORD[badge.kind] : false;
+}
+
 function itemBadge(t: TicketRow, me: Person | null): ItemBadge {
   const a = t.attention;
   if (a.kind === "running") {
@@ -157,7 +163,7 @@ function Item({
         {t.key}
       </Badge>
       <Stack dir="row" gap={4} align="baseline">
-        <Mark kind={badge.kind} glyph still progress={badge.progress} />
+        <Mark kind={badge.kind} glyph still name={badgeSays(badge)} progress={badge.progress} />
         <Text variant="label" weight={400} tone="1" truncate={2} title={t.title}>
           {t.title}
         </Text>
@@ -287,7 +293,7 @@ export function TeamsView() {
           <Stack grow />
           {LEGEND.map(([kind, word]) => (
             <Stack key={kind} dir="row" gap={3} align="center">
-              <Mark kind={kind} glyph />
+              <Mark kind={kind} glyph name={false} />
               <Text variant="meta" tone="2">
                 {word}
               </Text>

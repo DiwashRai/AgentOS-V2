@@ -115,62 +115,66 @@ export function Sortable({
     }
   };
   const shown = slot ?? preview ?? null;
+  // the live region beside the list, not in it: a list holds list items only
   return (
-    <div
-      ref={list}
-      role="list"
-      aria-label={label}
-      className={s.sortable}
-      data-gutter={gutter ? undefined : "none"}
-      style={vars({ "--gap": space(gap) })}
-      onDragOver={over}
-      onDragLeave={(e) => {
-        if (left(e)) setSlot(null);
-      }}
-      onDrop={drop}
-    >
-      {items.map((it, i) => (
-        <div
-          key={it.id}
-          role="listitem"
-          className={s.slot}
-          data-sort-id={it.id}
-          data-drop={lineAt(shown, i, items.length)}
-          data-dragging={from === i || undefined}
-        >
-          <button
-            type="button"
-            className={s.grip}
-            data-grip
-            draggable
-            aria-label={`Move ${it.label}`}
-            title="Drag to move, or ↑ ↓"
-            onDragStart={(e) => {
-              startDrag(e, { kind: own, id: it.id }, "move");
-              const row = e.currentTarget.parentElement;
-              const r = row?.getBoundingClientRect();
-              if (row && r) e.dataTransfer.setDragImage(row, e.clientX - r.left, e.clientY - r.top);
-              setFrom(i);
-            }}
-            onDragEnd={() => {
-              setFrom(null);
-              setSlot(null);
-            }}
-            onKeyDown={(e) => {
-              const d = STEP[e.key];
-              if (d === undefined) return;
-              e.preventDefault();
-              move(i, i + d);
-            }}
+    <>
+      <div
+        ref={list}
+        role="list"
+        aria-label={label}
+        className={s.sortable}
+        data-gutter={gutter ? undefined : "none"}
+        style={vars({ "--gap": space(gap) })}
+        onDragOver={over}
+        onDragLeave={(e) => {
+          if (left(e)) setSlot(null);
+        }}
+        onDrop={drop}
+      >
+        {items.map((it, i) => (
+          <div
+            key={it.id}
+            role="listitem"
+            className={s.slot}
+            data-sort-id={it.id}
+            data-drop={lineAt(shown, i, items.length)}
+            data-dragging={from === i || undefined}
           >
-            <Icon name="grip" />
-          </button>
-          {it.content}
-        </div>
-      ))}
+            <button
+              type="button"
+              className={s.grip}
+              data-grip
+              draggable
+              aria-label={`Move ${it.label}`}
+              title="Drag to move, or ↑ ↓"
+              onDragStart={(e) => {
+                startDrag(e, { kind: own, id: it.id }, "move");
+                const row = e.currentTarget.parentElement;
+                const r = row?.getBoundingClientRect();
+                if (row && r)
+                  e.dataTransfer.setDragImage(row, e.clientX - r.left, e.clientY - r.top);
+                setFrom(i);
+              }}
+              onDragEnd={() => {
+                setFrom(null);
+                setSlot(null);
+              }}
+              onKeyDown={(e) => {
+                const d = STEP[e.key];
+                if (d === undefined) return;
+                e.preventDefault();
+                move(i, i + d);
+              }}
+            >
+              <Icon name="grip" />
+            </button>
+            {it.content}
+          </div>
+        ))}
+      </div>
       <span className={u.unseen} aria-live="polite">
         {said}
       </span>
-    </div>
+    </>
   );
 }

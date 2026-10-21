@@ -9,7 +9,8 @@ export type NoticeFix =
   string | { before: string; link: { label: string; href: string }; after?: string };
 
 interface Said {
-  /** The lead words, a step firmer than the rest ("All quiet"); a dash sets them off from it. */
+  /** The lead words, a step firmer than the rest: set off by a dash on an empty line or a +N strip
+   *  ("All quiet — …"), a problem's first line. */
   lead?: string;
   children?: ReactNode;
 }
@@ -21,6 +22,8 @@ export type NoticeProps = Said &
   (
     | {
         kind: "status";
+        /** A status is its words alone. */
+        lead?: never;
         /** A status line that reports a failure (said at once, in the blocked colour). */
         error?: boolean;
         /** end: a status that closes a list, its words at the rows' far end ("checked 2m ago").
@@ -92,7 +95,6 @@ export function Notice(props: NoticeProps) {
         data-error={props.error}
         data-align={props.align}
       >
-        {lead ? <b>{lead}</b> : null}
         {children}
       </p>
     );

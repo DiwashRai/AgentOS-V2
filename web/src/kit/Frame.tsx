@@ -180,7 +180,7 @@ export function Frame({ space, nav, sections, foot, me, children }: FrameProps) 
             type="button"
             className={s.tool}
             aria-label="Search"
-            title="Search  /"
+            title="Search (/)"
             onClick={focusSearch}
           >
             <Icon name="search" />

@@ -281,7 +281,7 @@
           }
         },
         "ask": {
-          "why": "Closing with unsaved changes asks inside the overlay (Save, Discard, Keep editing): a small sheet over it, modal inside it, the view under it inert."
+          "why": "Closing with unsaved changes asks inside the overlay (Save, Discard, Keep editing): a small sheet over it, modal inside it, the view under it inert. An element or nothing, never a boolean; named by its own heading."
         }
       }
     },
@@ -499,7 +499,7 @@
           "why": "One form per state (MarkKind): R12's attention, plus the outcomes."
         },
         "name": {
-          "why": "Who or what, in the state's colour (Builder · run #42, Bea, Blocked), never with YOU, which stands alone; on a glyph, its accessible name, the state's word by default, or false where the words beside it already say it (a filter chip, a counter)."
+          "why": "Who or what, in the state's colour (Builder · run #42, Bea, Blocked), never with YOU, which stands alone. On a glyph, a choice every call makes: the state's word where the glyph is its only sign, or false where the words beside it say the state (a chip, a counter, a head)."
         },
         "ask": {
           "why": "What it waits for (Sign off the plan)."
@@ -549,7 +549,7 @@
           }
         },
         "lead": {
-          "why": "The lead words a step firmer than the rest, set off by a dash (All quiet, All clear, +3 more)."
+          "why": "The lead words a step firmer than the rest: set off by a dash on an empty line or a +N strip (All quiet, +3 more), a problem's first line; a status has none."
         },
         "children": {
           "why": "What it says after the lead."

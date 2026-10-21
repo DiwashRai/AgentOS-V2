@@ -104,7 +104,7 @@ function Expanded({ t, me, now }: { t: TicketRow; me: Person | null; now: number
         <Stack grow gap={4}>
           {a.kind === "running" ? (
             <Stack dir="row" gap={3} align="center">
-              <Mark kind="run" glyph />
+              <Mark kind="run" glyph name="Running" />
               <Text variant="meta" tone="live" weight={500}>
                 {runLine(t, now)}
               </Text>

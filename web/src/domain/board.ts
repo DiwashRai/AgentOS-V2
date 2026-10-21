@@ -66,6 +66,18 @@ export type MarkModel =
       ask?: string;
     };
 
+/** A state's word, for a glyph that is the only sign of it (a row's, a card's, a legend's). */
+export const STATE_WORD: Record<MarkModel["kind"], string> = {
+  run: "Running",
+  wait: "Waiting on someone",
+  you: "Needs you",
+  blk: "Blocked",
+  done: "Done",
+  abandoned: "Abandoned",
+  queued: "Queued",
+  idle: "Inbox",
+};
+
 export function markOf(a: Attention, me: Person | null): MarkModel {
   switch (a.kind) {
     case "waiting":

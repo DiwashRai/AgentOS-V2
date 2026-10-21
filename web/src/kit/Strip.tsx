@@ -35,13 +35,14 @@ function columns(stages: readonly StripStage[]): number[] {
 function pathOf({ stages, loops }: StripProps): string {
   const steps = stages.flatMap((st) => [
     `${st.name} (${st.phase}${st.off ? ", off" : ""})`,
-    ...(st.gate ? [`◆ ${st.gate}`] : []),
+    ...(st.gate ? [`gate: ${st.gate}`] : []),
   ]);
   const rounds = loops.map(
     (l) =>
       `${stages[l.first]?.name ?? ""} to ${stages[l.last]?.name ?? ""} loops up to ${String(l.rounds)} rounds`,
   );
-  return [steps.join(" → "), ...rounds].join(". ");
+  // in words, as a reader says them (no arrows or diamonds)
+  return [steps.join(", then "), ...rounds].join(". ");
 }
 
 export function Strip(props: StripProps) {

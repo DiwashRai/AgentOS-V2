@@ -4,18 +4,6 @@ import { cx, vars } from "./vars";
 
 export type MarkKind = "run" | "wait" | "you" | "blk" | "done" | "abandoned" | "queued" | "idle";
 
-/** The accessible names of a glyph-only mark. */
-const WORD: Record<MarkKind, string> = {
-  run: "Running",
-  wait: "Waiting on someone",
-  you: "Needs you",
-  blk: "Blocked",
-  done: "Done",
-  abandoned: "Abandoned",
-  queued: "Queued",
-  idle: "Inbox",
-};
-
 interface Common {
   /** One form per state. */
   kind: MarkKind;
@@ -28,9 +16,10 @@ export type MarkProps = Common &
     | {
         /** The glyph alone (counters, legends, group heads, a card's state). */
         glyph: true;
-        /** Its name for assistive tech (the state's word by default); `false` where words beside it
-         *  already say the state (a filter chip, a counter): it is then drawn unseen to them. */
-        name?: string | false;
+        /** Its name, a choice every glyph makes: the state's word where the glyph is the only sign of
+         *  it; `false` where the words beside it say the state (a filter chip, a counter, a head):
+         *  it is then drawing alone. */
+        name: string | false;
         /** Still: no breathing halo (a grid of cards, a board, would pulse all at once). */
         still?: boolean;
         /** A running glyph's pie, as far as its run is (Linear's in-progress circle); else half. */
@@ -74,7 +63,7 @@ function GlyphMark({ kind, name, small, still, progress }: GlyphProps) {
       className={cx(s.mark, s[kind], small && s.small, still && s.still)}
       style={vars({ "--fill": fill === null ? undefined : `${String(Math.round(fill * 100))}%` })}
     >
-      <Glyph label={name === false ? false : (name ?? WORD[kind])} />
+      <Glyph label={name} />
     </span>
   );
 }

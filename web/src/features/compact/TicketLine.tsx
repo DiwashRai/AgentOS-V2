@@ -4,7 +4,7 @@
 // (the agent and its step, the stage on its state's dot, the source) hugging the age, and last the
 // owner's face. The age and the face sit on fixed columns, so they end on one edge row after row.
 import type { Person, Priority, TicketRow, TicketType } from "../../api/types";
-import { markOf, type MarkModel, stageModel } from "../../domain/board";
+import { markOf, type MarkModel, STATE_WORD, stageModel } from "../../domain/board";
 import { age } from "../../domain/format";
 import { Age, Avatar, Badge, Chip, type Column, Icon, Mark, Stack, Text } from "../../kit";
 import { chipWords, sourceText, stageDot, stageWord } from "./model";
@@ -52,7 +52,12 @@ export function TitleCell({ t, me, after }: { t: TicketRow; me: Person | null; a
   const a = t.attention;
   return (
     <Stack dir="row" gap={4} align="center">
-      <Mark kind={markOf(a, me).kind} glyph progress={a.kind === "running" ? a.progress : null} />
+      <Mark
+        kind={markOf(a, me).kind}
+        glyph
+        name={STATE_WORD[markOf(a, me).kind]}
+        progress={a.kind === "running" ? a.progress : null}
+      />
       <Text tone="3" truncate title={after ? `${t.title} · ${after}` : t.title}>
         <Text weight={500} tone="1">
           {t.title}

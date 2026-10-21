@@ -45,6 +45,7 @@ import {
   Thread,
   Toggle,
 } from "../../kit";
+import { STATE_WORD } from "../../domain/board";
 
 const ICONS: readonly IconName[] = [
   "teams",
@@ -470,7 +471,7 @@ export function KitSheet() {
             </Stack>
             <Stack dir="row" gap={6}>
               {MARKS.map((kind) => (
-                <Mark key={kind} kind={kind} glyph small />
+                <Mark key={kind} kind={kind} glyph small name={STATE_WORD[kind]} />
               ))}
             </Stack>
           </Section>
@@ -525,7 +526,7 @@ export function KitSheet() {
               <Head
                 name="Group"
                 count={3}
-                icon={<Mark kind="run" glyph small />}
+                icon={<Mark kind="run" glyph small name={false} />}
                 summary="summary"
                 fold={{ open: true, toggle: () => undefined }}
               />

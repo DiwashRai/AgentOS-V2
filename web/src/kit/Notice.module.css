@@ -17,10 +17,6 @@
 .status[data-error="true"] {
   color: var(--blocked);
 }
-.status > b {
-  color: var(--ink-2);
-  font-weight: 600;
-}
 /* a status that closes a list: small, its words ending on the rows' far edge */
 .status[data-align="end"] {
   justify-content: flex-end;

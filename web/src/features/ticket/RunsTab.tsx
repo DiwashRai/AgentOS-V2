@@ -131,6 +131,16 @@ function whereText(r: Run, w: TicketWorkflow | undefined): string {
   return r.reason ?? RUN_MARK[r.state].word;
 }
 
+/** Whether a run's where-words say its state (stopped at a gate, or the state's own word). */
+function whereSaysState(r: Run, w: TicketWorkflow | undefined): boolean {
+  if (r.stages.some((s) => s.state === "running")) return false;
+  return gateOf(r, w) !== null || r.reason === null;
+}
+
+/** Whether a stage line's end says its state (a verdict, running, pending). */
+const endSaysState = (s: StageRun) =>
+  s.verdict !== null || s.state === "running" || s.state === "pending";
+
 interface RunProps {
   r: Run;
   runs: readonly Run[];
@@ -147,7 +157,7 @@ function RunLine({ r, runs, w, now }: RunProps) {
   return [
     <Badge key="key" kind="key">{`#${String(r.id)}`}</Badge>,
     <Stack key="where" dir="row" gap={4} align="center">
-      <Mark kind={mark.kind} glyph name={mark.word} />
+      <Mark kind={mark.kind} glyph name={whereSaysState(r, w) ? false : mark.word} />
       <Text tone="3" truncate title={`${whereText(r, w)} · ${after}`}>
         <Text weight={500} tone="1">
           {whereText(r, w)}
@@ -191,7 +201,7 @@ function StageLine({ s, w }: { s: StageRun; w: TicketWorkflow | undefined }) {
   return (
     <Row kind="rack">
       <Stack dir="row" gap={4} align="center">
-        <Mark kind={m.kind} glyph name={m.name} />
+        <Mark kind={m.kind} glyph name={endSaysState(s) ? false : m.name} />
         <Text weight={500} tone={s.state === "pending" ? "3" : "1"}>
           {s.name}
         </Text>

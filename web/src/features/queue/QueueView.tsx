@@ -114,7 +114,7 @@ function Body({ t }: { t: TicketRow }) {
   const running = t.attention.kind === "running";
   return (
     <Stack dir="row" gap={4} align="baseline">
-      <Mark kind={running ? "run" : "queued"} glyph still />
+      <Mark kind={running ? "run" : "queued"} glyph still name={false} />
       <Text variant="label" weight={400} tone={running ? "1" : "2"} truncate={2} title={t.title}>
         {t.title}
       </Text>
@@ -236,7 +236,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
       ) : (
         <Table columns={ITEM} head={false} scroll={false} bleed>
           <Head
-            icon={<Mark kind="you" glyph />}
+            icon={<Mark kind="you" glyph name={false} />}
             name="Your move"
             count={z.yourMove.length}
             note="Longest wait first"
@@ -257,7 +257,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
           <Stack gap={4}>
             <Head
               level="zone"
-              icon={<Mark kind="run" glyph />}
+              icon={<Mark kind="run" glyph name={false} />}
               name="Agents at work"
               count={z.agents.length}
               note={atWorkNote(z)}
@@ -279,7 +279,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
       {z.ready.length > 0 ? (
         <Table columns={ITEM} head={false} scroll={false} bleed>
           <Head
-            icon={<Mark kind="idle" glyph />}
+            icon={<Mark kind="idle" glyph name={false} />}
             name="Ready to start"
             count={z.ready.length}
             note="Oldest first"
@@ -292,7 +292,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
       {z.done.length > 0 ? (
         <Table columns={ITEM} head={false} scroll={false} bleed>
           <Head
-            icon={<Mark kind="done" glyph />}
+            icon={<Mark kind="done" glyph name={false} />}
             name="Done recently"
             count={z.done.length}
             note="Yours, last 7 days"
