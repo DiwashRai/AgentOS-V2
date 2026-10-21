@@ -67,29 +67,27 @@ function useAgentPickers(agent: AgentSettings, onChange: (a: AgentSettings) => v
   ];
 }
 
-/** The tickets: how many on a line of its own, the first few as links under it, and the rest
- *  behind +N, opened in place. */
+/** The tickets: how many, the first few as links after it, and the rest behind +N, opened in
+ *  place; one line, as its row's other values are. */
 function Tickets({ keys }: { keys: readonly string[] }) {
   const [all, setAll] = useState(false);
   if (keys.length === 0) return <Text tone="3">No tickets</Text>;
   const shown = all ? keys : keys.slice(0, FEW);
   return (
-    <Stack gap={2}>
+    <Stack dir="row" gap={4} align="center" wrap>
       <Text>{plural(keys.length, "ticket")}</Text>
-      <Stack dir="row" gap={4} align="center" wrap>
-        <Keys shown={shown} />
-        {keys.length > FEW ? (
-          <Button
-            variant="link"
-            title={all ? "Show the first few" : `Show all ${String(keys.length)}`}
-            onClick={() => {
-              setAll(!all);
-            }}
-          >
-            {all ? "Fewer" : `+${String(keys.length - FEW)}`}
-          </Button>
-        ) : null}
-      </Stack>
+      <Keys shown={shown} />
+      {keys.length > FEW ? (
+        <Button
+          variant="link"
+          title={all ? "Show the first few" : `Show all ${String(keys.length)}`}
+          onClick={() => {
+            setAll(!all);
+          }}
+        >
+          {all ? "Fewer" : `+${String(keys.length - FEW)}`}
+        </Button>
+      ) : null}
     </Stack>
   );
 }
