@@ -122,7 +122,7 @@ export function Chip(props: ChipProps) {
   const { label, title, after, onRemove, flash } = props;
   const ref = useArrival(flash);
   return (
-    <Tip text={title ?? label} cut={title === undefined}>
+    <Tip text={title ?? label} cut={(title ?? label) === label}>
       <span ref={ref} className={s.chip} {...flags(props)}>
         <Lead {...(props.dot ? { dot: props.dot } : { lead: props.lead })} />
         <span className={s.label}>{label}</span>

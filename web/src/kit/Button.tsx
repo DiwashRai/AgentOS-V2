@@ -36,11 +36,14 @@ interface AnchorProps {
   body: ReactNode;
 }
 
+/** A path inside the app ("/t/NW-17"), followed by the router; anything else opens in a new tab. */
+export const inApp = (href: string): boolean => href.startsWith("/");
+
 /** A path inside the app is a router link; anything else opens in a new tab. */
 function Anchor({ href, cls, tip, name, body }: AnchorProps) {
   return (
     <Tip text={tip} said={name !== undefined}>
-      {href.startsWith("/") ? (
+      {inApp(href) ? (
         <Link to={href} className={cls} aria-label={name}>
           {body}
         </Link>

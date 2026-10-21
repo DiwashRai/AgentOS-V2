@@ -258,14 +258,15 @@ function MenuSheet() {
       </Button>
       <Menu
         label="More on NW-17"
-        items={[
-          { label: "Copy link", run: () => undefined },
-          { label: "Copy key", run: () => undefined },
-          "|",
-          { label: "Open NW-17 in Jira", href: "https://jira.example.com/browse/NW-17" },
+        groups={[
+          [
+            { label: "Copy link", run: () => undefined },
+            { label: "Copy key", run: () => undefined },
+          ],
+          [{ label: "Open NW-17 in Jira", href: "https://jira.example.com/browse/NW-17" }],
         ]}
       />
-      <Menu label="More, small" size="sm" items={[{ label: "Open ticket", href: "/t/NW-17" }]} />
+      <Menu label="More, small" size="sm" groups={[[{ label: "Open ticket", href: "/t/NW-17" }]]} />
     </Stack>
   );
 }

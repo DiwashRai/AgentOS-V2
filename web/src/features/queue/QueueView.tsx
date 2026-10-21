@@ -184,10 +184,8 @@ function Chips({ t, me }: { t: TicketRow; me: Person | null }) {
   const running = t.attention.kind === "running";
   return (
     <Stack dir="row" gap={3} align="center" wrap>
-      {stage ? (
-        <Chip tone="fill" dot={running ? "live" : "neutral"} label={stage} title={stage} />
-      ) : null}
-      {t.repo ? <Chip tone="fill" lead="repo" label={t.repo} title={t.repo} /> : null}
+      {stage ? <Chip tone="fill" dot={running ? "live" : "neutral"} label={stage} /> : null}
+      {t.repo ? <Chip tone="fill" lead="repo" label={t.repo} /> : null}
     </Stack>
   );
 }

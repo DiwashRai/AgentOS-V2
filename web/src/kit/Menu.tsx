@@ -1,9 +1,11 @@
 // A menu of actions behind a "…" button, as Linear's: the button in the row of buttons it sits in,
 // and on a click the kit's one popover under it, each action a row (a link out ends on its arrow),
-// "|" a rule between groups. Base UI's menu does the keyboard (arrows, typeahead, Esc), the focus
-// and the placement; the look is the kit's.
+// a rule between groups. Base UI's menu does the keyboard (arrows, typeahead, Esc), the focus and
+// the placement; the look is the kit's.
 import { Menu as Base } from "@base-ui/react/menu";
+import { Link } from "react-router";
 
+import { inApp } from "./Button";
 import b from "./Button.module.css";
 import { Icon } from "./Icon";
 import { useLayer } from "./layer";
@@ -18,10 +20,10 @@ export type MenuItem = { label: string } & (
 );
 
 export interface MenuProps {
-  /** The button's name and tooltip ("More actions on NW-17"), and the menu's. */
+  /** The button's name and tooltip ("More on NW-17"), and the menu's. */
   label: string;
-  /** The actions, in order; "|" rules off a group. */
-  items: readonly (MenuItem | "|")[];
+  /** The actions in groups, a rule between each group and the next. */
+  groups: readonly (readonly MenuItem[])[];
   /** The size of the buttons it sits beside. */
   size?: "sm" | "md";
 }
@@ -34,24 +36,24 @@ function Row({ item }: { item: MenuItem }) {
       </Base.Item>
     );
   }
-  const out = !item.href.startsWith("/");
+  if (inApp(item.href)) {
+    return (
+      <Base.LinkItem className={p.row} render={<Link to={item.href} />}>
+        {item.label}
+      </Base.LinkItem>
+    );
+  }
   return (
-    <Base.LinkItem
-      className={p.row}
-      href={item.href}
-      {...(out ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-    >
+    <Base.LinkItem className={p.row} href={item.href} target="_blank" rel="noopener noreferrer">
       {item.label}
-      {out ? (
-        <span className={s.out}>
-          <Icon name="out" />
-        </span>
-      ) : null}
+      <span className={s.out}>
+        <Icon name="out" />
+      </span>
     </Base.LinkItem>
   );
 }
 
-export function Menu({ label, items, size = "md" }: MenuProps) {
+export function Menu({ label, groups, size = "md" }: MenuProps) {
   const layer = useLayer();
   return (
     <Base.Root>
@@ -64,14 +66,15 @@ export function Menu({ label, items, size = "md" }: MenuProps) {
       </Tip>
       <Base.Portal {...layer}>
         <Base.Positioner className={p.layer} align="end" sideOffset={() => tokenPx("--sp-2")}>
-          <Base.Popup className={cx(p.sheet, s.sheet)} aria-label={label}>
-            {items.map((it, i) =>
-              it === "|" ? (
-                <Base.Separator key={`rule${String(i)}`} className={s.rule} />
-              ) : (
-                <Row key={it.label} item={it} />
-              ),
-            )}
+          <Base.Popup className={p.sheet} aria-label={label}>
+            {groups.map((group, g) => (
+              <Base.Group key={g}>
+                {g > 0 ? <Base.Separator className={s.rule} /> : null}
+                {group.map((it, i) => (
+                  <Row key={i} item={it} />
+                ))}
+              </Base.Group>
+            ))}
           </Base.Popup>
         </Base.Positioner>
       </Base.Portal>

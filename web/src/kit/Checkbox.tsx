@@ -21,22 +21,25 @@ export function Checkbox({ label, checked, onChange, note }: CheckboxProps) {
   const said = useId();
   return (
     <label className={s.choice}>
+      {/* named by its words alone, its note its description: the label holds both, so a click
+          on either is a click on the box */}
       <Base.Root
         className={s.check}
         checked={checked}
         onCheckedChange={(on) => {
           onChange(on);
         }}
-        {...(note ? { "aria-describedby": said } : {})}
+        aria-labelledby={`${said}l`}
+        {...(note ? { "aria-describedby": `${said}n` } : {})}
       >
         <Base.Indicator className={s.mark}>
           <Icon name="check" />
         </Base.Indicator>
       </Base.Root>
       <span className={s.words}>
-        {label}
+        <span id={`${said}l`}>{label}</span>
         {note ? (
-          <span className={s.note} id={said}>
+          <span className={s.note} id={`${said}n`}>
             {note}
           </span>
         ) : null}

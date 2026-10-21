@@ -138,9 +138,10 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
     if (!d) return;
     if (open && !d.open) {
       d.showModal();
-      // the full look opens on itself, not its close; Tab goes on from there (not while it asks:
-      // the question has the focus)
-      if (look === "full" && ask === undefined) d.focus();
+      // it opens on itself, not on the first thing in it the browser would pick (the full look's
+      // close, the toast region); Tab goes on from there (not while it asks: the question has the
+      // focus)
+      if (ask === undefined) d.focus();
     }
     if (!open && d.open) d.close();
   });
@@ -154,7 +155,7 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
     <dialog
       ref={ref}
       className={look === "full" ? s.full : s.side}
-      tabIndex={look === "full" ? -1 : undefined}
+      tabIndex={-1}
       aria-label={label}
       // Esc is the dialog's own, wherever focus is in it (the question too): a keydown it prevents
       // never becomes the browser's close request, which a repeated Esc can't hold. A key a popup

@@ -273,7 +273,7 @@
 .radio {
   border-radius: var(--r-pill);
 }
-.choice:hover :is(.check, .radio) {
+.choice:hover :is(.check, .radio):not([data-checked]) {
   border-color: var(--ink-3);
 }
 :is(.check, .radio):focus-visible {

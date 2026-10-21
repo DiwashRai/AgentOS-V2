@@ -2,9 +2,10 @@
 // in a small sheet at the window's bottom right that goes by itself after a few seconds (the
 // pointer over it holds it). Base UI's toast does the timing, the polite announcement, F6 into
 // the region and the swipe away; the look is the kit's popover sheet. The frame has the region,
-// and each dialog has its own, in the top layer with it, so a toast raised inside one shows over it.
-// The kit's quiet language holds: a toast says what was done, never a spinner or a problem a
-// screen should say in place.
+// and each dialog has its own, in the top layer with it, so a toast raised inside one shows over it
+// (and goes with it when it closes). The kit's quiet language holds: a toast says what was done,
+// or that an action with no place of its own on the screen didn't happen (a copy the browser
+// refused); never a spinner, or a problem a screen should say in place.
 import { Toast } from "@base-ui/react/toast";
 import { type ReactNode, useEffect, useState } from "react";
 

@@ -168,7 +168,7 @@ function Item({
           {t.title}
         </Text>
       </Stack>
-      <Chip tone="fill" label={badge.text} title={badge.text} />
+      <Chip tone="fill" label={badge.text} />
     </Card>
   );
 }

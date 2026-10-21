@@ -28,17 +28,19 @@ export interface RadioProps {
 function Choice({ option, id }: { option: RadioOption; id: string }) {
   return (
     <label className={s.choice}>
+      {/* named by its words alone, its note its description (as Checkbox's) */}
       <Base.Root
         className={s.radio}
         value={option.id}
-        {...(option.note ? { "aria-describedby": id } : {})}
+        aria-labelledby={`${id}l`}
+        {...(option.note ? { "aria-describedby": `${id}n` } : {})}
       >
         <Base.Indicator className={s.pip} />
       </Base.Root>
       <span className={s.words}>
-        {option.label}
+        <span id={`${id}l`}>{option.label}</span>
         {option.note ? (
-          <span className={s.note} id={id}>
+          <span className={s.note} id={`${id}n`}>
             {option.note}
           </span>
         ) : null}

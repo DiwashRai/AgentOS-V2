@@ -1111,8 +1111,8 @@
         "label": {
           "why": "The button's name and tooltip, and the menu's."
         },
-        "items": {
-          "why": "The actions, each something to run or a link (a URL opens in a new tab, its row ending on the out arrow); \"|\" rules off a group."
+        "groups": {
+          "why": "The actions in groups, a rule between each group and the next (so no rule can lead, trail or double); each something to run or a link (a path in the app is the router's, a URL opens in a new tab, its row ending on the out arrow)."
         },
         "size": {
           "why": "It sits in a row of buttons and matches them.",

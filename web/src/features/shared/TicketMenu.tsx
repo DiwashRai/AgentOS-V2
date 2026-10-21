@@ -20,7 +20,7 @@ function useCopy() {
 
 export function TicketMenu({ t, size }: { t: Ticket; size: "sm" | "md" }) {
   const copy = useCopy();
-  const items: (MenuItem | "|")[] = [
+  const take: MenuItem[] = [
     {
       label: "Copy link",
       run: () => {
@@ -39,10 +39,6 @@ export function TicketMenu({ t, size }: { t: Ticket; size: "sm" | "md" }) {
     ...(t.pr_url ? [{ label: "Open the pull request", href: t.pr_url }] : []),
   ];
   return (
-    <Menu
-      label={`More on ${t.key}`}
-      items={out.length > 0 ? [...items, "|", ...out] : items}
-      size={size}
-    />
+    <Menu label={`More on ${t.key}`} groups={out.length > 0 ? [take, out] : [take]} size={size} />
   );
 }

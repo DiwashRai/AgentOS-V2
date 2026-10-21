@@ -1,10 +1,7 @@
-/* A menu: the "…" button held down while its menu is open, and the popover's rows with a rule
-   between groups and a link out's arrow at its row's end. */
-.trigger[data-popup-open] {
+/* A menu: the "…" button held down while its menu is open (its own state, not a tooltip's), and
+   the popover's rows with a rule between groups and a link out's arrow at its row's end. */
+.trigger[aria-expanded="true"] {
   background: var(--pop-hover);
-}
-.sheet {
-  min-width: var(--col-2xl);
 }
 .rule {
   height: var(--line-1);
