@@ -33,6 +33,7 @@ import {
   Page,
   Radio,
   Row,
+  Section,
   Segmented,
   Select,
   Sortable,
@@ -473,7 +474,7 @@ function OverlaySheet() {
   );
 }
 
-function Section({ name, children }: { name: string; children: ReactNode }) {
+function Block({ name, children }: { name: string; children: ReactNode }) {
   return (
     <Stack gap={5}>
       <Head level="zone" name={name} />
@@ -491,7 +492,7 @@ export function KitSheet() {
     <Page title="Kit" context="Every component, every variant">
       <Surface pad={9}>
         <Stack gap={9}>
-          <Section name="Text">
+          <Block name="Text">
             {TEXTS.map((v) => (
               <Text key={v} variant={v}>{`${v} · The quick brown fox`}</Text>
             ))}
@@ -502,15 +503,15 @@ export function KitSheet() {
                 </Text>
               ))}
             </Stack>
-          </Section>
-          <Section name="Icon">
+          </Block>
+          <Block name="Icon">
             <Stack dir="row" gap={6} wrap align="center">
               {ICONS.map((name) => (
                 <Icon key={name} name={name} label={name} />
               ))}
             </Stack>
-          </Section>
-          <Section name="Badge">
+          </Block>
+          <Block name="Badge">
             <Stack dir="row" gap={4} wrap align="center">
               <Badge kind="key" size="sm">
                 NW
@@ -529,8 +530,8 @@ export function KitSheet() {
               <Chip label={"web"} />
               <Badge kind="you" />
             </Stack>
-          </Section>
-          <Section name="Mark">
+          </Block>
+          <Block name="Mark">
             <Stack dir="row" gap={8} wrap>
               {MARKS.map((kind) =>
                 kind === "you" ? (
@@ -545,8 +546,8 @@ export function KitSheet() {
                 <Mark key={kind} kind={kind} glyph small name={STATE_WORD[kind]} />
               ))}
             </Stack>
-          </Section>
-          <Section name="Button">
+          </Block>
+          <Block name="Button">
             <Stack dir="row" gap={4} wrap align="center">
               {(["default", "ink", "you", "accent", "quiet", "link"] as const).map((v) => (
                 <Button key={v} variant={v}>
@@ -563,8 +564,8 @@ export function KitSheet() {
                 </Button>
               ))}
             </Stack>
-          </Section>
-          <Section name="Avatar and Age">
+          </Block>
+          <Block name="Avatar and Age">
             <Stack dir="row" gap={6} align="center">
               <Avatar name="Ada Park" seed="1" />
               <Avatar name="Bea Quinn" seed="2" size="talk" />
@@ -580,8 +581,8 @@ export function KitSheet() {
               <Age text="3h 10m" />
               <Age text="now" />
             </Stack>
-          </Section>
-          <Section name="Stepper and Meter">
+          </Block>
+          <Block name="Stepper and Meter">
             <Stepper model={MODELS[1]?.model ?? { stages: [], live: false, closed: false }} />
             <Stepper
               model={MODELS[0]?.model ?? { stages: [], live: false, closed: false }}
@@ -591,8 +592,8 @@ export function KitSheet() {
             <Stack dir="row" gap={6} align="center">
               <Meter size="row" done={1} total={4} />
             </Stack>
-          </Section>
-          <Section name="Table, Head, Row, Notice">
+          </Block>
+          <Block name="Table, Head, Row, Notice">
             <Table columns={COLUMNS} scroll={false}>
               <Head
                 name="Group"
@@ -632,8 +633,8 @@ export function KitSheet() {
                 Can&apos;t reach the server
               </Notice>
             </Table>
-          </Section>
-          <Section name="Controls">
+          </Block>
+          <Block name="Controls">
             <Stack dir="row" gap={8} align="center" wrap>
               <Segmented
                 label="Filter"
@@ -675,28 +676,53 @@ export function KitSheet() {
             >
               <Text tone="2">{`The ${tab} panel`}</Text>
             </Tabs>
-          </Section>
-          <Section name="Menu, toast">
+          </Block>
+          <Block name="Section">
+            <Stack gap={8}>
+              <Section
+                title="Talk"
+                note="Just people here. Agents don't read this."
+                end={
+                  <Avatar
+                    size="talk"
+                    people={[
+                      { name: "Ada Park", seed: "1" },
+                      { name: "Bea Quinn", seed: "2" },
+                    ]}
+                  />
+                }
+              >
+                <Text tone="2">A part with a line under its heading and faces at its end</Text>
+              </Section>
+              <Section title="Plan" aside="2 of 5 done">
+                <Text tone="2">A part with quiet words after its heading</Text>
+              </Section>
+              <Section label="NW-17">
+                <Text tone="2">A part with no head of its own, named for assistive tech</Text>
+              </Section>
+            </Stack>
+          </Block>
+          <Block name="Menu, toast">
             <MenuSheet />
-          </Section>
-          <Section name="Form: FormRow, Field, NumberField, Toggle, TextArea">
+          </Block>
+          <Block name="Form: FormRow, Field, NumberField, Toggle, TextArea">
             <FormSheet />
-          </Section>
-          <Section name="Checkbox, Radio">
+          </Block>
+          <Block name="Checkbox, Radio">
             <ChoiceSheet />
-          </Section>
-          <Section name="Drag, Drop, Sortable">
+          </Block>
+          <Block name="Drag, Drop, Sortable">
             <DragSheet />
-          </Section>
-          <Section name="Lane, Card, Chip">
+          </Block>
+          <Block name="Lane, Card, Chip">
             <LaneSheet />
-          </Section>
-          <Section name="Dialog, full">
+          </Block>
+          <Block name="Dialog, full">
             <Stack dir="row">
               <OverlaySheet />
             </Stack>
-          </Section>
-          <Section name="Checklist, Facts, Thread">
+          </Block>
+          <Block name="Checklist, Facts, Thread">
             <Checklist
               items={[
                 { text: "Write it", done: true, section: "Server" },
@@ -740,7 +766,7 @@ export function KitSheet() {
                 onSend={() => undefined}
               />
             </Surface>
-          </Section>
+          </Block>
         </Stack>
       </Surface>
     </Page>

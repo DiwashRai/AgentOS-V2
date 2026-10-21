@@ -14,7 +14,7 @@ export function PlanSection({
   return (
     <Section
       title="Plan"
-      aside={plan.length > 0 ? `${String(done)} of ${String(plan.length)} done` : undefined}
+      {...(plan.length > 0 ? { aside: `${String(done)} of ${String(plan.length)} done` } : {})}
     >
       {plan.length > 0 ? (
         <Checklist items={plan} look={look} />

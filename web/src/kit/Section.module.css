@@ -1,4 +1,4 @@
-/* A section: its head (the heading at the type scale's heading size, quiet words after it on its
+/* A section: its head (the heading in Text's heading role, quiet words after it on its
    baseline, its end item at the far edge, a quiet line under it), then the body. In a side panel,
    one of the panel's parts: padded to the panel's gutter and ruled off from the next. */
 .section {
@@ -18,8 +18,10 @@
 .head {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-1);
+  gap: var(--sp-2);
   min-width: 0;
+  /* a little more room under the head than between the body's own parts, so it reads as a head */
+  margin-bottom: var(--sp-3);
 }
 /* the end item centred on the line; the heading and its quiet words share a baseline */
 .line {
@@ -31,13 +33,6 @@
 .title,
 .aside {
   align-self: baseline;
-}
-.title {
-  margin: 0;
-  font-size: var(--fs-5);
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--ink-1);
 }
 .aside {
   font-size: var(--fs-2);

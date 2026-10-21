@@ -1172,7 +1172,7 @@
           "why": "Quiet words right after the heading: how much is done, a count."
         },
         "note": {
-          "why": "A quiet line under the heading: what the part is for (Talk is just people)."
+          "why": "A quiet line under the heading: what the part is for (Talk is just people), or its subline (a workflow copy's drift chips and who edited it); it describes the part."
         },
         "end": {
           "why": "At the head's end: who is in it (Talk's faces), its one action (Edit)."

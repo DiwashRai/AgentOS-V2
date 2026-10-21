@@ -92,7 +92,7 @@ function Body(props: BodyProps) {
   const plan = parsePlan(usePlan(props.t.key).data ?? "");
   return (
     <>
-      <Section label={props.t.key}>
+      <Section label={props.t.title}>
         <Head {...props} plan={plan} />
       </Section>
       <Talk t={props.t} me={props.me} />

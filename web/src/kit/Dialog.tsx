@@ -183,23 +183,26 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
       }}
     >
       <Layer.Provider value={ref}>
-        <Tips>
-          {/* keyed by its opening: a closed dialog's toasts (and any still waiting on its
+        {/* a Dialog's own: a full one opened from a panel isn't one of its parts */}
+        <InPanel value={false}>
+          <Tips>
+            {/* keyed by its opening: a closed dialog's toasts (and any still waiting on its
               question) go with it, and don't greet the next one */}
-          <Toasts
-            key={open ? "open" : "shut"}
-            held={ask !== undefined}
-            dock={look === "side" ? dock : undefined}
-          >
-            {look === "side" ? (
-              side
-            ) : open ? (
-              <Full onClose={onClose} ask={ask}>
-                {children}
-              </Full>
-            ) : null}
-          </Toasts>
-        </Tips>
+            <Toasts
+              key={open ? "open" : "shut"}
+              held={ask !== undefined}
+              dock={look === "side" ? dock : undefined}
+            >
+              {look === "side" ? (
+                side
+              ) : open ? (
+                <Full onClose={onClose} ask={ask}>
+                  {children}
+                </Full>
+              ) : null}
+            </Toasts>
+          </Tips>
+        </InPanel>
       </Layer.Provider>
     </dialog>
   );

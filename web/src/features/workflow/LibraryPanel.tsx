@@ -117,7 +117,7 @@ export function LibraryPanel({ lib, target, where, pick }: PanelProps) {
   return (
     <Section title="Library">
       <Tabs
-        label="Library"
+        label="Kind"
         value={tab}
         onChange={(id) => {
           setTab(id === "skills" || id === "files" ? id : "agents");

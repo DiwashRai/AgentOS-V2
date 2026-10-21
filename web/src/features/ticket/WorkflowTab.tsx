@@ -105,11 +105,13 @@ export function WorkflowTab({ t }: { t: Ticket }) {
           Edit
         </Button>
       }
+      note={
+        <Stack dir="row" gap={4} align="center" wrap>
+          <DriftChips w={copy} />
+          <Text variant="meta">{`Edited by ${authorText(copy.updated_by, copy.updated_at, now)}`}</Text>
+        </Stack>
+      }
     >
-      <Stack dir="row" gap={4} align="center" wrap>
-        <DriftChips w={copy} />
-        <Text variant="meta">{`Edited by ${authorText(copy.updated_by, copy.updated_at, now)}`}</Text>
-      </Stack>
       <Context w={copy} lib={lib} />
       <Stages w={copy} runs={runs} lib={lib} />
     </Section>
