@@ -8,6 +8,8 @@ import {
   Avatar,
   Badge,
   Button,
+  Card,
+  Chip,
   type Column,
   Head,
   Icon,
@@ -94,11 +96,16 @@ function AgentChip({ t }: { t: TicketRow }) {
   const what = a.kind === "running" ? `${a.agent} running` : "Queued";
   const whose = t.owner ? `, for ${t.owner.name}` : "";
   return (
-    <Badge kind="tag" tone="quiet" title={`${what}${whose}`}>
-      {what}
-      {a.kind === "running" ? <Icon name="agents" label={`${a.agent} agent`} /> : null}
-      {t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} size="sm" /> : null}
-    </Badge>
+    <Chip
+      label={what}
+      title={`${what}${whose}`}
+      after={
+        <>
+          {a.kind === "running" ? <Icon name="agents" label={`${a.agent} agent`} /> : null}
+          {t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} size="sm" /> : null}
+        </>
+      }
+    />
   );
 }
 
@@ -115,8 +122,8 @@ function stageText(t: TicketRow, me: Person | null): string {
 function Body({ t }: { t: TicketRow }) {
   const running = t.attention.kind === "running";
   return (
-    <Stack dir="row" gap={4} align="start">
-      <Mark kind={running ? "run" : "queued"} glyph />
+    <Stack dir="row" gap={4} align="baseline">
+      <Mark kind={running ? "run" : "queued"} glyph still />
       <Text variant="label" weight={400} tone={running ? "1" : "2"} truncate={2} title={t.title}>
         {t.title}
       </Text>
@@ -183,18 +190,13 @@ function Top({
 /** A card's chips: its stage as a label chip led by a dot in the card's state, then its repo. */
 function Chips({ t, me }: { t: TicketRow; me: Person | null }) {
   const stage = stageText(t, me);
+  const running = t.attention.kind === "running";
   return (
     <Stack dir="row" gap={3} align="center" wrap>
       {stage ? (
-        <Badge kind="tag" tone="fill" title={stage}>
-          {stage}
-        </Badge>
+        <Chip tone="fill" dot={running ? "live" : "neutral"} label={stage} title={stage} />
       ) : null}
-      {t.repo ? (
-        <Badge kind="tag" tone="quiet" title={t.repo}>
-          {t.repo}
-        </Badge>
-      ) : null}
+      {t.repo ? <Chip label={t.repo} title={t.repo} /> : null}
     </Stack>
   );
 }
@@ -205,21 +207,21 @@ function AgentCard({ t, me, now, onOpen }: ItemProps) {
   const a = t.attention;
   if (a.kind !== "running" && a.kind !== "queued") return null;
   return (
-    <Row
-      kind="tile"
-      look={a.kind === "queued" ? "flat" : "raised"}
-      action={{
-        label: `Peek at ${t.key}: ${t.title}`,
-        run: () => {
-          onOpen(t.key);
-        },
+    <Card
+      look="agent"
+      label={`Peek at ${t.key}: ${t.title}`}
+      off={a.kind === "queued"}
+      onOpen={() => {
+        onOpen(t.key);
       }}
     >
       <Top t={t} now={now} run={{ id: a.run_id, running: a.kind === "running" }} />
       <Body t={t} />
+      {/* the chips and the progress sink to the foot, so they line up across a row of cards */}
+      <Stack grow />
       <Chips t={t} me={me} />
       <Progress t={t} />
-    </Row>
+    </Card>
   );
 }
 

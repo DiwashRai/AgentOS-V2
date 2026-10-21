@@ -4,7 +4,7 @@
 // it is a check or a maker, as plain words (nothing on a card looks like a button). The ticket's
 // tab draws it compact (no prompt) with the stage's last run as a status glyph before its name.
 import type { Stage } from "../../api/types";
-import { Avatar, Badge, Chip, Icon, Mark, type MarkKind, Override, Stack, Text } from "../../kit";
+import { Avatar, Chip, Icon, Mark, type MarkKind, Override, Stack, Text } from "../../kit";
 import { agentOf, type Library, refName, runtimeName } from "./library";
 import { isCheck, phaseWord, type RefKind } from "./model";
 
@@ -94,7 +94,7 @@ export function StageChips({
         return (
           <Chip
             key={flash ? `${ref}:${String(fresh.n)}` : ref}
-            icon={kind}
+            lead={<Icon name={kind} />}
             label={refName(lib, kind, id)}
             flash={flash}
             {...(onRemove
@@ -141,11 +141,7 @@ function HeadLine({ stage, run }: { stage: Stage; run: LastRun | null }) {
       <Text variant="label" truncate>
         {stage.name}
       </Text>
-      {samePhase ? null : (
-        <Badge kind="tag" tone="fill" title={`Phase: ${phase}`}>
-          {phase}
-        </Badge>
-      )}
+      {samePhase ? null : <Chip tone="fill" label={phase} title={`Phase: ${phase}`} />}
       {run ? (
         <Text variant="meta" tone="2" title={run.title}>
           {run.text}

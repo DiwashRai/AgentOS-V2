@@ -3,7 +3,7 @@
 // drift from the library in one vocabulary, and the question asked when an editor would close with
 // unsaved changes.
 import type { Drift } from "../../api/types";
-import { Badge, Button, Stack, Text } from "../../kit";
+import { Button, Chip, Icon, Stack, Text } from "../../kit";
 
 /** An editor's title over a copy: "NW-17's copy of Standard v3". */
 export const copyTitle = (key: string, name: string, version: number): string =>
@@ -29,14 +29,18 @@ export function DriftChips({ drift, of }: { drift: Drift | null; of: string }) {
   return (
     <>
       {library !== null ? (
-        <Badge kind="prop" dot="you" title={`${of} is at v${String(library)} in the library`}>
-          {`Library has v${String(library)}`}
-        </Badge>
+        <Chip
+          dot="you"
+          label={`Library has v${String(library)}`}
+          title={`${of} is at v${String(library)} in the library`}
+        />
       ) : null}
       {changed ? (
-        <Badge kind="prop" icon="compose" title="This ticket changed its copy">
-          Changed here
-        </Badge>
+        <Chip
+          lead={<Icon name="compose" />}
+          label={"Changed here"}
+          title="This ticket changed its copy"
+        />
       ) : null}
     </>
   );

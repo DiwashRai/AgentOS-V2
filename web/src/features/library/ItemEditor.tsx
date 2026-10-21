@@ -10,7 +10,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 import { useNow, useSession } from "../../api/queries";
 import type { ItemBody, UsedBy } from "../../api/types";
 import { age } from "../../domain/format";
-import { Badge, Button, Field, FormRow, Page, type PageProps, Stack } from "../../kit";
+import { Button, Chip, Field, FormRow, Page, type PageProps, Stack } from "../../kit";
 import { Conflict } from "./conflict";
 import { Content } from "./content";
 import type { Draft } from "./draft";
@@ -86,17 +86,8 @@ function Actions({ e }: { e: Editor }) {
 
 /** After the title: a conflict, or an edit not saved yet. */
 function State({ e }: { e: Editor }) {
-  if (e.theirs)
-    return (
-      <Badge kind="tag" tone="blocked">
-        Conflict
-      </Badge>
-    );
-  return e.dirty ? (
-    <Badge kind="tag" tone="quiet">
-      Unsaved changes
-    </Badge>
-  ) : null;
+  if (e.theirs) return <Chip tone="blocked" label={"Conflict"} />;
+  return e.dirty ? <Chip label={"Unsaved changes"} /> : null;
 }
 
 function Side({ e, props }: { e: Editor; props: ItemEditorProps }) {

@@ -6,7 +6,7 @@
 // Edit opens the editor full window over the ticket (?edit=workflow); nothing is edited here.
 import { useNow, useRuns, useTicketWorkflow } from "../../api/queries";
 import type { Run, Ticket, TicketWorkflow } from "../../api/types";
-import { Button, Card, Chip, Lane, Notice, Stack, Text } from "../../kit";
+import { Button, Card, Chip, Icon, Lane, Notice, Stack, Text } from "../../kit";
 import { LoopFoot } from "../workflow/Editor";
 import { type Library, refName, useLibrary } from "../workflow/library";
 import { type LastRun, StageFace, StageSummary } from "../workflow/StageCard";
@@ -79,7 +79,7 @@ function Context({ w, lib }: { w: TicketWorkflow; lib: Library }) {
       </Text>
       {(["skills", "files"] as const).flatMap((kind) =>
         w.context[kind].map((id) => (
-          <Chip key={`${kind}:${id}`} icon={kind} label={refName(lib, kind, id)} />
+          <Chip key={`${kind}:${id}`} lead={<Icon name={kind} />} label={refName(lib, kind, id)} />
         )),
       )}
     </Stack>

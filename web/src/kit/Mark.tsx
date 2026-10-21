@@ -29,18 +29,10 @@ export interface MarkProps {
   glyph?: boolean;
   /** The small glyph of counters, pills and group heads. */
   small?: boolean;
-  /** In a row: the label in a neutral pill on a hairline (Linear's label chip), no colour of its
-   *  own: the row's status glyph says the state; `text` (a step count) follows inside it, quieter. */
-  chip?: boolean;
+  /** Still: no breathing halo (a grid of cards, a board, would pulse all at once). */
+  still?: boolean;
   /** A running glyph's pie: how far its run is (Linear's in-progress circle); half without it. */
   progress?: { done: number; total: number } | null;
-}
-
-/** A chip's words: the ask for YOU, else the name and its ask. */
-function chipLabel(kind: MarkKind, name?: string, ask?: string): string {
-  if (kind === "you") return ask ?? WORD.you;
-  const who = name ?? WORD[kind];
-  return ask ? `${who} · ${ask}` : who;
 }
 
 /** The glyph: Linear's status circle, drawn by the stylesheet from the kind. */
@@ -48,23 +40,12 @@ function Glyph({ label }: { label?: string }) {
   return label ? <i role="img" aria-label={label} /> : <i aria-hidden="true" />;
 }
 
-/** The row's chip: the label in a neutral pill, the step count quieter after it. */
-function ChipMark({ kind, name, ask, text }: MarkProps) {
-  const label = chipLabel(kind, name, ask);
-  return (
-    <span className={cx(s.mark, s.chip)} title={text ? `${label} · ${text}` : label}>
-      <b>{label}</b>
-      {text ? <span className={s.text}>{text}</span> : null}
-    </span>
-  );
-}
-
 /** The glyph alone, a running one's pie filled to its progress. */
-function GlyphMark({ kind, name, small, progress }: MarkProps) {
+function GlyphMark({ kind, name, small, still, progress }: MarkProps) {
   const fill = progress && progress.total > 0 ? progress.done / progress.total : null;
   return (
     <span
-      className={cx(s.mark, s[kind], small && s.small)}
+      className={cx(s.mark, s[kind], small && s.small, still && s.still)}
       style={vars({ "--fill": fill === null ? undefined : `${String(Math.round(fill * 100))}%` })}
     >
       <Glyph label={name ?? WORD[kind]} />
@@ -74,7 +55,6 @@ function GlyphMark({ kind, name, small, progress }: MarkProps) {
 
 /** A ticket's or run's state, in exactly one form per state. */
 export function Mark(props: MarkProps) {
-  if (props.chip) return <ChipMark {...props} />;
   if (props.glyph) return <GlyphMark {...props} />;
   return <NamedMark {...props} />;
 }

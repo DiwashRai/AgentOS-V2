@@ -1,5 +1,6 @@
-/* Chip: Linear's label chip (a pill on the label hairline, Badge tag's), a muted glyph before the
-   name; a remove at its end that lights on hover, the pill's padding tucked in round it */
+/* Chip: Linear's label chip, the kit's one pill. A pill on the label hairline, regular muted words
+   cut at their end, led by a muted glyph or a state's dot; something quieter after the words; a
+   remove at its end that lights on hover, the pill's padding tucked in round it */
 .chip {
   display: inline-flex;
   flex: 0 1 auto;
@@ -8,21 +9,73 @@
   min-width: 0;
   max-width: 100%;
   height: var(--h-list-chip);
-  padding: 0 var(--sp-4) 0 var(--sp-3);
+  padding: 0 var(--sp-4);
   border-radius: var(--r-pill);
   box-shadow: inset 0 0 0 var(--line-1) var(--list-label-edge);
   color: var(--ink-2);
   font-size: var(--fs-2);
+  font-weight: 400;
   line-height: 1;
   white-space: nowrap;
 }
-.chip > [aria-hidden="true"] {
+.chip:has(> .lead) {
+  padding-left: var(--sp-3);
+}
+.chip[data-tone="fill"] {
+  background: var(--list-chip-fill);
+}
+.chip[data-tone="strong"] {
+  color: var(--ink-1);
+  font-weight: 500;
+}
+.chip[data-tone="blocked"] {
+  color: var(--blocked);
+  font-weight: 500;
+}
+.lead {
+  display: inline-flex;
   flex: none;
   color: var(--prop-mark);
 }
-.chip svg {
+.lead svg {
   width: var(--sp-6);
   height: var(--sp-6);
+}
+.dot {
+  flex: none;
+  width: var(--prop-dot);
+  height: var(--prop-dot);
+  border-radius: 50%;
+  background: var(--prop-mark);
+}
+.dot[data-dot="live"] {
+  background: var(--live);
+}
+.dot[data-dot="you"] {
+  background: var(--you);
+}
+.dot[data-dot="blocked"] {
+  background: var(--blocked);
+}
+.dot[data-dot="done"] {
+  background: var(--done);
+}
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* quieter, after the words: a step count, or an agent's glyph and a face (tucked to the edge) */
+.after {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.chip:has(> .after > [role="img"]) {
+  padding-right: var(--sp-1);
 }
 .chip[data-removable] {
   padding-right: var(--sp-1);
@@ -37,11 +90,6 @@
     background: var(--card-open-ring);
     box-shadow: inset 0 0 0 var(--line-1) var(--you);
   }
-}
-.label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .remove {
   display: inline-grid;

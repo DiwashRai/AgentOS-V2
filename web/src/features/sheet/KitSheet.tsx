@@ -300,8 +300,10 @@ function LaneSheet() {
         <Text variant="label">{name}</Text>
         {name === "Build" ? <Override value="xhigh" own="high" /> : null}
         <Stack dir="row" gap={3}>
-          <Chip label="tests" icon="skills" />
-          {edit ? <Chip label="AGENTS.md" icon="files" onRemove={() => undefined} /> : null}
+          <Chip label="tests" lead={<Icon name="skills" />} />
+          {edit ? (
+            <Chip label="AGENTS.md" lead={<Icon name="files" />} onRemove={() => undefined} />
+          ) : null}
         </Stack>
       </Stack>
     </Card>
@@ -452,13 +454,9 @@ export function KitSheet() {
                 {5}
               </Badge>
               <Badge kind="kbd">Esc</Badge>
-              <Badge kind="tag">Bug</Badge>
-              <Badge kind="tag" tone="blocked">
-                High
-              </Badge>
-              <Badge kind="tag" tone="quiet">
-                web
-              </Badge>
+              <Chip tone="strong" label={"Bug"} />
+              <Chip tone="blocked" label={"High"} />
+              <Chip label={"web"} />
               <Badge kind="you" />
             </Stack>
           </Section>

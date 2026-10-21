@@ -12,8 +12,8 @@ import { stageModel } from "../../domain/board";
 import { firstName } from "../../domain/format";
 import { parsePlan, type PlanItem } from "../../domain/plan";
 import {
-  Badge,
   Checklist,
+  Chip,
   Notice,
   Page,
   Select,
@@ -115,9 +115,7 @@ function Overview({
         </Text>
         <Stack dir="row" gap={3} wrap>
           {items.map((name) => (
-            <Badge key={name} kind="tag" tone="quiet">
-              {name}
-            </Badge>
+            <Chip key={name} label={name} />
           ))}
         </Stack>
       </Stack>

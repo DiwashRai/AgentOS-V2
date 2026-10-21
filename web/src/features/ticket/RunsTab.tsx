@@ -13,6 +13,7 @@ import { firstName } from "../../domain/format";
 import {
   Avatar,
   Badge,
+  Chip,
   type Column,
   Icon,
   Mark,
@@ -154,9 +155,7 @@ function RunLine({ r, runs, w, now }: RunProps) {
         {`\u2002${after}`}
       </Text>
     </Stack>,
-    <Badge key="time" kind="prop" icon="clock" title={`${time} budget`}>
-      {time}
-    </Badge>,
+    <Chip key="time" lead={<Icon name="clock" />} label={time} title={`${time} budget`} />,
     <Text key="age" variant="meta" tone="3" tabular title={`Started ${clock(started)}`}>
       {ago(started, now)}
     </Text>,
@@ -168,9 +167,10 @@ function RunLine({ r, runs, w, now }: RunProps) {
 function Verdict({ s }: { s: StageRun }) {
   if (s.verdict)
     return (
-      <Badge kind="prop" dot={s.verdict === "pass" ? "done" : "blocked"}>
-        {s.verdict === "pass" ? "Passed" : "Failed"}
-      </Badge>
+      <Chip
+        dot={s.verdict === "pass" ? "done" : "blocked"}
+        label={s.verdict === "pass" ? "Passed" : "Failed"}
+      />
     );
   if (s.state === "running")
     return (

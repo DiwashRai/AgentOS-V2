@@ -24,19 +24,22 @@
     var(--teams-card-shadow);
 }
 
-/* the summary: the face on the lane's axis, the words beside it */
+/* the summary: the face on the lane's axis, the words beside it; with no face, the words alone */
 .summary {
   position: relative;
   display: grid;
-  grid-template-columns: var(--h-chip) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   column-gap: var(--sp-5);
   padding: var(--sp-5) var(--sp-6);
   border-radius: calc(var(--r-4) - var(--line-1));
 }
+.summary[data-face] {
+  grid-template-columns: var(--h-chip) minmax(0, 1fr);
+}
 .card[data-edit] .summary:hover {
   background: var(--teams-card-hover);
 }
-.card[data-off] .summary > :not(.hit) {
+.card[data-look="stage"][data-off] .summary > :not(.hit) {
   opacity: var(--lane-off);
 }
 /* the summary's one button, under its words, so the words stay plain text */
@@ -96,4 +99,55 @@
 .body {
   padding: var(--sp-7) var(--sp-6) var(--sp-8);
   border-top: var(--line-1) solid var(--teams-card-edge);
+}
+
+/* ticket: a ticket on a board, its lines one under another, a little apart */
+.card[data-look="ticket"] {
+  border-radius: var(--r-3);
+}
+.card[data-look="ticket"] .summary {
+  border-radius: calc(var(--r-3) - var(--line-1));
+}
+.card[data-look="ticket"] .main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+.card[data-look="ticket"] .main > * {
+  max-width: 100%;
+}
+
+/* agent: an agent's card, a shade off the surface, as tall as its neighbours, its lines one under
+   another down to its foot; a queued one recedes to a fainter hairline with no fill. A Meter in it
+   lies along its bottom edge, clipped to its corners */
+.card[data-look="agent"] {
+  align-self: stretch;
+  overflow: hidden;
+  border-color: var(--tile-edge);
+  background: var(--tile);
+  box-shadow: var(--tile-lift);
+}
+.card[data-look="agent"][data-off] {
+  border-color: var(--tile-quiet-edge);
+  background: transparent;
+  box-shadow: none;
+}
+.card[data-look="agent"][data-edit]:hover,
+.card[data-look="agent"]:has(.hit:focus-visible) {
+  border-color: var(--tile-hover-edge);
+  background: var(--tile-hover);
+}
+.card[data-look="agent"] .summary {
+  height: 100%;
+  padding: var(--sp-7) var(--sp-8) var(--sp-8);
+}
+.card[data-look="agent"][data-edit] .summary:hover {
+  background: none;
+}
+.card[data-look="agent"] .main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  height: 100%;
 }

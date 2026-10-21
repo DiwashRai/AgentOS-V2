@@ -6,7 +6,7 @@
 import type { Person, TicketRow, TicketType } from "../../api/types";
 import { markOf, type MarkModel, stageModel } from "../../domain/board";
 import { age } from "../../domain/format";
-import { Age, Avatar, Badge, type Column, Icon, Mark, Stack, Text } from "../../kit";
+import { Age, Avatar, Badge, Chip, type Column, Icon, Mark, Stack, Text } from "../../kit";
 import { sourceText, stageDot, stageWord } from "./model";
 
 const TYPE_WORD: Record<TicketType, string> = {
@@ -54,6 +54,13 @@ export function TitleCell({ t, me, after }: { t: TicketRow; me: Person | null; a
   );
 }
 
+/** A Now chip's words: the ask for your move, else who or what and its ask ("Bea · Sign off"). */
+function chipWords(m: MarkModel): string {
+  if (m.kind === "you") return m.ask ?? "Your move";
+  const who = m.name ?? "";
+  return m.ask ? ` · ${m.ask}` : who;
+}
+
 /** The quiet end of a line, as cells (spread into the Row, one per LINE_END column): the chips
  *  (the row's Now chip, if it has one; the stage on its state's dot, "Review 2/3", the whole way on
  *  hover; the source on the repo glyph), the age, the owner's face (an empty slot keeps its place). */
@@ -63,15 +70,9 @@ export function lineEnd({ t, me, now, age: shown, chip }: LineEndProps) {
   const source = sourceText(t);
   return [
     <Stack key="chips" dir="row" gap={3} align="center" justify="end">
-      {chip?.mark ? <Mark {...chip.mark} text={chip.count ?? undefined} chip /> : null}
-      <Badge kind="prop" dot={stageDot(t, me)} title={stage.path}>
-        {stage.word}
-      </Badge>
-      {source ? (
-        <Badge kind="prop" icon="repo">
-          {source}
-        </Badge>
-      ) : null}
+      {chip?.mark ? <Chip label={chipWords(chip.mark)} after={chip.count ?? undefined} /> : null}
+      <Chip dot={stageDot(t, me)} label={stage.word} title={stage.path} />
+      {source ? <Chip lead={<Icon name="repo" />} label={source} /> : null}
     </Stack>,
     <Text key="age" variant="meta" tone="3">
       <Age text={shown ?? age(t.since, now)} />

@@ -45,8 +45,9 @@
    count beside it says ("3/5": two done, the third under way). Still: a grid of cards would sweep
    all at once */
 .tile {
+  position: absolute;
+  inset: auto 0 0;
   gap: 0;
-  width: 100%;
   height: var(--tile-bar);
   background: var(--tile-meter-track);
 }

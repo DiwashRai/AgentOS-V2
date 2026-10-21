@@ -88,7 +88,7 @@ function ContextStrip({ draft, lib, fresh, land }: Lands & { draft: Draft; lib: 
               return (
                 <Chip
                   key={flash ? `${ref}:${String(fresh.n)}` : ref}
-                  icon={kind}
+                  lead={<Icon name={kind} />}
                   label={refName(lib, kind, id)}
                   flash={flash}
                   onRemove={() => {

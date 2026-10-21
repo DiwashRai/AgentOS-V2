@@ -12,7 +12,9 @@ import { firstName, plural, repoShort } from "../../domain/format";
 import {
   Avatar,
   Badge,
+  Card,
   Button,
+  Chip,
   type Column,
   Mark,
   type MarkKind,
@@ -144,28 +146,24 @@ function Item({
 }) {
   const badge = itemBadge(t, me);
   return (
-    <Row
-      kind="rack"
-      action={{
-        label: `Peek at ${t.key}: ${t.title}`,
-        run: () => {
-          onOpen(t.key);
-        },
+    <Card
+      look="ticket"
+      label={`Peek at ${t.key}: ${t.title}`}
+      onOpen={() => {
+        onOpen(t.key);
       }}
     >
       <Badge kind="key" size="sm">
         {t.key}
       </Badge>
-      <Stack dir="row" gap={4} align="start">
-        <Mark kind={badge.kind} glyph progress={badge.progress} />
-        <Text variant="label" weight={400} truncate={2} title={t.title}>
+      <Stack dir="row" gap={4} align="baseline">
+        <Mark kind={badge.kind} glyph still progress={badge.progress} />
+        <Text variant="label" weight={400} tone="1" truncate={2} title={t.title}>
           {t.title}
         </Text>
       </Stack>
-      <Badge kind="tag" tone="quiet" title={badge.text}>
-        {badge.text}
-      </Badge>
-    </Row>
+      <Chip tone="fill" label={badge.text} title={badge.text} />
+    </Card>
   );
 }
 
@@ -256,7 +254,7 @@ export function TeamsView() {
                   <Text variant="meta">{repo.name}</Text>
                   <Stack dir="row">
                     <Avatar
-                      size="md"
+                      size="mid"
                       people={people.map((p) => ({ name: p.name, seed: String(p.id) }))}
                     />
                   </Stack>

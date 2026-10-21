@@ -66,7 +66,7 @@
       }
     },
     "Badge": {
-      "why": "Every small labelled chip: keys, counts, keycaps, tags, another system's status, YOU.",
+      "why": "The small text forms: a key, a count, a keycap, YOU. A labelled pill is a Chip.",
       "props": {
         "kind": {
           "why": "V1 had a component per chip; one component with a kind each.",
@@ -74,8 +74,6 @@
             "key": "A ticket or project key, as quiet tabular text (how Linear writes an issue id).",
             "count": "The bare count after a head's or a filter pill's name.",
             "kbd": "A keycap in key hints.",
-            "tag": "A label chip on a hairline: the agent reads' tags, an agent card's chips, All teams' item badge.",
-            "prop": "A list row's quiet property (its stage, its source): a grey dot or a small glyph, then the words, no outline, so the row's one chip stays its only edged thing (Linear's label without its pill).",
             "you": "The YOU pill: the one mono-caps form."
           }
         },
@@ -92,28 +90,12 @@
         "title": {
           "why": "The full text or what a click does, on hover."
         },
-        "icon": {
-          "why": "A property's glyph in place of its dot (the repo glyph before a row's source)."
-        },
-        "dot": {
-          "why": "A property's dot in the hue of the state it belongs to (a row's stage on its state's dot), so the stage reads with the row's glyph without a coloured chip.",
-          "values": {
-            "neutral": "Waiting on someone else, queued, in the inbox or abandoned: the grey dot (the default).",
-            "live": "Its run is under way: running's orange.",
-            "you": "It waits on you: your move's accent.",
-            "blocked": "Blocked: red.",
-            "done": "Done: green."
-          }
-        },
         "tone": {
-          "why": "Count pills and tags take their head's or meaning's hue.",
+          "why": "A count takes its head's hue.",
           "values": {
             "neutral": "The default.",
             "you": "Needs-you heads.",
-            "done": "Done heads.",
-            "blocked": "A high-priority tag.",
-            "quiet": "An agent card's state pill and repo, the ticket page's item names: regular muted text on the hairline.",
-            "fill": "An agent card's state and repo: a filled chip with no edge, a face at its end; a stage's phase on its card, so it reads as a property, not a second name."
+            "done": "Done heads."
           }
         }
       }
@@ -161,7 +143,7 @@
       }
     },
     "Card": {
-      "why": "A stage as its own object on the workflow's lane (All teams' card look): its face on the lane's axis, its summary beside it as one button that selects it, opening in place to its settings (no dialog); dimmed when the stage is off, a problem at its foot.",
+      "why": "A card: one object on its own surface, the whole of it one button. Three looks on one surface and one activation (a workflow stage, an agent at work, a ticket on a board).",
       "props": {
         "label": {
           "why": "The stage's name, for the summary button (Edit Implement, Close Implement)."
@@ -183,23 +165,56 @@
         },
         "problem": {
           "why": "Inline validation (a gate inside a loop, a prompt naming an unknown field), at the card's foot in the blocked ink."
+        },
+        "look": {
+          "why": "Stages, agents at work and board tickets are cards in three places.",
+          "values": {
+            "stage": "A workflow stage on the lane: its face on the axis, opening in place to its settings (the default).",
+            "agent": "An agent at work (My queue): its lines down to the card's foot; a Meter lies along its bottom edge.",
+            "ticket": "A ticket on a board (All teams): its key, title and state chip on a hairline card."
+          }
         }
       }
     },
     "Chip": {
-      "why": "A skill or a file named on a stage or a workflow, as Linear's label chip with its glyph, and a remove at its end where it can be taken off (the workflow-context strip, an open card).",
+      "why": "Linear's label chip, the kit's one pill: a stage, a repo, a skill on a stage, a property, an agent's state (Badge's tag and prop pills and Mark's chip folded into it).",
       "props": {
         "label": {
-          "why": "Its name (tests, AGENTS.md)."
-        },
-        "icon": {
-          "why": "What it is: the sidebar's Skills or Files glyph."
+          "why": "Its words (tests, AGENTS.md, Implement, northwind/web)."
         },
         "onRemove": {
           "why": "Take it off the stage or the workflow; none draws it read only (a closed card, the ticket's tab)."
         },
         "flash": {
           "why": "A click in the library panel adds a chip that may be far below the fold: it scrolls into view and flashes once, so the click visibly landed."
+        },
+        "lead": {
+          "why": "A small glyph before the words: an Icon (skills, files, repo), or a still Mark glyph."
+        },
+        "dot": {
+          "why": "A dot in a state's hue before the words: a row's stage, a verdict, drift.",
+          "values": {
+            "neutral": "No state of its own (a queued card's stage).",
+            "live": "Running.",
+            "you": "Your move, or the library's newer version.",
+            "blocked": "Failed or blocked.",
+            "done": "Passed, complete, the default."
+          }
+        },
+        "tone": {
+          "why": "Most chips are muted words on a hairline; a few stand out.",
+          "values": {
+            "line": "A hairline, no fill: the default.",
+            "fill": "A faint fill on the hairline: an agent card's chips, a board card's state, a stage's phase.",
+            "strong": "The words in full ink: a ticket's type.",
+            "blocked": "The words in the blocked ink: a high priority, a conflict."
+          }
+        },
+        "title": {
+          "why": "The full text on hover, when it says more than the words."
+        },
+        "after": {
+          "why": "Quieter, after the words: a step count, or an agent's glyph and a face."
         }
       }
     },
@@ -488,11 +503,11 @@
         "small": {
           "why": "The glyph a size down, for counters, pills and heads."
         },
-        "chip": {
-          "why": "In a list row, what the state names beyond the glyph, the group and the stage (the agent and its step, who it waits on and for what) as Linear's label chip: a neutral pill on a hairline, no colour of its own, the row's one outlined thing, its step count inside it in a quieter ink."
-        },
         "progress": {
           "why": "A running glyph's pie fills as far as its run is (Linear's in-progress circle), so a row needs no meter beside it."
+        },
+        "still": {
+          "why": "No breathing halo: a grid of cards or a board would pulse all at once."
         }
       }
     },
@@ -506,7 +521,7 @@
           "why": "Steps in all."
         },
         "size": {
-          "why": "V1's three sizes.",
+          "why": "Two places draw a run's progress.",
           "values": {
             "tile": "A running agent card's: one still 2px track along the card's bottom edge, the finished steps live and the one under way a soft live, under the progress line's count (a queued card draws none).",
             "row": "Inline in a row (48px): the ticket's Now line."
@@ -632,13 +647,12 @@
           }
         },
         "kind": {
-          "why": "The five shapes V1's lists take.",
+          "why": "The shapes the app's lists take.",
           "values": {
             "line": "A list's row (Compact, My queue): one line on a hairline, edge to edge, its first cell under the group head's glyph, washed on hover.",
             "item": "A two-line row (Intake): roomy, on a hairline, washed on hover.",
-            "tile": "An agent card (My queue's Agents at work, Linear's agent card), each line in its own space: the key line with Linear's agent pill at its end (a hairline label, then the agent's glyph on a live disc under the owner's face); the title at regular weight, a still state glyph hanging before it; faint filled label chips (the stage's led by a dot in the card's state); and the progress line (the step, its count) over a track along the bottom edge. The chips and progress sink to the foot so they line up across a row.",
-            "rack": "A bare entry (a team's items): lights up.",
-            "band": "A board's swimlane: the team, then its stage lanes to the board's edge, its items stacked as cards, the board's only raised surface (a slight step above the page on a hairline), their titles wrapping only at the card's edge in a per-theme title ink (one weight in light and dark), each item's badge (a Badge tag) drawn as Linear's label chip, a pill on a hairline with a faint fill (All teams); every stage an equal lane, and a lane with no card bare page (Linear's empty column); the team's faces drawn as readable discs on a firm ink step; a team with nothing in flight says so in its first lane, where a card's key would sit; a flat band is the board's column head on the same grid (stage names and card counts)."
+            "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
+            "band": "A board's swimlane (All teams): the team, then its stage lanes to the board's edge, each holding ticket Cards; a flat band is the board's column head on the same grid."
           }
         },
         "action": {

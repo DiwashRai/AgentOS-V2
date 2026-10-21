@@ -6,7 +6,7 @@
 import { useWorkflows } from "../../api/queries";
 import type { Workflow } from "../../api/types";
 import { matches, plural } from "../../domain/format";
-import { Badge, type Column, Icon, Strip, Text } from "../../kit";
+import { Chip, type Column, Icon, Strip, Text } from "../../kit";
 import { useSearch } from "../shared/useSearch";
 import { ChangedCell, LibraryList, LibraryRow, NameCell, VersionCell } from "./list";
 
@@ -65,9 +65,7 @@ export function WorkflowsView() {
             title={`${w.name} · ${w.description}`}
             mark={
               w.is_default ? (
-                <Badge kind="tag" tone="quiet" title="New tickets start from it">
-                  Default
-                </Badge>
+                <Chip label={"Default"} title="New tickets start from it" />
               ) : undefined
             }
           />

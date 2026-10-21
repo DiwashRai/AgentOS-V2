@@ -1,6 +1,6 @@
 // One item of a list: its cells on the Table's columns. A line or an item is a flat row on a
-// hairline (Linear's list): hover and focus wash it, the open one a shade more. A tile is a card;
-// a band a board's swimlane. Raised items are actionable, flat ones settled; nothing changes size.
+// hairline (Linear's list): hover and focus wash it, the open one a shade more. A rack is a bare
+// entry; a band a board's swimlane. A card on its own surface is a Card. Nothing changes size.
 import { Children, type MouseEvent, type ReactNode } from "react";
 
 import s from "./Row.module.css";
@@ -13,13 +13,13 @@ export interface Action {
 }
 
 export interface RowProps {
-  /** The cells, one per column; with fewer, the last spans the rest. A tile stacks them. */
+  /** The cells, one per column; with fewer, the last spans the rest. Outside a table they stack. */
   children: ReactNode;
   /** raised: actionable (default); flat: settled; you: raised, a list row with a faint you wash. */
   look?: "raised" | "flat" | "you";
-  /** line: a list's one-line row (Compact, My queue); item: a roomy two-line row (Intake); tile: a
-   *  card; rack: a bare entry; band: a board's swimlane. */
-  kind?: "line" | "item" | "tile" | "rack" | "band";
+  /** line: a list's one-line row (Compact, My queue); item: a roomy two-line row (Intake); rack: a
+   *  bare entry (a run's stage); band: a board's swimlane. */
+  kind?: "line" | "item" | "rack" | "band";
   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
    *  names what it opens, for assistive tech. */
   action?: Action;
@@ -121,7 +121,7 @@ function Tail({
 export function Row(props: RowProps) {
   const { children, look = "raised", kind = "line", action, open = false, more, alert } = props;
   const columns = useColumns();
-  const stack = kind === "tile" || columns.length === 0;
+  const stack = columns.length === 0;
   const cells = useCells(children, stack);
   // A rack line is bare: it has no surface to raise or settle.
   const surface = kind === "rack" ? undefined : s[look];

@@ -184,34 +184,15 @@
   color: var(--ink-3);
 }
 
-/* the small glyph of counters, pills and heads: the same forms, a size down, no halo */
+/* the small glyph of counters, pills and heads: the same forms, a size down, no halo; a still one
+   keeps its size and drops the halo only (a grid of cards would pulse all at once) */
 .small {
   --g: var(--glyph-sm);
 }
 .small:is(.run, .wait, .you) > i::before {
   inset: var(--line-mark);
 }
-.small.run > i::after {
+.small.run > i::after,
+.still.run > i::after {
   display: none;
-}
-
-/* chip: in a row, the label in a neutral pill on a hairline, no colour of its own (the row's
-   status glyph is its one accent) */
-.chip {
-  flex-shrink: 1;
-  gap: var(--sp-3);
-  height: var(--h-list-chip);
-  padding: 0 var(--sp-4);
-  border-radius: var(--r-pill);
-  box-shadow: inset 0 0 0 var(--line-1) var(--list-label-edge);
-  color: var(--ink-2);
-  font-size: var(--fs-2);
-}
-.chip > b {
-  font-weight: 400;
-}
-.chip > .text {
-  flex: none;
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
 }

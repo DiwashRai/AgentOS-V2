@@ -9,7 +9,7 @@ import { useState } from "react";
 
 import { useNow, useTicketWorkflow, useWorkflow } from "../../api/queries";
 import type { Ticket, TicketWorkflow, Workflow, WorkflowBody } from "../../api/types";
-import { Badge, Button, Dialog, Notice, Page, Stack, Text } from "../../kit";
+import { Button, Chip, Dialog, Notice, Page, Stack, Text } from "../../kit";
 import { type Draft, useDraft } from "../workflow/draft";
 import { Editor } from "../workflow/Editor";
 import { authorText } from "../workflow/who";
@@ -92,7 +92,7 @@ function Drift({ w, draft }: { w: TicketWorkflow; draft: Draft }) {
   return (
     <Stack dir="row" gap={4} align="center" wrap>
       {taken ? (
-        <Badge kind="prop" dot="you">{`Taking library v${String(lib.version)} · unsaved`}</Badge>
+        <Chip dot="you" label={`Taking library v${String(lib.version)} · unsaved`} />
       ) : (
         <DriftChips w={w} />
       )}
