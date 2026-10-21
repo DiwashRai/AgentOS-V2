@@ -1047,7 +1047,7 @@
       }
     },
     "Thread": {
-      "why": "The conversation as Linear's comments: faces and plain text, mine on the right in a bubble, and the composer.",
+      "why": "The conversation as Linear's comments: faces and plain text, mine on the right in a bubble. Its reply box is a Composer.",
       "props": {
         "messages": {
           "why": "The messages."
@@ -1058,9 +1058,6 @@
             "full": "The whole thread.",
             "last": "One message, clamped."
           }
-        },
-        "compose": {
-          "why": "A composer under it, with this placeholder; in a full-height column it sits at the foot. With no messages only the composer draws (the peek pins it at its panel's foot)."
         }
       }
     },
@@ -1075,6 +1072,17 @@
         },
         "onChange": {
           "why": "Flipped."
+        }
+      }
+    },
+    "Composer": {
+      "why": "The reply box under a conversation (the ticket's Talk, the peek's foot): one line growing as you type, Send at its end, pinned at a full-height column's foot.",
+      "props": {
+        "label": {
+          "why": "Its accessible name and placeholder (\"Say something to Bea and Cy\")."
+        },
+        "onSend": {
+          "why": "What a send does, when it is wired; none: Send does nothing yet (W0 is static)."
         }
       }
     }

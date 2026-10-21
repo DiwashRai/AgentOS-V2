@@ -1,4 +1,5 @@
-// The conversation: people only, never agents. Faces and bubbles; mine on the right in ink.
+// The conversation: people only, never agents. Faces and bubbles; mine on the right in ink. The
+// reply box under it is a Composer.
 import { Avatar } from "./Avatar";
 import s from "./Thread.module.css";
 import { cx } from "./vars";
@@ -18,12 +19,10 @@ export interface ThreadProps {
   messages: readonly ThreadMessage[];
   /** last: one message, its bubble clamped (an expanded row); full: the whole thread. */
   look?: "last" | "full";
-  /** A composer under the thread, with this placeholder. */
-  compose?: string;
 }
 
-export function Thread({ messages, look = "full", compose }: ThreadProps) {
-  const list = (
+export function Thread({ messages, look = "full" }: ThreadProps) {
+  return (
     <ol className={cx(s.thread, s[look])} aria-label="Conversation">
       {messages.map((m, i) => {
         const same = i > 0 && messages[i - 1]?.seed === m.seed;
@@ -49,15 +48,5 @@ export function Thread({ messages, look = "full", compose }: ThreadProps) {
         );
       })}
     </ol>
-  );
-  if (compose === undefined) return list;
-  return (
-    <div className={s.talk}>
-      {list}
-      <label className={s.compose}>
-        <textarea rows={1} placeholder={compose} aria-label={compose} />
-        <span className={s.send}>Send</span>
-      </label>
-    </div>
   );
 }

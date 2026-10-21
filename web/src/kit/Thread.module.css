@@ -9,10 +9,6 @@
   list-style: none;
   min-width: 0;
 }
-/* an empty thread draws only its composer (the peek pins it at the panel's foot) */
-.thread:empty {
-  display: none;
-}
 .msg {
   display: grid;
   grid-template-columns: var(--sp-9) minmax(0, 1fr);
@@ -100,68 +96,4 @@
   border-radius: var(--r-4);
   background: var(--tk-mine);
   box-shadow: inset 0 0 0 var(--line-1) var(--tk-mine-edge);
-}
-.talk {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-9);
-  min-width: 0;
-}
-/* in a full-height column the reply box sits at its foot, and stays there while the thread scrolls */
-.talk > .compose {
-  position: sticky;
-  bottom: 0;
-  margin-top: auto;
-}
-/* the composer: Linear's reply box, one line of text with Send at its right end, growing as you type */
-.compose {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--sp-4);
-  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-6);
-  border: var(--line-1) solid var(--tk-card-edge);
-  border-radius: var(--r-4);
-  background: var(--tk-card);
-  cursor: text;
-  transition: border-color var(--dur-fast);
-}
-.compose:hover {
-  border-color: var(--rule-strong);
-}
-.compose:focus-within {
-  border-color: var(--rule-strong);
-  outline: var(--line-2) solid var(--focus);
-  outline-offset: var(--line-2);
-}
-.compose > textarea {
-  flex: 1;
-  align-self: center;
-  min-width: 0;
-  min-height: var(--h-compose);
-  field-sizing: content;
-  resize: none;
-  border: 0;
-  padding: var(--sp-2) 0;
-  background: transparent;
-  outline: none;
-  font-size: var(--fs-tk);
-  line-height: 1.55;
-  color: var(--ink-1);
-}
-.compose > textarea::placeholder {
-  color: var(--ink-3);
-}
-.send {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  height: var(--h-control-sm);
-  padding: 0 var(--sp-6);
-  border-radius: var(--r-3);
-  background: var(--tk-send);
-  box-shadow: inset 0 0 0 var(--line-1) var(--tk-chip-edge);
-  color: var(--ink-1);
-  font-size: var(--fs-3);
-  font-weight: 500;
 }

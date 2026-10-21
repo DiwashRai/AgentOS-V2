@@ -10,6 +10,7 @@ import {
   Card,
   Checklist,
   Chip,
+  Composer,
   type Column,
   Dialog,
   Drag,
@@ -634,7 +635,6 @@ export function KitSheet() {
             />
             <Surface level="sheet" pad={7}>
               <Thread
-                compose="Say something"
                 messages={[
                   {
                     id: 1,
@@ -656,6 +656,7 @@ export function KitSheet() {
                   },
                 ]}
               />
+              <Composer label="Say something" />
             </Surface>
           </Section>
         </Stack>

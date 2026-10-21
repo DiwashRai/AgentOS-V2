@@ -14,6 +14,7 @@ import { parsePlan, type PlanItem } from "../../domain/plan";
 import {
   Checklist,
   Chip,
+  Composer,
   Notice,
   Page,
   Select,
@@ -131,9 +132,9 @@ function Talk({ t, me }: { t: Ticket; me: Person | null }) {
   return (
     <Stack gap={9} grow>
       <TalkHead people={people} />
-      <Thread
-        messages={messages.map((m) => threadMessage(m, me))}
-        compose={others.length > 0 ? `Say something to ${others.join(" and ")}` : "Say something"}
+      <Thread messages={messages.map((m) => threadMessage(m, me))} />
+      <Composer
+        label={others.length > 0 ? `Say something to ${others.join(" and ")}` : "Say something"}
       />
     </Stack>
   );

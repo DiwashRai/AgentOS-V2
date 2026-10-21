@@ -9,6 +9,7 @@ export { Badge, type BadgeProps } from "./Badge";
 export { Button, type ButtonProps, type ButtonVariant } from "./Button";
 export { Card, type CardProps } from "./Card";
 export { type CheckItem, Checklist, type ChecklistProps } from "./Checklist";
+export { Composer, type ComposerProps } from "./Composer";
 export { Chip, type ChipProps } from "./Chip";
 export { Compare, type CompareCell, type CompareProps, type CompareSide } from "./Compare";
 export { Dialog, type DialogProps } from "./Dialog";

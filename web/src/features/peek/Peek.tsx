@@ -9,7 +9,17 @@ import { useMessages, usePlan, useTicket } from "../../api/queries";
 import type { Person, Ticket } from "../../api/types";
 import { stageModel } from "../../domain/board";
 import { parsePlan, type PlanItem } from "../../domain/plan";
-import { Avatar, Button, Checklist, Dialog, Stack, Stepper, Text, Thread } from "../../kit";
+import {
+  Avatar,
+  Button,
+  Checklist,
+  Composer,
+  Dialog,
+  Stack,
+  Stepper,
+  Text,
+  Thread,
+} from "../../kit";
 import { threadMessage, useBoard } from "../shared/board";
 import { Now } from "../ticket/now";
 import { Properties } from "../ticket/properties";
@@ -119,7 +129,7 @@ function Loaded({ ticketKey, ...rest }: Omit<BodyProps, "t"> & { ticketKey: stri
 /** The reply box, pinned at the panel's foot once the ticket is there. */
 function Reply({ ticketKey }: { ticketKey: string }) {
   const ticket = useTicket(ticketKey);
-  return ticket.data ? <Thread messages={[]} compose={`Say something about ${ticketKey}`} /> : null;
+  return ticket.data ? <Composer label={`Say something about ${ticketKey}`} /> : null;
 }
 
 export function Peek() {

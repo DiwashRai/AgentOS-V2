@@ -1,0 +1,42 @@
+/* the composer: Linear's reply box, one line of text with Send at its right end, growing as you
+   type; in a full-height column it sits at the foot and stays there while the thread scrolls */
+.compose {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-4);
+  margin-top: auto;
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-6);
+  border: var(--line-1) solid var(--tk-card-edge);
+  border-radius: var(--r-4);
+  background: var(--tk-card);
+  cursor: text;
+  transition: border-color var(--dur-fast);
+}
+.compose:hover {
+  border-color: var(--rule-strong);
+}
+.compose:focus-within {
+  border-color: var(--rule-strong);
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--line-2);
+}
+.compose > textarea {
+  flex: 1;
+  align-self: center;
+  min-width: 0;
+  min-height: var(--h-compose);
+  field-sizing: content;
+  resize: none;
+  border: 0;
+  padding: var(--sp-2) 0;
+  background: transparent;
+  outline: none;
+  font-size: var(--fs-tk);
+  line-height: 1.55;
+  color: var(--ink-1);
+}
+.compose > textarea::placeholder {
+  color: var(--ink-3);
+}
