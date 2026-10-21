@@ -22,8 +22,9 @@ export interface ChoiceProps<T extends ChoiceItem> {
   items: readonly T[];
   value: string;
   onChange: (id: string) => void;
-  /** The trigger: its class, its name when its body doesn't say it, its look's flag, its body. */
-  trigger: { className: string | undefined; name?: string; current?: boolean; body: ReactNode };
+  /** The trigger: its class, its name (always: a combobox's content is its value, not its name),
+   *  its look's flag, its body. */
+  trigger: { className: string | undefined; name: string; current?: boolean; body: ReactNode };
   /** Opens above the trigger (the sidebar's foot) or below it. */
   side?: "top" | "bottom";
   /** The popup sheet's own class (its width). */

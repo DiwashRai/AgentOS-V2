@@ -135,7 +135,8 @@ function More({ label, items, value, current, onChange }: MoreProps) {
       sheet={s.sheet}
       trigger={{
         className: s.pill,
-        ...(current ? {} : { name: `${String(items.length)} more filters` }),
+        // always named: a combobox's name never comes from its content, which is its value
+        name: `${String(items.length)} more filters`,
         current: current !== undefined,
         body: (
           <>

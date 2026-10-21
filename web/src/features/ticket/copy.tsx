@@ -3,7 +3,7 @@
 // drift from the library in one vocabulary, and the question asked when an editor would close with
 // unsaved changes.
 import type { Drift } from "../../api/types";
-import { Button, Chip, Stack, Text } from "../../kit";
+import { Button, Chip, type DialogAsk, Text } from "../../kit";
 
 /** An editor's title over a copy: "NW-17's copy of Standard v3". */
 export const copyTitle = (key: string, name: string, version: number): string =>
@@ -44,7 +44,7 @@ export function DriftChips({ drift, of }: { drift: Drift | null; of: string }) {
 
 /** Asked over an editor that would close with unsaved changes: Keep editing first (it takes the
  *  focus, so Enter is safe), Discard plain, Save lit. */
-export function SaveAsk({
+export function saveAsk({
   what,
   onKeep,
   onDiscard,
@@ -54,20 +54,18 @@ export function SaveAsk({
   onKeep: () => void;
   onDiscard: () => void;
   onSave: () => void;
-}) {
-  return (
-    <>
-      <Stack gap={3}>
-        <Text variant="heading" as="h2">{`Save your changes to ${what}?`}</Text>
-        <Text tone="2">Closing now loses them.</Text>
-      </Stack>
-      <Stack dir="row" gap={4} justify="end">
+}): DialogAsk {
+  return {
+    question: `Save your changes to ${what}?`,
+    note: "Closing now loses them.",
+    actions: (
+      <>
         <Button onClick={onKeep}>Keep editing</Button>
         <Button onClick={onDiscard}>Discard</Button>
         <Button variant="you" onClick={onSave}>
           Save
         </Button>
-      </Stack>
-    </>
-  );
+      </>
+    ),
+  };
 }

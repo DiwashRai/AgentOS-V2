@@ -13,7 +13,7 @@ import { Button, Chip, Dialog, Notice, Page, Stack, Text } from "../../kit";
 import { type Draft, useDraft } from "../workflow/draft";
 import { Editor } from "../workflow/Editor";
 import { authorText } from "../workflow/who";
-import { copyTitle, DriftChips as SharedDrift, SaveAsk } from "./copy";
+import { copyTitle, DriftChips as SharedDrift, saveAsk } from "./copy";
 
 interface OverlayProps {
   t: Ticket;
@@ -119,22 +119,22 @@ function CopyEditor({ t, w, open, onClose }: OverlayProps & { w: TicketWorkflow 
         else onClose();
       }}
       ask={
-        asking ? (
-          <SaveAsk
-            what={`${t.key}'s workflow`}
-            onKeep={() => {
-              setAsking(false);
-            }}
-            onDiscard={() => {
-              draft.discard();
-              close();
-            }}
-            onSave={() => {
-              draft.save();
-              close();
-            }}
-          />
-        ) : null
+        asking
+          ? saveAsk({
+              what: `${t.key}'s workflow`,
+              onKeep: () => {
+                setAsking(false);
+              },
+              onDiscard: () => {
+                draft.discard();
+                close();
+              },
+              onSave: () => {
+                draft.save();
+                close();
+              },
+            })
+          : null
       }
     >
       <Editor

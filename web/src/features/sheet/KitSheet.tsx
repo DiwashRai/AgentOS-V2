@@ -361,37 +361,40 @@ function OverlaySheet() {
           setAsking(!asking);
         }}
         ask={
-          asking ? (
-            <>
-              <Text variant="heading">Discard your changes?</Text>
-              <Stack dir="row" gap={4} justify="end">
-                <Button
-                  onClick={() => {
-                    setAsking(false);
-                  }}
-                >
-                  Keep editing
-                </Button>
-                <Button
-                  onClick={() => {
-                    setAsking(false);
-                    setOpen(false);
-                  }}
-                >
-                  Discard
-                </Button>
-                <Button
-                  variant="you"
-                  onClick={() => {
-                    setAsking(false);
-                    setOpen(false);
-                  }}
-                >
-                  Save
-                </Button>
-              </Stack>
-            </>
-          ) : null
+          asking
+            ? {
+                question: "Discard your changes?",
+                note: "Closing now loses them.",
+                actions: (
+                  <>
+                    <Button
+                      onClick={() => {
+                        setAsking(false);
+                      }}
+                    >
+                      Keep editing
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setAsking(false);
+                        setOpen(false);
+                      }}
+                    >
+                      Discard
+                    </Button>
+                    <Button
+                      variant="you"
+                      onClick={() => {
+                        setAsking(false);
+                        setOpen(false);
+                      }}
+                    >
+                      Save
+                    </Button>
+                  </>
+                ),
+              }
+            : null
         }
       >
         <Page title="A full-window editor" action={<Button variant="you">Save</Button>}>

@@ -281,7 +281,7 @@
           }
         },
         "ask": {
-          "why": "Closing with unsaved changes asks inside the overlay (Save, Discard, Keep editing): a small sheet over it, modal inside it, the view under it inert. An element or nothing, never a boolean; named by its own heading."
+          "why": "Closing with unsaved changes asks inside the overlay (Save, Discard, Keep editing): a small sheet over it, modal inside it, the view under it inert. The kit draws its words (the question as its heading and name, a note as its description) and the screen gives the actions, so it is never unnamed."
         }
       }
     },

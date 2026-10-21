@@ -15,6 +15,11 @@ const PRIORITY_SAY: Record<Exclude<Priority, "normal">, string> = {
   low: "Low priority",
 };
 
+/** A title glyph's name: on a bookend (Inbox, Done, Closed) the line's stage chip says the state,
+ *  so the glyph is drawing alone; elsewhere it is the state's one sign. */
+const said = (kind: MarkModel["kind"]) =>
+  kind === "idle" || kind === "done" || kind === "abandoned" ? false : STATE_WORD[kind];
+
 const TYPE_WORD: Record<TicketType, string> = {
   feature: "Feature",
   bug: "Bug",
@@ -55,7 +60,7 @@ export function TitleCell({ t, me, after }: { t: TicketRow; me: Person | null; a
       <Mark
         kind={markOf(a, me).kind}
         glyph
-        name={STATE_WORD[markOf(a, me).kind]}
+        name={said(markOf(a, me).kind)}
         progress={a.kind === "running" ? a.progress : null}
       />
       <Text tone="3" truncate title={after ? `${t.title} · ${after}` : t.title}>

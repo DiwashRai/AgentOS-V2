@@ -119,24 +119,20 @@ function ago(iso: string, now: number): string {
   return m < 1440 ? `${String(Math.floor(m / 60))}h ago` : `${String(Math.floor(m / 1440))}d ago`;
 }
 
-/** Where the run is: the stage it's on and its round, or where it stopped, said in the past. */
-function whereText(r: Run, w: TicketWorkflow | undefined): string {
+/** Where the run is: the stage it's on and its round, or where it stopped, said in the past; and
+ *  whether those words say the run's state (a gate stop or the state's own word do; a stage's name
+ *  doesn't), so its glyph knows whether to say it. */
+function whereOf(r: Run, w: TicketWorkflow | undefined): { text: string; saysState: boolean } {
   const on = r.stages.find((s) => s.state === "running");
   if (on) {
     const of = roundsOf(w, on.stage_id);
-    return of === null ? on.name : `${on.name}, round ${String(on.round)} of ${String(of)}`;
+    const text = of === null ? on.name : `${on.name}, round ${String(on.round)} of ${String(of)}`;
+    return { text, saysState: false };
   }
   const gate = gateOf(r, w);
-  if (gate) return `Stopped at ${gate.label}`;
-  return r.reason ?? RUN_MARK[r.state].word;
+  if (gate) return { text: `Stopped at ${gate.label}`, saysState: true };
+  return { text: r.reason ?? RUN_MARK[r.state].word, saysState: r.reason === null };
 }
-
-/** Whether a run's where-words say its state (stopped at a gate, or the state's own word). */
-function whereSaysState(r: Run, w: TicketWorkflow | undefined): boolean {
-  if (r.stages.some((s) => s.state === "running")) return false;
-  return gateOf(r, w) !== null || r.reason === null;
-}
-
 /** Whether a stage line's end says its state (a verdict, running, pending). */
 const endSaysState = (s: StageRun) =>
   s.verdict !== null || s.state === "running" || s.state === "pending";
@@ -150,6 +146,7 @@ interface RunProps {
 
 function RunLine({ r, runs, w, now }: RunProps) {
   const mark = RUN_MARK[r.state];
+  const where = whereOf(r, w);
   const signed = signedOff(r, runs, w);
   const after = `from ${stageName(w, r.from_stage)}${signed ? ` · signed off ${signed.at}` : ""}`;
   const time = `${String(minutes(r, now))}m of ${String(r.budget_min)}m`;
@@ -157,10 +154,10 @@ function RunLine({ r, runs, w, now }: RunProps) {
   return [
     <Badge key="key" kind="key">{`#${String(r.id)}`}</Badge>,
     <Stack key="where" dir="row" gap={4} align="center">
-      <Mark kind={mark.kind} glyph name={whereSaysState(r, w) ? false : mark.word} />
-      <Text tone="3" truncate title={`${whereText(r, w)} · ${after}`}>
+      <Mark kind={mark.kind} glyph name={where.saysState ? false : mark.word} />
+      <Text tone="3" truncate title={`${where.text} · ${after}`}>
         <Text weight={500} tone="1">
-          {whereText(r, w)}
+          {where.text}
         </Text>
         {`\u2002${after}`}
       </Text>
@@ -294,7 +291,7 @@ export function RunsTab({ t }: { t: Ticket }) {
         <Row
           key={r.id}
           action={{
-            label: `Run ${String(r.id)}: ${whereText(r, w)}`,
+            label: `Run ${String(r.id)}: ${whereOf(r, w).text}`,
             run: () => {
               setPicked(open === r.id ? null : r.id);
             },

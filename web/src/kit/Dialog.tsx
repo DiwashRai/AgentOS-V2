@@ -7,7 +7,7 @@
 //   then the view (a Page, so its top bar and body are the same as on its own screen). `ask`
 //   draws a question over it, modal inside it (unsaved changes: Save, Discard, Keep editing).
 // It sits in the browser's top layer, so the kit's popovers opened inside it mount inside it.
-import { type ReactElement, type ReactNode, useEffect, useId, useRef } from "react";
+import { type ReactNode, useEffect, useId, useRef } from "react";
 
 import { Button } from "./Button";
 import s from "./Dialog.module.css";
@@ -31,22 +31,18 @@ export type DialogProps = {
     }
   | {
       look: "full";
-      /** A question over it, modal inside it; the view under it is inert. An element or nothing (null),
-       *  never a boolean, so there is no empty question. */
-      ask?: ReactElement | null;
+      /** A question over it, modal inside it; the view under it is inert. Or nothing (null). */
+      ask?: DialogAsk | null;
       foot?: never;
     }
 );
 
-/** The question shown: named by its own heading, so it asks one question, not two (one with no
- *  heading keeps its aria-label, "Close …?"), and focused on its first button. */
-function showAsk(box: HTMLElement, id: string) {
-  const head = box.querySelector<HTMLElement>("h1, h2, h3");
-  if (head) {
-    head.id ||= id;
-    box.setAttribute("aria-labelledby", head.id);
-  }
-  box.querySelector<HTMLElement>("button")?.focus();
+/** A question the kit draws, so it is always named and described: its words as a heading, a note
+ *  under them, and its actions (the first takes the focus, so Enter is safe). */
+export interface DialogAsk {
+  question: string;
+  note?: string;
+  actions: ReactNode;
 }
 
 /** The question gone: focus back where the person was, else on the dialog. */
@@ -57,15 +53,13 @@ function giveBack(was: HTMLElement | null, frame: HTMLElement | null) {
 
 /** The full look: the close at the top left, the view beside it, and the question over both. */
 function Full({
-  label,
   onClose,
   children,
   ask,
 }: {
-  label: string;
   onClose: () => void;
   children: ReactNode;
-  ask: ReactElement | null | undefined;
+  ask: DialogAsk | null | undefined;
 }) {
   const asking = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
@@ -73,27 +67,29 @@ function Full({
   // inert while it is asked, so its focus is lost)
   const was = useRef<HTMLElement | null>(null);
   const hasAsk = ask != null;
+  const said = useId();
   const asked = useRef(false);
-  const named = useId();
   useEffect(() => {
-    if (hasAsk && asking.current) showAsk(asking.current, named);
+    if (hasAsk) asking.current?.querySelector<HTMLElement>("button")?.focus();
     else if (asked.current) giveBack(was.current, frame.current);
     asked.current = hasAsk;
-  }, [hasAsk, named]);
+  }, [hasAsk]);
   return (
     <>
-      <div
-        ref={frame}
-        className={s.frame}
-        inert={hasAsk}
-        onFocus={(e) => {
-          if (e.target instanceof HTMLElement) was.current = e.target;
-        }}
-      >
+      <div ref={frame} className={s.frame} inert={hasAsk}>
         <span className={s.close}>
           <Button variant="quiet" icon="close" title="Close (Esc)" onClick={onClose} />
         </span>
-        <div className={s.view}>{children}</div>
+        {/* only what the person reached in the view is where focus goes back (not the close the
+            browser's showModal lands on first) */}
+        <div
+          className={s.view}
+          onFocus={(e) => {
+            if (e.target instanceof HTMLElement) was.current = e.target;
+          }}
+        >
+          {children}
+        </div>
       </div>
       {hasAsk ? (
         <div className={s.scrim}>
@@ -102,9 +98,20 @@ function Full({
             className={s.ask}
             role="alertdialog"
             aria-modal="true"
-            aria-label={`Close ${label}?`}
+            aria-labelledby={`${said}q`}
+            aria-describedby={ask.note ? `${said}n` : undefined}
           >
-            {ask}
+            <div className={s.said}>
+              <h2 className={s.question} id={`${said}q`}>
+                {ask.question}
+              </h2>
+              {ask.note ? (
+                <p className={s.note} id={`${said}n`}>
+                  {ask.note}
+                </p>
+              ) : null}
+            </div>
+            <div className={s.actions}>{ask.actions}</div>
           </div>
         </div>
       ) : null}
@@ -166,7 +173,7 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
         {look === "side" ? (
           side
         ) : open ? (
-          <Full label={label} onClose={onClose} ask={ask}>
+          <Full onClose={onClose} ask={ask}>
             {children}
           </Full>
         ) : null}

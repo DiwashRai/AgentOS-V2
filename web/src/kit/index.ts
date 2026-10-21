@@ -12,7 +12,7 @@ export { type CheckItem, Checklist, type ChecklistProps } from "./Checklist";
 export { Composer, type ComposerProps } from "./Composer";
 export { Chip, type ChipProps } from "./Chip";
 export { Compare, type CompareCell, type CompareProps, type CompareSide } from "./Compare";
-export { Dialog, type DialogProps } from "./Dialog";
+export { Dialog, type DialogAsk, type DialogProps } from "./Dialog";
 export type { DragPayload } from "./dnd";
 export { Drag, type DragProps } from "./Drag";
 export { Drop, type DropProps } from "./Drop";

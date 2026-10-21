@@ -19,7 +19,7 @@ import type { Item, ItemBody, Origin, Ticket } from "../../api/types";
 import { Button, Dialog, Icon, Notice, Page, Stack, Text, Toggle } from "../../kit";
 import { type EditorActs, ItemEditor } from "../library/ItemEditor";
 import type { Fact } from "../library/side";
-import { copyTitle, DriftChips, SaveAsk } from "./copy";
+import { copyTitle, DriftChips, saveAsk } from "./copy";
 import { contentTitle, KIND, labelOf, libraryHref, stagesOf } from "./items";
 import { ticketHref } from "./tabs";
 
@@ -236,22 +236,22 @@ export function ItemOverlay({
         else close();
       }}
       ask={
-        asking ? (
-          <SaveAsk
-            what={what ?? name ?? "this item"}
-            onKeep={() => {
-              setAsking(false);
-            }}
-            onDiscard={() => {
-              acts.current?.discard();
-              close();
-            }}
-            onSave={() => {
-              acts.current?.save();
-              close();
-            }}
-          />
-        ) : undefined
+        asking
+          ? saveAsk({
+              what: what ?? name ?? "this item",
+              onKeep: () => {
+                setAsking(false);
+              },
+              onDiscard: () => {
+                acts.current?.discard();
+                close();
+              },
+              onSave: () => {
+                acts.current?.save();
+                close();
+              },
+            })
+          : undefined
       }
     >
       {name !== null ? <Loaded t={t} name={name} onDirty={onDirty} /> : null}
