@@ -12,7 +12,7 @@
 //   reuse   each component's screens (a features/ folder; a shared module counts for the screens
 //           that import it; the app's layout is "app"); one drawn by a single screen needs a
 //           `single` reason. The card lists the variants 0 or 1 screens choose;
-//   tokens  no token is defined twice across tokens.css's plain `:root` blocks (./tokens.mjs).
+//   tokens  no token is defined twice across tokens.css's blocks of one selector (./tokens.mjs).
 // Usage: node tools/kit.mjs --check [--base REF]  (exit 1 on any failure; `just gates` runs it)
 //        node tools/kit.mjs --card [--base REF]   (markdown for a PR description)
 //   The base is the merge base with REF (default HEAD for --check, origin/main for --card), as
@@ -265,7 +265,7 @@ function check(base) {
   );
   problems.push(...ledgerProblems(kit, vocab, led));
   for (const t of repeatedTokens(readFileSync(join(KIT, "tokens.css"), "utf8")))
-    problems.push(`tokens.css: ${t} is defined in two :root blocks (the later one wins)`);
+    problems.push(`tokens.css: ${t} is defined in two blocks of one selector (the later wins)`);
   if (names.length > led.budget.components)
     problems.push(`${String(names.length)} components > ${String(led.budget.components)}`);
   if (lines.total > led.budget.lines)

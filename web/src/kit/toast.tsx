@@ -14,6 +14,7 @@ import {
   type RefObject,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -53,25 +54,32 @@ interface ToastsProps {
   dock?: RefObject<HTMLElement | null> | undefined;
 }
 
-/** The region the toasts raised under it show in: the frame's, and each dialog's own. */
-export function Toasts({ children, held = false, dock }: ToastsProps) {
-  const layer = useLayer();
-  const [manager] = useState(() => Toast.createToastManager());
+/** The raiser for the things under a region: the provider's own manager (there before any of
+ *  their effects run), holding what is raised while the region is held. */
+function Raising({ held, children }: { held: boolean; children: ReactNode }) {
+  const toasts = Toast.useToastManager();
   const waiting = useRef<[string, string | undefined][]>([]);
-  // read when a toast is raised, not when its raiser was taken (a copy that finishes later)
+  // read when a toast is raised, not when its raiser was taken (a copy that finishes later); set
+  // in a layout effect, so it is current before any effect under it raises one
   const holding = useRef(held);
   const show = (title: string, note: string | undefined) => {
-    manager.add({ title, ...(note ? { description: note } : {}) });
+    toasts.add({ title, ...(note ? { description: note } : {}) });
   };
-  const raise: Raise = (title, note) => {
-    if (holding.current) waiting.current.push([title, note]);
-    else show(title, note);
-  };
-  useEffect(() => {
+  useLayoutEffect(() => {
     holding.current = held;
     if (held) return;
     for (const [title, note] of waiting.current.splice(0)) show(title, note);
   });
+  const raise: Raise = (title, note) => {
+    if (holding.current) waiting.current.push([title, note]);
+    else show(title, note);
+  };
+  return <Raiser value={raise}>{children}</Raiser>;
+}
+
+/** The region the toasts raised under it show in: the frame's, and each dialog's own. */
+export function Toasts({ children, held = false, dock }: ToastsProps) {
+  const layer = useLayer();
   // a dialog's region mounts once the dialog itself is there (its element is set after the things
   // inside it), or it would land in the body, under the dialog
   const [placed, setPlaced] = useState(false);
@@ -79,8 +87,8 @@ export function Toasts({ children, held = false, dock }: ToastsProps) {
     setPlaced(true);
   }, []);
   return (
-    <Toast.Provider toastManager={manager}>
-      <Raiser value={raise}>{children}</Raiser>
+    <Toast.Provider>
+      <Raising held={held}>{children}</Raising>
       {placed ? (
         <Toast.Portal {...(dock ? { container: dock } : layer)}>
           <Toast.Viewport className={cx(s.region, dock && s.docked)} inert={held}>

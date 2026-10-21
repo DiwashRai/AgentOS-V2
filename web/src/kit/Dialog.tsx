@@ -182,7 +182,13 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
     >
       <Layer.Provider value={ref}>
         <Tips>
-          <Toasts held={ask !== undefined} dock={look === "side" ? dock : undefined}>
+          {/* keyed by its opening: a closed dialog's toasts (and any still waiting on its
+              question) go with it, and don't greet the next one */}
+          <Toasts
+            key={open ? "open" : "shut"}
+            held={ask !== undefined}
+            dock={look === "side" ? dock : undefined}
+          >
             {look === "side" ? (
               side
             ) : open ? (

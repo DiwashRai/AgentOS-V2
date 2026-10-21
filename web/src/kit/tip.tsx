@@ -48,8 +48,13 @@ export function Tips({ children }: { children: ReactNode }) {
           if (open) {
             const el = details.trigger;
             const whole = el?.hasAttribute("data-tip-cut") === true && !cutShort(el);
-            // a popup's trigger given focus back as it closed (`data-tip-rest`, Menu's)
-            const rest = details.reason === "trigger-focus" && el?.hasAttribute("data-tip-rest");
+            // a popup's trigger given focus back as it closed (`data-tip-rest`: Menu's, a
+            // picker's), the tip's own element or one inside it (a fact's picker)
+            const at = details.event.target;
+            const rest =
+              details.reason === "trigger-focus" &&
+              at instanceof Element &&
+              at.closest("[data-tip-rest]") !== null;
             if (!whole && !rest) return;
             // not this one, and not the one before it either, left over somewhere else
             details.cancel();

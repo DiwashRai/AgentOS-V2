@@ -14,6 +14,12 @@ describe("the kit's tokens", () => {
     expect(repeatedTokens(css)).toEqual([]);
   });
 
+  it("finds a colour two shared-selector blocks both define", () => {
+    const css =
+      ":root:not([data-theme]),\n[data-theme] { --lane: x; }\n:root:not([data-theme]), [data-theme] { --lane: y; }";
+    expect(repeatedTokens(css)).toEqual(["--lane"]);
+  });
+
   it("reads past a name in a comment", () => {
     expect(repeatedTokens(":root { --a: 1px; /* not --a: 2px */ }")).toEqual([]);
   });

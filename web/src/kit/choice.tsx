@@ -3,7 +3,7 @@
 // "Change owner…" filter on its first line, each option as its owner draws it, the current one
 // ticked. The trigger is the owner's: its class, name and body.
 import { Combobox as Base } from "@base-ui/react/combobox";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 
 import { useDescribed } from "./described";
 import { Icon } from "./Icon";
@@ -37,6 +37,8 @@ export function Choice<T extends ChoiceItem>(props: ChoiceProps<T>) {
   const { label, items, value, onChange, trigger, side = "bottom", sheet, row } = props;
   const layer = useLayer();
   const described = useDescribed();
+  // focus given back as it closes brings no tooltip back (Menu's rest)
+  const [rest, setRest] = useState(false);
   return (
     <Base.Root
       items={items}
@@ -46,12 +48,22 @@ export function Choice<T extends ChoiceItem>(props: ChoiceProps<T>) {
       onValueChange={(it: T | null) => {
         if (it !== null) onChange(it.id);
       }}
+      onOpenChange={(open, details) => {
+        setRest(!open && (details.reason === "escape-key" || details.reason === "item-press"));
+      }}
     >
       <Base.Trigger
         className={trigger.className}
         aria-label={trigger.name}
         {...described}
         data-current={trigger.current}
+        data-tip-rest={rest || undefined}
+        onBlur={() => {
+          setRest(false);
+        }}
+        onPointerLeave={() => {
+          setRest(false);
+        }}
       >
         {trigger.body}
       </Base.Trigger>
