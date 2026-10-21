@@ -70,14 +70,11 @@
 .btn[aria-disabled="true"] .glyph {
   color: inherit;
 }
-/* ink: a primary that isn't a gate, a firmer neutral fill (the solid one is accent's alone) */
+/* ink: a primary that isn't a gate, the default's fill on a firmer edge in a firmer weight (the
+   solid one is accent's alone) */
 .ink {
-  background: var(--ctl-strong);
   border-color: var(--ctl-edge-hover);
   font-weight: 600;
-}
-.ink:hover {
-  background: var(--ctl-strong-hover);
 }
 .you,
 .you:hover {
@@ -124,7 +121,8 @@
 .link:hover {
   color: var(--ink-1);
 }
-/* blocked (R11): whatever its variant, an empty dashed outline in muted ink that hover leaves alone */
+/* blocked (R11): an empty dashed outline in muted ink that hover leaves alone; a quiet one is its
+   faded glyph alone (no box), and the gate primary keeps its fill, faded, so it still leads its bar */
 .btn[aria-disabled="true"],
 .btn[aria-disabled="true"]:hover {
   background: transparent;
@@ -132,4 +130,14 @@
   box-shadow: none;
   color: var(--ink-3);
   cursor: not-allowed;
+}
+.btn:is(.quiet, .you)[aria-disabled="true"] {
+  border-style: solid;
+  border-color: transparent;
+  opacity: var(--blocked-fade);
+}
+.btn.you[aria-disabled="true"] {
+  border-color: var(--you);
+  background: var(--you);
+  color: var(--you-ink);
 }

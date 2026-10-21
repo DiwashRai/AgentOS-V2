@@ -96,10 +96,10 @@ function Full({
           if (e.relatedTarget === e.currentTarget.closest("dialog")) was.current = null;
         }}
       >
-        <span className={s.close}>
-          <Button variant="quiet" icon="close" title="Close (Esc)" onClick={onClose} />
-        </span>
         <div className={s.view}>{children}</div>
+        <span className={s.close}>
+          <Button icon="close" title="Close (Esc)" onClick={onClose} />
+        </span>
       </div>
       {hasAsk ? (
         <div className={s.scrim}>
@@ -168,10 +168,11 @@ export function Dialog(props: DialogProps) {
     const d = ref.current;
     if (!d) return;
     if (open && !d.open) {
-      d.showModal();
       // it opens on itself, not on the first thing in it the browser would pick (the full look's
-      // close, the toast region); Tab goes on from there (not while it asks: the question has the
-      // focus)
+      // close, whose tooltip a keyboard's open would raise, the toast region); Tab goes on from
+      // there (not while it asks: the question has the focus)
+      d.autofocus = true;
+      d.showModal();
       if (ask === undefined) d.focus();
     }
     if (!open && d.open) d.close();

@@ -39,7 +39,7 @@ export function AgentView() {
         },
       }}
       contentTitle="Instructions"
-      name={{ label: "Name", value: a.name, mono: false }}
+      name={{ label: "Name", value: a.name }}
       description={a.description}
       usedBy={a.used_by}
       siblings={{

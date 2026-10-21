@@ -10,16 +10,10 @@
   color: var(--id-on);
   background: var(--id);
 }
-/* inside a pill and on a team a face is one neutral disc (initials say who) */
-.sm,
-.mid {
+/* inside a pill a face is one neutral disc (initials say who) */
+.sm {
   color: var(--face-ink);
   background: var(--face);
-}
-.mid {
-  width: var(--sp-9);
-  height: var(--sp-9);
-  font-size: var(--fs-1);
 }
 /* in rows and pickers: Linear's small face, a solid disc of the person's hue (a touch toned into
    the page on dark) with white initials that read */
@@ -42,6 +36,14 @@
 .lg {
   width: var(--h-avatar-lg);
   height: var(--h-avatar-lg);
+  font-size: var(--fs-2);
+}
+/* tile: a library row's lead, the agent's hue on the rounded square the other lists' glyphs sit on */
+.tile {
+  width: var(--h-tile);
+  height: var(--h-tile);
+  border-radius: var(--r-3);
+  background: var(--id-row);
   font-size: var(--fs-2);
 }
 .slot {

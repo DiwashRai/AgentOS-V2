@@ -1,8 +1,9 @@
 /* The kit's one popover (Select, Segmented's overflow and the account sheet draw it): Linear's
    lifted layer, its fill only a few percent over the page, told from what it covers by its edge, a crisp lit
    hairline over its own fill (so it reads the same over any row) and a large soft drop. Every list
-   of choices opens on its filter field, ruled off from the rows. 32px rows inset 4px from the sheet's edge,
-   6px round; only the one active row (pointer or keys) fills, so at most one is ever lit. A row
+   of choices opens on its filter field, ruled off from the rows. Its words are the page's body
+   size (14px, on 34px rows inset 6px from the sheet's edge, 6px round), so a menu reads as part of
+   the page it opens over, not a smaller system; only the one active row (pointer or keys) fills, so at most one is ever lit. A row
    reads as Linear's: its picture, its name, its muted aside (a count, a descriptor) right after
    the name, and the check at the far end on the current one alone. */
 /* the positioner a popup sits in: above the page, its sticky heads included */
@@ -11,10 +12,10 @@
 }
 .sheet {
   min-width: var(--col-2xl);
-  padding: var(--sp-2);
+  padding: var(--sp-3);
   background: var(--pop);
   border: var(--line-1) solid var(--pop-edge);
-  border-radius: var(--r-4);
+  border-radius: var(--r-5);
   box-shadow: var(--shadow-pop);
   color: var(--ink-1);
   outline: none;
@@ -34,15 +35,15 @@
 .find {
   display: flex;
   align-items: center;
-  width: calc(100% + var(--sp-2) * 2);
+  width: calc(100% + var(--sp-3) * 2);
   height: var(--h-pop-find);
-  margin: calc(var(--sp-2) * -1) calc(var(--sp-2) * -1) var(--sp-2);
-  padding: 0 var(--sp-6);
+  margin: calc(var(--sp-3) * -1) calc(var(--sp-3) * -1) var(--sp-3);
+  padding: 0 var(--sp-7);
   border: 0;
   border-bottom: var(--line-1) solid var(--pop-rule);
-  border-radius: var(--r-4) var(--r-4) 0 0;
+  border-radius: var(--r-5) var(--r-5) 0 0;
   background: none;
-  font-size: var(--fs-3);
+  font-size: var(--fs-tk);
   color: var(--ink-1);
   font-family: inherit;
   outline: none;
@@ -54,11 +55,12 @@
 .row {
   display: flex;
   align-items: center;
-  gap: var(--sp-4);
+  gap: var(--sp-5);
   height: var(--h-pop-item);
   padding: 0 var(--sp-4);
   border-radius: var(--r-2);
-  font-size: var(--fs-3);
+  font-size: var(--fs-tk);
+  color: var(--tk-ink);
   letter-spacing: var(--track-snug);
   white-space: nowrap;
   outline: none;
@@ -66,6 +68,7 @@
 }
 .row[data-highlighted] {
   background: var(--pop-hover);
+  color: var(--ink-1);
 }
 /* the muted aside, set right after the name */
 .aside {
@@ -92,6 +95,6 @@
   align-items: center;
   height: var(--h-pop-item);
   padding: 0 var(--sp-4);
-  font-size: var(--fs-3);
+  font-size: var(--fs-tk);
   color: var(--pop-aside);
 }

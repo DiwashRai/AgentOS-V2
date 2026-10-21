@@ -1,7 +1,8 @@
-// All teams (new in V2): every repo by stage. One band per repo (who works there, a link to its
-// list) and a lane per stage, Plan · Build · Verify · Review, each holding its tickets' cards (a
-// lane with none is bare page; a stage empty across the board folds narrow). Inbox and done work
-// live in each repo's list. Click an item to peek.
+// All teams (new in V2): every repo by stage, as Linear's board grouped by team. The stages are the
+// board's columns, Plan · Build · Verify · Review; each repo is a swimlane across them, its head one
+// line (the repo, who works there, how much is in flight, a way to its list) over a lane per stage
+// holding its tickets' cards (an empty stage across the board folds narrow; a repo with nothing in
+// flight is its head alone). Inbox and done work live in each repo's list. Click an item to peek.
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 
@@ -15,6 +16,7 @@ import {
   Card,
   Button,
   Chip,
+  type ChipDot,
   type Column,
   Mark,
   type MarkKind,
@@ -43,17 +45,14 @@ function countsOf(work: readonly TicketRow[]): Record<Phase, number> {
   return n;
 }
 
-/** The team column, then a lane per stage in order: a stage holding cards takes an equal share of
- *  the board's width (Linear's board columns); an empty one folds to a narrow lane, as Linear
- *  folds an empty column, so it leaves no dead band and its cards' neighbours get the room. */
+/** A column per stage in order: a stage holding cards takes an equal share of the board's width
+ *  (Linear's board columns); an empty one folds to a narrow lane, as Linear folds an empty column,
+ *  so its neighbours' cards get the room. */
 function columnsOf(counts: Record<Phase, number>): readonly Column[] {
-  return [
-    { label: "Team", width: "lg" },
-    ...STAGES.map((st): Column => ({
-      label: st.name,
-      width: counts[st.phase] > 0 ? "fill" : "md",
-    })),
-  ];
+  return STAGES.map((st): Column => ({
+    label: st.name,
+    width: counts[st.phase] > 0 ? "fill" : "md",
+  }));
 }
 
 /** The board's column head, on the lanes' own grid: each stage's name and how many cards it holds
@@ -61,9 +60,6 @@ function columnsOf(counts: Record<Phase, number>): readonly Column[] {
 function Head({ counts }: { counts: Record<Phase, number> }) {
   return (
     <Row kind="columns">
-      <Text variant="meta" weight={500}>
-        Team
-      </Text>
       {STAGES.map((st) => (
         <Stack key={st.phase} dir="row" gap={3} align="center">
           <Text weight={500} tone={counts[st.phase] > 0 ? "1" : "3"}>
@@ -98,8 +94,7 @@ function parkedAt(t: TicketRow, ask: string): string {
   return t.rail.find((s) => s.gate?.state === "waiting")?.gate?.short ?? ask;
 }
 
-/** An item's badge: the live agent and its progress, or what it waits on. Its text stays neutral;
- *  the state's glyph alone carries the hue. */
+/** An item's pill: the live agent and its progress, or what it waits on. */
 interface ItemBadge {
   kind: MarkKind;
   text: string;
@@ -109,7 +104,7 @@ interface ItemBadge {
 
 type Waiting = Extract<TicketRow["attention"], { kind: "waiting" }>;
 
-/** A waiting item's badge: on you, its gate and You (else the ask); on someone else, where it is
+/** A waiting item's pill: on you, its gate and You (else the ask); on someone else, where it is
  *  parked and who. */
 function waitingBadge(t: TicketRow, a: Waiting, me: Person | null): ItemBadge {
   if (isMyMove(a.on, me)) {
@@ -120,8 +115,8 @@ function waitingBadge(t: TicketRow, a: Waiting, me: Person | null): ItemBadge {
   return { kind: "wait", text: `${parkedAt(t, a.ask)} · ${who}` };
 }
 
-/** The glyph's name: a running or waiting item's badge names who, so its glyph says the state;
- *  any other badge says the state itself, and its glyph is drawing alone. */
+/** The glyph's name: a running or waiting item's pill names who, so its glyph says the state;
+ *  any other pill says the state itself, and its glyph is drawing alone. */
 function badgeSays(badge: ItemBadge): string | false {
   return badge.kind === "run" || badge.kind === "wait" ? STATE_WORD[badge.kind] : false;
 }
@@ -137,10 +132,25 @@ function itemBadge(t: TicketRow, me: Person | null): ItemBadge {
   return { kind: m.kind, text: m.kind === "you" ? "" : m.name };
 }
 
-/** One item, three levels: its key (12px, muted) leads; then the state's glyph (Linear's status
- *  circle, a running agent's pie showing its progress) and the title (14px, regular, up to two
- *  lines); then a smaller badge under it (Linear's label chip, a pill on a hairline) with the
- *  secondary words for who works on it or what it waits on. */
+/** A pill's dot: the state's hue, so the pill says it as the glyph does. */
+const DOT: Partial<Record<MarkKind, ChipDot>> = { you: "you", blk: "blocked", done: "done" };
+
+/** The pill on the key's line: a running agent's name and steps, then its glyph on the live disc
+ *  and whose ticket it is (Linear's "Working…" pill); any other state's words after its dot. */
+function Pill({ badge, owner }: { badge: ItemBadge; owner: Person | null }) {
+  if (badge.text === "") return null;
+  if (badge.kind === "run") {
+    const face = owner ? { name: owner.name, seed: String(owner.id) } : undefined;
+    return (
+      <Chip tone="edge" label={badge.text} after={face ? { agent: true, face } : { agent: true }} />
+    );
+  }
+  return <Chip tone="edge" dot={DOT[badge.kind] ?? "neutral"} label={badge.text} />;
+}
+
+/** One item, two lines (Linear's board card): its key (12px, muted) with its state's pill at the
+ *  line's end; then the state's glyph (Linear's status circle, a running agent's pie showing its
+ *  progress) and the title (14px, regular, up to two lines). */
 function Item({
   t,
   me,
@@ -159,16 +169,18 @@ function Item({
         onOpen(t.key);
       }}
     >
-      <Badge kind="key" size="sm">
-        {t.key}
-      </Badge>
+      <Stack dir="row" gap={4} align="center" justify="between">
+        <Badge kind="key" size="sm">
+          {t.key}
+        </Badge>
+        <Pill badge={badge} owner={t.owner} />
+      </Stack>
       <Stack dir="row" gap={4} align="baseline">
         <Mark kind={badge.kind} glyph still name={badgeSays(badge)} progress={badge.progress} />
         <Text variant="label" weight={400} tone="1" truncate={2} title={t.title}>
           {t.title}
         </Text>
       </Stack>
-      <Chip tone="fill" label={badge.text} />
     </Card>
   );
 }
@@ -206,6 +218,32 @@ function Cell({
   );
 }
 
+/** A swimlane's head, one line across the board: the repo, its full name, who works there, how
+ *  many of its tickets are in flight (or that none are), and its list at the line's end. */
+function LaneHead({ repo, people, n }: { repo: string; people: readonly Person[]; n: number }) {
+  return (
+    <Stack dir="row" gap={5} align="center">
+      <Text variant="label" weight={600} as="h2" truncate>
+        {repoShort(repo)}
+      </Text>
+      <Text variant="meta">{repo}</Text>
+      <Avatar people={people.map((p) => ({ name: p.name, seed: String(p.id) }))} />
+      <Text variant="meta" tabular>
+        {n > 0 ? `${String(n)} in flight` : "Nothing in flight"}
+      </Text>
+      <Stack grow />
+      <Button
+        variant="quiet"
+        size="xs"
+        icon="compact"
+        href={`/compact?repo=${encodeURIComponent(repo)}`}
+      >
+        Open list
+      </Button>
+    </Stack>
+  );
+}
+
 export function TeamsView() {
   const board = useBoard();
   const { rows, me } = board;
@@ -233,10 +271,9 @@ export function TeamsView() {
       context={contextOf(space, plural(repos.length, "repo"))}
       action={<NewTicket />}
       counters={[
+        { n: needYou, label: "need you", mark: "you" },
         { n: live, label: "running", mark: "run" },
         { n: queued, label: "queued", mark: "queued" },
-        "|",
-        { n: needYou, label: "need you", mark: "you" },
       ]}
       search={search}
     >
@@ -253,37 +290,17 @@ export function TeamsView() {
             const people = [...new Map(owners.map((p) => [p.id, p])).values()];
             return (
               <Row key={repo.name} kind="band">
-                <Stack gap={5}>
-                  <Stack gap={3}>
-                    <Text variant="heading" as="h2" truncate>
-                      {repoShort(repo.name)}
-                    </Text>
-                    <Text variant="meta">{repo.name}</Text>
-                    <Stack dir="row">
-                      <Avatar
-                        size="mid"
-                        people={people.map((p) => ({ name: p.name, seed: String(p.id) }))}
+                <LaneHead repo={repo.name} people={people} n={work.length} />
+                {work.length === 0
+                  ? null
+                  : STAGES.map((st) => (
+                      <Cell
+                        key={st.phase}
+                        items={work.filter((t) => t.phase === st.phase)}
+                        me={me}
+                        onOpen={open}
                       />
-                    </Stack>
-                  </Stack>
-                  <Stack dir="row">
-                    <Button variant="link" href={`/compact?repo=${encodeURIComponent(repo.name)}`}>
-                      Open list →
-                    </Button>
-                  </Stack>
-                </Stack>
-                {STAGES.map((st, i) =>
-                  work.length === 0 && i === 0 ? (
-                    <Notice key={st.phase} kind="empty" lead="Nothing in flight" />
-                  ) : (
-                    <Cell
-                      key={st.phase}
-                      items={work.filter((t) => t.phase === st.phase)}
-                      me={me}
-                      onOpen={open}
-                    />
-                  ),
-                )}
+                    ))}
               </Row>
             );
           })}

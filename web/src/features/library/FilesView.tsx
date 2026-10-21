@@ -1,6 +1,6 @@
-// The library's files (/library/files), AGENTS.md first: each file's path, its size, and what uses
-// it (how many workflows, and tickets on them or that added it). A row opens the file's editor
-// (AGENTS.md as its named blocks).
+// The library's files (/library/files), AGENTS.md first: each file's path over its opening line (or
+// AGENTS.md's block names), its size, and what uses it (how many workflows, and tickets on them or
+// that added it). A row opens the file's editor (AGENTS.md as its named blocks).
 import { useFiles } from "../../api/queries";
 import type { LibraryFile } from "../../api/types";
 import { matches } from "../../domain/format";
@@ -14,6 +14,13 @@ const COLUMNS: readonly Column[] = [
   { label: "Size", width: "md", end: true },
   ...USED,
 ];
+
+/** The line under a file's path: AGENTS.md's block names, else its first line of text. */
+function underOf(f: LibraryFile): string {
+  if (f.body.kind === "blocks") return f.body.blocks.map((b) => b.name).join(" · ");
+  const first = f.body.text.split("\n").find((l) => l.trim() !== "") ?? "";
+  return first.replace(/^#+\s*/, "");
+}
 
 export function FilesView() {
   const all = useFiles().data?.items ?? [];
@@ -31,13 +38,7 @@ export function FilesView() {
     >
       {shown.map((f) => (
         <LibraryRow key={f.id} name={f.path} href={href(f)}>
-          <NameCell
-            lead={<Icon name="files" tile />}
-            name={f.path}
-            {...(f.body.kind === "blocks"
-              ? { after: `${String(f.body.blocks.length)} blocks` }
-              : {})}
-          />
+          <NameCell lead={<Icon name="files" tile />} name={f.path} under={underOf(f)} />
           <Text tone="2" tabular>
             {sizeText(f.size)}
           </Text>

@@ -17,11 +17,6 @@
 .status[data-error="true"] {
   color: var(--blocked);
 }
-/* a status that closes a list: small, its words ending on the rows' far edge */
-.status[data-align="end"] {
-  justify-content: flex-end;
-  font-size: var(--fs-2);
-}
 
 /* the quiet row of an empty zone: a row's height and hairline; the lead a step firmer (never as
    firm as a row's title), a dash, the rest muted */
@@ -100,7 +95,7 @@
   align-items: center;
   gap: var(--sp-5);
   min-height: var(--h-row-flat);
-  padding: 0 var(--list-pad) 0 calc(var(--list-pad) + var(--sp-4));
+  padding: 0 var(--list-pad) 0 var(--list-inset);
   box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
   font-size: var(--fs-2);
   color: var(--ink-3);
@@ -117,31 +112,22 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* a line of a two-line item list, in the items' title size: its glyph centred in the slot of the
-   rows' leading face, and its words where the rows' titles start, so an empty group, a failed one
-   and a row start on the same two columns */
+/* a line of a two-line item list, in the items' title size, led from where the rows' titles start
+   by its glyph: an empty ring; in place of the edge, a problem's blocked dot on its first line */
 .empty[data-align="item"],
 .problem[data-align="item"] {
-  font-size: var(--fs-4);
-}
-.empty[data-align="item"] {
-  gap: var(--sp-6);
   min-height: var(--h-list-item);
   padding-left: var(--list-inset);
+  font-size: var(--fs-4);
 }
-.empty[data-align="item"] > i {
-  margin-inline: calc((var(--notice-slot) - var(--notice-mark)) / 2);
-}
-/* in place of the edge, a blocked dot in the glyph slot (Linear's status dot), on the first line */
 .problem[data-align="item"] {
-  padding-left: calc(var(--list-inset) + var(--notice-slot) + var(--sp-6));
+  padding-left: calc(var(--list-inset) + var(--notice-dot) + var(--sp-5));
 }
 .problem[data-align="item"]::before {
-  left: calc(var(--list-inset) + var(--notice-slot) / 2);
+  left: var(--list-inset);
   top: var(--notice-dot-top);
-  bottom: auto;
   width: var(--notice-dot);
   height: var(--notice-dot);
   border-radius: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
 }

@@ -26,9 +26,7 @@ export type NoticeProps = Said &
         lead?: never;
         /** A status line that reports a failure (said at once, in the blocked colour). */
         error?: boolean;
-        /** end: a status that closes a list, its words at the rows' far end ("checked 2m ago").
-         *  Otherwise its words line up with a group head's name. */
-        align?: "end";
+        align?: never;
         fix?: never;
         more?: never;
       }
@@ -89,12 +87,7 @@ export function Notice(props: NoticeProps) {
   const { kind, lead, children } = props;
   if (kind === "status") {
     return (
-      <p
-        className={s.status}
-        role={props.error ? "alert" : "status"}
-        data-error={props.error}
-        data-align={props.align}
-      >
+      <p className={s.status} role={props.error ? "alert" : "status"} data-error={props.error}>
         {children}
       </p>
     );

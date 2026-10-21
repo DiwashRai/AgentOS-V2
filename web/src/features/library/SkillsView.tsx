@@ -25,7 +25,7 @@ export function SkillsView() {
     >
       {shown.map((s) => (
         <LibraryRow key={s.id} name={s.name} href={href(s)}>
-          <NameCell lead={<Icon name="skills" tile />} name={s.name} after={s.description} />
+          <NameCell lead={<Icon name="skills" tile />} name={s.name} under={s.description} />
           {usedCells(s.used_by)}
         </LibraryRow>
       ))}

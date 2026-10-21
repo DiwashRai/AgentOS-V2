@@ -1,6 +1,6 @@
-// One item of a list: its cells on the Table's columns. An item is a flat row on a hairline; a line
-// has none (its group's band parts the runs), its hover, focus and open wash a rounded slab. A rack is a bare
-// entry; a band a board's swimlane. A card on its own surface is a Card. Nothing changes size.
+// One item of a list: its cells on the Table's columns. A line and an item are flat rows on a
+// hairline, washed full width on hover, focus and open. A rack is a bare entry; a band a board's
+// swimlane (its head, then its lanes). A card on its own surface is a Card. Nothing changes size.
 import { Children, type ReactNode } from "react";
 
 import { Opener, openOnClick } from "./opener";
@@ -19,8 +19,9 @@ export interface RowProps {
    *  not drawn. Outside a table they stack. */
   children: ReactNode;
   /** line: a list's one-line row (Compact, My queue); item: a roomy two-line row (Intake); rack: a
-   *  bare entry (a run's stage); band: a board's swimlane; columns: the board's column head, one
-   *  short line of stage names over the lanes, on the same grid. */
+   *  bare entry (a run's stage); band: a board's swimlane, its first cell a head line across the
+   *  board and then a cell per column; columns: the board's column head, one short line of stage
+   *  names over the lanes, on the same grid. */
   kind?: "line" | "item" | "rack" | "band" | "columns";
   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
    *  names what it opens, for assistive tech. */
@@ -32,13 +33,14 @@ export interface RowProps {
   alert?: string;
 }
 
-function useCells(children: ReactNode, stack: boolean): ReactNode[] {
+/** `lead`: a band's head, a line of its own across every column before the cells that sit on them. */
+function useCells(children: ReactNode, stack: boolean, lead: number): ReactNode[] {
   const columns = useColumns();
   const cells = Children.toArray(children);
   if (stack) return cells;
-  return cells.slice(0, columns.length).map((cell, i) => {
-    const last = i === cells.length - 1 && i < columns.length - 1;
-    const column = last ? columns[columns.length - 1] : columns[i];
+  return cells.slice(0, columns.length + lead).map((cell, i) => {
+    const last = i === cells.length - 1 && i - lead < columns.length - 1;
+    const column = last ? columns[columns.length - 1] : columns[i - lead];
     return (
       <span
         key={i}
@@ -106,7 +108,7 @@ export function Row(props: RowProps) {
   const { children, kind = "line", action, open = false, more, alert } = props;
   const columns = useColumns();
   const stack = columns.length === 0;
-  const cells = useCells(children, stack);
+  const cells = useCells(children, stack, kind === "band" ? 1 : 0);
   return (
     <div
       className={cx(

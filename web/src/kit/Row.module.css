@@ -8,21 +8,14 @@
     transform var(--dur-fast) var(--ease-out);
 }
 
-/* lists: an item is a flat row edge to edge on a hairline; a line has no hairline, its group's
-   band parts it from the next run, and its wash (hover, open) is a rounded slab held a step in
-   from the edges. No card, no shadow, nothing moves */
+/* lists: a line and an item are flat rows edge to edge, each on its hairline (Linear's list), the
+   wash (hover, open) running the full width. No card, no shadow, nothing moves */
 .line,
 .item {
   border-radius: 0;
   background: transparent;
-  transition: background-color var(--dur-fast) ease;
-}
-.item {
   box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
-}
-.line {
-  margin-inline: var(--sp-3);
-  border-radius: var(--r-2);
+  transition: background-color var(--dur-fast) ease;
 }
 .row:is(.line, .item):is(:hover, :has(:focus-visible)) {
   background: var(--list-hover);
@@ -75,7 +68,7 @@
 .line > .inner {
   column-gap: var(--sp-5);
   min-height: var(--h-line);
-  padding: 0 calc(var(--list-pad) - var(--sp-3)) 0 calc(var(--list-inset) - var(--sp-3));
+  padding: 0 var(--list-pad) 0 var(--list-inset);
 }
 .item > .inner {
   min-height: var(--h-list-item);
@@ -104,7 +97,7 @@
   grid-column-end: -1;
 }
 .more {
-  margin: 0 calc(var(--list-pad) - var(--sp-3)) 0 calc(var(--list-inset) - var(--sp-3));
+  margin: 0 var(--list-pad) 0 var(--list-inset);
   padding: var(--sp-7) 0 var(--sp-8);
   border-top: var(--line-1) solid var(--list-rule);
 }
@@ -133,10 +126,10 @@
   min-height: calc(var(--h-row) + var(--line-2));
 }
 
-/* band: a board's swimlane. No surface of its own: the first cell names it, every other cell is
-   a stage's lane, its items stacked as cards straight on the page (a lane with no card is bare
-   page). The cells run the full width of the board, and swimlanes are ruled apart. columns: the
-   board's column head, one short line of stage names over the lanes, on the same grid. */
+/* band: a board's swimlane (Linear's board grouped by team). Its first cell is its head, one line
+   across the board; under it each stage's lane is a faint slab with its items stacked on it as
+   cards (an empty lane is the bare slab), so the stages read as columns down the board. columns:
+   the board's column head, one short line of stage names over the lanes, on the same grid. */
 .band,
 .row.band:is(:hover, :has(:focus-visible)) {
   z-index: auto;
@@ -146,33 +139,33 @@
 }
 .band > .inner {
   align-items: stretch;
-  column-gap: var(--sp-5);
-  min-height: var(--h-band);
-  padding: var(--sp-4) 0;
+  column-gap: var(--sp-4);
+  padding: 0 0 var(--sp-7);
   border-radius: 0;
-}
-.band.columns > .inner {
-  align-items: center;
-  min-height: var(--h-list-head);
-  padding: 0;
-}
-.band + .band {
-  border-top: var(--line-1) solid var(--list-rule);
 }
 .band .cell {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
   gap: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--r-4);
+  background: var(--teams-lane);
 }
 .band:not(.columns) .cell:first-child {
-  padding-top: var(--sp-3);
+  grid-column: 1 / -1;
+  justify-content: center;
+  min-height: var(--h-list-head);
+  padding: 0 var(--sp-2);
+  background: none;
 }
 /* the stage names sit over the cards' own text, inset as the cards' keys are */
-.band.columns .cell {
-  justify-content: center;
-  padding: 0 var(--sp-6);
-}
-.band.columns .cell:first-child {
+.band.columns > .inner {
+  align-items: center;
+  min-height: var(--h-list-head);
   padding: 0;
+}
+.band.columns .cell {
+  padding: 0 var(--sp-8);
+  background: none;
 }

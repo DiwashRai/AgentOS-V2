@@ -40,18 +40,18 @@ import {
   visible,
 } from "./model";
 
-// One triage inbox, as Linear's own inbox: each saved query is its own card on the page (its head
-// a band at the card's top, its issues under it), so the three read as three inboxes at a glance.
-// An issue is Linear's inbox row: who has it as a face that leads both lines (Unassigned a dashed
-// empty face, so every row starts on one glyph); the title firm; under it one smaller muted line,
-// the Jira key (a link to it), then who and one fact (a priority worth saying, led by its bars,
-// else the Jira status; the rest in its tooltip). At the right, the age ("1h ago", in its largest
-// unit; to the minute in its tooltip); under the pointer or with focus, Take in takes its place.
-// No column head: the cells say what they are.
+// One triage inbox, as Linear's Triage: no cards. The list runs out to the sheet's edges under the
+// bar, each saved query a run of it under a quiet ruled head (no fill) that stays at the top while
+// its run scrolls past, the runs parted by room alone. An issue is Linear's triage row, two lines
+// on two ends: the title firm, the Jira key (a link to it) across from it; under them who has it,
+// a small face leading the name (Unassigned a dashed ring), and one fact (a priority worth saying,
+// led by its bars, else the Jira status; the rest in its tooltip), across from the age ("1h ago",
+// in its largest unit; to the minute in its tooltip). Under the pointer or with focus, Take in
+// takes the age's place. When the queries were checked sits in the list's foot, on the sheet's
+// floor. No column head: the cells say what they are.
 const COLUMNS: readonly Column[] = [
-  { label: "Owner", width: "sm", hug: true },
   { label: "Issue", width: "fill" },
-  { label: "Age", width: "lg", end: true, hug: true },
+  { label: "Key and age", width: "lg", end: true, hug: true },
 ];
 
 /** Muted words a step under the title (13px regular), the row's second line. */
@@ -67,11 +67,10 @@ function Meta({ issue }: { issue: IntakeIssue }) {
   const fact = metaFact(issue);
   return (
     <Stack dir="row" gap={3} align="center">
-      <Button variant="link" href={issue.url} title={`Open ${issue.key} in Jira`}>
-        <Badge kind="key">{issue.key}</Badge>
-      </Button>
-      <Quiet>·</Quiet>
-      <Quiet>{issue.assignee ?? "Unassigned"}</Quiet>
+      <Stack dir="row" gap={4} align="center">
+        {issue.assignee ? <Avatar name={issue.assignee} beside /> : <Avatar dashed />}
+        <Quiet>{issue.assignee ?? "Unassigned"}</Quiet>
+      </Stack>
       <Quiet>·</Quiet>
       <Stack dir="row" gap={2} align="center">
         {fact.priority ? <Icon name={fact.priority} /> : null}
@@ -84,28 +83,28 @@ function Meta({ issue }: { issue: IntakeIssue }) {
 function IssueRow({ issue, now }: { issue: IntakeIssue; now: number }) {
   return (
     <Row kind="item">
-      {issue.assignee ? (
-        <Avatar name={issue.assignee} size="talk" beside />
-      ) : (
-        <Avatar size="talk" dashed />
-      )}
-      <Stack gap={1} grow>
+      <Stack gap={3} grow>
         <Text variant="label" truncate title={issue.title}>
           {issue.title}
         </Text>
         <Meta issue={issue} />
       </Stack>
-      <Swap
-        hover={
-          <Button size="xs" title={`Take in ${issue.key}`}>
-            Take in
-          </Button>
-        }
-      >
-        <Text variant="ui" tone="3" tabular>
-          <Age text={ageLabel(issue.updated_at, now)} title={ageTitle(issue.updated_at, now)} />
-        </Text>
-      </Swap>
+      <Stack gap={1} align="end">
+        <Button variant="link" href={issue.url} title={`Open ${issue.key} in Jira`}>
+          <Badge kind="key">{issue.key}</Badge>
+        </Button>
+        <Swap
+          hover={
+            <Button size="xs" title={`Take in ${issue.key}`}>
+              Take in
+            </Button>
+          }
+        >
+          <Text variant="ui" tone="3" tabular>
+            <Age text={ageLabel(issue.updated_at, now)} title={ageTitle(issue.updated_at, now)} />
+          </Text>
+        </Swap>
+      </Stack>
     </Row>
   );
 }
@@ -151,9 +150,9 @@ interface LabelProps {
   toggle: () => void;
 }
 
-/** A query card's head: a faint band at the card's top. The chevron, the muted project key, the
- *  name in the rows' title size (bold), the count muted; a click anywhere on it but its end (or
- *  Enter on it) folds the card to its head. */
+/** A query's head: a quiet ruled line, no fill, held at the list's top while its run scrolls. The
+ *  chevron hung in the gutter, the muted project key, the name (bold), the count muted; a click
+ *  anywhere on it but its end (or Enter on it) folds the run to its head. */
 function GroupLabel({ q, count, jiraUrl, collapsed, toggle }: LabelProps) {
   const prefix = sharedPrefix(q);
   return (
@@ -254,16 +253,11 @@ export function IntakeView() {
         : {})}
       search={search}
     >
-      <Table columns={COLUMNS} head={false} scroll={false}>
+      <Table columns={COLUMNS} head={false} edge {...(data ? { foot: footNote(data, now) } : {})}>
         {data ? (
-          <Stack gap={8}>
-            {data.queries.map((q) => (
-              <Group key={q.name} q={q} query={query} jiraUrl={jiraUrl} now={now} />
-            ))}
-            <Notice kind="status" align="end">
-              {footNote(data, now)}
-            </Notice>
-          </Stack>
+          data.queries.map((q) => (
+            <Group key={q.name} q={q} query={query} jiraUrl={jiraUrl} now={now} />
+          ))
         ) : intake.error ? (
           <Notice kind="status" error>
             {`Can't reach the server · ${intake.error.message}`}

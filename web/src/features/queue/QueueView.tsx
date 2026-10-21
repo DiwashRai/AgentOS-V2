@@ -5,6 +5,7 @@ import type { Person, TicketRow } from "../../api/types";
 import { groupOf, stageModel, stepText } from "../../domain/board";
 import { age, elapsed, matches } from "../../domain/format";
 import {
+  Avatar,
   Badge,
   Button,
   Card,
@@ -84,20 +85,17 @@ function Item({ t, me, now, onOpen }: ItemProps) {
   );
 }
 /** A card's state, top right, as Linear's agent pill: the words (the agent and that it runs, or
- *  that it is queued), then inside the pill the agent's own glyph on its live disc (a running card's;
- *  a queued one has no agent yet) and the face of whose ticket it is. */
+ *  that it is queued) and a running one's agent glyph on its live disc; then, outside the pill at a
+ *  row's size, the face of whose ticket it is. */
 function AgentChip({ t }: { t: TicketRow }) {
   const a = t.attention;
   const what = a.kind === "running" ? `${a.agent} running` : "Queued";
-  const whose = t.owner ? `, for ${t.owner.name}` : "";
-  const face = t.owner ? { name: t.owner.name, seed: String(t.owner.id) } : undefined;
-  const who =
-    a.kind === "running"
-      ? { after: { agent: true as const, ...(face ? { face } : {}) } }
-      : face
-        ? { after: { face } }
-        : {};
-  return <Chip label={what} title={`${what}${whose}`} {...who} />;
+  return (
+    <Stack dir="row" gap={3} align="center">
+      <Chip label={what} {...(a.kind === "running" ? { after: { agent: true } } : {})} />
+      {t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} /> : null}
+    </Stack>
+  );
 }
 
 /** "Implement", or "Implement · round 2 of 3" in a later round (in words, so it never reads as the
@@ -184,8 +182,8 @@ function Chips({ t, me }: { t: TicketRow; me: Person | null }) {
   const running = t.attention.kind === "running";
   return (
     <Stack dir="row" gap={3} align="center" wrap>
-      {stage ? <Chip tone="fill" dot={running ? "live" : "neutral"} label={stage} /> : null}
-      {t.repo ? <Chip tone="fill" lead="repo" label={t.repo} /> : null}
+      {stage ? <Chip dot={running ? "live" : "neutral"} label={stage} /> : null}
+      {t.repo ? <Chip lead="repo" label={t.repo} /> : null}
     </Stack>
   );
 }
@@ -199,7 +197,6 @@ function AgentCard({ t, me, now, onOpen }: ItemProps) {
     <Card
       look="agent"
       label={`Peek at ${t.key}: ${t.title}`}
-      off={a.kind === "queued"}
       onOpen={() => {
         onOpen(t.key);
       }}
@@ -252,7 +249,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
             nothing running, nothing queued
           </Notice>
         ) : (
-          <Stack gap={4}>
+          <Stack gap={6}>
             <Head
               level="zone"
               icon={<Mark kind="run" glyph name={false} />}

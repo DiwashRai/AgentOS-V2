@@ -17,7 +17,9 @@
   color: var(--ink-1);
   font-weight: 500;
 }
+/* the agent's own still reads: in the second ink, its strike a thin line in the muted one */
 .over > s {
-  color: var(--ink-3);
+  color: var(--ink-2);
   text-decoration-color: var(--ink-3);
+  text-decoration-thickness: var(--line-1);
 }

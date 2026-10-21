@@ -33,10 +33,10 @@ export type ChipAfter =
 export type ChipProps = {
   /** Its words (tests, AGENTS.md, Implement, northwind/web). */
   label: string;
-  /** line: a faint fill, no outline (the default); fill: a firmer fill (an agent card's chips,
-   *  a board card's state, a stage's phase); blocked: the words in the blocked ink (a
-   *  conflict). */
-  tone?: "line" | "fill" | "blocked";
+  /** line: a faint fill, no outline (the default; in a list's row or an agent's tile, a pill on a
+   *  hairline); fill: a firmer fill (a stage's phase); edge: a round pill on a hairline, no fill (a board card's state, Linear's
+   *  card pill); blocked: the words in the blocked ink (a conflict). */
+  tone?: "line" | "fill" | "edge" | "blocked";
   /** The full text on hover, when it says more than the words. */
   title?: string;
   after?: ChipAfter;

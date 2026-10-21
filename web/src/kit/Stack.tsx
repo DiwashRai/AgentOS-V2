@@ -8,7 +8,7 @@ export interface StackProps {
   /** row: side by side; column (the default): one under another. */
   dir?: "row" | "column";
   gap?: Space;
-  align?: "start" | "center" | "baseline";
+  align?: "start" | "center" | "baseline" | "end";
   justify?: "end" | "between";
   wrap?: boolean;
   /** Take the free space, and let the content shrink below its own width. */

@@ -48,25 +48,25 @@
   bottom: calc(100% - var(--lane-face));
 }
 
-/* a loop's band, one piece per stage: a faint wash with no edge (the stages are words on the page,
-   so a box round them would be the one box), rounded at its ends; the first piece reaches up past
-   the joint's diamond, the last stops under the loop's foot */
+/* a loop's band, one piece per stage: a bracket in the gutter in the axis's line, no wash and no
+   box (the stages' own cards, their edges parting them, are the boxes); the first piece turns in
+   past the joint's diamond, the last under the loop's foot */
 .band {
   position: absolute;
-  inset: 0 calc(var(--sp-5) * -1) 0 calc(var(--out) * -1);
-  background: var(--loop-fill);
+  inset: 0 auto 0 calc(var(--out) * -1);
+  width: var(--sp-4);
+  border-left: var(--line-2) solid var(--lane-line);
   pointer-events: none;
 }
 .band:is([data-pos="first"], [data-pos="only"]) {
   top: calc(var(--reach) * -1);
-  border-radius: var(--r-5) var(--r-5) 0 0;
+  border-top: var(--line-2) solid var(--lane-line);
+  border-top-left-radius: var(--r-3);
 }
 .band:is([data-pos="last"], [data-pos="only"]) {
   bottom: calc(var(--sp-4) * -1);
-  border-radius: 0 0 var(--r-5) var(--r-5);
-}
-.band[data-pos="only"] {
-  border-radius: var(--r-5);
+  border-bottom: var(--line-2) solid var(--lane-line);
+  border-bottom-left-radius: var(--r-3);
 }
 .block:is([data-loop="last"], [data-loop="only"]) {
   margin-bottom: var(--sp-4);

@@ -1,39 +1,32 @@
-// The item editor's side column, a narrow rail ruled off beside the content: the properties (an
-// agent's runtime, model and effort as Linear's property chips; read-only facts as plain text),
-// what uses the item (its workflows; its tickets as a count and the first few, the rest one click
-// away), and its latest versions with who wrote each, a person or a ticket's run.
-import { type ReactNode, useState } from "react";
+// The item editor's properties, as Linear's project page lists them over its document: labelled
+// rows of chips on one left edge with the content under them. Properties (an agent's runtime, model
+// and effort as pickers in place; read-only facts as a muted glyph and their words), what uses the
+// item (its workflows; its tickets as a count and the first few, the rest one click away), and its
+// latest versions with who wrote each, a person or a ticket's run.
+import { useState } from "react";
 
 import { useNow, useRuntimes } from "../../api/queries";
 import type { AgentSettings, Effort, RuntimeId, UsedBy, Version } from "../../api/types";
 import { age, plural } from "../../domain/format";
-import { Age, Avatar, Button, FormRow, Icon, Section, Select, Stack, Text } from "../../kit";
+import { Avatar, Button, type Fact, Facts, Icon, Select, Stack, Text } from "../../kit";
 import { authorName } from "./model";
+
+export type { Fact };
 
 const EFFORTS: readonly Effort[] = ["low", "medium", "high", "xhigh", "max"];
 
 /** How many tickets "Used by" names before the rest fold into +N. */
-const FEW = 3;
-
-export interface Fact {
-  label: string;
-  value: ReactNode;
-}
+const FEW = 2;
 
 /** An agent's runtime, model and effort, each a picker in place; a new runtime starts on its first
  *  model. */
-function AgentPickers({
-  agent,
-  onChange,
-}: {
-  agent: AgentSettings;
-  onChange: (a: AgentSettings) => void;
-}) {
+function useAgentPickers(agent: AgentSettings, onChange: (a: AgentSettings) => void): Fact[] {
   const runtimes = useRuntimes().data ?? [];
   const models = runtimes.find((r) => r.id === agent.runtime)?.models ?? [agent.model];
-  return (
-    <>
-      <FormRow label="Runtime">
+  return [
+    {
+      label: "Runtime",
+      picker: (
         <Select
           label="Runtime"
           value={agent.runtime}
@@ -43,8 +36,11 @@ function AgentPickers({
             if (r) onChange({ ...agent, runtime: id as RuntimeId, model: r.models[0] ?? "" });
           }}
         />
-      </FormRow>
-      <FormRow label="Model">
+      ),
+    },
+    {
+      label: "Model",
+      picker: (
         <Select
           label="Model"
           value={agent.model}
@@ -53,8 +49,11 @@ function AgentPickers({
             onChange({ ...agent, model });
           }}
         />
-      </FormRow>
-      <FormRow label="Effort">
+      ),
+    },
+    {
+      label: "Effort",
+      picker: (
         <Select
           label="Effort"
           value={agent.effort}
@@ -63,131 +62,118 @@ function AgentPickers({
             onChange({ ...agent, effort: effort as Effort });
           }}
         />
-      </FormRow>
-    </>
-  );
+      ),
+    },
+  ];
 }
 
-export interface PropertiesProps {
-  agent: { value: AgentSettings; onChange: (a: AgentSettings) => void } | null;
-  /** Read-only, as plain text (a path in monospace), or a ticket copy's own controls. */
-  facts: readonly Fact[];
-}
-
-export function Properties({ agent, facts }: PropertiesProps) {
-  if (!agent && facts.length === 0) return null;
-  return (
-    <Section title="Properties">
-      <Stack gap={3}>
-        {agent ? <AgentPickers agent={agent.value} onChange={agent.onChange} /> : null}
-        {facts.map((f) => (
-          <FormRow key={f.label} label={f.label}>
-            {f.value}
-          </FormRow>
-        ))}
-      </Stack>
-    </Section>
-  );
-}
-
-/** The tickets: how many, the first few as links, and the rest behind +N, opened in place. */
+/** The tickets: how many on a line of its own, the first few as links under it, and the rest
+ *  behind +N, opened in place. */
 function Tickets({ keys }: { keys: readonly string[] }) {
   const [all, setAll] = useState(false);
-  if (keys.length === 0) return <Text tone="3">None</Text>;
+  if (keys.length === 0) return <Text tone="3">No tickets</Text>;
   const shown = all ? keys : keys.slice(0, FEW);
   return (
-    <Stack dir="row" gap={3} align="center" wrap>
-      <Text tone="2">{`${plural(keys.length, "ticket")}:`}</Text>
+    <Stack gap={2}>
+      <Text>{plural(keys.length, "ticket")}</Text>
+      <Stack dir="row" gap={4} align="center" wrap>
+        <Keys shown={shown} />
+        {keys.length > FEW ? (
+          <Button
+            variant="link"
+            title={all ? "Show the first few" : `Show all ${String(keys.length)}`}
+            onClick={() => {
+              setAll(!all);
+            }}
+          >
+            {all ? "Fewer" : `+${String(keys.length - FEW)}`}
+          </Button>
+        ) : null}
+      </Stack>
+    </Stack>
+  );
+}
+
+function Keys({ shown }: { shown: readonly string[] }) {
+  return (
+    <>
       {shown.map((key) => (
         <Button key={key} variant="link" href={`/t/${key}`}>
           {key}
         </Button>
       ))}
-      {keys.length > FEW ? (
-        <Button
-          variant="link"
-          title={all ? "Show the first few" : `Show all ${String(keys.length)}`}
-          onClick={() => {
-            setAll(!all);
-          }}
-        >
-          {all ? "Fewer" : `+${String(keys.length - FEW)}`}
-        </Button>
-      ) : null}
-    </Stack>
+    </>
   );
 }
 
 /** The workflows that use it, each a link to its editor, and the tickets on them or holding a
  *  copy of their own. */
-export function UsedBySection({ usedBy }: { usedBy: UsedBy }) {
-  return (
-    <Section title="Used by">
-      <Stack gap={3}>
-        <FormRow label="Workflows">
-          {usedBy.workflows.length ? (
-            usedBy.workflows.map((w) => (
-              <Button
-                key={w.id}
-                variant="link"
-                icon="workflows"
-                href={`/library/workflows/${w.id}`}
-              >
-                {w.name}
-              </Button>
-            ))
-          ) : (
-            <Text tone="3">None</Text>
-          )}
-        </FormRow>
-        <FormRow label="Tickets">
-          <Tickets keys={usedBy.tickets} />
-        </FormRow>
-      </Stack>
-    </Section>
-  );
-}
-
-/** A ticket copy's Used by: where it is used on the ticket (its workflow, the stages that get it). */
-export function UsedInSection({ facts }: { facts: readonly Fact[] }) {
-  return (
-    <Section title="Used by">
-      <Stack gap={3}>
-        {facts.map((f) => (
-          <FormRow key={f.label} label={f.label}>
-            {f.value}
-          </FormRow>
-        ))}
-      </Stack>
-    </Section>
-  );
+function usedByFacts(usedBy: UsedBy): Fact[] {
+  const flows: Fact[] = usedBy.workflows.length
+    ? usedBy.workflows.map((w) => ({
+        label: `Workflow ${w.name}`,
+        icon: "workflows",
+        value: (
+          <Button variant="link" href={`/library/workflows/${w.id}`}>
+            {w.name}
+          </Button>
+        ),
+      }))
+    : [{ label: "Workflows", icon: "workflows", value: "No workflows" }];
+  return [...flows, { label: "Tickets", value: <Tickets keys={usedBy.tickets} /> }];
 }
 
 /** The latest few versions, newest first: the number, who wrote it (a face, or the run's glyph),
  *  and how long ago. */
-export function History({ versions }: { versions: readonly Version[] }) {
+function historyFacts(versions: readonly Version[], now: number): Fact[] {
+  return versions.map((v) => ({
+    label: `Version ${String(v.version)}`,
+    value: (
+      <>
+        <Text tone="3" tabular>{`v${String(v.version)}`}</Text>
+        {v.by.kind === "person" ? (
+          <Avatar name={v.by.person.name} seed={String(v.by.person.id)} beside />
+        ) : (
+          <Icon name="agents" />
+        )}
+        {authorName(v.by)}
+      </>
+    ),
+    note: `· ${age(v.at, now)}`,
+  }));
+}
+
+export interface PropertyRowsProps {
+  agent: { value: AgentSettings; onChange: (a: AgentSettings) => void } | null;
+  /** Read-only, or a ticket copy's own (where it came from). */
+  facts: readonly Fact[];
+  /** The library's: the workflows and tickets that use it. */
+  usedBy?: UsedBy | undefined;
+  /** A ticket copy's: where it is used on the ticket (its workflow, the stages that get it). */
+  usedIn?: readonly Fact[] | undefined;
+  versions: readonly Version[];
+}
+
+function AgentRow({
+  agent,
+  facts,
+}: Pick<PropertyRowsProps, "facts"> & { agent: NonNullable<PropertyRowsProps["agent"]> }) {
+  const pickers = useAgentPickers(agent.value, agent.onChange);
+  return <Facts label="Properties" items={[...pickers, ...facts]} />;
+}
+
+export function PropertyRows({ agent, facts, usedBy, usedIn, versions }: PropertyRowsProps) {
   const now = useNow(60_000);
   return (
-    <Section title="History">
-      <Stack gap={4}>
-        {versions.map((v) => (
-          <Stack key={v.version} dir="row" gap={4} align="center">
-            <Text tone="3" tabular>{`v${String(v.version)}`}</Text>
-            {v.by.kind === "person" ? (
-              <Avatar name={v.by.person.name} seed={String(v.by.person.id)} beside />
-            ) : (
-              <Icon name="agents" />
-            )}
-            <Text tone="2" truncate>
-              {authorName(v.by)}
-            </Text>
-            <Stack grow />
-            <Text variant="meta" tone="3">
-              <Age text={age(v.at, now)} />
-            </Text>
-          </Stack>
-        ))}
-      </Stack>
-    </Section>
+    <Stack>
+      {agent ? (
+        <AgentRow agent={agent} facts={facts} />
+      ) : facts.length ? (
+        <Facts label="Properties" items={facts} />
+      ) : null}
+      {usedBy ? <Facts label="Used by" items={usedByFacts(usedBy)} /> : null}
+      {usedIn ? <Facts label="Used by" items={usedIn} /> : null}
+      <Facts label="History" items={historyFacts(versions, now)} />
+    </Stack>
   );
 }

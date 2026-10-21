@@ -56,14 +56,14 @@
 }
 .title {
   margin: 0;
-  font-size: var(--fs-3);
+  font-size: var(--fs-tk);
   font-weight: 500;
   letter-spacing: var(--track-snug);
   color: var(--ink-1);
 }
 .note {
   margin: 0;
-  font-size: var(--fs-2);
+  font-size: var(--fs-3);
   color: var(--pop-aside);
 }
 .note:empty {

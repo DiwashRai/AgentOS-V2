@@ -55,6 +55,11 @@
 .value {
   padding: 0 var(--sp-4);
 }
+/* a link for a value (where a copy came from) at the row's size and ink, the chip its hover */
+.value a {
+  font-size: inherit;
+  color: inherit;
+}
 /* the value's muted glyph */
 .glyph {
   display: inline-flex;

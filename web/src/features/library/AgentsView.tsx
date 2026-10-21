@@ -1,5 +1,6 @@
-// The library's agents (/library/agents): each agent's face and name, how it runs (runtime, model,
-// effort) and what uses it (how many workflows, and tickets on them). A row opens the agent's editor.
+// The library's agents (/library/agents): each agent's face, name and what it is for, how it runs
+// (runtime, model, effort) and what uses it (how many workflows, and tickets on them). A row opens
+// the agent's editor.
 import { useAgents, useRuntimes } from "../../api/queries";
 import type { Agent } from "../../api/types";
 import { matches } from "../../domain/format";
@@ -10,9 +11,9 @@ import { runtimeName } from "./model";
 
 const COLUMNS: readonly Column[] = [
   { label: "Agent", width: "fill", min: "xl" },
-  { label: "Runtime", width: "lg" },
-  { label: "Model", width: "md" },
-  { label: "Effort", width: "md" },
+  { label: "Runtime", width: "md" },
+  { label: "Model", width: "sm" },
+  { label: "Effort", width: "sm" },
   ...USED,
 ];
 
@@ -35,7 +36,11 @@ export function AgentsView() {
     >
       {shown.map((a) => (
         <LibraryRow key={a.id} name={a.name} href={href(a)}>
-          <NameCell lead={<Avatar name={a.name} seed={`agent:${a.id}`} beside />} name={a.name} />
+          <NameCell
+            lead={<Avatar size="tile" name={a.name} seed={`agent:${a.id}`} beside />}
+            name={a.name}
+            under={a.description}
+          />
           <Text tone="2">{runtimeName(runtimes, a.runtime)}</Text>
           <Text tone="2">{a.model}</Text>
           <Text tone="2">{a.effort}</Text>

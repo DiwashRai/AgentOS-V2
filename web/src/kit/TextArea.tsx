@@ -1,5 +1,6 @@
 // Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of
-// AGENTS.md): at least `lines` tall and growing with its text, or filling its column. Every area
+// AGENTS.md): at least `lines` tall and growing with its text, or filling its column; an item
+// editor's is a framed sheet under its own head strip. Every area
 // can pop out to the whole window, for long text: the same value, edited at a readable measure,
 // and Done or Esc brings it back (inside an overlay too: it opens over it).
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
@@ -21,12 +22,16 @@ export interface TextAreaProps {
   lines?: number;
   /** Fill the height of the column it is in and scroll inside (an item editor's body). */
   fill?: boolean;
-  /** Unboxed, the page's own text (an item editor's content); popped out, it is boxed. */
-  bare?: boolean;
+  /** A sheet: this strip over the text (an item editor's content: its title, or a block's name,
+   *  length and moves), the pop-out at its end, the whole ringed while the text has the focus. */
+  head?: ReactNode;
+  /** Folded to its head strip alone (a block of AGENTS.md; its head says the first line). */
+  folded?: boolean;
 }
 
 export function TextArea(props: TextAreaProps) {
-  const { label, value, onChange, placeholder, lines = 3, fill, bare } = props;
+  const { label, value, onChange, placeholder, lines = 3, fill, head, folded } = props;
+  const sheet = head !== undefined;
   const [out, setOut] = useState(false);
   const popped = useRef<HTMLTextAreaElement>(null);
   const description = useDescription();
@@ -46,7 +51,7 @@ export function TextArea(props: TextAreaProps) {
   const area = (full: boolean) => (
     <textarea
       ref={full ? popped : undefined}
-      className={cx(s.box, s.area, (full || fill === true) && s.fill, bare && !full && s.ghost)}
+      className={cx(s.box, s.area, (full || fill === true) && s.fill, sheet && !full && s.leaf)}
       style={vars({ "--lines": String(lines) })}
       aria-label={label}
       {...(full ? own : inline)}
@@ -61,20 +66,31 @@ export function TextArea(props: TextAreaProps) {
   const close = () => {
     setOut(false);
   };
+  const pop = (
+    <Pop
+      label={label}
+      corner={!sheet}
+      onPop={() => {
+        setOut(true);
+      }}
+    />
+  );
   return (
-    <div className={cx(s.areaWrap, fill && s.areaFill)}>
-      {area(false)}
-      <span className={s.pop}>
-        <Button
-          variant="quiet"
-          size="xs"
-          icon="expand"
-          title={`Edit ${label} in the whole window`}
-          onClick={() => {
-            setOut(true);
-          }}
-        />
-      </span>
+    <div className={cx(s.areaWrap, fill && s.areaFill, sheet && s.sheet)}>
+      {sheet ? (
+        <>
+          <div className={s.sheetHead}>
+            {head}
+            {pop}
+          </div>
+          {folded ? null : area(false)}
+        </>
+      ) : (
+        <>
+          {area(false)}
+          {pop}
+        </>
+      )}
       <Dialog label={label} open={out} onClose={close} look="full">
         <Page
           title={label}
@@ -92,6 +108,21 @@ export function TextArea(props: TextAreaProps) {
         </Page>
       </Dialog>
     </div>
+  );
+}
+
+/** The pop-out: at a sheet's head strip's end, or in a plain area's top right corner. */
+function Pop({ label, corner, onPop }: { label: string; corner: boolean; onPop: () => void }) {
+  return (
+    <span className={corner ? s.pop : undefined}>
+      <Button
+        variant="quiet"
+        size="xs"
+        icon="expand"
+        title={`Edit ${label} in the whole window`}
+        onClick={onPop}
+      />
+    </span>
   );
 }
 

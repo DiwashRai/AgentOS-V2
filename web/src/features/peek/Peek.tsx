@@ -47,11 +47,12 @@ function Bar({ ticketKey, onClose }: { ticketKey: string; onClose: () => void })
         {t?.source ? `${ticketKey} · Jira ${t.source.ref}` : ticketKey}
       </Text>
       <Stack grow />
-      <Button variant="quiet" size="sm" href={`/t/${ticketKey}`}>
+      {/* the three in one look: the controls' own, each on its hairline */}
+      <Button size="sm" icon="out" href={`/t/${ticketKey}`}>
         Open ticket
       </Button>
       {t ? <TicketMenu t={t} size="sm" /> : null}
-      <Button variant="quiet" size="sm" icon="close" title="Close peek (Esc)" onClick={onClose} />
+      <Button size="sm" icon="close" title="Close peek (Esc)" onClick={onClose} />
     </Stack>
   );
 }

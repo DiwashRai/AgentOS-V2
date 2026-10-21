@@ -3,12 +3,12 @@ import { hueOf, initials } from "./identity";
 import { Tip } from "./tip";
 import { cx } from "./vars";
 
-type Size = "sm" | "md" | "mid" | "lg" | "talk";
+type Size = "sm" | "md" | "lg" | "talk" | "tile";
 
 /** One of: a person's face; a row of faces; or an empty slot. */
 export type AvatarProps = {
-  /** sm and mid are a neutral disc (in a pill, on a team); md (rows, pickers), talk and lg keep the
-   *  person's hue. */
+  /** sm is a neutral disc (in a pill); md (rows, pickers, a team), talk and lg keep the person's
+   *  hue; tile is a rounded square in it (an agent leading a library row). */
   size?: Size;
 } & (
   | {
@@ -63,7 +63,7 @@ function Face({ name, seed, size, beside }: FaceProps) {
   );
 }
 
-/** A person's face (a neutral disc in a pill and on a team, their own hue in rows, pickers and the
+/** A person's face (a neutral disc in a pill, their own hue in rows, pickers, a team and the
  *  conversation), a row of faces (named together by the row), or an empty slot. */
 export function Avatar({ name, seed, size = "md", beside = false, dashed, people }: AvatarProps) {
   if (people) {

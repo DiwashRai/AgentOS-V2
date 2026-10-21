@@ -6,14 +6,16 @@
 .icon > svg {
   display: block;
 }
-/* tile: the glyph on a faint square in the quiet ink, a row's lead (Linear's project icon) */
+/* tile: the glyph on a faint rounded square in the quiet ink, a library row's lead (Linear's
+   project icon), the size and shape of an agent's face beside it */
 .tile {
   align-items: center;
   justify-content: center;
-  width: var(--h-list-chip);
-  height: var(--h-list-chip);
-  border-radius: var(--r-2);
+  width: var(--h-tile);
+  height: var(--h-tile);
+  border-radius: var(--r-3);
   background: var(--list-chip-fill);
+  box-shadow: inset 0 0 0 var(--line-1) var(--list-rule);
   color: var(--ink-2);
 }
 .line {

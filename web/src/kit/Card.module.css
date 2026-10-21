@@ -1,8 +1,7 @@
 /* Card: one object on its own surface, white on a firm hairline with a soft drop (in the dark a
-   slight step above the sheet on a lit hairline). A stage is the exception: words on the page by
-   the lane's axis, its summary washed on hover like a row; selected, it rises onto the card's
-   surface, ringed in your move's accent, its settings ruled off under the summary. An agent's and
-   a ticket's looks follow below. */
+   slight step above the sheet on a lit hairline). A stage is flat on the lane, its summary washed
+   on hover like a row; selected, it is ringed in your move's accent, its settings ruled off under
+   the summary. An agent's and a ticket's looks follow below. */
 .card {
   position: relative;
   min-width: 0;
@@ -17,10 +16,15 @@
 .card[data-edit]:hover {
   border-color: var(--teams-card-hover-edge);
 }
-.card[data-look="stage"]:not([data-open]) {
-  border-color: transparent;
-  background: none;
+/* a stage: a flat card on the lane, over its axis, its face on the card's own ground; a disabled
+   one keeps the card on a dashed edge */
+.card[data-look="stage"] {
+  --ground: var(--teams-card);
   box-shadow: none;
+}
+.card[data-look="stage"][data-off]:not([data-open]) {
+  border-style: dashed;
+  border-color: var(--ctl-edge-hover);
 }
 .card[data-open],
 .card[data-open]:hover {
@@ -113,36 +117,33 @@
   border-top: var(--line-1) solid var(--teams-card-edge);
 }
 
-/* ticket: a ticket on a board, its lines one under another, a little apart */
+/* ticket: a ticket on a board, its two lines tight under one another, each the card's width */
 .card[data-look="ticket"] {
   border-radius: var(--r-3);
 }
 .card[data-look="ticket"] .summary {
+  padding: var(--sp-4) var(--sp-5);
   border-radius: calc(var(--r-3) - var(--line-1));
 }
 .card[data-look="ticket"] .main {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: var(--sp-2);
 }
 
-/* agent: an agent's card, a flat slab of the band's grey with no outline, as tall as its
-   neighbours, its lines one under another down to its foot; a queued one is no slab, only a dashed
-   outline, as its glyph is a dashed ring */
+/* agent: an agent's tile, the surface on a hairline (one treatment, running or queued: the glyph
+   says which), as tall as its neighbours, its lines one under another down to its foot */
 .card[data-look="agent"] {
   align-self: stretch;
-  border-color: transparent;
-  background: var(--list-band);
-  box-shadow: none;
-}
-.card[data-look="agent"][data-off] {
-  border: var(--line-1) dashed var(--tile-edge);
-  background: transparent;
+  border-color: var(--tile-edge);
+  border-radius: var(--r-3);
+  background: var(--tile);
+  box-shadow: var(--tile-lift);
 }
 .card[data-look="agent"][data-edit]:hover,
 .card[data-look="agent"]:has(.hit:focus-visible) {
-  background: var(--chip-on);
+  border-color: var(--tile-hover-edge);
+  background: var(--tile-hover);
 }
 .card[data-look="agent"] .summary {
   height: 100%;

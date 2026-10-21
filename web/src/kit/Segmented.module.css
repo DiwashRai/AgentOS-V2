@@ -1,14 +1,15 @@
-/* Linear's view chips: one row of the same chip (one height, radius and weight). A chip is its
-   words in secondary ink and nothing else until hovered (a light fill); the pressed one alone is
-   a firm fill on a lit hairline in primary ink, so it reads at a glance. Counts recede and the
-   state glyphs stay small and muted. The row takes the bar's free room and never wraps or clips:
-   what doesn't fit goes into the last chip's popover. */
+/* Filter chips as one control: the chips are segments of a single recessed track (a faint ink
+   fill, rounded at its two ends), so the whole filter has an edge and reads as one thing; the
+   pressed one is a control raised inside it (the button's fill, hairline and drop, inset from the
+   track's edge) in primary ink. The rest are words in secondary ink; hover lights an inset fill.
+   Each state glyph keeps its state's colour, so the filter reads as the list's groups do; counts
+   recede. The row takes the bar's free room and never wraps or clips: what doesn't fit goes into
+   the track's last segment's popover. */
 .track {
   position: relative;
   display: flex;
   flex: 999 1 0;
   align-items: center;
-  gap: var(--sp-2);
   min-width: 0;
   /* room inside the clip for a chip's focus ring (2px out, 2px wide), the bar's own box unmoved */
   margin: calc(var(--focus-room) * -1);
@@ -20,15 +21,16 @@
   min-width: min-content;
 }
 .pill {
+  position: relative;
+  isolation: isolate;
   flex: none;
   display: inline-flex;
   align-items: center;
   gap: var(--sp-3);
   height: var(--h-pill);
-  padding: 0 var(--sp-4);
-  border: var(--line-1) solid transparent;
-  border-radius: var(--r-2);
-  background: transparent;
+  padding: 0 var(--sp-5);
+  border: 0;
+  background: var(--seg);
   font-size: var(--fs-3);
   font-weight: 500;
   letter-spacing: var(--track-snug);
@@ -36,32 +38,43 @@
   color: var(--ink-2);
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    background-color var(--dur-fast) ease,
-    border-color var(--dur-fast) ease,
-    color var(--dur-fast) ease;
+  transition: color var(--dur-fast) ease;
 }
-/* the state glyphs in the muted ink, whatever their state (on the row and in the popover) */
-.pill,
-.item {
-  --you: var(--ink-3);
-  --live: var(--ink-3);
-  --blocked: var(--ink-3);
-  --done: var(--ink-3);
+/* the track's two ends: the first segment and the last one shown (the overflow chip, when there) */
+.pill:first-child {
+  border-radius: var(--r-3) 0 0 var(--r-3);
+}
+.track > .pill:not(:has(~ .pill)) {
+  border-radius: 0 var(--r-3) var(--r-3) 0;
+}
+.track > .pill:first-child:not(:has(~ .pill)) {
+  border-radius: var(--r-3);
+}
+/* the inset fill: a light wash on hover, the raised control on the pressed one */
+.pill::before {
+  content: "";
+  position: absolute;
+  inset: var(--seg-inset);
+  z-index: -1;
+  border-radius: var(--r-2);
+  transition: background-color var(--dur-fast) ease;
 }
 .pill:hover,
 .pill[data-popup-open] {
+  color: var(--ink-1);
+}
+.pill:hover::before,
+.pill[data-popup-open]::before {
   background: var(--chip-hover);
+}
+.pill:is([aria-pressed="true"], [data-current="true"]) {
   color: var(--ink-1);
 }
-.pill[aria-pressed="true"],
-.pill[data-current="true"] {
-  background: var(--chip-on);
-  border-color: var(--chip-on-edge);
-  color: var(--ink-1);
-}
-.pill:is([aria-pressed="true"], [data-current="true"]):hover {
-  background: var(--chip-on-hover);
+.pill:is([aria-pressed="true"], [data-current="true"])::before {
+  background: var(--ctl-lift);
+  box-shadow:
+    0 0 0 var(--line-1) var(--ctl-edge-hover),
+    var(--ctl-shadow);
 }
 .pill em {
   font-style: normal;
@@ -91,7 +104,7 @@
   top: 0;
   left: 0;
   display: flex;
-  column-gap: var(--sp-2);
+  column-gap: 0;
   visibility: hidden;
   pointer-events: none;
 }

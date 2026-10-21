@@ -1,8 +1,9 @@
 // What the four library lists share, as Linear's index: the bar (the list's name, the Space's
 // Library, search, New), then a table out to the sheet's edges with no surface of its own: a column
-// head ruled off the bar, rows that open the item's editor on a click or Enter, ↑ ↓ (or j k) moving
-// a selection that Enter opens, what uses each item as two counts, and a foot with those keys and the
-// count. A search that matches nothing says so.
+// head ruled off the bar, two-line rows on hairlines (a tile, the name over what it is, the facts
+// packed at the right) that open the item's editor on a click or Enter, ↑ ↓ (or j k) moving a
+// selection that Enter opens, and a foot with those keys and the count. A search that matches
+// nothing says so.
 import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -138,6 +139,7 @@ export function LibraryRow({
   const selected = useContext(Selected);
   return (
     <Row
+      kind="item"
       open={selected === href}
       action={{
         label: `Open ${name}`,
@@ -151,32 +153,41 @@ export function LibraryRow({
   );
 }
 
-/** A row's lead: an optional glyph or face, the name, and quiet words after it on the same line
- *  (Compact's title cell), cut at the end so the words give way first. */
+/** A row's lead, as Linear's project rows: a tile (a glyph, or an agent's face), the name, and
+ *  under it a second line (what it is for, or the workflow's stages), each cut at its end. */
 export function NameCell({
   lead,
   name,
-  after,
+  under,
   mark,
   title,
 }: {
-  lead?: ReactNode;
+  lead: ReactNode;
   name: string;
-  after?: string;
+  under: ReactNode;
   /** A chip after the name (the default workflow's). */
   mark?: ReactNode;
-  /** On hover, in place of the name and the words (a workflow's description). */
+  /** On hover over the name (a workflow's description). */
   title?: string;
 }) {
   return (
-    <Stack dir="row" gap={4} align="center">
+    <Stack dir="row" gap={6} align="center">
       {lead}
-      <Text tone="3" truncate title={title ?? (after ? `${name} ${after}` : name)}>
-        <Text variant="label">{name}</Text>
-        {mark ? "\u2002" : null}
-        {mark}
-        {after ? `\u2002${after}` : null}
-      </Text>
+      <Stack gap={1}>
+        <Stack dir="row" gap={4} align="center">
+          <Text variant="label" truncate title={title ?? name}>
+            {name}
+          </Text>
+          {mark}
+        </Stack>
+        {typeof under === "string" ? (
+          <Text tone="3" truncate title={under}>
+            {under}
+          </Text>
+        ) : (
+          under
+        )}
+      </Stack>
     </Stack>
   );
 }
@@ -187,7 +198,9 @@ export function ChangedCell({ by, at }: { by: Author; at: Iso }) {
   const who = by.kind === "person" ? firstName(by.person.name) : `Run #${String(by.run_id)}`;
   return (
     <Stack dir="row" gap={3} align="center">
-      {by.kind === "person" ? <Avatar name={by.person.name} seed={String(by.person.id)} /> : null}
+      {by.kind === "person" ? (
+        <Avatar size="talk" name={by.person.name} seed={String(by.person.id)} />
+      ) : null}
       <Text tone="2" truncate>
         {who}
       </Text>

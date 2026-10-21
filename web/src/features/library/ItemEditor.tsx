@@ -10,13 +10,13 @@ import { type ReactNode, useEffect, useRef } from "react";
 import { useNow, useSession } from "../../api/queries";
 import type { ItemBody, UsedBy } from "../../api/types";
 import { age } from "../../domain/format";
-import { Button, Chip, Field, Page, type PageProps, Stack } from "../../kit";
+import { Button, Chip, Field, Page, type PageProps, Stack, Text } from "../../kit";
 import { Conflict } from "./conflict";
 import { Content } from "./content";
 import type { Draft } from "./draft";
 import { authorName } from "./model";
 import { type Siblings, SiblingNav } from "./nav";
-import { type Fact, History, Properties, UsedBySection, UsedInSection } from "./side";
+import { type Fact, PropertyRows } from "./side";
 import { type Editor, useEditor, type Versioned } from "./useEditor";
 
 export interface EditorItem extends Versioned {
@@ -29,10 +29,13 @@ export interface ItemEditorProps {
   item: EditorItem;
   /** Over the content, saying what it is (Instructions, the path). */
   contentTitle: string;
-  /** A library item's name to edit (a file's path, in monospace), over its description. */
-  name?: { label: string; value: string; mono: boolean };
+  /** A library item's name to edit (a file's path too: a title, in the headings' sans), over its
+   *  description. */
+  name?: { label: string; value: string };
   /** A library item's description to edit, under its name. */
   description?: string;
+  /** The document's title when it has no name to edit (a ticket's copy: AGENTS.md, Builder). */
+  heading?: string;
   /** Read-only properties (a skill's path, a file's size, a ticket copy's origin). */
   facts?: readonly Fact[];
   /** The library's: the workflows and tickets that use it. */
@@ -61,25 +64,36 @@ const MINUTE = 60_000;
 const ago = (a: string) => (a === "now" ? "just now" : `${a} ago`);
 const FIRST = "Keep yours or take theirs first";
 
+/** Discard quiet, Save the bar's one filled button (faded while there is nothing to save). */
 function Actions({ e }: { e: Editor }) {
   if (e.theirs)
     return (
       <>
-        <Button blocked={FIRST}>Discard</Button>
-        <Button blocked={FIRST}>Save</Button>
+        <Button variant="quiet" blocked={FIRST}>
+          Discard
+        </Button>
+        <Button variant="you" blocked={FIRST}>
+          Save
+        </Button>
       </>
     );
   return e.dirty ? (
     <>
-      <Button onClick={e.discard}>Discard</Button>
+      <Button variant="quiet" onClick={e.discard}>
+        Discard
+      </Button>
       <Button variant="you" onClick={e.save}>
         Save
       </Button>
     </>
   ) : (
     <>
-      <Button blocked="No changes to discard">Discard</Button>
-      <Button blocked="No changes to save">Save</Button>
+      <Button variant="quiet" blocked="No changes to discard">
+        Discard
+      </Button>
+      <Button variant="you" blocked="No changes to save">
+        Save
+      </Button>
     </>
   );
 }
@@ -90,36 +104,39 @@ function State({ e }: { e: Editor }) {
   return e.dirty ? <Chip label={"Unsaved changes"} /> : null;
 }
 
-function Side({ e, props }: { e: Editor; props: ItemEditorProps }) {
-  const { facts = [], usedBy, usedIn } = props;
+/** Its properties, what uses it and its versions: Linear's labelled rows, over the content. */
+function Rows({ e, props }: { e: Editor; props: ItemEditorProps }) {
   const body = e.draft.body;
   return (
-    <Stack gap={10}>
-      <Properties
-        agent={
-          body.kind === "agent"
-            ? {
-                value: body.agent,
-                onChange: (agent) => {
-                  e.edit({ body: { kind: "agent", agent } });
-                },
-              }
-            : null
-        }
-        facts={facts}
-      />
-      {usedBy ? <UsedBySection usedBy={usedBy} /> : null}
-      {usedIn ? <UsedInSection facts={usedIn} /> : null}
-      <History versions={e.history} />
-    </Stack>
+    <PropertyRows
+      agent={
+        body.kind === "agent"
+          ? {
+              value: body.agent,
+              onChange: (agent) => {
+                e.edit({ body: { kind: "agent", agent } });
+              },
+            }
+          : null
+      }
+      facts={props.facts ?? []}
+      usedBy={props.usedBy}
+      usedIn={props.usedIn}
+      versions={e.history}
+    />
   );
 }
 
 /** A library item's name and description, the document's title and the lead under it, over its
  *  content. */
 function Identity({ e, props }: { e: Editor; props: ItemEditorProps }) {
-  const { name, description } = props;
-  if (!name && description === undefined) return null;
+  const { name, description, heading } = props;
+  if (!name && description === undefined)
+    return heading ? (
+      <Text variant="display" as="h2">
+        {heading}
+      </Text>
+    ) : null;
   return (
     <Stack gap={2}>
       {name ? (
@@ -128,7 +145,6 @@ function Identity({ e, props }: { e: Editor; props: ItemEditorProps }) {
           label={name.label}
           value={e.draft.name}
           placeholder={name.label}
-          mono={name.mono}
           onChange={(v) => {
             e.edit({ name: v });
           }}
@@ -150,8 +166,9 @@ function Identity({ e, props }: { e: Editor; props: ItemEditorProps }) {
 }
 function Main({ e, props }: { e: Editor; props: ItemEditorProps }) {
   return (
-    <Stack gap={9} grow>
+    <Stack gap={10} grow>
       <Identity e={e} props={props} />
+      <Rows e={e} props={props} />
       <Content
         body={e.draft.body}
         title={props.contentTitle}
@@ -212,9 +229,7 @@ export function ItemEditor(props: ItemEditorProps) {
           <Actions e={e} />
         </>
       }
-      {...(e.theirs
-        ? {}
-        : { side: { look: "rail" as const, content: <Side e={e} props={props} /> } })}
+      {...(e.theirs ? {} : { side: { look: "doc" as const } })}
     >
       {e.theirs ? (
         <Conflict

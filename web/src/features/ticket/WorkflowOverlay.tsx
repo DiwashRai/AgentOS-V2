@@ -9,7 +9,7 @@ import { useState } from "react";
 
 import { useNow, useTicketWorkflow, useWorkflow } from "../../api/queries";
 import type { Ticket, TicketWorkflow, Workflow, WorkflowBody } from "../../api/types";
-import { Button, Chip, Dialog, Notice, Page, Stack, Text } from "../../kit";
+import { Button, Chip, Dialog, FormRow, Notice, Page, Text } from "../../kit";
 import { type Draft, useDraft } from "../workflow/draft";
 import { Editor } from "../workflow/Editor";
 import { authorText } from "../workflow/who";
@@ -90,7 +90,7 @@ function Drift({ w, draft }: { w: TicketWorkflow; draft: Draft }) {
   const taken = lib !== undefined && draft.dirty && same(draft.body, lib);
   const drifted = w.drift.library !== null || w.drift.changed;
   return (
-    <Stack dir="row" gap={4} align="center" wrap>
+    <FormRow label="This copy">
       {taken ? (
         <Chip dot="you" label={`Taking library v${String(lib.version)} · unsaved`} />
       ) : (
@@ -98,7 +98,7 @@ function Drift({ w, draft }: { w: TicketWorkflow; draft: Draft }) {
       )}
       {drifted && !taken ? <Take w={w} lib={lib} draft={draft} /> : null}
       <Promote w={w} block={promoteBlock(w, lib, taken)} />
-    </Stack>
+    </FormRow>
   );
 }
 function CopyEditor({ t, w, open, onClose }: OverlayProps & { w: TicketWorkflow }) {

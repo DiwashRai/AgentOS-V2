@@ -1,26 +1,27 @@
-/* side: the peek, docked full height at the window's right edge, as Linear's issue peek is: one
-   sheet on a hairline and a long soft shadow, the list beside it only veiled, so it still reads */
+/* side: the peek, a sheet floated at the window's right edge, inset as the full look is, the list
+   under it dimmed by the same scrim, so the one thing lifted is the one thing to read */
 .side {
   position: fixed;
-  inset: 0 0 0 auto;
+  inset: var(--sp-4) var(--sp-4) var(--sp-4) auto;
   width: min(var(--w-peek), calc(100vw - var(--sp-10)));
-  height: 100dvh;
+  height: auto;
   max-height: none;
   margin: 0;
   padding: 0;
   border: 0;
-  border-left: var(--line-1) solid var(--tk-card-edge);
+  border-radius: var(--r-4);
   background: var(--tk-side);
   color: var(--ink-2);
-  box-shadow: var(--shadow-dock);
+  box-shadow: var(--shadow-float);
   overflow: hidden;
 }
 .side:focus-visible,
 .full:focus-visible {
   outline: none;
 }
-.side::backdrop {
-  background: var(--tk-veil);
+.side::backdrop,
+.full::backdrop {
+  background: var(--tk-scrim);
 }
 .side[open] {
   display: flex;
@@ -38,17 +39,16 @@
   }
 }
 /* the bar: the panel's chrome, pinned over the sections the way the foot is under them (the key,
-   then its buttons at the end), ruled off from the document it heads on the line the view's own
-   top bar ends on, so the two read as one bar across the window */
+   then its buttons at the end); no rule: the sections fade out under it and under the foot */
 .bar {
   flex: none;
   display: flex;
   align-items: center;
-  height: calc(var(--h-top) + var(--sp-4));
+  height: var(--h-top);
   padding: 0 var(--sp-6) 0 var(--sp-9);
-  border-bottom: var(--line-1) solid var(--tk-card-edge);
 }
-/* the Sections scroll inside the panel as one document (each draws its own padding) */
+/* the Sections scroll inside the panel as one document (each draws its own padding), faded at
+   both ends, so a line half under the bar or the reply box says there is more */
 .body {
   flex: 1;
   min-height: 0;
@@ -56,6 +56,13 @@
   flex-direction: column;
   overflow-y: auto;
   scrollbar-width: thin;
+  /* a mask reads only alpha: the ink stands for opaque */
+  mask-image: linear-gradient(
+    transparent,
+    var(--ink-1) var(--sp-6),
+    var(--ink-1) calc(100% - var(--sp-10)),
+    transparent
+  );
 }
 /* where the panel's toasts dock: a line between the sections and the foot, the toasts rising from
    it over the sections' end, inside the panel and clear of the reply box */
@@ -65,11 +72,10 @@
   height: 0;
   z-index: var(--z-pop);
 }
-/* the foot: pinned under the sections, ruled off where they scroll away under it */
+/* the foot: pinned under the sections, which fade away under it */
 .foot {
   flex: none;
-  padding: var(--sp-6) var(--sp-9) var(--sp-8);
-  border-top: var(--line-1) solid var(--tk-card-edge);
+  padding: var(--sp-2) var(--sp-8) var(--sp-8);
 }
 .foot:empty {
   display: none;
@@ -94,9 +100,6 @@
   box-shadow: var(--shadow-float);
   overflow: hidden;
 }
-.full::backdrop {
-  background: var(--tk-scrim);
-}
 .full[open] {
   display: block;
   animation: rise var(--dur-fast) var(--ease-out);
@@ -113,8 +116,7 @@
 }
 .frame {
   position: relative;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  display: flex;
   height: 100%;
 }
 /* the bar's hairline, under the close as well as the view's top bar */
@@ -124,25 +126,24 @@
   inset: var(--h-top) 0 auto;
   border-top: var(--line-1) solid var(--tk-card-edge);
 }
+/* the close: at the bar's end, where the peek's is, in the room the view's bar leaves for it */
 .close {
+  position: absolute;
+  top: 0;
+  right: var(--gutter);
   display: flex;
   align-items: center;
-  gap: var(--sp-6);
   height: var(--h-top);
-  padding: 0 var(--sp-8) 0 var(--sp-6);
-}
-.close::after {
-  content: "";
-  height: var(--sp-9);
-  border-left: var(--line-1) solid var(--tk-card-edge);
 }
 /* the gutter inside the scroller, as the sheet's own, so a rail beside the body runs out through it */
 .view {
+  --top-end: calc(var(--h-control) + var(--sp-4));
   display: flex;
+  flex: 1;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  padding-right: var(--gutter);
+  padding-inline: var(--gutter);
   overflow-y: auto;
   scrollbar-width: thin;
 }

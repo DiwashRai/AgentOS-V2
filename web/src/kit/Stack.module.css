@@ -16,6 +16,9 @@
 .stack[data-align="baseline"] {
   align-items: baseline;
 }
+.stack[data-align="end"] {
+  align-items: flex-end;
+}
 .stack[data-justify="end"] {
   justify-content: flex-end;
 }

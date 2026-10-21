@@ -72,7 +72,8 @@
   margin-bottom: calc(var(--pad) * -1);
 }
 /* edge: out through the sheet's gutter, no surface; each row's first cell under the bar's title, the
-   head a faint band ruled off the bar, the foot flush with the sheet's rounded foot */
+   head bare labels between two rules (no band), spaced as its two-line item rows, the foot flush
+   with the sheet's rounded foot */
 .edge {
   --list-pad: var(--gutter);
   --list-inset: var(--gutter);
@@ -82,7 +83,7 @@
   scrollbar-gutter: auto;
 }
 .edge > .head {
-  background: var(--list-band);
+  column-gap: var(--sp-6);
   box-shadow:
     inset 0 var(--line-1) 0 var(--list-rule),
     inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);

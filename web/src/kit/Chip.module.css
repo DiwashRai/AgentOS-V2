@@ -21,8 +21,19 @@
 .chip[data-lead] {
   padding-left: var(--sp-3);
 }
+/* in a list's row or an agent's card: Linear's label chip, a pill on a hairline with no fill */
+:where([data-row], [data-look="agent"]) .chip[data-tone="line"] {
+  border: var(--line-1) solid var(--list-chip-edge);
+  border-radius: var(--r-pill);
+  background: none;
+}
 .chip[data-tone="fill"] {
   background: var(--chip-on);
+}
+.chip[data-tone="edge"] {
+  border-radius: var(--r-pill);
+  background: none;
+  box-shadow: inset 0 0 0 var(--line-1) var(--chip-on-edge);
 }
 .chip[data-tone="blocked"] {
   color: var(--blocked);

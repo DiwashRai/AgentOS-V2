@@ -38,26 +38,18 @@ function facts(i: Item): Fact[] {
   const k = KIND[i.kind];
   const href = libraryHref(i);
   return [
-    {
-      label: "Kind",
-      value: (
-        <Stack dir="row" gap={3} align="center">
-          <Icon name={k.icon} />
-          <Text tone="1">{k.word}</Text>
-        </Stack>
-      ),
-    },
-    {
-      label: "Copied from",
-      value:
-        i.origin.kind === "copy" && href ? (
-          <Button variant="link" href={href}>
-            {`${i.origin.of.name} v${String(i.origin.version)}`}
-          </Button>
-        ) : (
-          <Text tone="3">Ticket only</Text>
-        ),
-    },
+    { label: "Kind", icon: k.icon, value: k.word },
+    i.origin.kind === "copy" && href
+      ? {
+          label: "Copied from",
+          icon: "out",
+          value: (
+            <Button variant="link" href={href}>
+              {`${i.origin.of.name} v${String(i.origin.version)}`}
+            </Button>
+          ),
+        }
+      : { label: "Copied from", value: "Ticket only" },
   ];
 }
 
@@ -68,13 +60,14 @@ function useUsedIn(t: Ticket, i: Item): Fact[] | undefined {
   return [
     {
       label: "Workflow",
+      icon: "workflows",
       value: (
-        <Button variant="link" icon="workflows" href={ticketHref(t.key, "workflow")}>
+        <Button variant="link" href={ticketHref(t.key, "workflow")}>
           {`${w.name} v${String(w.from.version)}`}
         </Button>
       ),
     },
-    { label: "Stages", value: <Text tone="2">{stagesOf(i, w)}</Text> },
+    { label: "Stages", icon: "gate", value: stagesOf(i, w) },
   ];
 }
 
@@ -183,6 +176,7 @@ function Editor({ t, i, onDirty }: { t: Ticket; i: Item; onDirty: OnDirty }) {
   return (
     <ItemEditor
       title={title}
+      heading={labelOf(i)}
       item={i}
       contentTitle={contentTitle(i, i.body.kind === "blocks")}
       facts={facts(i)}

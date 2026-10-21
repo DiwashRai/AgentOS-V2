@@ -28,7 +28,7 @@ export function FileView() {
       title={[{ label: "Files", href: "/library/files" }, f.path]}
       item={f}
       contentTitle={f.body.kind === "blocks" ? "Blocks, in the order agents read them" : "Content"}
-      name={{ label: "Path", value: f.path, mono: true }}
+      name={{ label: "Path", value: f.path }}
       facts={[{ label: "Size", value: <Text tone="2">{sizeText(f.size)}</Text> }]}
       usedBy={f.used_by}
       siblings={{

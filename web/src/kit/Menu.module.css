@@ -5,7 +5,7 @@
 }
 .rule {
   height: var(--line-1);
-  margin: var(--sp-2) calc(var(--sp-2) * -1);
+  margin: var(--sp-3) calc(var(--sp-3) * -1);
   background: var(--pop-rule);
 }
 .out {

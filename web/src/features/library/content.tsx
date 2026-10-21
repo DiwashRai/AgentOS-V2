@@ -1,7 +1,7 @@
-// The item editor's main column: the content as the page's own text, monospace markdown filling the
-// column (an agent's instructions, a SKILL.md, a file), or AGENTS.md as its named blocks: each a
-// section of the document under its name as a heading, its length, a fold to its first line,
-// Move up and Move down after it (and its handle, to drag it or step it with ↑ ↓), edited in place.
+// The item editor's main column: the content as a sheet, its head strip over monospace markdown
+// filling the column (an agent's instructions, a SKILL.md, a file), or AGENTS.md as its named
+// blocks: each a sheet of its own, its head the fold, its name to edit as a heading, its length and
+// the pair of Move up and Move down (and its handle, to drag it or step it with ↑ ↓).
 import { useState } from "react";
 
 import type { Block, ItemBody } from "../../api/types";
@@ -20,12 +20,55 @@ interface BlockCardProps {
   onMove: (to: number) => void;
 }
 
-/** A block's head: its name to edit as a heading, its length, the fold, and the click way to
- *  reorder it. */
+const lines = (text: string) => plural(text.split("\n").length, "line");
+
+/** Move up and Move down, a pair apart from the rest of the head; an end's one faded. */
+function Moves({ name, at, of, onMove }: { name: string; at: number; of: number } & MoveTo) {
+  const step = (to: number, blocked: string) =>
+    to < 0 || to >= of
+      ? { blocked }
+      : {
+          onClick: () => {
+            onMove(to);
+          },
+        };
+  return (
+    <Stack dir="row" align="center">
+      <Button
+        variant="quiet"
+        size="xs"
+        icon="up"
+        title={`Move ${name} up`}
+        {...step(at - 1, "Already first")}
+      />
+      <Button
+        variant="quiet"
+        size="xs"
+        icon="chevron"
+        title={`Move ${name} down`}
+        {...step(at + 1, "Already last")}
+      />
+    </Stack>
+  );
+}
+
+interface MoveTo {
+  onMove: (to: number) => void;
+}
+
+/** A block's head strip: the fold, its name to edit as a heading (folded, its first line after
+ *  it), its length, and the click way to reorder it. */
 function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardProps) {
   const name = block.name || "this block";
   return (
-    <Stack dir="row" gap={3} align="center">
+    <Stack dir="row" gap={4} align="center" grow>
+      <Button
+        variant="quiet"
+        size="xs"
+        icon={open ? "caret" : "right"}
+        title={open ? `Fold ${name}` : `Unfold ${name}`}
+        onClick={onFold}
+      />
       <Stack grow>
         <Field
           look="heading"
@@ -37,42 +80,17 @@ function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardP
           }}
         />
       </Stack>
+      {open ? null : (
+        <Stack grow>
+          <Text variant="code" tone="3" truncate>
+            {firstLine(block)}
+          </Text>
+        </Stack>
+      )}
       <Text variant="meta" tone="3" tabular>
-        {plural(block.text.split("\n").length, "line")}
+        {lines(block.text)}
       </Text>
-      <Button
-        variant="quiet"
-        size="xs"
-        icon={open ? "caret" : "right"}
-        title={open ? `Fold ${name}` : `Unfold ${name}`}
-        onClick={onFold}
-      />
-      <Button
-        variant="quiet"
-        size="xs"
-        icon="up"
-        title={`Move ${name} up`}
-        {...(at === 0
-          ? { blocked: "Already first" }
-          : {
-              onClick: () => {
-                onMove(at - 1);
-              },
-            })}
-      />
-      <Button
-        variant="quiet"
-        size="xs"
-        icon="chevron"
-        title={`Move ${name} down`}
-        {...(at === of - 1
-          ? { blocked: "Already last" }
-          : {
-              onClick: () => {
-                onMove(at + 1);
-              },
-            })}
-      />
+      <Moves name={name} at={at} of={of} onMove={onMove} />
     </Stack>
   );
 }
@@ -80,24 +98,16 @@ function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardP
 function BlockCard(props: BlockCardProps) {
   const { block, open, onChange } = props;
   return (
-    <Stack gap={3}>
-      <BlockHead {...props} />
-      {open ? (
-        <TextArea
-          bare
-          label={`${block.name} block`}
-          value={block.text}
-          lines={2}
-          onChange={(text) => {
-            onChange({ ...block, text });
-          }}
-        />
-      ) : (
-        <Text variant="code" tone="3" truncate>
-          {firstLine(block)}
-        </Text>
-      )}
-    </Stack>
+    <TextArea
+      head={<BlockHead {...props} />}
+      folded={!open}
+      label={`${block.name} block`}
+      value={block.text}
+      lines={2}
+      onChange={(text) => {
+        onChange({ ...block, text });
+      }}
+    />
   );
 }
 
@@ -124,7 +134,9 @@ function Blocks({
   return (
     <Sortable
       label="AGENTS.md blocks"
-      gap={6}
+      gap={5}
+      // the handles hang in the document's margin, so a sheet's edge is the property rows' left edge
+      gutter={false}
       onMove={move}
       items={blocks.map((b, i) => {
         const key = keys[i] ?? b.name;
@@ -158,6 +170,18 @@ function Blocks({
   );
 }
 
+/** A sheet's head over the whole text: what it is (Instructions, the path) and its length. */
+function Head({ title, text }: { title: string; text: string }) {
+  return (
+    <Stack dir="row" gap={4} align="center" grow>
+      <Text variant="label">{title}</Text>
+      <Text variant="meta" tone="3" tabular>
+        {lines(text)}
+      </Text>
+    </Stack>
+  );
+}
+
 /** The content editor for a body: its own words over it say what it is (Instructions, the path). */
 export function Content({
   body,
@@ -168,16 +192,13 @@ export function Content({
   title: string;
   onChange: (body: ItemBody) => void;
 }) {
-  const head = (
-    <Text variant="meta" weight={500}>
-      {title}
-    </Text>
-  );
   switch (body.kind) {
     case "blocks":
       return (
         <Stack gap={5}>
-          {head}
+          <Text variant="meta" tone="3">
+            {title}
+          </Text>
           <Blocks
             blocks={body.blocks}
             onChange={(blocks) => {
@@ -188,33 +209,27 @@ export function Content({
       );
     case "text":
       return (
-        <Stack gap={4} grow>
-          {head}
-          <TextArea
-            bare
-            label={title}
-            value={body.text}
-            fill
-            onChange={(text) => {
-              onChange({ kind: "text", text });
-            }}
-          />
-        </Stack>
+        <TextArea
+          head={<Head title={title} text={body.text} />}
+          label={title}
+          value={body.text}
+          fill
+          onChange={(text) => {
+            onChange({ kind: "text", text });
+          }}
+        />
       );
     case "agent":
       return (
-        <Stack gap={4} grow>
-          {head}
-          <TextArea
-            bare
-            label={title}
-            value={body.agent.instructions}
-            fill
-            onChange={(instructions) => {
-              onChange({ kind: "agent", agent: { ...body.agent, instructions } });
-            }}
-          />
-        </Stack>
+        <TextArea
+          head={<Head title={title} text={body.agent.instructions} />}
+          label={title}
+          value={body.agent.instructions}
+          fill
+          onChange={(instructions) => {
+            onChange({ kind: "agent", agent: { ...body.agent, instructions } });
+          }}
+        />
       );
   }
 }

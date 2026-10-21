@@ -27,7 +27,7 @@ export function SkillView() {
       title={[{ label: "Skills", href: "/library/skills" }, s.name]}
       item={{ ...s, body: { kind: "text", text: s.content } }}
       contentTitle="SKILL.md"
-      name={{ label: "Name", value: s.name, mono: false }}
+      name={{ label: "Name", value: s.name }}
       description={s.description}
       facts={[
         {

@@ -102,15 +102,14 @@
   field-sizing: fixed;
   resize: none;
 }
-/* a document's own words (Field's looks, a bare TextArea): no box, the text flush with the column
-   (its padding pulled back into the gutter), a faint wash on hover, the ring alone on focus */
+/* a document's own words (Field's looks): no box, the text flush with the column (its padding
+   pulled back into the gutter), a faint wash on hover, the ring alone on focus */
 .ghost {
   width: calc(100% + var(--sp-3) * 2);
   margin-inline: calc(var(--sp-3) * -1);
   padding: var(--sp-1) var(--sp-3);
   border-color: transparent;
   background: none;
-  resize: none;
 }
 .ghost:is(:hover, :focus-within) {
   border-color: transparent;
@@ -131,6 +130,44 @@
 .heading {
   font-size: var(--fs-5);
   font-weight: 600;
+}
+
+/* a sheet (an item editor's content): a framed panel, its head strip ruled off over the text; the
+   edge firms on hover, and while the text has the focus the whole is ringed in your move's accent */
+.sheet {
+  border: var(--line-1) solid var(--tk-card-edge);
+  border-radius: var(--r-4);
+  background: var(--tk-card);
+  transition:
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
+}
+.sheet:hover {
+  border-color: var(--ctl-edge-hover);
+}
+.sheet:has(> .leaf:focus) {
+  border-color: var(--you);
+  box-shadow: 0 0 0 var(--line-3) var(--card-open-ring);
+}
+.sheetHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: calc(var(--h-field) + var(--sp-5));
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-6);
+  border-bottom: var(--line-1) solid var(--tk-card-edge);
+}
+.sheetHead:last-child {
+  border-bottom: 0;
+}
+.leaf,
+.leaf:is(:hover, :focus-within) {
+  padding: var(--sp-6) var(--sp-8) var(--sp-8);
+  border: 0;
+  border-radius: 0 0 var(--r-4) var(--r-4);
+  background: none;
+  outline: none;
+  resize: none;
 }
 
 /* the pop-out: a quiet button in the area's top right corner, shown on hover and focus */

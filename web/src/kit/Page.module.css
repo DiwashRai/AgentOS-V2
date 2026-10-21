@@ -12,6 +12,8 @@
   gap: var(--sp-8);
   height: var(--h-top);
   min-width: 0;
+  /* room at its end for what sits over it there (a full dialog's close) */
+  padding-right: var(--top-end, 0);
 }
 .title {
   flex: none;
@@ -154,14 +156,13 @@
   margin-right: calc(var(--gutter) * -1);
   border-top: var(--line-1) solid var(--tk-card-edge);
 }
-/* a rail of settings (an item editor's properties) is narrower than a reading column, so the
-   content beside it keeps the width */
-.split[data-side="rail"] {
-  grid-template-columns: minmax(0, 1fr) var(--w-rail);
-}
 /* the body: one calm reading column, room under its last line when scrolled to the end */
 .split > .body {
   padding: var(--sp-10) var(--sp-10) calc(var(--sp-10) * 2) 0;
+}
+/* a document: the reading column centred under the bar, room above and under it */
+.doc {
+  padding: calc(var(--sp-10) + var(--sp-7)) 0 calc(var(--sp-10) * 2);
 }
 /* the measure carries the body's column on: at least the body's height, so an editor's growing
    content (a filled text area) takes the rest of the window */
@@ -172,11 +173,6 @@
   width: 100%;
   max-width: var(--w-ticket);
   margin-inline: auto;
-}
-/* beside a rail of settings the body is an editor: flush with the title, out to the rail's gutter,
-   so it lines up the same full window over the ticket as beside the sidebar */
-.split[data-side="rail"] .measure {
-  max-width: none;
 }
 /* the column beside: Linear's issue sidebar, a tinted rail ruled off by one hairline and run out to
    the sheet's edge, full height, so what it holds can pin its foot (Talk's reply box) to the

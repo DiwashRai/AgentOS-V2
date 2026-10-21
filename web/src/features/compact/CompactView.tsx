@@ -54,7 +54,8 @@ const COLUMNS: readonly Column[] = [
 
 const PLAN_MAX = 6;
 
-/** A group's band takes its state's hue: the ones that call for a look; the waiting ones stay ink. */
+/** A group's count takes its state's hue (its band stays grey): the ones that call for a look; the
+ *  waiting ones stay ink. */
 const TONE: Record<Group, "neutral" | "you" | "live" | "blocked" | "done"> = {
   needs_you: "you",
   blocked: "blocked",

@@ -149,7 +149,11 @@ function HeadLine({ stage, run }: { stage: Stage; run: LastRun | null }) {
         </Text>
       ) : null}
       <Stack grow />
-      {stage.enabled ? null : <Text variant="meta">Skipped</Text>}
+      {stage.enabled ? null : (
+        <Text variant="meta" tone="2">
+          Skipped
+        </Text>
+      )}
       <RoleMark stage={stage} />
     </Stack>
   );
@@ -162,7 +166,7 @@ export function StageSummary({ stage, lib, show = "all", run, fresh }: SummaryPr
       <HeadLine stage={stage} run={run ?? null} />
       <Who stage={stage} lib={lib} />
       {prompt ? (
-        <Text variant="code" truncate title={prompt}>
+        <Text variant="code" tone="2" truncate title={prompt}>
           {firstLine(prompt)}
         </Text>
       ) : null}

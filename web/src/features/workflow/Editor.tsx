@@ -14,6 +14,7 @@ import {
   Chip,
   type DragPayload,
   Drop,
+  FormRow,
   Icon,
   Lane,
   type LaneLoop,
@@ -76,8 +77,7 @@ function ContextStrip({ draft, lib, fresh, land }: Lands & { draft: Draft; lib: 
   };
   return (
     <Drop accept={["skill", "file"]} onDrop={add} label="Give every stage">
-      <Stack dir="row" gap={4} align="center" wrap>
-        <Text tone="3">Every stage gets</Text>
+      <FormRow label="Every stage gets">
         {(["skills", "files"] as const).flatMap((kind) =>
           c[kind].map((id) => {
             const ref = `${kind}:${id}`;
@@ -96,7 +96,7 @@ function ContextStrip({ draft, lib, fresh, land }: Lands & { draft: Draft; lib: 
           }),
         )}
         <Text variant="meta">Drop a skill or a file here</Text>
-      </Stack>
+      </FormRow>
     </Drop>
   );
 }
@@ -244,29 +244,32 @@ function loopsOf(draft: Draft, problems: Problems): LaneLoop[] {
   }));
 }
 
-/** Undo and Redo (one look in every state, a blocked one in the muted ink), Discard and Save,
- *  which says how many problems there are. */
+/** Undo and Redo (quiet glyphs, a blocked one faded), Discard quiet and Save the bar's one filled
+ *  button (faded while there is nothing to save), which says how many problems there are. */
 function Actions({ draft, problems }: { draft: Draft; problems: number }) {
   const save = problems > 0 ? `Save · ${plural(problems, "problem")}` : "Save";
   return (
     <>
       <Button
+        variant="quiet"
         icon="undo"
         title="Undo"
         {...(draft.canUndo ? { onClick: draft.undo } : { blocked: "Nothing to undo" })}
       />
       <Button
+        variant="quiet"
         icon="redo"
         title="Redo"
         {...(draft.canRedo ? { onClick: draft.redo } : { blocked: "Nothing to redo" })}
       />
       <Button
+        variant="quiet"
         {...(draft.dirty ? { onClick: draft.discard } : { blocked: "No changes to discard" })}
       >
         Discard
       </Button>
       <Button
-        variant={draft.dirty ? "you" : "default"}
+        variant="you"
         {...(draft.dirty
           ? {
               onClick: draft.save,

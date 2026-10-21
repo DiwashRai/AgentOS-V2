@@ -11,7 +11,7 @@ export { Card, type CardProps } from "./Card";
 export { Checkbox, type CheckboxProps } from "./Checkbox";
 export { type CheckItem, Checklist, type ChecklistProps } from "./Checklist";
 export { Composer, type ComposerProps } from "./Composer";
-export { Chip, type ChipProps } from "./Chip";
+export { Chip, type ChipDot, type ChipProps } from "./Chip";
 export { Compare, type CompareCell, type CompareProps, type CompareSide } from "./Compare";
 export { Dialog, type DialogAsk, type DialogProps } from "./Dialog";
 export type { DragPayload } from "./dnd";
