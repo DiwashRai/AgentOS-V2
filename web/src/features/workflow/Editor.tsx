@@ -32,6 +32,7 @@ import {
   addToStage,
   insertStage,
   moveStage,
+  noGateAfter,
   type Problems,
   problemsOf,
   type RefKind,
@@ -88,7 +89,7 @@ function ContextStrip({ draft, lib, fresh, land }: Lands & { draft: Draft; lib: 
               return (
                 <Chip
                   key={flash ? `${ref}:${String(fresh.n)}` : ref}
-                  lead={<Icon name={kind} />}
+                  lead={kind}
                   label={refName(lib, kind, id)}
                   flash={flash}
                   onRemove={() => {
@@ -174,10 +175,12 @@ function dropOnto(draft: Draft, s: Stage, p: DragPayload, land: Lands["land"]) {
 function stagesOf({ draft, lib, problems, selected, select, fresh, land }: LaneParts): LaneStage[] {
   return draft.body.stages.map((s) => {
     const here = fresh?.stage === s.id ? fresh : null;
+    const barred = noGateAfter(draft.body, s.id);
     return {
       id: s.id,
       label: s.name,
       gate: s.gate?.label ?? null,
+      ...(barred !== undefined ? { noGate: barred } : {}),
       content: (
         <Drop
           accept={s.kind === "agent" ? ["agent", "skill", "file"] : ["skill", "file"]}
@@ -190,7 +193,7 @@ function stagesOf({ draft, lib, problems, selected, select, fresh, land }: LaneP
             label={s.name}
             face={<StageFace stage={s} lib={lib} />}
             off={!s.enabled}
-            problem={problems.stages.get(s.id)}
+            problem={problems.stages.get(s.id)?.text}
             onOpen={() => {
               select(selected === s.id ? null : s.id);
             }}

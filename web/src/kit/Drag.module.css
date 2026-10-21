@@ -61,15 +61,17 @@
   pointer-events: none;
 }
 
-/* a sortable list keeps its handles' gutter at its left itself; a Lane, which reserves one for its
-   loop bands too, sets it to none */
+/* a sortable list keeps its handles' gutter at its left itself, unless its owner keeps one (a Lane) */
 .sortable {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--gap);
   min-width: 0;
-  padding-left: var(--sortable-gutter, calc(var(--w-grip) + var(--sp-5)));
+  padding-left: calc(var(--w-grip) + var(--sp-5));
+}
+.sortable[data-gutter="none"] {
+  padding-left: 0;
 }
 .slot {
   position: relative;

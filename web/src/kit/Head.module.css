@@ -111,7 +111,10 @@
 .line .toggle {
   flex: 1;
   min-width: 0;
-  margin-left: calc(var(--sp-9) * -1);
+}
+/* the line's chevron sits at the inset, its glyph's own width, where the list's rows start */
+.line .chev {
+  width: auto;
 }
 .line .rule {
   display: none;

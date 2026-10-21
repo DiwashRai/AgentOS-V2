@@ -268,3 +268,22 @@ export function footOf(rows: readonly TicketRow[]): {
     repos: new Set(rows.map((t) => t.repo).filter((r) => r !== null)).size,
   };
 }
+
+/** The state's word when a chip names no one (a run with no agent named yet). */
+const STATE_WORD: Record<MarkModel["kind"], string> = {
+  run: "Running",
+  wait: "Waiting",
+  you: "Your move",
+  blk: "Blocked",
+  done: "Done",
+  abandoned: "Abandoned",
+  queued: "Queued",
+  idle: "Inbox",
+};
+
+/** A Now chip's words: the ask for your move, else who or what and its ask ("Bea · Sign off"). */
+export function chipWords(m: MarkModel): string {
+  if (m.kind === "you") return m.ask ?? STATE_WORD.you;
+  const who = m.name ?? STATE_WORD[m.kind];
+  return m.ask ? `${who} · ${m.ask}` : who;
+}

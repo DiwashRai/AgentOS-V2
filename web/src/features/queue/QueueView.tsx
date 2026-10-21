@@ -5,7 +5,6 @@ import type { Person, TicketRow } from "../../api/types";
 import { groupOf, stageModel, stepText } from "../../domain/board";
 import { age, elapsed, matches } from "../../domain/format";
 import {
-  Avatar,
   Badge,
   Button,
   Card,
@@ -89,8 +88,8 @@ function Item({ t, me, now, onOpen }: ItemProps) {
   );
 }
 /** A card's state, top right, as Linear's agent pill: the words (the agent and that it runs, or
- *  that it is queued), then inside the pill the agent's own glyph (a running card's; a queued one
- *  has no agent yet) overlapping the face of whose ticket it is. */
+ *  that it is queued), then inside the pill the agent's own glyph on its live disc (a running card's;
+ *  a queued one has no agent yet) and the face of whose ticket it is. */
 function AgentChip({ t }: { t: TicketRow }) {
   const a = t.attention;
   const what = a.kind === "running" ? `${a.agent} running` : "Queued";
@@ -99,12 +98,10 @@ function AgentChip({ t }: { t: TicketRow }) {
     <Chip
       label={what}
       title={`${what}${whose}`}
-      after={
-        <>
-          {a.kind === "running" ? <Icon name="agents" label={`${a.agent} agent`} /> : null}
-          {t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} size="sm" /> : null}
-        </>
-      }
+      after={{
+        agent: a.kind === "running" ? a.agent : null,
+        face: t.owner ? { name: t.owner.name, seed: String(t.owner.id) } : null,
+      }}
     />
   );
 }
@@ -149,7 +146,7 @@ function Progress({ t }: { t: TicketRow }) {
           {stepText(p)}
         </Text>
       ) : null}
-      {p ? <Meter done={p.done} total={p.total} /> : null}
+      {p ? <Meter size="edge" done={p.done} total={p.total} /> : null}
     </Stack>
   );
 }
@@ -196,7 +193,7 @@ function Chips({ t, me }: { t: TicketRow; me: Person | null }) {
       {stage ? (
         <Chip tone="fill" dot={running ? "live" : "neutral"} label={stage} title={stage} />
       ) : null}
-      {t.repo ? <Chip label={t.repo} title={t.repo} /> : null}
+      {t.repo ? <Chip tone="fill" lead="repo" label={t.repo} title={t.repo} /> : null}
     </Stack>
   );
 }
@@ -215,10 +212,12 @@ function AgentCard({ t, me, now, onOpen }: ItemProps) {
         onOpen(t.key);
       }}
     >
-      <Top t={t} now={now} run={{ id: a.run_id, running: a.kind === "running" }} />
-      <Body t={t} />
-      {/* the chips and the progress sink to the foot, so they line up across a row of cards */}
-      <Stack grow />
+      {/* the key line and the title take the free height, so the chips and the progress sink to the
+          foot and line up across a row of cards */}
+      <Stack grow gap={4}>
+        <Top t={t} now={now} run={{ id: a.run_id, running: a.kind === "running" }} />
+        <Body t={t} />
+      </Stack>
       <Chips t={t} me={me} />
       <Progress t={t} />
     </Card>

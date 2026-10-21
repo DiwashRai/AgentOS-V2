@@ -3,6 +3,7 @@
 // plan, with the reply box pinned at the panel's foot, without leaving the list. It never carries
 // gate actions; those live on the row and the ticket. The run's Cancel sits on the run's own line,
 // as on the ticket page.
+import { useState } from "react";
 import { useSearchParams } from "react-router";
 
 import { useMessages, usePlan, useTicket } from "../../api/queries";
@@ -129,7 +130,16 @@ function Loaded({ ticketKey, ...rest }: Omit<BodyProps, "t"> & { ticketKey: stri
 /** The reply box, pinned at the panel's foot once the ticket is there. */
 function Reply({ ticketKey }: { ticketKey: string }) {
   const ticket = useTicket(ticketKey);
-  return ticket.data ? <Composer label={`Say something about ${ticketKey}`} /> : null;
+  const [draft, setDraft] = useState("");
+  return ticket.data ? (
+    <Composer
+      label={`Say something about ${ticketKey}`}
+      value={draft}
+      onChange={setDraft}
+      // W0 is static: sending arrives with the API, so the draft stays
+      onSend={() => undefined}
+    />
+  ) : null;
 }
 
 export function Peek() {

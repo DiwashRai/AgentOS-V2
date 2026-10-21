@@ -1,5 +1,5 @@
-// A run's progress: one segment per step; the step in progress sweeps. One form, two sizes: a
-// hairline track along an agent card's bottom edge, and inline in a row.
+// A run's progress: one segment per step; the step in progress sweeps. One form, two sizes: inline
+// in a row (the default), and a hairline track along the bottom edge of the agent Card it is in.
 import s from "./Meter.module.css";
 import { cx } from "./vars";
 
@@ -7,7 +7,7 @@ export interface MeterProps {
   /** Steps finished. */
   done: number;
   total: number;
-  size?: "tile" | "row";
+  size?: "row" | "edge";
 }
 
 type Seg = "done" | "now" | "next";
@@ -18,7 +18,7 @@ function segments(done: number, total: number): Seg[] {
   );
 }
 
-export function Meter({ done, total, size = "tile" }: MeterProps) {
+export function Meter({ done, total, size = "row" }: MeterProps) {
   return (
     <span
       className={cx(s.meter, s[size])}

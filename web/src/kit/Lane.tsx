@@ -19,6 +19,9 @@ export interface LaneStage {
   content: ReactNode;
   /** The gate after it, by name, or none. */
   gate: string | null;
+  /** Why no gate can go after it, when none can (the workflow's rule, said by the screen): its
+   *  empty diamond is inert and says so. */
+  noGate?: string;
 }
 
 export interface LaneLoop {
@@ -82,17 +85,17 @@ interface JointProps {
   edit: LaneEdit | undefined;
 }
 
-const INSIDE = "Gates go after a loop's last stage";
-
-/** The gate's diamond on the axis: a toggle while editing, a mark when read only. Inside a loop
- *  (before its last stage) an empty slot is inert, since no gate can go there; one that got there
- *  by a reorder stays a toggle, so it can be taken off. */
-function Diamond({ st, i, edit, inside }: Omit<JointProps, "last"> & { inside: boolean }) {
+/** The gate's diamond on the axis: a toggle while editing, a mark when read only. Where no gate can
+ *  go (`noGate`) an empty slot is inert and says why; one that got there by a reorder stays a
+ *  toggle, so it can be taken off. */
+function Diamond({ st, i, edit }: Omit<JointProps, "last">) {
   if (!edit)
     return <span className={s.gate} data-on role="img" aria-label={`Gate: ${st.gate ?? ""}`} />;
   const on = st.gate !== null;
-  if (inside && !on)
-    return <span className={s.gate} data-inert role="img" aria-label={INSIDE} title={INSIDE} />;
+  if (st.noGate !== undefined && !on)
+    return (
+      <span className={s.gate} data-inert role="img" aria-label={st.noGate} title={st.noGate} />
+    );
   const say = on
     ? `Gate after ${st.label}: ${st.gate ?? ""}. Click to remove it`
     : `Add a gate after ${st.label}`;
@@ -127,12 +130,12 @@ function Insert({ st, i, last, edit }: JointProps & { edit: LaneEdit }) {
 }
 
 /** Between a card and the next: the axis, the gate's diamond and name, and the + while editing. */
-function Joint({ st, i, last, edit, inside }: JointProps & { inside: boolean }) {
+function Joint({ st, i, last, edit }: JointProps) {
   const gated = st.gate !== null;
   if (!edit && !gated && last) return null;
   return (
     <div className={s.joint} data-end={last || undefined}>
-      {edit || gated ? <Diamond st={st} i={i} edit={edit} inside={inside} /> : null}
+      {edit || gated ? <Diamond st={st} i={i} edit={edit} /> : null}
       {gated ? <span className={s.name}>{st.gate}</span> : null}
       {edit ? <Insert st={st} i={i} last={last} edit={edit} /> : null}
     </div>
@@ -148,7 +151,7 @@ interface RowProps extends JointProps {
  *  loop ends here, where the loop's foot goes instead). */
 function Row({ st, i, last, edit, pos, foot }: RowProps) {
   const inside = pos === "first" || pos === "mid";
-  const joint = <Joint st={st} i={i} last={last} edit={edit} inside={inside} />;
+  const joint = <Joint st={st} i={i} last={last} edit={edit} />;
   return (
     <div className={s.row}>
       <div className={s.block} data-loop={pos}>
@@ -183,6 +186,7 @@ export function Lane({ label, stages, loops, edit }: LaneProps) {
       {edit ? (
         <Sortable
           label={label}
+          gutter={false}
           items={rows}
           onMove={edit.onMove}
           accept={edit.accept}

@@ -29,17 +29,17 @@ export interface HeadProps {
   fold?: { open: boolean; toggle: () => void };
 }
 
-export function Head({
-  name,
-  count,
-  icon,
-  tone = "neutral",
-  note,
-  summary,
-  level = "group",
-  fold,
-}: HeadProps) {
-  const title = (
+interface TitleProps {
+  name: string;
+  count: number | undefined;
+  icon: ReactNode;
+  tone: NonNullable<HeadProps["tone"]>;
+  note: ReactNode;
+}
+
+/** The glyph or key, the name, the count, and a line's note. */
+function Title({ name, count, icon, tone, note }: TitleProps) {
+  return (
     <>
       {icon ? <span className={s.icon}>{icon}</span> : null}
       <span className={s.name}>{name}</span>
@@ -48,7 +48,31 @@ export function Head({
           {count}
         </Badge>
       ) : null}
+      {note}
     </>
+  );
+}
+
+/** The title as the fold's button, or as a heading when the group doesn't fold. */
+function Lead({ fold, title }: { fold: HeadProps["fold"]; title: ReactNode }) {
+  if (!fold) return <h2 className={s.static}>{title}</h2>;
+  return (
+    <button type="button" className={s.toggle} aria-expanded={fold.open} onClick={fold.toggle}>
+      <span className={s.chev}>
+        <Icon name="chevron" />
+      </span>
+      {title}
+    </button>
+  );
+}
+
+export function Head(props: HeadProps) {
+  const { name, count, icon, tone = "neutral", note, summary, level = "group", fold } = props;
+  // a line's note belongs to its name ("didn't answer"), inside the fold that reaches across it
+  const noteEl = note ? <span className={s.note}>{note}</span> : null;
+  const inFold = level === "line" && fold !== undefined;
+  const title = (
+    <Title name={name} count={count} icon={icon} tone={tone} note={inFold ? noteEl : null} />
   );
   return (
     <div
@@ -56,17 +80,8 @@ export function Head({
       data-head={level}
       data-row={level === "line" ? "" : undefined}
     >
-      {fold ? (
-        <button type="button" className={s.toggle} aria-expanded={fold.open} onClick={fold.toggle}>
-          <span className={s.chev}>
-            <Icon name="chevron" />
-          </span>
-          {title}
-        </button>
-      ) : (
-        <h2 className={s.static}>{title}</h2>
-      )}
-      {note ? <span className={s.note}>{note}</span> : null}
+      <Lead fold={fold} title={title} />
+      {inFold ? null : noteEl}
       <span className={s.rule} aria-hidden="true" />
       {summary ? <span className={s.summary}>{summary}</span> : null}
     </div>

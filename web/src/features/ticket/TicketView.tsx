@@ -129,12 +129,17 @@ function Talk({ t, me }: { t: Ticket; me: Person | null }) {
   const messages = useMessages(t.key).data?.items ?? [];
   const people = [...new Map(messages.map((m) => [m.author.id, m.author])).values()];
   const others = people.filter((p) => p.id !== me?.id).map((p) => firstName(p.name));
+  const [draft, setDraft] = useState("");
   return (
     <Stack gap={9} grow>
       <TalkHead people={people} />
       <Thread messages={messages.map((m) => threadMessage(m, me))} />
       <Composer
         label={others.length > 0 ? `Say something to ${others.join(" and ")}` : "Say something"}
+        value={draft}
+        onChange={setDraft}
+        // W0 is static: sending arrives with the API, so the draft stays
+        onSend={() => undefined}
       />
     </Stack>
   );

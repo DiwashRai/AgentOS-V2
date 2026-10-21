@@ -2,9 +2,10 @@
 // AGENTS.md): at least `lines` tall and growing with its text, or filling its column. Every area
 // can pop out to the whole window, for long text: the same value, edited at a readable measure,
 // and Done or Esc brings it back (inside an overlay too: it opens over it).
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "./Button";
+import { useDescribed } from "./described";
 import { Dialog } from "./Dialog";
 import s from "./Form.module.css";
 import { Page } from "./Page";
@@ -24,11 +25,23 @@ export interface TextAreaProps {
 
 export function TextArea({ label, value, onChange, placeholder, lines = 3, fill }: TextAreaProps) {
   const [out, setOut] = useState(false);
+  const popped = useRef<HTMLTextAreaElement>(null);
+  const described = useDescribed();
+  // popped out, the text has the focus (after the window's own, which takes it as it opens)
+  useEffect(() => {
+    if (!out) return;
+    const f = requestAnimationFrame(() => popped.current?.focus());
+    return () => {
+      cancelAnimationFrame(f);
+    };
+  }, [out]);
   const area = (full: boolean) => (
     <textarea
+      ref={full ? popped : undefined}
       className={cx(s.box, s.area, (full || fill === true) && s.fill)}
       style={vars({ "--lines": String(lines) })}
       aria-label={label}
+      {...described}
       value={value}
       placeholder={placeholder}
       spellCheck={false}
@@ -41,7 +54,7 @@ export function TextArea({ label, value, onChange, placeholder, lines = 3, fill 
     setOut(false);
   };
   return (
-    <div className={cx(s.areaWrap, fill && s.fill)}>
+    <div className={cx(s.areaWrap, fill && s.areaFill)}>
       {area(false)}
       <span className={s.pop}>
         <Button

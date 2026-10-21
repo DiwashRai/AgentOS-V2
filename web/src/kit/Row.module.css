@@ -167,9 +167,6 @@
 .band:not(.flat) .cell:first-child {
   padding-top: var(--sp-3);
 }
-.band:not(.flat) .cell:first-child > :last-child {
-  margin-top: var(--sp-2);
-}
 /* the stage names sit over the cards' own text, inset as the cards' keys are */
 .band.flat .cell {
   justify-content: center;

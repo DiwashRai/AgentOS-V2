@@ -85,24 +85,6 @@ export function markOf(a: Attention, me: Person | null): MarkModel {
   }
 }
 
-/** The 3px status edge: you blue, running vermilion, blocked and abandoned crimson, done green. */
-export type Edge = "you" | "live" | "blocked" | "done" | "quiet";
-
-export function edgeOf(t: Pick<TicketRow, "attention">, me: Person | null): Edge {
-  const a = t.attention;
-  if (a.kind === "done") return a.outcome === "abandoned" ? "blocked" : "done";
-  const edges: Record<Group, Edge> = {
-    needs_you: "you",
-    running: "live",
-    blocked: "blocked",
-    done: "done",
-    queued: "quiet",
-    waiting: "quiet",
-    inbox: "quiet",
-  };
-  return edges[groupOf(t, me)];
-}
-
 // ------------------------------------------------------------------ the stage glyph's model
 
 export interface GlyphGate {

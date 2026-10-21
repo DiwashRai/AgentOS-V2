@@ -30,29 +30,46 @@
   height: var(--h-field);
   padding: 0 var(--sp-5);
 }
-/* a search: the glyph inside the box at its start, the text after it */
-.searchWrap {
-  position: relative;
+/* search: the kit's one search box, the glyph, the text and a "/" keycap; as wide as its slot */
+.search {
   display: flex;
   align-items: center;
+  gap: var(--sp-4);
   width: 100%;
-}
-.searchWrap > :first-child {
-  position: absolute;
-  left: var(--sp-5);
-  display: inline-flex;
+  min-width: var(--col-lg);
+  height: var(--h-control);
+  padding: 0 var(--sp-3) 0 var(--sp-5);
+  border: var(--line-1) solid var(--rule);
+  border-radius: var(--r-3);
+  background: var(--raised);
   color: var(--ink-3);
-  pointer-events: none;
+  font-size: var(--fs-3);
+  transition: border-color var(--dur-fast);
 }
-.searchWrap svg {
-  width: var(--sp-6);
-  height: var(--sp-6);
+.search:hover {
+  border-color: var(--rule-strong);
 }
-.find {
-  padding-left: calc(var(--sp-5) + var(--sp-6) + var(--sp-4));
+.search:focus-within {
+  border-color: var(--rule-strong);
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--line-2);
 }
-.find::-webkit-search-cancel-button {
-  display: none;
+.findInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: var(--ink-1);
+  font-size: var(--fs-3);
+  appearance: none;
+}
+.findInput::placeholder {
+  color: var(--ink-3);
+}
+.findInput::-webkit-search-cancel-button {
+  appearance: none;
 }
 .mono {
   font-family: var(--font-mono);
@@ -86,13 +103,22 @@
 .areaWrap {
   position: relative;
   display: flex;
+  flex: 1 1 100%;
   flex-direction: column;
+  width: 100%;
   min-width: 0;
 }
+/* filling its column: the wrapper takes the height, the area fills the wrapper */
+.areaFill {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+}
+/* clear of the area's scrollbar */
 .pop {
   position: absolute;
   top: var(--sp-2);
-  right: var(--sp-2);
+  right: var(--sp-6);
   opacity: 0;
   transition: opacity var(--dur-fast) ease;
 }

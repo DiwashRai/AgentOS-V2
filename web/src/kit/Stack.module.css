@@ -34,5 +34,10 @@
   align-items: start;
 }
 .cols[data-cols="2"] {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--w-form-col)), 1fr));
+  /* two columns, each at least half the width (so never three), falling to one when a column
+     would be narrower than a form column */
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, max(var(--w-form-col), calc((100% - var(--gap)) / 2))), 1fr)
+  );
 }

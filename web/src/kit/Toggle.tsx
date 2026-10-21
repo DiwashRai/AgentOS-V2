@@ -1,5 +1,6 @@
 // An on/off setting as Linear's switch (enabled, resume, needs a repo, writable by agents): a
 // button with the switch role, so Space and a click flip it.
+import { useDescribed } from "./described";
 import s from "./Form.module.css";
 
 export interface ToggleProps {
@@ -10,12 +11,14 @@ export interface ToggleProps {
 }
 
 export function Toggle({ label, on, onChange }: ToggleProps) {
+  const described = useDescribed();
   return (
     <button
       type="button"
       role="switch"
       aria-checked={on}
       aria-label={label}
+      {...described}
       title={label}
       className={s.switch}
       onClick={() => {

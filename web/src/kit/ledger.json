@@ -53,7 +53,7 @@
             "sm": "A face inside a pill (16px): an agent card's state chip.",
             "md": "Rows, heads and pickers (20px), neutral.",
             "mid": "A neutral face whose initials must read (24px): All teams' team faces.",
-            "lg": "A larger face (30px): the kit sheet's; no screen draws it now.",
+            "lg": "The signed-in face in the sidebar's account popover (30px).",
             "talk": "The conversation and the sidebar head's signed-in face (24px), on the person's hue."
           }
         },
@@ -146,31 +146,31 @@
       "why": "A card: one object on its own surface, the whole of it one button. Three looks on one surface and one activation (a workflow stage, an agent at work, a ticket on a board).",
       "props": {
         "label": {
-          "why": "The stage's name, for the summary button (Edit Implement, Close Implement)."
+          "why": "What it is: a stage's button says Edit Implement or Close Implement; an agent's or a ticket's says what it opens (Peek at NW-17: …)."
         },
         "face": {
-          "why": "An agent's face or a shell stage's glyph, in the slot the lane's axis runs through."
+          "why": "A stage's face (an agent's, or a shell's glyph), in the slot the lane's axis runs through."
         },
         "children": {
-          "why": "The summary: name, phase, agent or command, effort, the prompt's first line, chips, the check or maker mark."
+          "why": "Its lines: a stage's summary; an agent's key, title, chips and progress; a ticket's key, title and state."
         },
         "open": {
           "why": "The selected stage's settings, drawn in place under the summary (the owner's rule: no dialog, every field visible)."
         },
         "onOpen": {
-          "why": "A click on the summary selects the card or closes it; none draws it read only (the ticket's Workflow tab)."
+          "why": "A click (or Enter) anywhere but its own controls: selects a stage (none: read only), or opens a peek at the agent's or ticket's ticket."
         },
         "off": {
-          "why": "A disabled stage is dimmed (the spec's rule), still in its place on the lane."
+          "why": "A disabled stage is dimmed, still in its place; a queued agent recedes to a hairline."
         },
         "problem": {
-          "why": "Inline validation (a gate inside a loop, a prompt naming an unknown field), at the card's foot in the blocked ink."
+          "why": "A stage's inline validation (a gate inside a loop, a prompt naming an unknown field), at its foot in the blocked ink."
         },
         "look": {
           "why": "Stages, agents at work and board tickets are cards in three places.",
           "values": {
             "stage": "A workflow stage on the lane: its face on the axis, opening in place to its settings (the default).",
-            "agent": "An agent at work (My queue): its lines down to the card's foot; a Meter lies along its bottom edge.",
+            "agent": "An agent at work (My queue): its lines down to the card's foot, an edge Meter along its bottom edge.",
             "ticket": "A ticket on a board (All teams): its key, title and state chip on a hairline card."
           }
         }
@@ -189,16 +189,16 @@
           "why": "A click in the library panel adds a chip that may be far below the fold: it scrolls into view and flashes once, so the click visibly landed."
         },
         "lead": {
-          "why": "A small glyph before the words: an Icon (skills, files, repo), or a still Mark glyph."
+          "why": "A small glyph before the words (skills, files, the repo, the clock, a version); one or the other with a dot."
         },
         "dot": {
-          "why": "A dot in a state's hue before the words: a row's stage, a verdict, drift.",
+          "why": "A dot in a state's hue before the words, instead of a glyph: a row's stage, a verdict, drift.",
           "values": {
             "neutral": "No state of its own (a queued card's stage).",
             "live": "Running.",
             "you": "Your move, or the library's newer version.",
             "blocked": "Failed or blocked.",
-            "done": "Passed, complete, the default."
+            "done": "Passed, complete, the default workflow."
           }
         },
         "tone": {
@@ -206,15 +206,14 @@
           "values": {
             "line": "A hairline, no fill: the default.",
             "fill": "A faint fill on the hairline: an agent card's chips, a board card's state, a stage's phase.",
-            "strong": "The words in full ink: a ticket's type.",
-            "blocked": "The words in the blocked ink: a high priority, a conflict."
+            "blocked": "The words in the blocked ink: a conflict."
           }
         },
         "title": {
           "why": "The full text on hover, when it says more than the words."
         },
         "after": {
-          "why": "Quieter, after the words: a step count, or an agent's glyph and a face."
+          "why": "Quieter, after the words: a step count; or who works on it, the agent's glyph on its live disc and the face of whose ticket it is."
         }
       }
     },
@@ -353,7 +352,7 @@
           "why": "A command or a path reads in monospace."
         },
         "search": {
-          "why": "A search over a panel's own list (the workflow editor's library): the glyph before it, Esc to clear, the input the sidebar's Search finds."
+          "why": "The kit's one search box (a view's top bar, a panel's list): the glyph, a / keycap; / focuses the top layer's, Esc clears it and never closes the overlay it is in."
         }
       }
     },
@@ -445,10 +444,10 @@
           "why": "The right slot after the hairline: a stat, links, a JQL."
         },
         "level": {
-          "why": "Three sizes of head in V1.",
+          "why": "Three heads over a list's runs.",
           "values": {
             "zone": "A band run through its surface's padding, edge to edge (My queue's Agents at work, over its cards).",
-            "group": "A list's band edge to edge (Linear's group head): Compact's and Intake's fold, My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
+            "group": "A list's band edge to edge (Linear's group head): Compact's fold, My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
             "line": "A plain line of the list (Intake's queries): on its hairline, lit like a row, its fold across it; the row a Swap in its summary answers to."
           }
         },
@@ -475,7 +474,7 @@
           "why": "The list's accessible name."
         },
         "stages": {
-          "why": "The stages in order: an id, a name for the handle, the diamond and the +, the card, and the gate after it."
+          "why": "The stages in order: an id, a name for the handle, the diamond and the +, the card, the gate after it, and why none can go there when none can."
         },
         "loops": {
           "why": "The loops by their first and last stage, each with its foot (up to N rounds, a number field while editing, what's wrong with it)."
@@ -492,13 +491,10 @@
           "why": "One form per state (MarkKind): R12's attention, plus the outcomes."
         },
         "name": {
-          "why": "Who or what, in the state's colour (in a chip, in ink on the state's dot)."
+          "why": "Who or what, in the state's colour (Builder · run #42, Bea, Blocked)."
         },
         "ask": {
           "why": "What it waits for (Sign off the plan)."
-        },
-        "text": {
-          "why": "Plain text after the label."
         },
         "glyph": {
           "why": "The glyph alone: before a row's title (its one accent), counters, legends, heads."
@@ -515,7 +511,7 @@
       }
     },
     "Meter": {
-      "why": "A running run's progress, one segment per step, the current one sweeping (V1's RunMeter).",
+      "why": "A run's progress, one segment per step, the current one sweeping (V1's RunMeter).",
       "props": {
         "done": {
           "why": "Steps finished."
@@ -526,8 +522,8 @@
         "size": {
           "why": "Two places draw a run's progress.",
           "values": {
-            "tile": "A running agent card's: one still 2px track along the card's bottom edge, the finished steps live and the one under way a soft live, under the progress line's count (a queued card draws none).",
-            "row": "Inline in a row (48px): the ticket's Now line."
+            "row": "Inline in a row (48px): the ticket's Now line; the default.",
+            "edge": "An agent Card's: one still hairline track along the card's bottom edge (the card is its containing block)."
           }
         }
       }
@@ -590,14 +586,14 @@
       }
     },
     "Override": {
-      "why": "A stage's setting over its agent's own (a model, an effort) must read without hovering and without a state's hue: a neutral dot, the value set here, the agent's own struck through after it.",
+      "why": "A value set over another it replaces (a stage's effort over its agent's): the set value, the replaced one struck through.",
       "single": "The workflow editor's stage cards and the ticket's Workflow tab (one card summary); the item editors' agent copies can take it up.",
       "props": {
         "value": {
-          "why": "The value set on the stage (xhigh)."
+          "why": "The value set (xhigh)."
         },
         "own": {
-          "why": "The agent's own value it replaces (high), struck through."
+          "why": "The value it replaces (high), struck through."
         }
       }
     },
@@ -759,6 +755,9 @@
         },
         "preview": {
           "why": "The drop line drawn at a slot: the spec's mid-drag state, as a still."
+        },
+        "gutter": {
+          "why": "A sortable list keeps its handles' gutter at its left; a Lane, which keeps one for its loop bands too, turns it off."
         }
       }
     },
@@ -800,10 +799,10 @@
           "why": "Take the free space (and push the rest along)."
         },
         "cols": {
-          "why": "Equal columns (run tiles, the rack).",
+          "why": "A grid instead of a line.",
           "values": {
-            "2": "A form's settings side by side (a stage's settings), one under the other where too narrow for two.",
-            "3": "The run tiles (three at most)."
+            "2": "A form's settings two side by side (each at least half the width), one under the other where a column would be narrower than a form column.",
+            "3": "Equal columns: the agents' cards (three at most)."
           }
         }
       }
@@ -1082,7 +1081,13 @@
           "why": "Its accessible name and placeholder (\"Say something to Bea and Cy\")."
         },
         "onSend": {
-          "why": "What a send does, when it is wired; none: Send does nothing yet (W0 is static)."
+          "why": "Send the draft (the button, or Ctrl/Cmd+Enter); W0 is static, so the screens keep the draft."
+        },
+        "value": {
+          "why": "The draft, held by the screen (it decides when to keep or clear it)."
+        },
+        "onChange": {
+          "why": "An edit to the draft."
         }
       }
     }

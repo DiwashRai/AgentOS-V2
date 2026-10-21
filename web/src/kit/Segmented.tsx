@@ -4,15 +4,13 @@
 // combobox, as the other pickers: its filter field, then the rows); while the pressed one is
 // among them, that chip is the pressed one (filled, its name and the chevron). The popover holds
 // only those hidden ones, each with its count right after its name, the pressed one ticked.
-import { Combobox as Base } from "@base-ui/react/combobox";
 import { useLayoutEffect, useRef, useState } from "react";
 
+import { Choice } from "./choice";
 import { Icon } from "./Icon";
-import { useLayer } from "./layer";
 import { Mark, type MarkKind } from "./Mark";
 import p from "./Popover.module.css";
 import s from "./Segmented.module.css";
-import { cx, tokenPx } from "./vars";
 
 export interface Segment {
   id: string;
@@ -124,68 +122,83 @@ interface MoreProps {
 
 function More({ label, items, value, current, onChange }: MoreProps) {
   const marked = items.some((it) => it.mark !== undefined);
-  const layer = useLayer();
   return (
-    <Base.Root
+    <Choice
+      label={label}
       items={items}
-      value={items.find((it) => it.id === value) ?? null}
-      itemToStringLabel={(it: Segment) => it.label}
-      isItemEqualToValue={(a: Segment, b: Segment) => a.id === b.id}
-      onValueChange={(it: Segment | null) => {
-        if (it !== null) onChange(it.id);
+      value={value}
+      onChange={onChange}
+      sheet={s.sheet}
+      trigger={{
+        className: s.pill,
+        ...(current ? {} : { name: `${String(items.length)} more filters` }),
+        current: current !== undefined,
+        body: (
+          <>
+            {current ? <Body it={current} /> : `+${String(items.length)}`}
+            <Chev />
+          </>
+        ),
       }}
-    >
-      <Base.Trigger
+      row={(it) => (
+        <>
+          {/* the glyph's column, kept empty for a filter without one so the names align */}
+          {marked ? (
+            <span className={s.item}>{it.mark ? <Mark kind={it.mark} glyph small /> : null}</span>
+          ) : null}
+          {it.label}
+          {it.count !== undefined ? (
+            <span className={p.aside} data-zero={it.count === 0}>
+              {it.count}
+            </span>
+          ) : null}
+        </>
+      )}
+    />
+  );
+}
+/** The pills shown, each a pressed-or-not button. */
+function Pills({ items, value, shown, onChange }: PillsProps) {
+  return items.map((it, i) =>
+    shown(i) ? (
+      <button
+        key={it.id}
+        type="button"
         className={s.pill}
-        data-current={current !== undefined}
-        aria-label={current ? undefined : `${String(items.length)} more filters`}
+        aria-pressed={it.id === value}
+        onClick={() => {
+          onChange(it.id);
+        }}
       >
-        {current ? <Body it={current} /> : `+${String(items.length)}`}
-        <Chev />
-      </Base.Trigger>
-      <Base.Portal {...layer}>
-        <Base.Positioner align="start" sideOffset={() => tokenPx("--sp-2")}>
-          <Base.Popup className={cx(p.sheet, s.sheet)} aria-label={label}>
-            <Base.Input
-              className={p.find}
-              placeholder={`Change ${label.toLowerCase()}…`}
-              aria-label={label}
-            />
-            <Base.Empty className={p.empty}>No match</Base.Empty>
-            <Base.List>
-              {(it: Segment) => (
-                <Base.Item key={it.id} value={it} className={p.row}>
-                  {/* the glyph's column, kept empty for a filter without one so the names align */}
-                  {marked ? (
-                    <span className={s.item}>
-                      {it.mark ? <Mark kind={it.mark} glyph small /> : null}
-                    </span>
-                  ) : null}
-                  {it.label}
-                  {it.count !== undefined ? (
-                    <span className={p.aside} data-zero={it.count === 0}>
-                      {it.count}
-                    </span>
-                  ) : null}
-                  <Base.ItemIndicator className={p.check}>
-                    <Icon name="check" />
-                  </Base.ItemIndicator>
-                </Base.Item>
-              )}
-            </Base.List>
-          </Base.Popup>
-        </Base.Positioner>
-      </Base.Portal>
-    </Base.Root>
+        <Body it={it} />
+      </button>
+    ) : null,
   );
 }
 
-export function Segmented({ label, items, value, onChange, fit }: SegmentedProps) {
+interface PillsProps {
+  items: readonly Segment[];
+  value: string;
+  shown: (i: number) => boolean;
+  onChange: (id: string) => void;
+}
+
+/** Every pill, as wide as the form gives it: nothing to measure. */
+function Fit({ label, items, value, onChange }: SegmentedProps) {
+  return (
+    <div className={s.track} data-fit role="group" aria-label={label}>
+      <Pills items={items} value={value} shown={() => true} onChange={onChange} />
+    </div>
+  );
+}
+
+/** As many pills as fit the bar, measured; the rest behind a "+N" chip. */
+function Measured({ label, items, value, onChange }: SegmentedProps) {
   const { track, ruler, room } = useRoom(
     items.map((it) => `${it.label}${String(it.count)}`).join(),
   );
   const pressed = items.findIndex((it) => it.id === value);
-  const shown = fit ? new Set(items.map((_, i) => i)) : shownOf(room, pressed);
+  const shown = shownOf(room, pressed);
   const rest = items.filter((_, i) => !shown.has(i));
   const pick = items[pressed];
   const current = shown.has(pressed) ? undefined : pick;
@@ -194,25 +207,10 @@ export function Segmented({ label, items, value, onChange, fit }: SegmentedProps
       ref={track}
       className={s.track}
       data-collapsed={shown.size === 0}
-      data-fit={fit === true || undefined}
       role="group"
       aria-label={label}
     >
-      {items.map((it, i) =>
-        shown.has(i) ? (
-          <button
-            key={it.id}
-            type="button"
-            className={s.pill}
-            aria-pressed={it.id === value}
-            onClick={() => {
-              onChange(it.id);
-            }}
-          >
-            <Body it={it} />
-          </button>
-        ) : null,
-      )}
+      <Pills items={items} value={value} shown={(i) => shown.has(i)} onChange={onChange} />
       {rest.length > 0 ? (
         <More label={label} items={rest} value={value} current={current} onChange={onChange} />
       ) : null}
@@ -235,4 +233,8 @@ export function Segmented({ label, items, value, onChange, fit }: SegmentedProps
       </div>
     </div>
   );
+}
+
+export function Segmented(props: SegmentedProps) {
+  return props.fit ? <Fit {...props} /> : <Measured {...props} />;
 }

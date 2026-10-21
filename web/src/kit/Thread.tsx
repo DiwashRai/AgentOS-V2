@@ -22,6 +22,8 @@ export interface ThreadProps {
 }
 
 export function Thread({ messages, look = "full" }: ThreadProps) {
+  // nothing said yet draws nothing: no empty list for assistive tech, no gap above the composer
+  if (messages.length === 0) return null;
   return (
     <ol className={cx(s.thread, s[look])} aria-label="Conversation">
       {messages.map((m, i) => {

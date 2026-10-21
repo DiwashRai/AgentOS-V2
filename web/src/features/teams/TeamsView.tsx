@@ -247,28 +247,28 @@ export function TeamsView() {
             const people = [...new Map(owners.map((p) => [p.id, p])).values()];
             return (
               <Row key={repo.name} kind="band">
-                <>
-                  <Text variant="heading" as="h2" truncate>
-                    {repoShort(repo.name)}
-                  </Text>
-                  <Text variant="meta">{repo.name}</Text>
-                  <Stack dir="row">
-                    <Avatar
-                      size="mid"
-                      people={people.map((p) => ({ name: p.name, seed: String(p.id) }))}
-                    />
+                <Stack gap={5}>
+                  <Stack gap={3}>
+                    <Text variant="heading" as="h2" truncate>
+                      {repoShort(repo.name)}
+                    </Text>
+                    <Text variant="meta">{repo.name}</Text>
+                    <Stack dir="row">
+                      <Avatar
+                        size="mid"
+                        people={people.map((p) => ({ name: p.name, seed: String(p.id) }))}
+                      />
+                    </Stack>
                   </Stack>
                   <Stack dir="row">
                     <Button variant="link" href={`/compact?repo=${encodeURIComponent(repo.name)}`}>
                       Open list →
                     </Button>
                   </Stack>
-                </>
+                </Stack>
                 {STAGES.map((st, i) =>
                   work.length === 0 && i === 0 ? (
-                    <Text key={st.phase} variant="meta" tone="3">
-                      Nothing in flight
-                    </Text>
+                    <Notice key={st.phase} kind="empty" lead="Nothing in flight" />
                   ) : (
                     <Cell
                       key={st.phase}

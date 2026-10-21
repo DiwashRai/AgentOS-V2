@@ -94,7 +94,7 @@ export function StageChips({
         return (
           <Chip
             key={flash ? `${ref}:${String(fresh.n)}` : ref}
-            lead={<Icon name={kind} />}
+            lead={kind}
             label={refName(lib, kind, id)}
             flash={flash}
             {...(onRemove

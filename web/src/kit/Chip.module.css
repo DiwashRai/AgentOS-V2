@@ -18,15 +18,11 @@
   line-height: 1;
   white-space: nowrap;
 }
-.chip:has(> .lead) {
+.chip[data-lead] {
   padding-left: var(--sp-3);
 }
 .chip[data-tone="fill"] {
   background: var(--list-chip-fill);
-}
-.chip[data-tone="strong"] {
-  color: var(--ink-1);
-  font-weight: 500;
 }
 .chip[data-tone="blocked"] {
   color: var(--blocked);
@@ -36,10 +32,6 @@
   display: inline-flex;
   flex: none;
   color: var(--prop-mark);
-}
-.lead svg {
-  width: var(--sp-6);
-  height: var(--sp-6);
 }
 .dot {
   flex: none;
@@ -65,16 +57,33 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* quieter, after the words: a step count, or an agent's glyph and a face (tucked to the edge) */
-.after {
-  display: inline-flex;
+/* after the words: a quieter count; or who works on it, the agent's glyph on its live disc and
+   the face of whose ticket it is, tucked to the pill's end */
+.count {
   flex: none;
-  align-items: center;
-  gap: var(--sp-2);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
-.chip:has(> .after > [role="img"]) {
+.who {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sp-1);
+}
+.agent {
+  display: inline-grid;
+  place-items: center;
+  width: var(--h-face-sm);
+  height: var(--h-face-sm);
+  border-radius: 50%;
+  background: var(--tile-agent);
+  color: var(--live-text);
+}
+.agent svg {
+  width: var(--w-tile-agent-glyph);
+  height: var(--w-tile-agent-glyph);
+}
+.chip[data-who] {
   padding-right: var(--sp-1);
 }
 .chip[data-removable] {

@@ -5,25 +5,44 @@ import { createContext, type ReactNode, useContext } from "react";
 import s from "./Table.module.css";
 import { cx, vars, type Width, width } from "./vars";
 
-export interface Column {
+/** How a column takes its width: its width as set; or as wide as each row's own content, up to it
+ *  (`hug`); or its width while there is room, less when the list is too narrow (`give`); or a fill
+ *  column that keeps a floor (`min`). One of them, never two. */
+type Track =
+  | { width: Width; hug?: never; give?: never; min?: never }
+  | {
+      width: Width;
+      /** As wide as each row's own content, up to width: the free width goes to the fill columns.
+       *  Each row sizes it alone, so it suits a list without a column head (Linear's right cluster). */
+      hug: true;
+      give?: never;
+      min?: never;
+    }
+  | {
+      width: Width;
+      /** Its width while there is room, less only when the list is too narrow for the fill column's
+       *  floor (a row's quiet properties, which then cut their words). */
+      give: true;
+      hug?: never;
+      min?: never;
+    }
+  | {
+      width: "fill";
+      /** A fill column's floor: it keeps this width before a hugging column takes more (a title over
+       *  its chips, when the list is narrow). */
+      min: Width;
+      hug?: never;
+      give?: never;
+    };
+
+export type Column = Track & {
   label: string;
-  width: Width;
   /** Right-align the column (ages, actions). */
   end?: boolean;
-  /** As wide as each row's own content, up to width: the free width goes to the fill columns.
-   *  Each row sizes it alone, so it suits a list without a column head (Linear's right cluster). */
-  hug?: boolean;
-  /** A fill column's floor: it keeps this width before a hugging column takes more (a title over
-   *  its chips, when the list is narrow). */
-  min?: Width;
   /** Never narrower than its content (a row's buttons): when the list is narrow, the chips give
    *  way, not the buttons. */
   keep?: boolean;
-  /** Its width while there is room, less only when the list is too narrow for the fill column's
-   *  floor (a row's quiet properties, which then cut their words). */
-  give?: boolean;
-}
-
+};
 function track(c: Column): string {
   if (c.hug) return `fit-content(${width(c.width)})`;
   if (c.min) return `minmax(${width(c.min)}, 1fr)`;

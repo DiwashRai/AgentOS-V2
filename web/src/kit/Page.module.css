@@ -133,47 +133,11 @@
   background: var(--rule);
 }
 
-/* search: 268 wide, a "/" keycap */
+/* the bar's search: 268 wide, giving way first when the bar is short */
 .search {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-4);
   flex: 0 1 var(--w-menu);
   width: var(--w-menu);
   min-width: var(--col-lg);
-  height: var(--h-control);
-  padding: 0 var(--sp-3) 0 var(--sp-5);
-  border: var(--line-1) solid var(--rule);
-  border-radius: var(--r-3);
-  background: var(--raised);
-  color: var(--ink-3);
-  font-size: var(--fs-3);
-  transition: border-color var(--dur-fast);
-}
-.search:hover {
-  border-color: var(--rule-strong);
-}
-.search:focus-within {
-  border-color: var(--rule-strong);
-  outline: var(--line-2) solid var(--focus);
-  outline-offset: var(--line-2);
-}
-.search > input {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  outline: none;
-  color: var(--ink-1);
-  font-size: var(--fs-3);
-  appearance: none;
-}
-.search > input::placeholder {
-  color: var(--ink-3);
-}
-.search > input::-webkit-search-cancel-button {
-  appearance: none;
 }
 
 /* a body with a full-height column beside it: each scrolls on its own */

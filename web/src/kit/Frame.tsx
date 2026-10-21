@@ -10,6 +10,7 @@ import { Avatar } from "./Avatar";
 import s from "./Frame.module.css";
 import { Icon, type IconName } from "./Icon";
 import p from "./Popover.module.css";
+import { activeSearch } from "./search";
 import { Select } from "./Select";
 import { applyTheme, currentTheme, THEMES, themeOf, type ThemeId } from "./theme";
 import { cx, tokenPx } from "./vars";
@@ -115,7 +116,7 @@ function Workspace({ space, me }: { space: string; me: FrameProps["me"] }) {
 
 /** The head's search: it takes you to the view's own search field (as "/" does). */
 function focusSearch() {
-  document.querySelector<HTMLInputElement>('main input[type="search"]')?.focus();
+  activeSearch()?.focus();
 }
 
 function Section({ sec, path }: { sec: NavSection; path: string }) {

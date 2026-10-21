@@ -301,10 +301,8 @@ function LaneSheet() {
         <Text variant="label">{name}</Text>
         {name === "Build" ? <Override value="xhigh" own="high" /> : null}
         <Stack dir="row" gap={3}>
-          <Chip label="tests" lead={<Icon name="skills" />} />
-          {edit ? (
-            <Chip label="AGENTS.md" lead={<Icon name="files" />} onRemove={() => undefined} />
-          ) : null}
+          <Chip label="tests" lead="skills" />
+          {edit ? <Chip label="AGENTS.md" lead="files" onRemove={() => undefined} /> : null}
         </Stack>
       </Stack>
     </Card>
@@ -418,6 +416,7 @@ export function KitSheet() {
   const [pill, setPill] = useState("all");
   const [owner, setOwner] = useState("1");
   const [tab, setTab] = useState("one");
+  const [draft, setDraft] = useState("");
   return (
     <Page title="Kit" context="Every component, every variant">
       <Surface pad={9}>
@@ -455,7 +454,7 @@ export function KitSheet() {
                 {5}
               </Badge>
               <Badge kind="kbd">Esc</Badge>
-              <Chip tone="strong" label={"Bug"} />
+              <Chip label={"Bug"} />
               <Chip tone="blocked" label={"High"} />
               <Chip label={"web"} />
               <Badge kind="you" />
@@ -656,7 +655,12 @@ export function KitSheet() {
                   },
                 ]}
               />
-              <Composer label="Say something" />
+              <Composer
+                label="Say something"
+                value={draft}
+                onChange={setDraft}
+                onSend={() => undefined}
+              />
             </Surface>
           </Section>
         </Stack>

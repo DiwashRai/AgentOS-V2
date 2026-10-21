@@ -2,6 +2,7 @@
 // and unit between − and +. Arrow keys step it; typing keeps a draft until it is a number in range.
 import { useState } from "react";
 
+import { useDescribed } from "./described";
 import s from "./Form.module.css";
 import { Icon } from "./Icon";
 import { cx } from "./vars";
@@ -18,6 +19,7 @@ export interface NumberFieldProps {
 }
 
 export function NumberField({ label, value, onChange, min, max, unit }: NumberFieldProps) {
+  const described = useDescribed();
   const [draft, setDraft] = useState<string | null>(null);
   const set = (n: number) => {
     if (Number.isInteger(n) && n >= min && n <= max) onChange(n);
@@ -40,6 +42,7 @@ export function NumberField({ label, value, onChange, min, max, unit }: NumberFi
         type="number"
         inputMode="numeric"
         aria-label={label}
+        {...described}
         min={min}
         max={max}
         value={draft ?? String(value)}

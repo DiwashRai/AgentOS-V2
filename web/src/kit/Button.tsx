@@ -12,12 +12,14 @@ interface Common {
   size?: "xs" | "sm" | "md";
   /** Why it can't be pressed now (R11): it stays focusable, does nothing, and says why. */
   blocked?: string;
-  onClick?: () => void;
-  /** A path inside the app ("/t/NW-17"), or a URL opened in a new tab. */
-  href?: string;
 }
 
+/** What it does: a click, or a link (a path inside the app, "/t/NW-17", or a URL opened in a new
+ *  tab); never both. */
+type Does = { onClick?: () => void; href?: never } | { href: string; onClick?: never };
+
 export type ButtonProps = Common &
+  Does &
   (
     | { children: ReactNode; icon?: IconName; title?: string }
     /** Icon-only: `title` is its name, so it can't be left without one. */

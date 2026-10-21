@@ -1,35 +1,50 @@
 // Linear's label chip, the kit's one pill: a stage, a repo, a skill on a stage, a property, an
 // agent's state. A pill on a hairline, regular muted words cut at their end, led by a small glyph
-// or a dot in a state's hue, with something quieter after the words (a step count, an agent and a
-// face), and, where it can be taken off, a remove at its end. A chip that was just added (or
-// clicked for again) scrolls into view and flashes once, so a click far from it shows where it
-// landed. What a chip says is the screen's to decide; the chip only draws it.
-import { type ReactNode, useEffect, useRef } from "react";
+// or a dot in a state's hue (one or the other), with something quieter after the words (a step
+// count, or an agent's glyph on its live disc and a face), and, where it can be taken off, a
+// remove at its end. A chip that was just added (or clicked for again) scrolls into view and
+// flashes once, so a click far from it shows where it landed. What a chip says is the screen's
+// to decide; the chip only draws it.
+import { useEffect, useRef } from "react";
 
+import { Avatar } from "./Avatar";
 import s from "./Chip.module.css";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 import { tokenPx } from "./vars";
 
-export interface ChipProps {
+/** A state's hue for a chip's dot. */
+export type ChipDot = "neutral" | "live" | "you" | "blocked" | "done";
+
+/** After the words: a count, or who works on it (an agent, a person's face). */
+export type ChipAfter =
+  { text: string } | { agent: string | null; face: { name: string; seed: string } | null };
+
+export type ChipProps = {
   /** Its words (tests, AGENTS.md, Implement, northwind/web). */
   label: string;
-  /** A small glyph before the words (an Icon, or a still Mark glyph). */
-  lead?: ReactNode;
-  /** A dot before the words in a state's hue, instead of a glyph. */
-  dot?: "neutral" | "live" | "you" | "blocked" | "done";
   /** line: a hairline, no fill (the default); fill: a faint fill on the hairline (an agent card's
-   *  chips, a board card's state); strong: the words in full ink (a ticket's type); blocked: the
-   *  words in the blocked ink (a high priority, a conflict). */
-  tone?: "line" | "fill" | "strong" | "blocked";
+   *  chips, a board card's state, a stage's phase); blocked: the words in the blocked ink (a
+   *  conflict). */
+  tone?: "line" | "fill" | "blocked";
   /** The full text on hover, when it says more than the words. */
   title?: string;
-  /** Quieter, after the words: a step count, or an agent's glyph and a face. */
-  after?: ReactNode;
+  after?: ChipAfter;
   /** Take it off; none draws it read only. */
   onRemove?: () => void;
   /** Just added: scroll it into view and flash it once, when it mounts. */
   flash?: boolean;
-}
+} & (
+  | {
+      /** A small glyph before the words (skills, files, the repo). */
+      lead?: IconName;
+      dot?: never;
+    }
+  | {
+      /** A dot in a state's hue before the words, instead of a glyph. */
+      dot: ChipDot;
+      lead?: never;
+    }
+);
 
 function useArrival(flash: boolean | undefined) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -59,22 +74,51 @@ function Remove({ label, onRemove }: { label: string; onRemove: () => void }) {
   );
 }
 
+/** After the words: a quieter count, or the agent's glyph on its live disc and a face. */
+function After({ after }: { after: ChipAfter }) {
+  if ("text" in after) return <span className={s.count}>{after.text}</span>;
+  return (
+    <span className={s.who}>
+      {after.agent !== null ? (
+        <span className={s.agent}>
+          <Icon name="agents" label={`${after.agent} agent`} />
+        </span>
+      ) : null}
+      {after.face ? <Avatar name={after.face.name} seed={after.face.seed} size="sm" /> : null}
+    </span>
+  );
+}
+
+/** The chip's own data attributes, for its stylesheet: its tone, and what it holds. */
+function flags({ lead, after, onRemove, flash, tone = "line" }: ChipProps) {
+  const on = (b: boolean) => b || undefined;
+  return {
+    "data-tone": tone,
+    "data-lead": on(lead !== undefined),
+    "data-who": on(after !== undefined && !("text" in after)),
+    "data-removable": on(onRemove !== undefined),
+    "data-flash": on(flash === true),
+  };
+}
+
+/** What leads the words: a state's dot, or a small glyph. */
+function Lead({ dot, lead }: Pick<ChipProps, "dot" | "lead">) {
+  if (dot) return <i className={s.dot} data-dot={dot} aria-hidden="true" />;
+  return lead ? (
+    <span className={s.lead}>
+      <Icon name={lead} />
+    </span>
+  ) : null;
+}
+
 export function Chip(props: ChipProps) {
-  const { label, lead, dot, tone = "line", title, after, onRemove, flash } = props;
+  const { label, title, after, onRemove, flash } = props;
   const ref = useArrival(flash);
   return (
-    <span
-      ref={ref}
-      className={s.chip}
-      data-tone={tone}
-      data-removable={onRemove !== undefined || undefined}
-      data-flash={flash === true || undefined}
-      title={title ?? label}
-    >
-      {dot ? <i className={s.dot} data-dot={dot} aria-hidden="true" /> : null}
-      {lead ? <span className={s.lead}>{lead}</span> : null}
+    <span ref={ref} className={s.chip} {...flags(props)} title={title ?? label}>
+      <Lead {...(props.dot ? { dot: props.dot } : { lead: props.lead })} />
       <span className={s.label}>{label}</span>
-      {after !== undefined && after !== null ? <span className={s.after}>{after}</span> : null}
+      {after ? <After after={after} /> : null}
       {onRemove ? <Remove label={label} onRemove={onRemove} /> : null}
     </span>
   );

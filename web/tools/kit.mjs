@@ -72,11 +72,18 @@ const kitShape = (x) =>
 function fieldsOf(checker, t, depth) {
   if (depth > 3) return {};
   const element = checker.isArrayType(t) ? checker.getTypeArguments(t)[0] : t;
-  const shapes = (element.isUnion() ? element.types : [element]).filter(kitShape);
+  // a kit shape, or an intersection of one with others (a column: its track's case and its common
+  // fields); a field the union's cases declare differently keeps its vocabulary and every value
+  const isKit = (x) => kitShape(x) || (x.isIntersection() && x.types.some(kitShape));
+  const shapes = (element.isUnion() ? element.types : [element]).filter(isKit);
   const items = {};
   for (const field of shapes.flatMap((x) => x.getProperties())) {
     const p = propOf(checker, field, depth + 1);
-    if (p.vocab || p.values.length || Object.keys(p.items).length) items[field.name] = p;
+    if (!(p.vocab || p.values.length || Object.keys(p.items).length)) continue;
+    const old = items[field.name];
+    items[field.name] = old
+      ? { ...old, vocab: old.vocab ?? p.vocab, values: [...new Set([...old.values, ...p.values])] }
+      : p;
   }
   return items;
 }
@@ -147,7 +154,7 @@ const linesText = (l) =>
   `${String(l.total)} lines (${String(l.code)} TS, ${String(l.css)} CSS, ${String(l.tokens)} tokens)`;
 
 /** The variants an attribute sets: a literal's value, or the literal members of an expression's
- *  type (`look={done ? "flat" : "raised"}` sets both; so does a screen's own model, `edgeOf(t)`).
+ *  type (`look={done ? "flat" : "raised"}` sets both; so does a screen's own model, `stageDot(t, me)`).
  *  An expression typed as one of the kit's own types (a `ButtonVariant` handed on) passes a value
  *  through rather than choosing one, and sets none. */
 function setBy(checker, attr) {

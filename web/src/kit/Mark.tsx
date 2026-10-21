@@ -23,8 +23,6 @@ export interface MarkProps {
   name?: string;
   /** The ask: after YOU in the you hue ("Sign off the plan"); after a name, "· ask". */
   ask?: string;
-  /** Plain text after the label. */
-  text?: string;
   /** The glyph alone (counters, legends, group heads). */
   glyph?: boolean;
   /** The small glyph of counters, pills and group heads. */
@@ -60,14 +58,13 @@ export function Mark(props: MarkProps) {
 }
 
 /** YOU stands alone; any other state shows its glyph and its name, and the ask follows the name. */
-function NamedMark({ kind, name, ask, text, small }: MarkProps) {
+function NamedMark({ kind, name, ask, small }: MarkProps) {
   const named = kind !== "you" && name !== undefined;
   return (
     <span className={cx(s.mark, s[kind], small && s.small)}>
       {kind === "you" ? <Badge kind="you" /> : <Glyph />}
       {named ? <b>{name}</b> : null}
       {ask ? <span className={s.ask}>{named ? `· ${ask}` : ask}</span> : null}
-      {text ? <span className={s.text}>{text}</span> : null}
     </span>
   );
 }

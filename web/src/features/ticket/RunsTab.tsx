@@ -155,7 +155,7 @@ function RunLine({ r, runs, w, now }: RunProps) {
         {`\u2002${after}`}
       </Text>
     </Stack>,
-    <Chip key="time" lead={<Icon name="clock" />} label={time} title={`${time} budget`} />,
+    <Chip key="time" lead="clock" label={time} title={`${time} budget`} />,
     <Text key="age" variant="meta" tone="3" tabular title={`Started ${clock(started)}`}>
       {ago(started, now)}
     </Text>,

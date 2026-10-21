@@ -35,12 +35,6 @@
   font-weight: 500;
   line-height: 1.25;
 }
-.text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--ink-2);
-}
 .ask {
   min-width: 0;
   overflow: hidden;

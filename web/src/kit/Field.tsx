@@ -1,8 +1,14 @@
 // A one-line text field (a name, a shell command, a model id): Linear's input, as wide as its slot.
-// A search field (a panel's own list) leads with the search glyph, is the page's search input to
-// the sidebar's Search, and Esc clears it (then leaves it).
-import { Icon } from "./Icon";
+// A search field (a view's search in its top bar, a panel's own list) is the kit's one search box:
+// the search glyph, the text, a "/" keycap. "/" focuses the search of the top layer; Esc clears it,
+// then leaves it, and never also closes the overlay it is in.
+import { type RefObject, useEffect, useRef } from "react";
+
+import { Badge } from "./Badge";
 import s from "./Form.module.css";
+import { Icon } from "./Icon";
+import { useDescribed } from "./described";
+import { activeSearch, isShortcut } from "./search";
 import { cx } from "./vars";
 
 export interface FieldProps {
@@ -13,16 +19,37 @@ export interface FieldProps {
   placeholder?: string;
   /** Monospace, for a command or a path. */
   mono?: boolean;
-  /** A search over a list: the glyph before it, and Esc to clear. */
+  /** A search over a list or a view: the search box. */
   search?: boolean;
 }
 
+/** "/" focuses this search when it is the top layer's. */
+function useSlash(ref: RefObject<HTMLInputElement | null>, on: boolean) {
+  useEffect(() => {
+    if (!on) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "/" || !isShortcut(e) || activeSearch() !== ref.current) return;
+      e.preventDefault();
+      ref.current?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [ref, on]);
+}
+
 export function Field({ label, value, onChange, placeholder, mono, search }: FieldProps) {
+  const ref = useRef<HTMLInputElement>(null);
+  const described = useDescribed();
+  useSlash(ref, search === true);
   const input = (
     <input
+      ref={ref}
       type={search ? "search" : "text"}
-      className={cx(s.box, s.field, mono && s.mono, search && s.find)}
+      className={search ? s.findInput : cx(s.box, s.field, mono && s.mono)}
       aria-label={label}
+      {...described}
       value={value}
       placeholder={placeholder}
       spellCheck={!mono && !search}
@@ -31,6 +58,9 @@ export function Field({ label, value, onChange, placeholder, mono, search }: Fie
       }}
       onKeyDown={(e) => {
         if (!search || e.key !== "Escape") return;
+        // the search's own: an overlay it sits in stays open
+        e.preventDefault();
+        e.stopPropagation();
         if (value === "") e.currentTarget.blur();
         else onChange("");
       }}
@@ -38,9 +68,10 @@ export function Field({ label, value, onChange, placeholder, mono, search }: Fie
   );
   if (!search) return input;
   return (
-    <span className={s.searchWrap}>
+    <label className={s.search}>
       <Icon name="search" />
       {input}
-    </span>
+      <Badge kind="kbd">/</Badge>
+    </label>
   );
 }

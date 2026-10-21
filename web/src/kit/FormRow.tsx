@@ -1,6 +1,10 @@
 // One setting on one line: its label in a column of its own (so a card's settings line up), the
-// control beside it with a quiet note after it, and what's wrong with it under it.
-import type { ReactNode } from "react";
+// control beside it with a quiet note after it, and what's wrong with it under it. The row is a
+// group named by its label; the controls in it are described by its note and its problem, and
+// marked invalid while it has one.
+import { type ReactNode, useId } from "react";
+
+import { type Described, DescribedBy } from "./described";
 
 import s from "./Form.module.css";
 
@@ -16,16 +20,31 @@ export interface FormRowProps {
 }
 
 export function FormRow({ label, children, note, problem }: FormRowProps) {
+  const id = useId();
+  const [labelId, noteId, problemId] = [`${id}l`, `${id}n`, `${id}p`];
+  const ids = [note ? noteId : null, problem ? problemId : null].filter((x) => x !== null);
+  const described: Described = {
+    ...(ids.length > 0 ? { "aria-describedby": ids.join(" ") } : {}),
+    ...(problem ? { "aria-invalid": true as const } : {}),
+  };
   return (
-    <div className={s.row} role="group" aria-label={label}>
-      <span className={s.label} aria-hidden="true">
+    <div className={s.row} role="group" aria-labelledby={labelId}>
+      <span className={s.label} id={labelId}>
         {label}
       </span>
       <span className={s.control}>
-        {children}
-        {note ? <span className={s.note}>{note}</span> : null}
+        <DescribedBy.Provider value={described}>{children}</DescribedBy.Provider>
+        {note ? (
+          <span className={s.note} id={noteId}>
+            {note}
+          </span>
+        ) : null}
       </span>
-      {problem ? <span className={s.problem}>{problem}</span> : null}
+      {problem ? (
+        <span className={s.problem} id={problemId}>
+          {problem}
+        </span>
+      ) : null}
     </div>
   );
 }

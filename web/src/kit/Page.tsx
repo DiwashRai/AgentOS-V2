@@ -1,10 +1,9 @@
 // A view: the top bar (title, context, counters, the view's own middle, search, one button) and the
 // body under it, which fills the rest of the window.
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect } from "react";
 import { Link } from "react-router";
 
-import { Badge } from "./Badge";
-import { Icon } from "./Icon";
+import { Field } from "./Field";
 import { Mark, type MarkKind } from "./Mark";
 import s from "./Page.module.css";
 import { cx } from "./vars";
@@ -39,51 +38,6 @@ export interface PageProps {
    *  editor's properties), the body beside it an editor out to the rail's gutter. */
   side?: { look?: "column" | "rail"; content: ReactNode };
   children: ReactNode;
-}
-
-/** Single-key shortcuts never fire while typing or with a modifier held. */
-function isShortcut(e: KeyboardEvent): boolean {
-  const t = e.target;
-  const typing =
-    t instanceof HTMLElement &&
-    (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
-  return !e.metaKey && !e.ctrlKey && !e.altKey && !typing;
-}
-
-function SearchField({ value, onChange, placeholder }: Search) {
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "/" || !isShortcut(e)) return;
-      e.preventDefault();
-      ref.current?.focus();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-    };
-  }, []);
-  return (
-    <label className={s.search}>
-      <Icon name="search" />
-      <input
-        ref={ref}
-        type="search"
-        placeholder={placeholder}
-        aria-label={placeholder}
-        value={value}
-        onChange={(e) => {
-          onChange(e.currentTarget.value);
-        }}
-        onKeyDown={(e) => {
-          if (e.key !== "Escape") return;
-          if (value === "") e.currentTarget.blur();
-          else onChange("");
-        }}
-      />
-      <Badge kind="kbd">/</Badge>
-    </label>
-  );
 }
 
 function Counters({ items }: { items: readonly (Counter | "|")[] }) {
@@ -139,7 +93,17 @@ export function Page({
         {counters ? <Counters items={counters} /> : null}
         {middle}
         <span className={s.grow} />
-        {search ? <SearchField {...search} /> : null}
+        {search ? (
+          <span className={s.search}>
+            <Field
+              search
+              label={search.placeholder}
+              placeholder={search.placeholder}
+              value={search.value}
+              onChange={search.onChange}
+            />
+          </span>
+        ) : null}
         {action ? <span className={s.actions}>{action}</span> : null}
       </header>
       {side ? (

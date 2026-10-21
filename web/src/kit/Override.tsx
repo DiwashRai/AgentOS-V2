@@ -1,17 +1,17 @@
-// A setting a stage sets over its agent's own (a model, an effort): a small neutral dot, the value
-// set here, then the agent's own struck through after it, so an override reads without hovering
-// and without borrowing a state's hue.
+// A value set over another it replaces (a stage's effort over its agent's): a small neutral dot,
+// the value set, then the one it replaces struck through after it, so an override reads without
+// hovering and without borrowing a state's hue. Whose values they are is the screen's to say.
 import s from "./Override.module.css";
 
 export interface OverrideProps {
-  /** The value set on the stage (xhigh). */
+  /** The value set (xhigh). */
   value: string;
-  /** The agent's own, which it replaces (high). */
+  /** The value it replaces (high). */
   own: string;
 }
 
 export function Override({ value, own }: OverrideProps) {
-  const say = `${value}, set on this stage over the agent's ${own}`;
+  const say = `${value}, replacing ${own}`;
   return (
     <span className={s.over} title={say} aria-label={say}>
       <i aria-hidden="true" />

@@ -18,7 +18,7 @@ import {
   Toggle,
 } from "../../kit";
 import { agentOf, type Library, runtimeName } from "./library";
-import { isCheck, PHASES, type RefKind } from "./model";
+import { isCheck, PHASES, type RefKind, type StageProblem } from "./model";
 import { type Fresh, StageChips } from "./StageCard";
 
 const EFFORTS: readonly Effort[] = ["low", "medium", "high", "xhigh", "max"];
@@ -28,7 +28,7 @@ export interface FieldsProps {
   stage: Stage;
   lib: Library;
   /** What's wrong with the stage (said under the prompt when it is the prompt's). */
-  problem: string | undefined;
+  problem: StageProblem | undefined;
   set: (s: Stage) => void;
   removeRef: (kind: RefKind, id: string) => void;
   /** The chip that just landed here, to scroll to and flash. */
@@ -130,7 +130,7 @@ const fieldsNote = (lib: Library) =>
   `Ticket fields as {{ name }}: ${lib.fields.map((f) => f.name).join(", ")}`;
 
 function AgentFields({ s, lib, problem, set }: FieldsProps & { s: AgentStage }) {
-  const promptProblem = problem?.startsWith("The prompt") ? problem : undefined;
+  const promptProblem = problem?.field === "prompt" ? problem.text : undefined;
   return (
     <>
       <AgentRows s={s} lib={lib} set={set} />

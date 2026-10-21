@@ -1,7 +1,7 @@
-/* Card: a stage as its own object on the sheet (All teams' card: white on a firm hairline with a
-   soft drop; in the dark a slight step above the sheet on a lit hairline). The summary lights on
-   hover like a row; the selected card is ringed in your move's accent and opens in place, its
-   settings ruled off under the summary. */
+/* Card: one object on its own surface, white on a firm hairline with a soft drop (in the dark a
+   slight step above the sheet on a lit hairline). A stage's summary lights on hover like a row;
+   the selected stage is ringed in your move's accent and opens in place, its settings ruled off
+   under the summary. An agent's and a ticket's looks follow below. */
 .card {
   position: relative;
   min-width: 0;
@@ -42,20 +42,24 @@
 .card[data-look="stage"][data-off] .summary > :not(.hit) {
   opacity: var(--lane-off);
 }
-/* the summary's one button, under its words, so the words stay plain text */
+/* the card's own button, visually hidden; the ring goes round the card. A pointer opens it from
+   anywhere on its summary */
 .hit {
   position: absolute;
-  inset: 0;
-  z-index: 1;
+  width: var(--line-1);
+  height: var(--line-1);
   padding: 0;
   border: 0;
-  border-radius: inherit;
-  background: none;
-  cursor: pointer;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
-.hit:focus-visible {
+.card:has(.hit:focus-visible) {
   outline: var(--line-2) solid var(--focus);
-  outline-offset: calc(var(--line-2) * -1);
+  outline-offset: var(--line-2);
+}
+.card[data-edit] .summary {
+  cursor: pointer;
 }
 .face {
   display: grid;
@@ -114,15 +118,13 @@
   align-items: flex-start;
   gap: var(--sp-2);
 }
-.card[data-look="ticket"] .main > * {
-  max-width: 100%;
-}
 
 /* agent: an agent's card, a shade off the surface, as tall as its neighbours, its lines one under
    another down to its foot; a queued one recedes to a fainter hairline with no fill. A Meter in it
    lies along its bottom edge, clipped to its corners */
 .card[data-look="agent"] {
   align-self: stretch;
+  /* an edge Meter lies along its bottom edge */
   overflow: hidden;
   border-color: var(--tile-edge);
   background: var(--tile);

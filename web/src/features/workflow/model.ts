@@ -98,15 +98,30 @@ export const addToStage = (b: WorkflowBody, stage: string, kind: RefKind, id: st
 export const setAgent = (b: WorkflowBody, stage: string, agent: string) =>
   updateStage(b, stage, (s) => (s.kind === "agent" ? { ...s, agent } : s));
 
+/** Why no gate can go after a stage, when none can: inside a loop, before its last stage (rules.md
+ *  › Workflows: a gate only on a loop's last stage). */
+export function noGateAfter(b: WorkflowBody, id: string): string | undefined {
+  const at = (sid: string) => b.stages.findIndex((s) => s.id === sid);
+  const k = at(id);
+  const inside = b.loops.some((l) => at(l.first) <= k && k < at(l.last));
+  return inside ? "Gates go after a loop's last stage" : undefined;
+}
+
 export function setRounds(b: WorkflowBody, i: number, rounds: number): WorkflowBody {
   return { ...b, loops: b.loops.map((l, k) => (k === i ? { ...l, rounds } : l)) };
 }
 
 // ---------------------------------------------------------------- what's wrong
 
+/** What's wrong with a stage, and which of its settings it is about. */
+export interface StageProblem {
+  field: "prompt" | "gate";
+  text: string;
+}
+
 export interface Problems {
-  /** One message per stage that has one, by stage id. */
-  stages: ReadonlyMap<string, string>;
+  /** One problem per stage that has one, by stage id. */
+  stages: ReadonlyMap<string, StageProblem>;
   /** One message per loop that has one, by loop index. */
   loops: ReadonlyMap<number, string>;
   count: number;
@@ -139,7 +154,7 @@ function promptProblem(s: Stage, known: ReadonlySet<string>): string | null {
 
 export function problemsOf(b: WorkflowBody, fields: readonly TemplateField[]): Problems {
   const known = new Set(fields.map((f) => f.name));
-  const stages = new Map<string, string>();
+  const stages = new Map<string, StageProblem>();
   const loops = new Map<number, string>();
   b.loops.forEach((l, i) => {
     const inside = span(b, l.first, l.last);
@@ -148,12 +163,15 @@ export function problemsOf(b: WorkflowBody, fields: readonly TemplateField[]): P
     for (const k of inside.slice(0, -1)) {
       const s = b.stages[k];
       if (s?.gate)
-        stages.set(s.id, "A gate inside a loop: only the loop's last stage can have one.");
+        stages.set(s.id, {
+          field: "gate",
+          text: "A gate inside a loop: only the loop's last stage can have one.",
+        });
     }
   });
   for (const s of b.stages) {
     const p = promptProblem(s, known);
-    if (p && !stages.has(s.id)) stages.set(s.id, p);
+    if (p && !stages.has(s.id)) stages.set(s.id, { field: "prompt", text: p });
   }
   return { stages, loops, count: stages.size + loops.size };
 }

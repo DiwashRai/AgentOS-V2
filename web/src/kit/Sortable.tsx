@@ -30,6 +30,9 @@ export interface SortableProps {
   gap?: Space;
   /** Draw the drop line at this slot: a still of a drag in progress. */
   preview?: number;
+  /** Keep the handles' gutter at the list's left (the default); a Lane, which keeps one for its
+   *  loop bands too, turns it off. */
+  gutter?: boolean;
 }
 
 /** Which row draws the drop line for `slot`, and on which side: the row it lands before, or
@@ -55,6 +58,7 @@ export function Sortable({
   label,
   items,
   onMove,
+  gutter = true,
   accept = [],
   onDrop,
   gap = 0,
@@ -116,6 +120,7 @@ export function Sortable({
       role="list"
       aria-label={label}
       className={s.sortable}
+      data-gutter={gutter ? undefined : "none"}
       style={vars({ "--gap": space(gap) })}
       onDragOver={over}
       onDragLeave={(e) => {

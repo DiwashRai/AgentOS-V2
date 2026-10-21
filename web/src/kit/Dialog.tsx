@@ -13,19 +13,27 @@ import { Button } from "./Button";
 import s from "./Dialog.module.css";
 import { Layer } from "./layer";
 
-export interface DialogProps {
+export type DialogProps = {
   /** Its accessible name. */
   label: string;
   open: boolean;
   /** Esc or the close button: the screen decides (close, or ask first). */
   onClose: () => void;
   children: ReactNode;
-  /** Pinned under the scrolling sections (the peek's reply box); the side look only. */
-  foot?: ReactNode;
-  look?: "side" | "full";
-  /** A question over the full look, modal inside it; the view under it is inert. */
-  ask?: ReactNode;
-}
+} & (
+  | {
+      look?: "side";
+      /** Pinned under the scrolling sections (the peek's reply box). */
+      foot?: ReactNode;
+      ask?: never;
+    }
+  | {
+      look: "full";
+      /** A question over it, modal inside it; the view under it is inert. */
+      ask?: ReactNode;
+      foot?: never;
+    }
+);
 
 /** The full look: the close at the top left, the view beside it, and the question over both. */
 function Full({
@@ -33,7 +41,12 @@ function Full({
   onClose,
   children,
   ask,
-}: Pick<DialogProps, "label" | "onClose" | "children" | "ask">) {
+}: {
+  label: string;
+  onClose: () => void;
+  children: ReactNode;
+  ask: ReactNode;
+}) {
   const asking = useRef<HTMLDivElement>(null);
   const hasAsk = ask !== undefined && ask !== null;
   useEffect(() => {
