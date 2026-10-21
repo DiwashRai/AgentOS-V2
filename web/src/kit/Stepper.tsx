@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import { Icon } from "./Icon";
 import s from "./Stepper.module.css";
+import { Tip } from "./tip";
 import { cx, vars } from "./vars";
 
 export interface StepGate {
@@ -73,10 +74,12 @@ function GateCaption({ g, bare }: { g: StepGate; bare: boolean }) {
   if (bare && !parked(g)) return null;
   const sub = GATE_SUB[g.state](g);
   return (
-    <span className={s.gatecap} data-state={g.state} title={g.label}>
-      <span>{g.short}</span>
-      {sub ? <b>{sub}</b> : null}
-    </span>
+    <Tip text={g.label}>
+      <span className={s.gatecap} data-state={g.state}>
+        <span>{g.short}</span>
+        {sub ? <b>{sub}</b> : null}
+      </span>
+    </Tip>
   );
 }
 
@@ -86,13 +89,9 @@ function Knot({ g, bare }: { g: StepGate; bare: boolean }) {
   if (!bare || parked(g))
     return <span className={s.knot} data-state={g.state} aria-hidden="true" />;
   return (
-    <span
-      className={s.knot}
-      data-state={g.state}
-      role="img"
-      aria-label={`Gate: ${g.label}`}
-      title={g.label}
-    />
+    <Tip text={g.label} said>
+      <span className={s.knot} data-state={g.state} role="img" aria-label={`Gate: ${g.label}`} />
+    </Tip>
   );
 }
 
@@ -112,10 +111,12 @@ function StageStep({ step, final, text, bare }: StageProps) {
       aria-current={at ? "step" : undefined}
     >
       <span className={s.bar}>{step.gate ? <Knot g={step.gate} bare={bare} /> : null}</span>
-      <span className={s.name} title={step.name}>
-        {final ? <Icon name="tick-sm" /> : null}
-        {step.name}
-      </span>
+      <Tip text={step.name} cut>
+        <span className={s.name}>
+          {final ? <Icon name="tick-sm" /> : null}
+          {step.name}
+        </span>
+      </Tip>
       {text ? <span className={s.sub}>{text}</span> : null}
       {step.round && at ? <span className={s.sub}>{roundText(step.round)}</span> : null}
       {step.gate ? <GateCaption g={step.gate} bare={bare} /> : null}

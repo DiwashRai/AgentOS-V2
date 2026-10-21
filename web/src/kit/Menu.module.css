@@ -1,0 +1,19 @@
+/* A menu: the "…" button held down while its menu is open, and the popover's rows with a rule
+   between groups and a link out's arrow at its row's end. */
+.trigger[data-popup-open] {
+  background: var(--pop-hover);
+}
+.sheet {
+  min-width: var(--col-2xl);
+}
+.rule {
+  height: var(--line-1);
+  margin: var(--sp-2) calc(var(--sp-2) * -1);
+  background: var(--pop-rule);
+}
+.out {
+  display: inline-flex;
+  margin-left: auto;
+  padding-left: var(--sp-4);
+  color: var(--pop-aside);
+}

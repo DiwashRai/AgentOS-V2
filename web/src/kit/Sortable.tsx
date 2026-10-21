@@ -8,6 +8,7 @@ import s from "./Drag.module.css";
 import u from "./unseen.module.css";
 import { claim, claimed, type DragPayload, kindOf, left, payloadOf, startDrag } from "./dnd";
 import { Icon } from "./Icon";
+import { Tip } from "./tip";
 import { type Space, space, vars } from "./vars";
 
 export interface SortItem {
@@ -140,34 +141,35 @@ export function Sortable({
             data-drop={lineAt(shown, i, items.length)}
             data-dragging={from === i || undefined}
           >
-            <button
-              type="button"
-              className={s.grip}
-              data-grip
-              draggable
-              aria-label={`Move ${it.label}`}
-              title="Drag to move, or ↑ ↓"
-              onDragStart={(e) => {
-                startDrag(e, { kind: own, id: it.id }, "move");
-                const row = e.currentTarget.parentElement;
-                const r = row?.getBoundingClientRect();
-                if (row && r)
-                  e.dataTransfer.setDragImage(row, e.clientX - r.left, e.clientY - r.top);
-                setFrom(i);
-              }}
-              onDragEnd={() => {
-                setFrom(null);
-                setSlot(null);
-              }}
-              onKeyDown={(e) => {
-                const d = STEP[e.key];
-                if (d === undefined) return;
-                e.preventDefault();
-                move(i, i + d);
-              }}
-            >
-              <Icon name="grip" />
-            </button>
+            <Tip text="Drag to move, or ↑ ↓">
+              <button
+                type="button"
+                className={s.grip}
+                data-grip
+                draggable
+                aria-label={`Move ${it.label}`}
+                onDragStart={(e) => {
+                  startDrag(e, { kind: own, id: it.id }, "move");
+                  const row = e.currentTarget.parentElement;
+                  const r = row?.getBoundingClientRect();
+                  if (row && r)
+                    e.dataTransfer.setDragImage(row, e.clientX - r.left, e.clientY - r.top);
+                  setFrom(i);
+                }}
+                onDragEnd={() => {
+                  setFrom(null);
+                  setSlot(null);
+                }}
+                onKeyDown={(e) => {
+                  const d = STEP[e.key];
+                  if (d === undefined) return;
+                  e.preventDefault();
+                  move(i, i + d);
+                }}
+              >
+                <Icon name="grip" />
+              </button>
+            </Tip>
             {it.content}
           </div>
         ))}

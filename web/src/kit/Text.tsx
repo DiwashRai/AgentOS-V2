@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import s from "./Text.module.css";
+import { Tip } from "./tip";
 import { cx, type Tone } from "./vars";
 
 export type TextVariant =
@@ -35,19 +36,20 @@ export function Text({
 }: TextProps) {
   const Tag = as ?? "span";
   return (
-    <Tag
-      className={cx(
-        s.text,
-        s[variant],
-        truncate === true && s.truncate,
-        truncate === 2 && s.clamp,
-        tabular && s.tabular,
-      )}
-      data-tone={tone}
-      data-weight={weight}
-      title={title}
-    >
-      {children}
-    </Tag>
+    <Tip text={title} cut={title === children}>
+      <Tag
+        className={cx(
+          s.text,
+          s[variant],
+          truncate === true && s.truncate,
+          truncate === 2 && s.clamp,
+          tabular && s.tabular,
+        )}
+        data-tone={tone}
+        data-weight={weight}
+      >
+        {children}
+      </Tag>
+    </Tip>
   );
 }

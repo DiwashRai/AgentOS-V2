@@ -1,5 +1,6 @@
 // The small text forms: a key, a count, a keycap, YOU. A labelled pill is a Chip.
 import s from "./Badge.module.css";
+import { Tip } from "./tip";
 import { cx } from "./vars";
 
 export type BadgeProps =
@@ -16,9 +17,9 @@ export function Badge(props: BadgeProps) {
   switch (props.kind) {
     case "key":
       return (
-        <span className={cx(s.key, s[props.size ?? "md"])} title={props.title}>
-          {props.children}
-        </span>
+        <Tip text={props.title}>
+          <span className={cx(s.key, s[props.size ?? "md"])}>{props.children}</span>
+        </Tip>
       );
     case "count":
       return (

@@ -5,6 +5,7 @@ import { type ReactNode, useId } from "react";
 
 import s from "./Facts.module.css";
 import { Icon, type IconName } from "./Icon";
+import { Tip } from "./tip";
 import u from "./unseen.module.css";
 
 export type Fact = {
@@ -67,15 +68,12 @@ export function Facts({ items, label }: FactsProps) {
       ) : null}
       <dl className={s.chips} aria-labelledby={label ? head : undefined}>
         {items.map((f) => (
-          <div
-            key={f.label}
-            className={s.fact}
-            data-picker={f.picker !== undefined || undefined}
-            title={f.label}
-          >
-            <dt className={u.unseen}>{f.label}</dt>
-            <Value f={f} />
-          </div>
+          <Tip key={f.label} text={f.label} said>
+            <div className={s.fact} data-picker={f.picker !== undefined || undefined}>
+              <dt className={u.unseen}>{f.label}</dt>
+              <Value f={f} />
+            </div>
+          </Tip>
         ))}
       </dl>
     </div>

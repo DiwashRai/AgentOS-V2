@@ -1,6 +1,7 @@
 // A plan's items: a green tick or an open ring, with an optional section head and "+N more".
 import { Icon } from "./Icon";
 import s from "./Checklist.module.css";
+import { Tip } from "./tip";
 import { cx } from "./vars";
 
 export interface CheckItem {
@@ -31,9 +32,9 @@ export function Checklist({ items, more = 0, look = "bare" }: ChecklistProps) {
             ) : (
               <span className={s.todo} role="img" aria-label="Open" />
             )}
-            <span className={s.text} title={it.text}>
-              {it.text}
-            </span>
+            <Tip text={it.text} cut>
+              <span className={s.text}>{it.text}</span>
+            </Tip>
           </span>
         </li>
       ))}

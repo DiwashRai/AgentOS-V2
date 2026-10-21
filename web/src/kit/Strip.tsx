@@ -3,6 +3,7 @@
 // the stages a loop repeats, then the words. It draws a workflow as written, not a ticket's way
 // through it (that is the Stepper's).
 import s from "./Strip.module.css";
+import { Tip } from "./tip";
 import { vars } from "./vars";
 
 export interface StripStage {
@@ -51,24 +52,26 @@ export function Strip(props: StripProps) {
   const path = pathOf(props);
   const cols = stages.flatMap((st) => (st.gate ? ["minmax(0, 1fr)", "auto"] : ["minmax(0, 1fr)"]));
   return (
-    <span className={s.strip} role="img" aria-label={`${label}: ${path}`} title={path}>
-      <span className={s.track} style={vars({ "--cols": cols.join(" ") })}>
-        {stages.flatMap((st, i) => [
-          <i key={`s${String(i)}`} data-phase={st.phase} data-off={st.off || undefined} />,
-          ...(st.gate ? [<u key={`g${String(i)}`} />] : []),
-        ])}
-        {loops.map((l) => (
-          <span
-            key={`l${String(l.first)}`}
-            className={s.loop}
-            style={vars({
-              "--from": String(col[l.first] ?? 1),
-              "--to": String((col[l.last] ?? 1) + 1),
-            })}
-          />
-        ))}
+    <Tip text={path} said>
+      <span className={s.strip} role="img" aria-label={`${label}: ${path}`}>
+        <span className={s.track} style={vars({ "--cols": cols.join(" ") })}>
+          {stages.flatMap((st, i) => [
+            <i key={`s${String(i)}`} data-phase={st.phase} data-off={st.off || undefined} />,
+            ...(st.gate ? [<u key={`g${String(i)}`} />] : []),
+          ])}
+          {loops.map((l) => (
+            <span
+              key={`l${String(l.first)}`}
+              className={s.loop}
+              style={vars({
+                "--from": String(col[l.first] ?? 1),
+                "--to": String((col[l.last] ?? 1) + 1),
+              })}
+            />
+          ))}
+        </span>
+        <b>{label}</b>
       </span>
-      <b>{label}</b>
-    </span>
+    </Tip>
   );
 }

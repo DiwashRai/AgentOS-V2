@@ -5,6 +5,7 @@ import { type KeyboardEvent, type ReactNode, useState } from "react";
 
 import s from "./Drag.module.css";
 import { type DragPayload, startDrag } from "./dnd";
+import { Tip } from "./tip";
 
 export interface DragProps {
   /** What it carries: its kind (which targets take it) and its id. */
@@ -34,21 +35,22 @@ export function Drag({ payload, label, onClick, children }: DragProps) {
       }
     : {};
   return (
-    <div
-      {...press}
-      draggable
-      className={s.drag}
-      data-dragging={dragging || undefined}
-      title={label}
-      onDragStart={(e) => {
-        startDrag(e, payload, "copy");
-        setDragging(true);
-      }}
-      onDragEnd={() => {
-        setDragging(false);
-      }}
-    >
-      {children}
-    </div>
+    <Tip text={label} said={onClick !== undefined}>
+      <div
+        {...press}
+        draggable
+        className={s.drag}
+        data-dragging={dragging || undefined}
+        onDragStart={(e) => {
+          startDrag(e, payload, "copy");
+          setDragging(true);
+        }}
+        onDragEnd={() => {
+          setDragging(false);
+        }}
+      >
+        {children}
+      </div>
+    </Tip>
   );
 }

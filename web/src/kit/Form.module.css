@@ -1,6 +1,6 @@
-/* The form controls (Field, TextArea, NumberField, Toggle, FormRow): Linear's inputs, a fill a
-   hair off the page on the controls' hairline, firmer on hover, the focus ring on focus; text in
-   ink at the rows' size. */
+/* The form controls (Field, TextArea, NumberField, Toggle, Checkbox, Radio, FormRow): Linear's
+   inputs, a fill a hair off the page on the controls' hairline, firmer on hover, the focus ring on
+   focus; text in ink at the rows' size. */
 .box {
   min-width: 0;
   border: var(--line-1) solid var(--ctl-edge);
@@ -224,6 +224,78 @@
 }
 .switch[aria-checked="true"]::after {
   transform: translateX(calc(var(--w-switch) - var(--h-switch)));
+}
+
+/* Checkbox and Radio: a box or a ring on the words' first line, the words and a quiet line under
+   them one target; filled in your move's accent when on (a white tick, a white dot) */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  font-size: var(--fs-3);
+  letter-spacing: var(--track-snug);
+  color: var(--ink-1);
+  cursor: default;
+}
+.words {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.check,
+.radio {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--h-check);
+  height: var(--h-check);
+  /* on the words' first line */
+  margin-top: var(--sp-1);
+  border: var(--line-1) solid var(--ctl-edge-hover);
+  background: var(--ctl);
+  box-shadow: var(--ctl-shadow);
+  color: var(--switch-knob);
+  outline: none;
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
+}
+.check {
+  border-radius: var(--r-1);
+}
+.radio {
+  border-radius: var(--r-pill);
+}
+.choice:hover :is(.check, .radio) {
+  border-color: var(--ink-3);
+}
+:is(.check, .radio):focus-visible {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-tight);
+}
+:is(.check, .radio)[data-checked] {
+  border-color: var(--you);
+  background: var(--you);
+}
+.mark {
+  display: inline-flex;
+}
+.mark svg {
+  width: var(--h-check);
+  height: var(--h-check);
+}
+.pip {
+  width: var(--h-pip);
+  height: var(--h-pip);
+  border-radius: var(--r-pill);
+  background: currentColor;
 }
 
 /* FormRow: the label in its column, the control (and a quiet note) beside it, a problem under the

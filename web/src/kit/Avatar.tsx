@@ -1,5 +1,6 @@
 import s from "./Avatar.module.css";
 import { hueOf, initials } from "./identity";
+import { Tip } from "./tip";
 import { cx } from "./vars";
 
 type Size = "sm" | "md" | "mid" | "lg" | "talk";
@@ -49,11 +50,16 @@ interface FaceProps {
 }
 
 function Face({ name, seed, size, beside }: FaceProps) {
-  const said = beside ? { "aria-hidden": true } : { role: "img", "aria-label": name, title: name };
-  return (
+  const face = (said: object) => (
     <span className={cx(s.av, s[size], s[hueOf(`person:${seed}`)])} {...said}>
       {initials(name)}
     </span>
+  );
+  if (beside) return face({ "aria-hidden": true });
+  return (
+    <Tip text={name} said>
+      {face({ role: "img", "aria-label": name })}
+    </Tip>
   );
 }
 
@@ -63,11 +69,13 @@ export function Avatar({ name, seed, size = "md", beside = false, dashed, people
   if (people) {
     const names = people.map((p) => p.name).join(", ");
     return (
-      <span className={s.faces} role="group" aria-label={names} title={names}>
-        {people.map((p) => (
-          <Face key={p.seed} name={p.name} seed={p.seed} size={size} beside />
-        ))}
-      </span>
+      <Tip text={names} said>
+        <span className={s.faces} role="group" aria-label={names}>
+          {people.map((p) => (
+            <Face key={p.seed} name={p.name} seed={p.seed} size={size} beside />
+          ))}
+        </span>
+      </Tip>
     );
   }
   if (name === undefined)

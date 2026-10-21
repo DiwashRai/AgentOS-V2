@@ -22,6 +22,7 @@ import {
   Thread,
 } from "../../kit";
 import { threadMessage, useBoard } from "../shared/board";
+import { TicketMenu } from "../shared/TicketMenu";
 import { Now } from "../ticket/now";
 import { Properties } from "../ticket/properties";
 import { TalkHead } from "../ticket/talk";
@@ -45,6 +46,7 @@ function Head({ t, me, now, onClose, plan }: BodyProps & { plan: readonly PlanIt
         <Button size="sm" href={`/t/${t.key}`}>
           Open ticket
         </Button>
+        <TicketMenu t={t} size="sm" />
         <Button size="sm" icon="close" title="Close peek (Esc)" onClick={onClose} />
       </Stack>
       <Stack gap={4}>

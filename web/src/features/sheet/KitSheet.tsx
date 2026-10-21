@@ -8,6 +8,7 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   Checklist,
   Chip,
   Composer,
@@ -24,11 +25,13 @@ import {
   Lane,
   Mark,
   type MarkKind,
+  Menu,
   Meter,
   Notice,
   NumberField,
   Override,
   Page,
+  Radio,
   Row,
   Segmented,
   Select,
@@ -44,6 +47,7 @@ import {
   type TextVariant,
   Thread,
   Toggle,
+  useToast,
 } from "../../kit";
 import { STATE_WORD } from "../../domain/board";
 
@@ -70,6 +74,7 @@ const ICONS: readonly IconName[] = [
   "shell",
   "gate",
   "close",
+  "more",
   "chevron",
   "out",
   "high",
@@ -199,6 +204,68 @@ function FormSheet() {
       <FormRow label="Prompt" problem="No field verdict.note: did you mean verdict.notes?">
         <TextArea label="Prompt" value={prompt} onChange={setPrompt} lines={4} />
       </FormRow>
+    </Stack>
+  );
+}
+
+/** Choices said in words (the admin's intake settings, W8): how intake takes issues in, and a
+ *  query's own say. */
+function ChoiceSheet() {
+  const [how, setHow] = useState("ask");
+  const [auto, setAuto] = useState(false);
+  return (
+    <Stack gap={8}>
+      <FormRow label="Intake">
+        <Radio
+          label="Intake"
+          value={how}
+          onChange={setHow}
+          options={[
+            {
+              id: "ask",
+              label: "Ask first",
+              note: "Issues wait on Intake until someone takes them in.",
+            },
+            {
+              id: "all",
+              label: "Take everything in",
+              note: "New issues go straight to the Inbox.",
+            },
+          ]}
+        />
+      </FormRow>
+      <Checkbox
+        label="Take in Platform backlog by itself"
+        note="Its new issues skip Intake and go to the Inbox."
+        checked={auto}
+        onChange={setAuto}
+      />
+    </Stack>
+  );
+}
+
+/** A "…" menu, and a toast said by an action. */
+function MenuSheet() {
+  const say = useToast();
+  return (
+    <Stack dir="row" gap={4} align="center">
+      <Button
+        onClick={() => {
+          say("Copied the link to NW-17");
+        }}
+      >
+        Say something happened
+      </Button>
+      <Menu
+        label="More on NW-17"
+        items={[
+          { label: "Copy link", run: () => undefined },
+          { label: "Copy key", run: () => undefined },
+          "|",
+          { label: "Open NW-17 in Jira", href: "https://jira.example.com/browse/NW-17" },
+        ]}
+      />
+      <Menu label="More, small" size="sm" items={[{ label: "Open ticket", href: "/t/NW-17" }]} />
     </Stack>
   );
 }
@@ -608,8 +675,14 @@ export function KitSheet() {
               <Text tone="2">{`The ${tab} panel`}</Text>
             </Tabs>
           </Section>
+          <Section name="Menu, toast">
+            <MenuSheet />
+          </Section>
           <Section name="Form: FormRow, Field, NumberField, Toggle, TextArea">
             <FormSheet />
+          </Section>
+          <Section name="Checkbox, Radio">
+            <ChoiceSheet />
           </Section>
           <Section name="Drag, Drop, Sortable">
             <DragSheet />

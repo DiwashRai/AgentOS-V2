@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import s from "./Icon.module.css";
+import { Tip } from "./tip";
 import { cx } from "./vars";
 
 // V1's glyphs (its kit's `I` set and the refresh's type squares). Colour comes from the CSS:
@@ -151,6 +152,17 @@ const GLYPHS = {
   // a gate: the stepper's diamond, as a glyph
   gate: { ...LINE12, d: <path d="M6 1.75 10.25 6 6 10.25 1.75 6z" /> },
   close: { ...LINE12, d: <path d="M3 3l6 6M9 3l-6 6" /> },
+  // three dots in a row: a menu of more actions
+  more: {
+    ...LINE14,
+    d: (
+      <g className={s.solid}>
+        {[3, 7, 11].map((x) => (
+          <circle key={x} cx={x} cy="7" r="1.25" />
+        ))}
+      </g>
+    ),
+  },
   chevron: { ...LINE10, d: <path d="M2.5 4l2.5 2.5L7.5 4" /> },
   // the chevron turned up: move a row up, the previous item
   up: { ...LINE10, d: <path d="M2.5 6l2.5-2.5L7.5 6" /> },
@@ -263,17 +275,19 @@ export function Icon({ name, label }: IconProps) {
     ? ({ role: "img", "aria-label": label } as const)
     : ({ "aria-hidden": true } as const);
   return (
-    <span className={cx(s.icon, s[name])} title={label} {...a11y}>
-      <svg
-        aria-hidden="true"
-        className={g.cls}
-        width={g.box}
-        height={g.box}
-        viewBox={`0 0 ${view} ${view}`}
-      >
-        {g.box === 14 && g.cls === s.type ? <rect width="14" height="14" rx="3.5" /> : null}
-        {g.d}
-      </svg>
-    </span>
+    <Tip text={label} said>
+      <span className={cx(s.icon, s[name])} {...a11y}>
+        <svg
+          aria-hidden="true"
+          className={g.cls}
+          width={g.box}
+          height={g.box}
+          viewBox={`0 0 ${view} ${view}`}
+        >
+          {g.box === 14 && g.cls === s.type ? <rect width="14" height="14" rx="3.5" /> : null}
+          {g.d}
+        </svg>
+      </span>
+    </Tip>
   );
 }

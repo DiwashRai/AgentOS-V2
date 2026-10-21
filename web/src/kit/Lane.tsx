@@ -11,6 +11,7 @@ import type { DragPayload } from "./dnd";
 import s from "./Lane.module.css";
 import u from "./unseen.module.css";
 import { Sortable } from "./Sortable";
+import { Tip } from "./tip";
 
 export interface LaneStage {
   id: string;
@@ -95,23 +96,26 @@ function Diamond({ st, i, edit }: Omit<JointProps, "last">) {
   const on = st.gate !== null;
   if (st.noGate !== undefined && !on)
     return (
-      <span className={s.gate} data-inert role="img" aria-label={st.noGate} title={st.noGate} />
+      <Tip text={st.noGate} said>
+        <span className={s.gate} data-inert role="img" aria-label={st.noGate} />
+      </Tip>
     );
   const say = on
     ? `Gate after ${st.label}: ${st.gate ?? ""}. Click to remove it`
     : `Add a gate after ${st.label}`;
   return (
-    <button
-      type="button"
-      className={s.gate}
-      data-on={on || undefined}
-      aria-pressed={on}
-      aria-label={say}
-      title={say}
-      onClick={() => {
-        edit.onGate(i);
-      }}
-    />
+    <Tip text={say} said>
+      <button
+        type="button"
+        className={s.gate}
+        data-on={on || undefined}
+        aria-pressed={on}
+        aria-label={say}
+        onClick={() => {
+          edit.onGate(i);
+        }}
+      />
+    </Tip>
   );
 }
 

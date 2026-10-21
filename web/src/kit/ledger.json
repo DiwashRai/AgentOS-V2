@@ -1,8 +1,8 @@
 {
   "budget": {
-    "components": 40,
+    "components": 45,
     "props": 8,
-    "lines": 7628
+    "lines": 9000
   },
   "raises": [
     {
@@ -24,6 +24,16 @@
       "budget": "lines",
       "to": 7628,
       "why": "The library and workflow editor screens (owner approved, to be trimmed before use)"
+    },
+    {
+      "budget": "components",
+      "to": 45,
+      "why": "Owner (2026-10-21): Menu, Checkbox and Radio now (tooltips and toasts are drawn by the kit's own title and the frame), with room for the next few"
+    },
+    {
+      "budget": "lines",
+      "to": 9000,
+      "why": "Owner (2026-10-21): tooltips, menus, toasts, checkboxes and radios on Base UI, with the kit kept under 9,000 lines"
     }
   ],
   "components": {
@@ -382,7 +392,7 @@
       }
     },
     "Frame": {
-      "why": "The app's frame: the labelled sidebar in three groups (the views; the headed sections; Settings and the theme at the foot) under its head (the Space's switcher, then search, which takes you to the view's search field, and new ticket, inert until W4 as the page's own button is, as Linear's two icon buttons), and the main column as an inset sheet.",
+      "why": "The app's frame: the labelled sidebar in three groups (the views; the headed sections; Settings and the theme at the foot) under its head (the Space's switcher, then search, which takes you to the view's search field, and new ticket, inert until W4 as the page's own button is, as Linear's two icon buttons), and the main column as an inset sheet. It holds the app's one tooltip (every title the kit takes is drawn as Linear's tooltip, Base UI's) and its toasts (useToast: a short word that something was done, Base UI's); a Dialog holds its own of each, in the top layer with it.",
       "single": "There is one frame: the app's layout draws it around every screen.",
       "props": {
         "space": {
@@ -1094,6 +1104,60 @@
           "why": "An edit to the draft."
         }
       }
+    },
+    "Menu": {
+      "why": "A menu of actions behind a \"…\" button, as Linear's (a ticket's: copy its link and key, open its Jira issue and pull request): Base UI's keyboard, typeahead, focus and placement, the kit's one popover.",
+      "props": {
+        "label": {
+          "why": "The button's name and tooltip, and the menu's."
+        },
+        "items": {
+          "why": "The actions, each something to run or a link (a URL opens in a new tab, its row ending on the out arrow); \"|\" rules off a group."
+        },
+        "size": {
+          "why": "It sits in a row of buttons and matches them.",
+          "values": {
+            "sm": "Beside small buttons (the peek's head).",
+            "md": "Beside the page bar's buttons (the ticket's): the default."
+          }
+        }
+      }
+    },
+    "Checkbox": {
+      "why": "A setting on or off said in its own words beside a box, with a quiet line under them, as Linear's checkbox (Toggle is for a setting a FormRow names): Base UI's role, Space and form value.",
+      "single": "No screen yet: the admin's intake settings (taking a query's issues in by themselves) are its first, with Settings in W8; the kit sheet shows it.",
+      "props": {
+        "label": {
+          "why": "The words beside the box, and its name."
+        },
+        "checked": {
+          "why": "On or off."
+        },
+        "onChange": {
+          "why": "Flipped."
+        },
+        "note": {
+          "why": "A quiet line under the words: what it means."
+        }
+      }
+    },
+    "Radio": {
+      "why": "One of a few, all in view with what each means, as Linear's radios (Select is one of many in a popup; Segmented filters): Base UI's radio group, its arrow keys and form value.",
+      "single": "No screen yet: the admin's intake setting (ask first, or take everything in) is its first, with Settings in W8; the kit sheet shows it.",
+      "props": {
+        "label": {
+          "why": "The group's name (a FormRow's label says it on screen)."
+        },
+        "value": {
+          "why": "The chosen one."
+        },
+        "options": {
+          "why": "The choices, each its words and a quiet line under them."
+        },
+        "onChange": {
+          "why": "A choice."
+        }
+      }
     }
   },
   "vocab": {
@@ -1200,7 +1264,8 @@
         "redo": "The workflow editor's Redo.",
         "loop": "A loop's rounds on the workflow lane.",
         "shell": "A shell stage, in place of an agent's face.",
-        "gate": "A gate as a glyph (a stage's gate after it, in a field or a chip)."
+        "gate": "A gate as a glyph (a stage's gate after it, in a field or a chip).",
+        "more": "A menu of more actions (Menu's button)."
       }
     }
   }

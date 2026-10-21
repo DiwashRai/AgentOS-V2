@@ -599,6 +599,8 @@
   --w-switch: 28px;
   --h-switch: 16px;
   --switch-inset: 2px;
+  --h-check: 14px; /* a checkbox's box, a radio's ring */
+  --h-pip: 6px; /* the dot in a chosen radio */
   /* overlay: the full-window editor's question (unsaved changes) */
   --w-ask: 400px;
   --w-editor: 960px; /* a popped-out text area's measure */

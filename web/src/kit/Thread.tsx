@@ -2,6 +2,7 @@
 // reply box under it is a Composer.
 import { Avatar } from "./Avatar";
 import s from "./Thread.module.css";
+import { Tip } from "./tip";
 import { cx } from "./vars";
 
 export interface ThreadMessage {
@@ -35,7 +36,9 @@ export function Thread({ messages, look = "full" }: ThreadProps) {
               {same ? null : (
                 <span className={s.who}>
                   {m.mine && look === "full" ? "You" : m.name}
-                  <time title={m.full}>{m.at}</time>
+                  <Tip text={m.full}>
+                    <time>{m.at}</time>
+                  </Tip>
                 </span>
               )}
               <span className={s.bubble}>

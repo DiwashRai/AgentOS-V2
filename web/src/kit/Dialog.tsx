@@ -6,12 +6,15 @@
 // - full: the whole window, for editing (a ticket's workflow or item): the close at the top left,
 //   then the view (a Page, so its top bar and body are the same as on its own screen). `ask`
 //   draws a question over it, modal inside it (unsaved changes: Save, Discard, Keep editing).
-// It sits in the browser's top layer, so the kit's popovers opened inside it mount inside it.
+// It sits in the browser's top layer, so the kit's popovers, tooltips and toasts raised inside it
+// mount inside it.
 import { type ReactNode, useEffect, useId, useRef } from "react";
 
 import { Button } from "./Button";
 import s from "./Dialog.module.css";
 import { Layer } from "./layer";
+import { Tips } from "./tip";
+import { Toasts } from "./toast";
 
 export type DialogProps = {
   /** Its accessible name. */
@@ -173,13 +176,17 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
       }}
     >
       <Layer.Provider value={ref}>
-        {look === "side" ? (
-          side
-        ) : open ? (
-          <Full onClose={onClose} ask={ask}>
-            {children}
-          </Full>
-        ) : null}
+        <Tips>
+          <Toasts>
+            {look === "side" ? (
+              side
+            ) : open ? (
+              <Full onClose={onClose} ask={ask}>
+                {children}
+              </Full>
+            ) : null}
+          </Toasts>
+        </Tips>
       </Layer.Provider>
     </dialog>
   );

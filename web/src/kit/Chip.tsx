@@ -10,6 +10,7 @@ import { useEffect, useRef } from "react";
 import { Avatar } from "./Avatar";
 import s from "./Chip.module.css";
 import { Icon, type IconName } from "./Icon";
+import { Tip } from "./tip";
 import { tokenPx } from "./vars";
 
 /** A state's hue for a chip's dot. */
@@ -72,15 +73,11 @@ function useArrival(flash: boolean | undefined) {
 
 function Remove({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <button
-      type="button"
-      className={s.remove}
-      aria-label={`Remove ${label}`}
-      title={`Remove ${label}`}
-      onClick={onRemove}
-    >
-      <Icon name="close" />
-    </button>
+    <Tip text={`Remove ${label}`} said>
+      <button type="button" className={s.remove} aria-label={`Remove ${label}`} onClick={onRemove}>
+        <Icon name="close" />
+      </button>
+    </Tip>
   );
 }
 
@@ -125,11 +122,13 @@ export function Chip(props: ChipProps) {
   const { label, title, after, onRemove, flash } = props;
   const ref = useArrival(flash);
   return (
-    <span ref={ref} className={s.chip} {...flags(props)} title={title ?? label}>
-      <Lead {...(props.dot ? { dot: props.dot } : { lead: props.lead })} />
-      <span className={s.label}>{label}</span>
-      {after ? <After after={after} /> : null}
-      {onRemove ? <Remove label={label} onRemove={onRemove} /> : null}
-    </span>
+    <Tip text={title ?? label} cut={title === undefined}>
+      <span ref={ref} className={s.chip} {...flags(props)}>
+        <Lead {...(props.dot ? { dot: props.dot } : { lead: props.lead })} />
+        <span className={s.label}>{label}</span>
+        {after ? <After after={after} /> : null}
+        {onRemove ? <Remove label={label} onRemove={onRemove} /> : null}
+      </span>
+    </Tip>
   );
 }

@@ -26,6 +26,7 @@ import {
 } from "../../kit";
 import { ActionButton, headerActions } from "../shared/Actions";
 import { threadMessage, useBoard } from "../shared/board";
+import { TicketMenu } from "../shared/TicketMenu";
 import { useSearch } from "../shared/useSearch";
 import { ContextTab } from "./ContextTab";
 import { Now } from "./now";
@@ -189,9 +190,12 @@ export function TicketView() {
       search={search}
       {...(t
         ? {
-            action: headerActions(t.actions.filter((a) => a.id !== "cancel")).map((a) => (
-              <ActionButton key={a.id} action={a} size="md" header />
-            )),
+            action: [
+              ...headerActions(t.actions.filter((a) => a.id !== "cancel")).map((a) => (
+                <ActionButton key={a.id} action={a} size="md" header />
+              )),
+              <TicketMenu key="more" t={t} size="md" />,
+            ],
             // keyed by the ticket: a draft is one ticket's, and doesn't follow you to the next
             side: { content: <Talk key={t.key} t={t} me={me} /> },
           }

@@ -1,7 +1,7 @@
 // The app's frame: the labelled sidebar in three groups under its head (the Space's switcher, which
 // opens on who is signed in, then search and new ticket at the row's end, as Linear's): the views,
 // the headed sections, and Settings with the theme menu (a row naming the current theme) at the
-// foot; and the main column, an inset sheet beside it.
+// foot; and the main column, an inset sheet beside it. It holds the app's tooltip and its toasts.
 import { Popover } from "@base-ui/react/popover";
 import { type ReactNode, useState } from "react";
 import { Link, matchPath, useLocation } from "react-router";
@@ -13,6 +13,8 @@ import p from "./Popover.module.css";
 import { activeSearch } from "./search";
 import { Select } from "./Select";
 import { applyTheme, currentTheme, THEMES, themeOf, type ThemeId } from "./theme";
+import { Tip, TipDelay, Tips } from "./tip";
+import { Toasts } from "./toast";
 import { cx, tokenPx } from "./vars";
 
 /** A view: it leads to its screen. */
@@ -58,10 +60,12 @@ const STUB_NOTE = "Not in this version yet";
 function SideLink({ item, path }: { item: NavEntry; path: string }) {
   if (!("to" in item))
     return (
-      <span className={cx(s.item, s.stub)} title={`${item.label}: ${STUB_NOTE}`}>
-        <Icon name={item.icon} />
-        <span className={s.label}>{item.label}</span>
-      </span>
+      <Tip text={`${item.label}: ${STUB_NOTE}`}>
+        <span className={cx(s.item, s.stub)}>
+          <Icon name={item.icon} />
+          <span className={s.label}>{item.label}</span>
+        </span>
+      </Tip>
     );
   const n = item.count ?? 0;
   const here =
@@ -166,7 +170,8 @@ const THEME_ITEMS = THEMES.map((t) => ({
   aside: <Swatches theme={t.id} />,
 }));
 
-export function Frame({ space, nav, sections, foot, me, children }: FrameProps) {
+/** The sidebar and the main column. */
+function App({ space, nav, sections, foot, me, children }: FrameProps) {
   const [theme, setTheme] = useState<ThemeId>(currentTheme);
   const path = useLocation().pathname;
   return (
@@ -176,23 +181,16 @@ export function Frame({ space, nav, sections, foot, me, children }: FrameProps) 
           <Workspace space={space} me={me} />
           {/* search and new ticket, Linear's two icon buttons at the head's end; new ticket is the
               page's own button again, and like it arrives with W4 */}
-          <button
-            type="button"
-            className={s.tool}
-            aria-label="Search"
-            title="Search (/)"
-            onClick={focusSearch}
-          >
-            <Icon name="search" />
-          </button>
-          <button
-            type="button"
-            className={cx(s.tool, s.create)}
-            aria-label="New ticket"
-            title={`New ticket: ${STUB_NOTE}`}
-          >
-            <Icon name="compose" />
-          </button>
+          <Tip text="Search (/)">
+            <button type="button" className={s.tool} aria-label="Search" onClick={focusSearch}>
+              <Icon name="search" />
+            </button>
+          </Tip>
+          <Tip text={`New ticket: ${STUB_NOTE}`}>
+            <button type="button" className={cx(s.tool, s.create)} aria-label="New ticket">
+              <Icon name="compose" />
+            </button>
+          </Tip>
         </div>
         <div className={s.list}>
           {nav.map((item) => (
@@ -225,5 +223,17 @@ export function Frame({ space, nav, sections, foot, me, children }: FrameProps) 
       </nav>
       <main className={s.main}>{children}</main>
     </div>
+  );
+}
+
+export function Frame(props: FrameProps) {
+  return (
+    <TipDelay>
+      <Tips>
+        <Toasts>
+          <App {...props} />
+        </Toasts>
+      </Tips>
+    </TipDelay>
   );
 }
