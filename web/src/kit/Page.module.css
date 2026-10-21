@@ -62,7 +62,7 @@
 }
 .crumb > a:focus-visible {
   outline: var(--line-2) solid var(--focus);
-  outline-offset: var(--line-1);
+  outline-offset: var(--focus-tight);
 }
 .title.step {
   font-size: var(--fs-4);
@@ -157,14 +157,14 @@
 .split > .body {
   padding: var(--sp-10) var(--sp-10) calc(var(--sp-10) * 2) 0;
 }
-.split > .body > * {
+.measure {
   width: 100%;
   max-width: var(--w-ticket);
   margin-inline: auto;
 }
 /* beside a rail of settings the body is an editor: flush with the title, out to the rail's gutter,
    so it lines up the same full window over the ticket as beside the sidebar */
-.split[data-side="rail"] > .body > * {
+.split[data-side="rail"] .measure {
   max-width: none;
 }
 /* the column beside: no card, the page's own ground ruled off by one hairline, full height, so what

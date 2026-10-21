@@ -2,8 +2,9 @@
 //   ledger  every kit component, prop and variant (string and number literals, and the fields
 //           of the kit's own object and item shapes inside a prop, three levels down) has a
 //           one-line reason in src/kit/ledger.json (`items` holds the fields); a prop typed with one of
-//           the kit's vocabularies (Space, Width, Tone, MarkKind, IconName) takes the vocabulary's
-//           reasons, given once; the ledger names nothing the kit doesn't have;
+//           the kit's vocabularies (Space, Width, Length, Tone, MarkKind, IconName) takes the
+//           vocabulary's reasons, given once; the ledger names nothing the kit doesn't have (the
+//           rules are ./ledger.mjs, tested beside it);
 //   budget  at most `budget.components` components, `budget.props` props each, `budget.lines`
 //           code lines in src/kit; raising one against the base needs a `raises` entry (the
 //           owner's to add, as the gate baseline's are). The budget is a checkpoint, not a wall:
@@ -21,6 +22,8 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { ledgerProblems } from "./ledger.mjs";
 
 const WEB = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = join(WEB, "src");
@@ -247,54 +250,6 @@ function ledgerAt(ref) {
 }
 
 const BUDGET = ["components", "props", "lines"];
-
-function propProblems(where, value, entry, led) {
-  if (!entry?.why) return [`${where}: no reason in the ledger`];
-  if (value.vocab)
-    return led.vocab?.[value.vocab]
-      ? []
-      : [`${where}: vocabulary ${value.vocab} not in the ledger`];
-  const out = [];
-  for (const v of value.values)
-    if (!entry.values?.[v]) out.push(`${where}=${v}: no reason in the ledger`);
-  for (const v of Object.keys(entry.values ?? {}))
-    if (!value.values.includes(v)) out.push(`${where}=${v}: in the ledger, not in the kit`);
-  const inner = `${where}${value.array ? "[]" : ""}`;
-  for (const [field, f] of Object.entries(value.items))
-    out.push(...propProblems(`${inner}.${field}`, f, entry.items?.[field], led));
-  for (const field of Object.keys(entry.items ?? {}))
-    if (!(field in value.items)) out.push(`${inner}.${field}: in the ledger, not in the kit`);
-  return out;
-}
-
-function ledgerProblems(kit, vocab, led) {
-  const problems = [];
-  for (const [name, comp] of Object.entries(kit)) {
-    const entry = led.components[name];
-    if (comp.notComponent) problems.push(`${name}: a PascalCase export that isn't a component`);
-    if (!entry?.why) {
-      problems.push(`${name}: no ledger entry with a reason`);
-      continue;
-    }
-    for (const [prop, value] of Object.entries(comp.props))
-      problems.push(...propProblems(`${name}.${prop}`, value, entry.props?.[prop], led));
-    for (const prop of Object.keys(entry.props ?? {}))
-      if (!(prop in comp.props)) problems.push(`${name}.${prop}: in the ledger, not in the kit`);
-    const n = Object.keys(comp.props).length;
-    if (n > led.budget.props)
-      problems.push(`${name}: ${String(n)} props > ${String(led.budget.props)}`);
-  }
-  for (const name of Object.keys(led.components))
-    if (!(name in kit)) problems.push(`${name}: in the ledger, not in the kit`);
-  for (const [name, values] of Object.entries(vocab)) {
-    const entry = led.vocab?.[name];
-    for (const v of values)
-      if (!entry?.values?.[v]) problems.push(`${name}=${v}: no reason in the ledger's vocabulary`);
-    for (const v of Object.keys(entry?.values ?? {}))
-      if (!values.includes(v)) problems.push(`${name}=${v}: in the ledger, not in the kit`);
-  }
-  return problems;
-}
 
 /** Budget fields raised against the base without a `raises` entry saying why. */
 function raised(led, before) {

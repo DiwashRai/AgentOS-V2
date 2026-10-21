@@ -11,12 +11,13 @@ export interface OverrideProps {
 }
 
 export function Override({ value, own }: OverrideProps) {
-  const say = `${value}, replacing ${own}`;
   return (
-    <span className={s.over} title={say} aria-label={say}>
+    <span className={s.over} title={`${value}, replacing ${own}`}>
       <i aria-hidden="true" />
       <b>{value}</b>
       <s aria-hidden="true">{own}</s>
+      {/* what the struck value says, in words for assistive tech */}
+      <span className={s.unseen}>{`, replacing ${own}`}</span>
     </span>
   );
 }

@@ -156,7 +156,7 @@ function Row({ st, i, last, edit, pos, foot }: RowProps) {
     <div className={s.row}>
       <div className={s.block} data-loop={pos}>
         {pos ? <span className={s.band} data-pos={pos} aria-hidden="true" /> : null}
-        {st.content}
+        <div className={s.card}>{st.content}</div>
         {foot ? <div className={s.foot}>{foot}</div> : null}
         {inside ? joint : null}
       </div>

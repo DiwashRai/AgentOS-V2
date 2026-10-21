@@ -26,20 +26,15 @@ export function tokenPx(name: `--${string}`): number {
 /** Text colour: the three inks, or a status hue's text colour. */
 export type Tone = "1" | "2" | "3" | "you" | "done" | "blocked" | "live";
 
-/** A column width: a `--col-*` size, a share of the free space, the content's own width (at
- *  least 2xl), a hairline, or a glyph's or a face's slot. */
-export type Width =
-  "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "fill" | "fit" | "line" | "dot" | "face";
+/** A column width: a `--col-*` size, a share of the free space, or a face's slot. */
+export type Width = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "fill" | "face";
 
-/** A width that is a length: every Width but the two whole tracks (`fill`, `fit`), for a place
- *  that wraps it in a track of its own (a hugging column's cap, a fill column's floor). */
-export type Length = Exclude<Width, "fill" | "fit">;
+/** A width that is a length: every Width but the whole track `fill`, for a place that wraps it in
+ *  a track of its own (a hugging column's cap, a fill column's floor). */
+export type Length = Exclude<Width, "fill">;
 
 const WIDTH: Partial<Record<Width, string>> = {
   fill: "minmax(0, 1fr)",
-  fit: "minmax(var(--col-2xl), max-content)",
-  line: "var(--line-1)",
-  dot: "var(--sp-6)",
   face: "var(--h-chip)",
 };
 

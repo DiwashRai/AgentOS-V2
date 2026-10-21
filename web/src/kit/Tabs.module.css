@@ -28,7 +28,7 @@
 }
 .tab:focus-visible {
   outline: var(--line-2) solid var(--focus);
-  outline-offset: var(--line-2);
+  outline-offset: var(--focus-out);
   border-radius: var(--r-1);
 }
 .tab[data-active] {

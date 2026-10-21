@@ -145,7 +145,6 @@ function CompactRow({
   const line = nowLine(t, me);
   return (
     <Row
-      look={g === "done" ? "flat" : g === "needs_you" ? "you" : "raised"}
       action={{ label: `${t.key}: ${t.title}`, run: onToggle }}
       open={open}
       more={<Expanded t={t} me={me} now={now} />}

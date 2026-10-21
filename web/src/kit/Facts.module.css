@@ -36,7 +36,7 @@
   --priority-on: var(--ink-3);
   --type-glyph: var(--ink-3);
 }
-.fact:hover {
+.fact:not([data-picker]):hover {
   background: var(--tk-hover);
 }
 .fact > dt {
@@ -48,28 +48,31 @@
   white-space: nowrap;
 }
 .fact > dd {
+  margin: 0;
+}
+.value {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
   min-width: 0;
   min-height: var(--h-fact);
-  margin: 0;
   padding: 0 var(--sp-4);
   color: var(--tk-ink);
   font-size: var(--fs-tk);
   font-weight: 400;
   white-space: nowrap;
 }
-.fact > dd > svg {
+/* the value's muted glyph */
+.glyph {
+  display: inline-flex;
   flex: none;
   color: var(--ink-3);
 }
-/* a picker in a chip brings its own padding and hover */
-.fact > dd:has(> button:only-child) {
-  padding: 0;
-}
-.fact:has(button):hover {
-  background: none;
+/* a picker brings its own padding and hover */
+.picker {
+  display: flex;
+  align-items: center;
+  min-height: var(--h-fact);
 }
 .note {
   margin-left: calc(var(--sp-2) * -1);

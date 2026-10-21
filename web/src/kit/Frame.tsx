@@ -95,7 +95,12 @@ function Workspace({ space, me }: { space: string; me: FrameProps["me"] }) {
         </Popover.Trigger>
       ) : null}
       <Popover.Portal>
-        <Popover.Positioner side="bottom" align="start" sideOffset={() => tokenPx("--sp-2")}>
+        <Popover.Positioner
+          className={p.layer}
+          side="bottom"
+          align="start"
+          sideOffset={() => tokenPx("--sp-2")}
+        >
           <Popover.Popup className={cx(p.sheet, s.account)} aria-label={space}>
             <span className={p.head}>{space}</span>
             {me ? (

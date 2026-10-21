@@ -67,8 +67,12 @@ function variantOf(action: Action, header: boolean): ActionLook {
 export function ActionButton({ action, size = "sm", header = false }: ActionButtonProps) {
   const blocked = blockedFor(action, useSession().data?.me?.role);
   const variant = variantOf(action, header);
-  return (
-    <Button size={size} variant={variant} {...(blocked ? { blocked } : {})}>
+  return blocked !== null ? (
+    <Button size={size} variant={variant} blocked={blocked}>
+      {WORD[action.id]}
+    </Button>
+  ) : (
+    <Button size={size} variant={variant}>
       {WORD[action.id]}
     </Button>
   );

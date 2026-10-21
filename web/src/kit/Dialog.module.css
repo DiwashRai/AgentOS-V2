@@ -43,12 +43,12 @@
   overflow-y: auto;
   scrollbar-width: thin;
 }
-.body > * {
+.section {
   flex: none;
   padding: var(--sp-8) var(--sp-9);
   border-bottom: var(--line-1) solid var(--tk-card-edge);
 }
-.body > :last-child {
+.section:last-child {
   border-bottom: 0;
 }
 /* the foot: pinned under the sections, ruled off where they scroll away under it */

@@ -36,7 +36,7 @@ a {
 /* Focus is ink: a 2px outline at a 2px offset that follows the element's own radius. */
 :focus-visible {
   outline: var(--line-2) solid var(--focus);
-  outline-offset: var(--line-2);
+  outline-offset: var(--focus-out);
 }
 
 /* One place pauses animation while the tab is hidden (kit/theme.ts) and honours reduced motion. */

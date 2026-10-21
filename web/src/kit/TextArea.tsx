@@ -5,7 +5,7 @@
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "./Button";
-import { type Described, useDescription } from "./described";
+import { describe, useDescription } from "./described";
 import { Dialog } from "./Dialog";
 import s from "./Form.module.css";
 import { Page } from "./Page";
@@ -38,26 +38,15 @@ export function TextArea({ label, value, onChange, placeholder, lines = 3, fill 
   }, [out]);
   // popped out, the row's note and problem are out of reach (the page under the window is inert):
   // the popped area is described by its own copies of them, under it
-  const own: Described = {
-    ...(description.note || description.problem
-      ? {
-          "aria-describedby": [
-            description.note ? `${words}n` : null,
-            description.problem ? `${words}p` : null,
-          ]
-            .filter((x) => x !== null)
-            .join(" "),
-        }
-      : {}),
-    ...(description.problem ? { "aria-invalid": true as const } : {}),
-  };
+  const inline = describe(description.id, description.note, description.problem);
+  const own = describe(words, description.note, description.problem);
   const area = (full: boolean) => (
     <textarea
       ref={full ? popped : undefined}
       className={cx(s.box, s.area, (full || fill === true) && s.fill)}
       style={vars({ "--lines": String(lines) })}
       aria-label={label}
-      {...(full ? own : description.attrs)}
+      {...(full ? own : inline)}
       value={value}
       placeholder={placeholder}
       spellCheck={false}

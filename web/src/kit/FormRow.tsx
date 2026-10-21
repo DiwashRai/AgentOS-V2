@@ -4,7 +4,7 @@
 // marked invalid while it has one.
 import { type ReactNode, useId } from "react";
 
-import { type Described, DescribedBy } from "./described";
+import { DescribedBy } from "./described";
 
 import s from "./Form.module.css";
 
@@ -14,42 +14,32 @@ export interface FormRowProps {
   /** The control (a Field, a Select, a Toggle, a NumberField…). */
   children: ReactNode;
   /** Quiet words after the control ("the agent's: high"). */
-  note?: string;
+  note?: string | undefined;
   /** What's wrong with the value, under it in the blocked ink. */
-  problem?: string;
+  problem?: string | undefined;
 }
 
 export function FormRow({ label, children, note, problem }: FormRowProps) {
   const id = useId();
-  const [labelId, noteId, problemId] = [`${id}l`, `${id}n`, `${id}p`];
-  const ids = [note ? noteId : null, problem ? problemId : null].filter((x) => x !== null);
-  const described: Described = {
-    ...(ids.length > 0 ? { "aria-describedby": ids.join(" ") } : {}),
-    ...(problem ? { "aria-invalid": true as const } : {}),
-  };
   return (
-    <div className={s.row} role="group" aria-labelledby={labelId}>
-      <span className={s.label} id={labelId}>
+    <div className={s.row} role="group" aria-labelledby={`${id}l`}>
+      <span className={s.label} id={`${id}l`}>
         {label}
       </span>
       <span className={s.control}>
         <DescribedBy.Provider
-          value={{
-            attrs: described,
-            ...(note ? { note } : {}),
-            ...(problem ? { problem } : {}),
-          }}
+          value={{ id, ...(note ? { note } : {}), ...(problem ? { problem } : {}) }}
         >
           {children}
         </DescribedBy.Provider>
         {note ? (
-          <span className={s.note} id={noteId}>
+          <span className={s.note} id={`${id}n`}>
             {note}
           </span>
         ) : null}
       </span>
       {problem ? (
-        <span className={s.problem} id={problemId}>
+        <span className={s.problem} id={`${id}p`}>
           {problem}
         </span>
       ) : null}

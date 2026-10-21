@@ -72,7 +72,7 @@ function Header({ t, me, now, plan }: HeaderProps) {
           {lead}
         </Text>
       </Stack>
-      <Properties t={t} now={now} owner={<Owner t={t} />} />
+      <Properties t={t} now={now} owner={{ picker: <Owner t={t} /> }} />
       <Stepper model={stageModel(t, me)} now={<Now t={t} me={me} now={now} plan={plan} />} />
     </Stack>
   );

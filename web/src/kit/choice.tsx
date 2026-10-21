@@ -55,7 +55,12 @@ export function Choice<T extends ChoiceItem>(props: ChoiceProps<T>) {
         {trigger.body}
       </Base.Trigger>
       <Base.Portal {...layer}>
-        <Base.Positioner side={side} align="start" sideOffset={() => tokenPx("--sp-2")}>
+        <Base.Positioner
+          className={p.layer}
+          side={side}
+          align="start"
+          sideOffset={() => tokenPx("--sp-2")}
+        >
           <Base.Popup className={cx(p.sheet, sheet)} aria-label={label}>
             <Base.Input
               className={p.find}

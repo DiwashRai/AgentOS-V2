@@ -279,7 +279,6 @@ export function RunsTab({ t }: { t: Ticket }) {
       {items.map((r) => (
         <Row
           key={r.id}
-          look={r.ended_at === null ? "raised" : "flat"}
           action={{
             label: `Run ${String(r.id)}: ${whereText(r, w)}`,
             run: () => {

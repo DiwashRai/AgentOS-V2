@@ -603,6 +603,15 @@
   --w-ask: 400px;
   --w-editor: 960px; /* a popped-out text area's measure */
   --w-form-col: 280px; /* a form's two columns fold to one below this each */
+  --z-sticky: 2; /* a list's sticky group heads, over its rows */
+  --z-pop: 10; /* the kit's popups, over everything on the page (sticky heads included) */
+  /* focus: the ring's offset; outside by default, tight on a bordered box (a field, a chip's ×), inside
+     on a row that runs to its list's edges */
+  --focus-out: var(--line-2);
+  --focus-tight: var(--line-1);
+  --focus-in: calc(var(--line-2) * -1);
+  /* the room a box that clips (a scroller) keeps round its content, so their rings show */
+  --focus-room: 4px;
   /* drag: a sortable row's handle, in the gutter left of the row */
   --w-grip: 20px;
 }

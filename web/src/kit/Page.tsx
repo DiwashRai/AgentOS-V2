@@ -25,11 +25,11 @@ export interface PageProps {
    *  then its key), the last step the name, drawn at crumb size rather than as a view's heading. */
   title: string | readonly [{ label: string; href: string }, string];
   /** After the title, quiet: the Space, a scope. */
-  context?: string;
+  context?: string | undefined;
   /** The number carries the weight, a zero recedes; "|" draws a separator. */
   counters?: readonly (Counter | "|")[];
   /** The view's own controls after the counters (filter pills, a crumb). */
-  middle?: ReactNode;
+  middle?: ReactNode | undefined;
   search?: Search;
   /** The bar's buttons at its right end (New ticket; a ticket's actions). */
   action?: ReactNode;
@@ -51,7 +51,7 @@ function Counters({ items }: { items: readonly (Counter | "|")[] }) {
             key={c.label}
             className={cx(s.counter, c.n === 0 && s.zero, c.n > 0 && c.mark === "you" && s.you)}
           >
-            {c.mark ? <Mark kind={c.mark} glyph small /> : null}
+            {c.mark ? <Mark kind={c.mark} glyph small name={false} /> : null}
             <b>{c.n}</b> {c.label}
           </span>
         ),
@@ -108,7 +108,9 @@ export function Page({
       </header>
       {side ? (
         <div className={s.split} data-side={side.look ?? "column"}>
-          <div className={s.body}>{children}</div>
+          <div className={s.body}>
+            <div className={s.measure}>{children}</div>
+          </div>
           <aside className={s.side}>{side.content}</aside>
         </div>
       ) : (

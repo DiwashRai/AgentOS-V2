@@ -4,7 +4,7 @@ import { useDescribed } from "./described";
 import s from "./Form.module.css";
 
 export interface ToggleProps {
-  /** Its accessible name and tooltip (a FormRow's label says it on screen). */
+  /** Its accessible name (a FormRow's label says it on screen). */
   label: string;
   on: boolean;
   onChange: (on: boolean) => void;
@@ -19,7 +19,6 @@ export function Toggle({ label, on, onChange }: ToggleProps) {
       aria-checked={on}
       aria-label={label}
       {...described}
-      title={label}
       className={s.switch}
       onClick={() => {
         onChange(!on);

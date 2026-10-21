@@ -6,24 +6,14 @@ import s from "./Table.module.css";
 import { cx, vars, type Length, type Width, width } from "./vars";
 
 /** How a column takes its width: its width as set; or as wide as each row's own content, up to it
- *  (`hug`); or its width while there is room, less when the list is too narrow (`give`); or a fill
- *  column that keeps a floor (`min`). One of them, never two. */
+ *  (`hug`); or a fill column that keeps a floor (`min`). One of them, never two. */
 type Track =
-  | { width: Width; hug?: never; give?: never; min?: never }
+  | { width: Width; hug?: never; min?: never }
   | {
       width: Length;
       /** As wide as each row's own content, up to width: the free width goes to the fill columns.
        *  Each row sizes it alone, so it suits a list without a column head (Linear's right cluster). */
       hug: true;
-      give?: never;
-      min?: never;
-    }
-  | {
-      width: Length;
-      /** Its width while there is room, less only when the list is too narrow for the fill column's
-       *  floor (a row's quiet properties, which then cut their words). */
-      give: true;
-      hug?: never;
       min?: never;
     }
   | {
@@ -32,7 +22,6 @@ type Track =
        *  its chips, when the list is narrow). */
       min: Length;
       hug?: never;
-      give?: never;
     };
 
 export type Column = Track & {
@@ -43,14 +32,16 @@ export type Column = Track & {
    *  way, not the buttons. */
   keep?: boolean;
 };
+
 function track(c: Column): string {
   if (c.hug) return `fit-content(${width(c.width)})`;
-  if (c.min) return `minmax(${width(c.min)}, 1fr)`;
-  return c.give ? `minmax(0, ${width(c.width)})` : width(c.width);
+  return c.min ? `minmax(${width(c.min)}, 1fr)` : width(c.width);
 }
-
 /** The columns rows lay their cells on; a Row resets it for what it holds. */
 export const Columns = createContext<readonly Column[]>([]);
+
+/** Whether the list scrolls inside its surface: a group head in it stays at the top (Head reads it). */
+export const Scrolling = createContext(false);
 
 export function useColumns(): readonly Column[] {
   return useContext(Columns);
@@ -78,22 +69,24 @@ export function Table(props: TableProps) {
   const cols = columns.map(track);
   return (
     <Columns.Provider value={columns}>
-      <div
-        className={cx(s.table, scroll && s.scroll, bleed && s.bleed, measure && s.measure)}
-        style={vars({ "--cols": cols.join(" ") })}
-      >
-        {head ? (
-          <div className={s.head} aria-hidden="true">
-            {columns.map((c, i) => (
-              <span key={i} data-end={c.end}>
-                {c.label}
-              </span>
-            ))}
-          </div>
-        ) : null}
-        <div className={s.list}>{children}</div>
-        {foot ? <footer className={s.foot}>{foot}</footer> : null}
-      </div>
+      <Scrolling.Provider value={scroll}>
+        <div
+          className={cx(s.table, scroll && s.scroll, bleed && s.bleed, measure && s.measure)}
+          style={vars({ "--cols": cols.join(" ") })}
+        >
+          {head ? (
+            <div className={s.head} aria-hidden="true">
+              {columns.map((c, i) => (
+                <span key={i} data-end={c.end}>
+                  {c.label}
+                </span>
+              ))}
+            </div>
+          ) : null}
+          <div className={s.list}>{children}</div>
+          {foot ? <footer className={s.foot}>{foot}</footer> : null}
+        </div>
+      </Scrolling.Provider>
     </Columns.Provider>
   );
 }

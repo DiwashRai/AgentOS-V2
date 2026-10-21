@@ -55,7 +55,7 @@
 }
 .card:has(.hit:focus-visible) {
   outline: var(--line-2) solid var(--focus);
-  outline-offset: var(--line-2);
+  outline-offset: var(--focus-out);
 }
 .card[data-edit] .summary {
   cursor: pointer;

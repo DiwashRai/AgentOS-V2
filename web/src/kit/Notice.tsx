@@ -1,28 +1,55 @@
 import type { ReactNode } from "react";
 
+import { Button } from "./Button";
 import s from "./Notice.module.css";
 
-export interface NoticeProps {
-  /** status: a quiet loading or error line; empty: the quiet row of an empty zone; problem: what
-   *  went wrong, a line of the list on a blocked edge, at a reading measure; more: the strip
-   *  under a capped list ("Show 3 more"). */
-  kind: "status" | "empty" | "problem" | "more";
+/** A problem's second line, muted: what can be done about it, words with a link inside them
+ *  ("An admin can fix the query in" Settings › Intake "."). */
+export type NoticeFix =
+  string | { before: string; link: { label: string; href: string }; after?: string };
+
+interface Said {
   /** The lead words, a step firmer than the rest ("All quiet"); a dash sets them off from it. */
   lead?: string;
   children?: ReactNode;
-  /** A status line that reports a failure (said at once, in the blocked colour). */
-  error?: boolean;
-  /** item: a line of a two-line item list (Intake), in the items' size; an empty ring or a
-   *  problem's blocked dot sits where the group labels' chevrons do, the words just after it.
-   *  end: a status that closes a list, its words at the rows' far end ("checked 2m ago").
-   *  Otherwise its words line up with a group head's name. */
-  align?: "item" | "end";
-  /** A problem's second line, muted: what can be done about it, apart from what went wrong. */
-  fix?: ReactNode;
 }
 
+/** One of four quiet lines, each with only what it draws. status: a quiet loading or error line;
+ *  empty: the quiet row of an empty zone; problem: what went wrong, a line of the list on a blocked
+ *  edge, at a reading measure; more: the strip under a capped list ("Show 3 more"). */
+export type NoticeProps = Said &
+  (
+    | {
+        kind: "status";
+        /** A status line that reports a failure (said at once, in the blocked colour). */
+        error?: boolean;
+        /** end: a status that closes a list, its words at the rows' far end ("checked 2m ago").
+         *  Otherwise its words line up with a group head's name. */
+        align?: "end";
+        fix?: never;
+        more?: never;
+      }
+    | {
+        kind: "empty" | "problem";
+        /** item: a line of a two-line item list (Intake), in the items' size; an empty ring or a
+         *  problem's blocked dot sits where the group labels' chevrons do, the words just after it. */
+        align?: "item";
+        /** A problem's second line: what can be done about it. */
+        fix?: NoticeFix;
+        error?: never;
+        more?: never;
+      }
+    | {
+        kind: "more";
+        /** The button that shows the rest ("Show 3 more"), its title saying how many in all. */
+        more?: { label: string; title: string; run: () => void };
+        error?: never;
+        align?: never;
+        fix?: never;
+      }
+  );
 /** The lead, set off from what follows by a dash, so the two never run on. */
-function Said({ lead, children }: { lead: string | undefined; children: ReactNode }) {
+function Said({ lead, children }: Said) {
   return (
     <>
       {lead ? <b>{lead}</b> : null}
@@ -32,15 +59,30 @@ function Said({ lead, children }: { lead: string | undefined; children: ReactNod
   );
 }
 
+/** A problem's fix: its words, a link inside them drawn as a word of the sentence. */
+function Fix({ fix }: { fix: NoticeFix }) {
+  if (typeof fix === "string") return <p className={s.fix}>{fix}</p>;
+  return (
+    <p className={s.fix}>
+      {`${fix.before} `}
+      <Button variant="link" href={fix.link.href}>
+        {fix.link.label}
+      </Button>
+      {fix.after ?? ""}
+    </p>
+  );
+}
+
 /** Loading, empty and failure states, in the quiet language: no spinners, no toasts. */
-export function Notice({ kind, lead, children, error, align, fix }: NoticeProps) {
+export function Notice(props: NoticeProps) {
+  const { kind, lead, children } = props;
   if (kind === "status") {
     return (
       <p
         className={s.status}
-        role={error ? "alert" : "status"}
-        data-error={error}
-        data-align={align}
+        role={props.error ? "alert" : "status"}
+        data-error={props.error}
+        data-align={props.align}
       >
         {lead ? <b>{lead}</b> : null}
         {children}
@@ -49,16 +91,28 @@ export function Notice({ kind, lead, children, error, align, fix }: NoticeProps)
   }
   if (kind === "problem") {
     return (
-      <div className={s.problem} role="status" data-align={align}>
+      <div className={s.problem} role="status" data-align={props.align}>
         {lead ? <b>{lead}</b> : null}
         <p>{children}</p>
-        {fix ? <p className={s.fix}>{fix}</p> : null}
+        {props.fix !== undefined ? <Fix fix={props.fix} /> : null}
+      </div>
+    );
+  }
+  if (kind === "more") {
+    return (
+      <div className={s.more}>
+        {props.more ? (
+          <Button variant="quiet" size="xs" title={props.more.title} onClick={props.more.run}>
+            {props.more.label}
+          </Button>
+        ) : null}
+        <Said lead={lead}>{children}</Said>
       </div>
     );
   }
   return (
-    <div className={s[kind]} data-align={align}>
-      {kind === "empty" ? <i aria-hidden="true" /> : null}
+    <div className={s.empty} data-align={props.align}>
+      <i aria-hidden="true" />
       <Said lead={lead}>{children}</Said>
     </div>
   );

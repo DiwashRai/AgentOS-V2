@@ -47,6 +47,7 @@ export function Field({ label, value, onChange, placeholder, mono, search }: Fie
     <input
       ref={ref}
       type={search ? "search" : "text"}
+      aria-keyshortcuts={search ? "/" : undefined}
       className={search ? s.findInput : cx(s.box, s.field, mono && s.mono)}
       aria-label={label}
       {...described}
@@ -71,7 +72,9 @@ export function Field({ label, value, onChange, placeholder, mono, search }: Fie
     <label className={s.search}>
       <Icon name="search" />
       {input}
-      <Badge kind="kbd">/</Badge>
+      <span aria-hidden="true">
+        <Badge kind="kbd">/</Badge>
+      </span>
     </label>
   );
 }

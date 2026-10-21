@@ -236,7 +236,7 @@
   color: var(--side-on-ink);
 }
 .item:focus-visible {
-  outline-offset: calc(var(--line-2) * -1);
+  outline-offset: var(--focus-in);
 }
 /* an entry with no screen yet: the views' ink and weight, but no hover and no pointer */
 .stub {

@@ -119,14 +119,13 @@ const MODELS: readonly { label: string; model: StepperModel }[] = [
     label: "Parked on you",
     model: {
       stages: stages(1, "you").map((s, i) => (i === 1 ? { ...s, state: "done" } : s)),
-      label: "Sign-off",
       live: false,
       closed: false,
     },
   },
   {
     label: "Running",
-    model: { stages: stages(2, "passed"), label: "Implement", live: true, closed: false },
+    model: { stages: stages(2, "passed"), live: true, closed: false },
   },
   {
     label: "Review loop",
@@ -134,8 +133,6 @@ const MODELS: readonly { label: string; model: StepperModel }[] = [
       stages: stages(4, "passed").map((s) =>
         s.name === "Review" ? { ...s, round: { n: 2, of: 3 } } : s,
       ),
-      label: "Review",
-      round: { n: 2, of: 3 },
       live: true,
       closed: false,
     },
@@ -146,14 +143,13 @@ const MODELS: readonly { label: string; model: StepperModel }[] = [
       stages: stages(2, "passed").map((s) =>
         s.name === "Implement" ? { ...s, state: "failed" } : s,
       ),
-      label: "Implement",
       live: false,
       closed: false,
     },
   },
   {
     label: "Done",
-    model: { stages: stages(6, "passed"), label: "Done", live: false, closed: false },
+    model: { stages: stages(6, "passed"), live: false, closed: false },
   },
 ];
 
@@ -510,11 +506,9 @@ export function KitSheet() {
             </Stack>
           </Section>
           <Section name="Stepper and Meter">
+            <Stepper model={MODELS[1]?.model ?? { stages: [], live: false, closed: false }} />
             <Stepper
-              model={MODELS[1]?.model ?? { stages: [], label: "", live: false, closed: false }}
-            />
-            <Stepper
-              model={MODELS[0]?.model ?? { stages: [], label: "", live: false, closed: false }}
+              model={MODELS[0]?.model ?? { stages: [], live: false, closed: false }}
               compact
             />
             <Meter done={2} total={5} />
@@ -536,14 +530,14 @@ export function KitSheet() {
                 <Text variant="label">A raised line</Text>
                 <Age text="now" />
               </Row>
-              <Row look="you">
+              <Row>
                 <Badge kind="key">{"NW-14"}</Badge>
                 <Text variant="label" weight={600}>
                   Needs you
                 </Text>
                 <Age text="3h 10m" />
               </Row>
-              <Row look="flat" alert="An alert under the row">
+              <Row alert="An alert under the row">
                 <Badge kind="key">{"NW-5"}</Badge>
                 <Text variant="label" tone="2">
                   A settled line
@@ -631,7 +625,7 @@ export function KitSheet() {
             <Facts
               items={[
                 { label: "Owner", value: "Ada" },
-                { label: "Workflow", value: "Standard v3" },
+                { label: "Workflow", icon: "workflow", value: "Standard v3" },
               ]}
             />
             <Surface level="sheet" pad={7}>

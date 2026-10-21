@@ -161,7 +161,7 @@ function GroupLabel({ q, count, jiraUrl, collapsed, toggle }: LabelProps) {
       name={q.name}
       icon={prefix ?? undefined}
       {...(count > 0 ? { count } : {})}
-      {...(q.result.kind === "error" ? { note: "didn't answer" } : {})}
+      note={q.result.kind === "error" ? "didn't answer" : undefined}
       summary={<LabelEnd q={q} jiraUrl={jiraUrl} />}
       fold={{ open: !collapsed, toggle }}
     />
@@ -196,15 +196,11 @@ function Group({ q, query, jiraUrl, now }: GroupProps) {
         <Notice
           kind="problem"
           align="item"
-          fix={
-            <>
-              {"An admin can fix the query in "}
-              <Button variant="link" href="/settings">
-                Settings › Intake
-              </Button>
-              .
-            </>
-          }
+          fix={{
+            before: "An admin can fix the query in",
+            link: { label: "Settings › Intake", href: "/settings" },
+            after: ".",
+          }}
         >
           {q.result.message}
         </Notice>
@@ -218,18 +214,16 @@ function Group({ q, query, jiraUrl, now }: GroupProps) {
             <IssueRow key={issue.key} issue={issue} now={now} />
           ))}
           {rest > 0 ? (
-            <Notice kind="more" align="item">
-              <Button
-                variant="quiet"
-                size="xs"
-                title={`Show all ${String(issues.length)}`}
-                onClick={() => {
+            <Notice
+              kind="more"
+              more={{
+                label: `Show ${String(rest)} more`,
+                title: `Show all ${String(issues.length)}`,
+                run: () => {
                   setExpanded(true);
-                }}
-              >
-                {`Show ${String(rest)} more`}
-              </Button>
-            </Notice>
+                },
+              }}
+            />
           ) : null}
         </>
       )}
@@ -270,13 +264,11 @@ export function IntakeView() {
             </Notice>
           </>
         ) : intake.error ? (
-          <Notice kind="status" align="item" error>
+          <Notice kind="status" error>
             {`Can't reach the server · ${intake.error.message}`}
           </Notice>
         ) : (
-          <Notice kind="status" align="item">
-            Loading
-          </Notice>
+          <Notice kind="status">Loading</Notice>
         )}
       </Table>
     </Page>

@@ -24,9 +24,9 @@ export interface Step {
 
 export interface StepperModel {
   stages: readonly Step[];
-  label: string;
-  round?: { n: number; of: number };
+  /** A run is on a runner: the current segment draws live. */
   live: boolean;
+  /** Abandoned: its stopped stage is where it was closed. */
   closed: boolean;
 }
 
@@ -34,8 +34,8 @@ export interface StepperProps {
   model: StepperModel;
   /** Smaller names, every inactive gate a bare diamond (an expanded row). */
   compact?: boolean;
-  /** What happens now (the live run, a gate's ask, a blocked reason), a full-width line under the
-   *  stages, the two in one run card so they read as one object. */
+  /** What happens now (the live run, a gate's ask, a blocked reason): a full-width line under the
+   *  stages, joined to them so the two read as one object. */
   now?: ReactNode;
 }
 

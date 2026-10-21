@@ -1,10 +1,14 @@
-/* The kit's one popover (Menu, Select and Segmented's overflow draw it): Linear's lifted layer,
-   its fill only a few percent over the page, told from what it covers by its edge, a crisp lit
+/* The kit's one popover (Select, Segmented's overflow and the account sheet draw it): Linear's
+   lifted layer, its fill only a few percent over the page, told from what it covers by its edge, a crisp lit
    hairline over its own fill (so it reads the same over any row) and a large soft drop. Every list
    of choices opens on its filter field, ruled off from the rows. 32px rows inset 4px from the sheet's edge,
    6px round; only the one active row (pointer or keys) fills, so at most one is ever lit. A row
    reads as Linear's: its picture, its name, its muted aside (a count, a descriptor) right after
    the name, and the check at the far end on the current one alone. */
+/* the positioner a popup sits in: above the page, its sticky heads included */
+.layer {
+  z-index: var(--z-pop);
+}
 .sheet {
   min-width: var(--col-2xl);
   padding: var(--sp-2);

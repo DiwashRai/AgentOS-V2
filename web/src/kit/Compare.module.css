@@ -10,8 +10,12 @@
   background: var(--input);
   overflow: hidden;
 }
-.compare > :nth-child(even) {
-  border-left: var(--line-1) solid var(--tk-card-edge);
+/* a row is the grid's, not a box: its cells are the grid's items */
+.row {
+  display: contents;
+}
+[data-side="theirs"] {
+  box-shadow: inset var(--line-1) 0 0 var(--tk-card-edge);
 }
 .head {
   display: flex;
@@ -69,10 +73,18 @@
   background: var(--diff-gap);
 }
 /* room over the first lines and under the last */
-.compare > :nth-child(3),
-.compare > :nth-child(4) {
+.row[data-first] > * {
   padding-top: var(--sp-4);
 }
-.compare > :nth-last-child(-n + 2) {
+.row[data-last] > * {
   padding-bottom: var(--sp-5);
+}
+/* words for assistive tech only */
+.unseen {
+  position: absolute;
+  width: var(--line-1);
+  height: var(--line-1);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

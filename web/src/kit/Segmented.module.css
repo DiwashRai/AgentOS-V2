@@ -10,6 +10,9 @@
   align-items: center;
   gap: var(--sp-2);
   min-width: 0;
+  /* room inside the clip for a chip's focus ring (2px out, 2px wide), the bar's own box unmoved */
+  margin: calc(var(--focus-room) * -1);
+  padding: var(--focus-room);
   overflow: hidden;
 }
 /* collapsed to the overflow chip alone: the bar gives way to it rather than clip it */

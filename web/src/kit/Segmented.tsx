@@ -7,7 +7,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 
 import { Choice } from "./choice";
-import { useDescribed } from "./described";
+import { DescribedBy, useDescribed } from "./described";
 import { Icon } from "./Icon";
 import { Mark, type MarkKind } from "./Mark";
 import p from "./Popover.module.css";
@@ -70,7 +70,7 @@ function shownOf(room: Room | null, pressed: number): ReadonlySet<number> {
 function Body({ it }: { it: Segment }) {
   return (
     <>
-      {it.mark ? <Mark kind={it.mark} glyph small /> : null}
+      {it.mark ? <Mark kind={it.mark} glyph small name={false} /> : null}
       {it.label}
       {it.count !== undefined ? <em data-zero={it.count === 0}>{it.count}</em> : null}
     </>
@@ -99,7 +99,10 @@ function useRoom(key: string) {
       const named = widths.pop() ?? 0;
       const more = widths.pop() ?? 0;
       const gap = parseFloat(getComputedStyle(r).columnGap) || 0;
-      setRoom({ width: t.clientWidth, gap, more, named, pills: widths });
+      // the track's inner width: its padding is only room for a focus ring
+      const pad = getComputedStyle(t);
+      const inner = t.clientWidth - parseFloat(pad.paddingLeft) - parseFloat(pad.paddingRight);
+      setRoom({ width: inner, gap, more, named, pills: widths });
     };
     measure();
     const watch = new ResizeObserver(measure);
@@ -145,7 +148,9 @@ function More({ label, items, value, current, onChange }: MoreProps) {
         <>
           {/* the glyph's column, kept empty for a filter without one so the names align */}
           {marked ? (
-            <span className={s.item}>{it.mark ? <Mark kind={it.mark} glyph small /> : null}</span>
+            <span className={s.item}>
+              {it.mark ? <Mark kind={it.mark} glyph small name={false} /> : null}
+            </span>
           ) : null}
           {it.label}
           {it.count !== undefined ? (
@@ -198,8 +203,10 @@ function Fit({ label, items, value, onChange }: SegmentedProps) {
 /** As many pills as fit the bar, measured; the rest behind a "+N" chip. */
 function Measured({ label, items, value, onChange }: SegmentedProps) {
   const described = useDescribed();
+  // remeasured when anything a chip's width depends on changes: the words, counts and marks, and
+  // the pressed one, which names the overflow chip when it is among the rest
   const { track, ruler, room } = useRoom(
-    items.map((it) => `${it.label}${String(it.count)}`).join(),
+    `${items.map((it) => `${it.label}${String(it.count)}${it.mark ?? ""}`).join()}|${value}`,
   );
   const pressed = items.findIndex((it) => it.id === value);
   const shown = shownOf(room, pressed);
@@ -217,7 +224,10 @@ function Measured({ label, items, value, onChange }: SegmentedProps) {
     >
       <Pills items={items} value={value} shown={(i) => shown.has(i)} onChange={onChange} />
       {rest.length > 0 ? (
-        <More label={label} items={rest} value={value} current={current} onChange={onChange} />
+        // the group carries the row's description; its overflow chip doesn't repeat it
+        <DescribedBy.Provider value={{}}>
+          <More label={label} items={rest} value={value} current={current} onChange={onChange} />
+        </DescribedBy.Provider>
       ) : null}
       {/* the ruler, unseen: every chip at natural width, then the "+N" chip (with its chevron) and
           the chip naming the pressed one, to measure the fit */}

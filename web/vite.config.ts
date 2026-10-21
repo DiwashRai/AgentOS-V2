@@ -9,5 +9,5 @@ export default defineConfig({
     port: 5174,
     strictPort: true,
   },
-  test: { environment: "node", include: ["src/**/*.test.{ts,tsx}"] },
+  test: { environment: "node", include: ["src/**/*.test.{ts,tsx}", "tools/**/*.test.mjs"] },
 });

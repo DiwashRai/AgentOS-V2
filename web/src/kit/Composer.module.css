@@ -7,18 +7,20 @@
   align-items: flex-end;
   gap: var(--sp-4);
   margin-top: auto;
-  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-6);
+  padding-right: var(--sp-3);
   border: var(--line-1) solid var(--tk-card-edge);
   border-radius: var(--r-4);
   background: var(--tk-card);
   transition: border-color var(--dur-fast);
 }
-/* the text's label fills the box but Send, so a click on the padding round the text focuses it */
+/* the text's label fills the box but Send, its padding the box's, so a click anywhere round the text
+   focuses it */
 .text {
   flex: 1;
   align-self: stretch;
   display: flex;
   min-width: 0;
+  padding: var(--sp-3) 0 var(--sp-3) var(--sp-6);
   cursor: text;
 }
 .compose:hover {
@@ -27,7 +29,7 @@
 .compose:focus-within {
   border-color: var(--rule-strong);
   outline: var(--line-2) solid var(--focus);
-  outline-offset: var(--line-2);
+  outline-offset: var(--focus-out);
 }
 .text > textarea {
   flex: 1;
@@ -46,4 +48,9 @@
 }
 .text > textarea::placeholder {
   color: var(--ink-3);
+}
+/* Send, at the foot of the box as the text grows, the box's padding under it */
+.send {
+  flex: none;
+  padding-bottom: var(--sp-3);
 }

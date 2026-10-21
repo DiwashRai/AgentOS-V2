@@ -1,12 +1,13 @@
 // A ticket's properties, as Linear's project page lists them: labelled rows of chips, each a muted
-// icon and its value at body size (what it is, where its code lives, how it runs). The ticket page and the peek both draw them; the owner is
-// the screen's own (a picker on the page, a face in the peek).
+// icon and its value at body size (what it is, where its code lives, how it runs). The ticket page
+// and the peek both draw them; the owner is the screen's own (a picker on the page, a face in the
+// peek).
 import type { ReactNode } from "react";
 
 import type { Ticket } from "../../api/types";
 import { stagesText } from "../../domain/board";
 import { age } from "../../domain/format";
-import { type Fact, Facts, Icon, Stack } from "../../kit";
+import { type Fact, Facts, Stack } from "../../kit";
 
 const TYPE_WORD = {
   feature: "Feature",
@@ -21,62 +22,24 @@ interface Row {
   items: Fact[];
 }
 
-function rows(t: Ticket, now: number, owner: ReactNode): Row[] {
+/** The owner's fact: a picker on the ticket page, a face and a name in the peek. */
+export type Owner = { picker: ReactNode } | { value: ReactNode };
+
+function rows(t: Ticket, now: number, owner: Owner): Row[] {
   const what: Fact[] = [
-    {
-      label: "Type",
-      value: (
-        <>
-          <Icon name={t.type} />
-          {TYPE_WORD[t.type]}
-        </>
-      ),
-    },
-    ...(t.priority === "high"
-      ? [
-          {
-            label: "Priority",
-            value: (
-              <>
-                <Icon name="high" />
-                High
-              </>
-            ),
-          },
-        ]
-      : []),
-    { label: "Owner", value: owner },
-    {
-      label: "Opened",
-      value: (
-        <>
-          <Icon name="clock" />
-          Opened
-        </>
-      ),
-      note: `${age(t.created_at, now)} ago`,
-    },
+    { label: "Type", icon: t.type, value: TYPE_WORD[t.type] },
+    ...(t.priority === "high" ? [{ label: "Priority", icon: "high" as const, value: "High" }] : []),
+    { label: "Owner", ...owner },
+    { label: "Opened", icon: "clock", value: "Opened", note: `${age(t.created_at, now)} ago` },
   ];
   const code: Fact[] = [
-    {
-      label: "Repo",
-      value: (
-        <>
-          <Icon name="repo" />
-          {t.repo ?? "No repo"}
-        </>
-      ),
-    },
+    { label: "Repo", icon: "repo", value: t.repo ?? "No repo" },
     ...(t.base_branch
       ? [
           {
             label: "Base branch",
-            value: (
-              <>
-                <Icon name="branch" />
-                {t.base_branch.name}
-              </>
-            ),
+            icon: "branch" as const,
+            value: t.base_branch.name,
             note: FROM[t.base_branch.from],
           },
         ]
@@ -91,12 +54,8 @@ function rows(t: Ticket, now: number, owner: ReactNode): Row[] {
       items: [
         {
           label: "Workflow",
-          value: (
-            <>
-              <Icon name="workflow" />
-              {`${t.workflow.name} v${String(t.workflow.version)}`}
-            </>
-          ),
+          icon: "workflow",
+          value: `${t.workflow.name} v${String(t.workflow.version)}`,
           note: stagesText(t),
         },
       ],
@@ -104,7 +63,7 @@ function rows(t: Ticket, now: number, owner: ReactNode): Row[] {
   ];
 }
 
-export function Properties({ t, now, owner }: { t: Ticket; now: number; owner: ReactNode }) {
+export function Properties({ t, now, owner }: { t: Ticket; now: number; owner: Owner }) {
   return (
     <Stack>
       {rows(t, now, owner).map((r) => (

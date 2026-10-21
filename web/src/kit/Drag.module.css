@@ -34,7 +34,7 @@
 }
 .drop[data-over] {
   outline: var(--line-2) solid var(--you);
-  outline-offset: var(--line-2);
+  outline-offset: var(--focus-out);
 }
 .drop[data-over]::after {
   content: "";

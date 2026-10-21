@@ -2,22 +2,23 @@
 // lines (Intake): name, count, note, and a summary slot at the far end. A zone or group head is a
 // band; a line head is a plain line of the list. A head with `fold` collapses its group; the
 // screen then leaves the group's rows out.
-import type { ReactNode } from "react";
+import { type ReactNode, useContext } from "react";
 
 import { Badge } from "./Badge";
 import s from "./Head.module.css";
 import { Icon } from "./Icon";
+import { Scrolling } from "./Table";
 import { cx } from "./vars";
 
 export interface HeadProps {
   name: string;
-  count?: number;
+  count?: number | undefined;
   /** Before the name: a status glyph, or a project key. */
   icon?: ReactNode;
   /** you: the count in the you hue (Needs you); done: in green. The name stays in ink. */
   tone?: "neutral" | "you" | "done";
   /** Quiet, right after the count ("Longest wait first"). */
-  note?: string;
+  note?: string | undefined;
   /** At the far end: a stat, links. */
   summary?: ReactNode;
   /** group: a list's edge-to-edge band (with or without a fold), its glyph over the rows' first
@@ -66,18 +67,23 @@ function Lead({ fold, title }: { fold: HeadProps["fold"]; title: ReactNode }) {
   );
 }
 
+function useSticky(level: NonNullable<HeadProps["level"]>): boolean {
+  return useContext(Scrolling) && level === "group";
+}
+
 export function Head(props: HeadProps) {
   const { name, count, icon, tone = "neutral", note, summary, level = "group", fold } = props;
   // a line's note belongs to its name ("didn't answer"), inside the fold that reaches across it
   const noteEl = note ? <span className={s.note}>{note}</span> : null;
   const inFold = level === "line" && fold !== undefined;
+  // a group head in a list that scrolls inside its surface stays at its top
+  const sticky = useSticky(level);
   const title = (
     <Title name={name} count={count} icon={icon} tone={tone} note={inFold ? noteEl : null} />
   );
   return (
     <div
-      className={cx(s.head, s[level], s[tone])}
-      data-head={level}
+      className={cx(s.head, s[level], sticky && s.sticky)}
       data-row={level === "line" ? "" : undefined}
     >
       <Lead fold={fold} title={title} />

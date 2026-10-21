@@ -111,7 +111,7 @@ function AgentRows({ s, lib, set }: AgentProps) {
   const a = agentOf(lib, s.agent);
   return (
     <>
-      <FormRow label="Agent" {...(a ? { note: a.description } : {})}>
+      <FormRow label="Agent" note={a?.description}>
         <Select
           label="Agent"
           value={`${SEED}${s.agent}`}
@@ -134,11 +134,7 @@ function AgentFields({ s, lib, problem, set }: FieldsProps & { s: AgentStage }) 
   return (
     <>
       <AgentRows s={s} lib={lib} set={set} />
-      <FormRow
-        label="Prompt"
-        note={fieldsNote(lib)}
-        {...(promptProblem ? { problem: promptProblem } : {})}
-      >
+      <FormRow label="Prompt" note={fieldsNote(lib)} problem={promptProblem}>
         <TextArea
           label="Prompt"
           value={s.prompt}

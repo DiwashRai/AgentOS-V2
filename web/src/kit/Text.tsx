@@ -18,7 +18,7 @@ export interface TextProps {
   /** Figures of one width, so counts and times line up. */
   tabular?: boolean;
   title?: string;
-  /** The element: a heading or paragraph where the document needs one; code for JQL and paths. */
+  /** The element: a heading or paragraph where the document needs one, else a span. */
   as?: "span" | "p" | "h1" | "h2";
 }
 

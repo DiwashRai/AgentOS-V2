@@ -1,7 +1,9 @@
 // One item of a list: its cells on the Table's columns. A line or an item is a flat row on a
 // hairline (Linear's list): hover and focus wash it, the open one a shade more. A rack is a bare
 // entry; a band a board's swimlane. A card on its own surface is a Card. Nothing changes size.
-import { Children, type MouseEvent, type ReactNode } from "react";
+import { Children, type ReactNode } from "react";
+
+import { Opener, openOnClick } from "./opener";
 
 import s from "./Row.module.css";
 import { Columns, useColumns } from "./Table";
@@ -15,11 +17,10 @@ export interface Action {
 export interface RowProps {
   /** The cells, one per column; with fewer, the last spans the rest. Outside a table they stack. */
   children: ReactNode;
-  /** raised: actionable (default); flat: settled; you: raised, a list row with a faint you wash. */
-  look?: "raised" | "flat" | "you";
   /** line: a list's one-line row (Compact, My queue); item: a roomy two-line row (Intake); rack: a
-   *  bare entry (a run's stage); band: a board's swimlane. */
-  kind?: "line" | "item" | "rack" | "band";
+   *  bare entry (a run's stage); band: a board's swimlane; columns: the board's column head, one
+   *  short line of stage names over the lanes, on the same grid. */
+  kind?: "line" | "item" | "rack" | "band" | "columns";
   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
    *  names what it opens, for assistive tech. */
   action?: Action;
@@ -50,29 +51,6 @@ function useCells(children: ReactNode, stack: boolean): ReactNode[] {
   });
 }
 
-/** What the row does, for the keyboard and assistive tech: a real button, visually hidden (the
- *  focus ring goes round the row), saying whether the row is expanded when it has an expansion. */
-function Hit({ action, open, more }: { action: Action; open: boolean; more: ReactNode }) {
-  return (
-    <button
-      type="button"
-      className={s.hit}
-      aria-label={action.label}
-      aria-expanded={more === undefined ? undefined : open}
-      onClick={action.run}
-    />
-  );
-}
-
-/** For a pointer, a click anywhere on the row opens it too: not one on a control inside it (its
- *  own meaning, and the row's button handles its own), nor the end of a text selection. */
-function openOnClick(action: Action) {
-  return (e: MouseEvent) => {
-    const control = e.target instanceof Element && e.target.closest("a, button, [role=combobox]");
-    if (!control && document.getSelection()?.isCollapsed !== false) action.run();
-  };
-}
-
 interface InnerProps {
   action: Action | undefined;
   stack: boolean;
@@ -89,8 +67,13 @@ function Inner({ action, stack, open, more, children }: InnerProps) {
   const cells = <Columns.Provider value={[]}>{children}</Columns.Provider>;
   if (!action) return <div className={cls}>{cells}</div>;
   return (
-    <div role="presentation" className={cx(cls, s.opens)} onClick={openOnClick(action)}>
-      <Hit action={action} open={open} more={more} />
+    <div role="presentation" className={cx(cls, s.opens)} onClick={openOnClick(action.run)}>
+      <Opener
+        className={s.hit}
+        say={action.label}
+        expanded={more === undefined ? undefined : open}
+        onOpen={action.run}
+      />
       {cells}
     </div>
   );
@@ -119,14 +102,20 @@ function Tail({
 }
 
 export function Row(props: RowProps) {
-  const { children, look = "raised", kind = "line", action, open = false, more, alert } = props;
+  const { children, kind = "line", action, open = false, more, alert } = props;
   const columns = useColumns();
   const stack = columns.length === 0;
   const cells = useCells(children, stack);
-  // A rack line is bare: it has no surface to raise or settle.
-  const surface = kind === "rack" ? undefined : s[look];
   return (
-    <div className={cx(s.row, s[kind], surface, open && s.open)} data-row="">
+    <div
+      className={cx(
+        s.row,
+        s[kind === "columns" ? "band" : kind],
+        kind === "columns" && s.columns,
+        open && s.open,
+      )}
+      data-row=""
+    >
       <Inner action={action} stack={stack} open={open} more={more}>
         {cells}
       </Inner>

@@ -58,16 +58,16 @@ function Head({ t, me, now, onClose, plan }: BodyProps & { plan: readonly PlanIt
       <Properties
         t={t}
         now={now}
-        owner={
-          t.owner ? (
+        owner={{
+          value: t.owner ? (
             <>
               <Avatar name={t.owner.name} seed={String(t.owner.id)} />
               {t.owner.name}
             </>
           ) : (
             "Nobody"
-          )
-        }
+          ),
+        }}
       />
       <Stepper model={stageModel(t, me)} now={<Now t={t} me={me} now={now} plan={plan} />} />
     </Stack>

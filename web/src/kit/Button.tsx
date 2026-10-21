@@ -10,13 +10,14 @@ export type ButtonVariant = "default" | "ink" | "you" | "accent" | "quiet" | "li
 interface Common {
   variant?: ButtonVariant;
   size?: "xs" | "sm" | "md";
-  /** Why it can't be pressed now (R11): it stays focusable, does nothing, and says why. */
-  blocked?: string;
 }
 
-/** What it does: a click, or a link (a path inside the app, "/t/NW-17", or a URL opened in a new
- *  tab); never both. */
-type Does = { onClick?: () => void; href?: never } | { href: string; onClick?: never };
+/** What it does, one of: a click; a link (a path inside the app, "/t/NW-17", or a URL opened in a
+ *  new tab); or nothing now, and why (R11): it stays focusable, does nothing, and says why. */
+type Does =
+  | { onClick?: () => void; href?: never; blocked?: never }
+  | { href: string; onClick?: never; blocked?: never }
+  | { blocked: string; onClick?: never; href?: never };
 
 export type ButtonProps = Common &
   Does &

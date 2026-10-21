@@ -93,8 +93,8 @@
 .problem > .fix {
   color: var(--ink-3);
 }
-/* a link in the fix (Settings › Intake) is a word of its sentence: its size, not a control's */
-.problem > .fix :is(a, button) {
+/* the fix's link (Settings › Intake) is a word of its sentence: its size, not a control's */
+.fix > :is(a, button) {
   font-size: inherit;
 }
 
@@ -109,8 +109,8 @@
   font-size: var(--fs-2);
   color: var(--ink-3);
 }
-/* a small button that opens the rest: its glyph, not its padding, lines up with the rows' words */
-.more > button:first-child {
+/* the button that opens the rest: its glyph, not its padding, lines up with the rows' words */
+.more > button {
   margin-left: calc(var(--sp-4) * -1);
 }
 .more > b {

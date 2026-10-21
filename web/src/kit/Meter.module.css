@@ -41,7 +41,7 @@
   }
 }
 /* edge: an agent card's, one continuous hairline track laid along the bottom edge of the card it
-   is in (an agent Card is its containing block), the finished steps in live, the one in progress a
+   is in (the card's summary is its containing block), the finished steps in live, the one in progress a
    soft live, so it reads as the count beside it says ("3/5": two done, the third under way).
    Still: a grid of cards would sweep all at once */
 .edge {

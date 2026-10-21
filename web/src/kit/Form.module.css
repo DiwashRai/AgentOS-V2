@@ -17,7 +17,7 @@
 .box:focus-within {
   border-color: var(--ctl-edge-hover);
   outline: var(--line-2) solid var(--focus);
-  outline-offset: var(--line-1);
+  outline-offset: var(--focus-tight);
 }
 .box::placeholder,
 .box ::placeholder {
@@ -52,7 +52,7 @@
 .search:focus-within {
   border-color: var(--rule-strong);
   outline: var(--line-2) solid var(--focus);
-  outline-offset: var(--line-2);
+  outline-offset: var(--focus-out);
 }
 .findInput {
   flex: 1;

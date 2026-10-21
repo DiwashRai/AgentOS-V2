@@ -46,13 +46,6 @@
   padding: 0 0 var(--sp-10);
   mask-image: var(--list-fade);
 }
-/* a scrolling list's group heads stay at its top while their rows pass under them (Linear's) */
-.scroll > .list > [data-head="group"] {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: linear-gradient(var(--list-band), var(--list-band)), var(--recess);
-}
 /* the foot keeps the list's scrollbar gutter, so its far end lines up with the rows' */
 .foot {
   flex: none;

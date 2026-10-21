@@ -66,13 +66,9 @@ function Buttons({ t, me }: { t: TicketRow; me: Person | null }) {
   );
 }
 
-const LOOK = { needs_you: "you", done: "flat" } as const;
-
 function Item({ t, me, now, onOpen }: ItemProps) {
-  const g = groupOf(t, me);
   return (
     <Row
-      look={g === "needs_you" || g === "done" ? LOOK[g] : "raised"}
       action={{
         label: `Peek at ${t.key}: ${t.title}`,
         run: () => {

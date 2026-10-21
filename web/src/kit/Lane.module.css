@@ -19,9 +19,13 @@
   position: relative;
   min-width: 0;
 }
-/* a card paints over its loop's band */
-.block > :not(.band) {
+/* a card and a loop's foot paint over the loop's band (the joint is positioned already) */
+.card,
+.foot {
   position: relative;
+}
+.card {
+  min-width: 0;
 }
 
 /* a loop's band, one piece per stage: open at the seams, closed and rounded at its ends; the first
@@ -138,7 +142,7 @@ button.gate:not([data-on]):hover::after {
 }
 button.gate:focus-visible {
   outline: var(--line-2) solid var(--focus);
-  outline-offset: 0;
+  outline-offset: var(--focus-tight);
 }
 .name {
   color: var(--ink-2);

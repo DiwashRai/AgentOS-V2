@@ -7,7 +7,7 @@
 //   then the view (a Page, so its top bar and body are the same as on its own screen). `ask`
 //   draws a question over it, modal inside it (unsaved changes: Save, Discard, Keep editing).
 // It sits in the browser's top layer, so the kit's popovers opened inside it mount inside it.
-import { type ReactNode, useEffect, useRef } from "react";
+import { Children, type ReactNode, useEffect, useRef } from "react";
 
 import { Button } from "./Button";
 import s from "./Dialog.module.css";
@@ -48,13 +48,31 @@ function Full({
   ask: ReactNode;
 }) {
   const asking = useRef<HTMLDivElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
+  // where the person was in the view, to go back to when the question is dismissed (the view is
+  // inert while it is asked, so its focus is lost)
+  const was = useRef<HTMLElement | null>(null);
   const hasAsk = ask !== undefined && ask !== null;
+  const asked = useRef(false);
   useEffect(() => {
     if (hasAsk) asking.current?.querySelector<HTMLElement>("button")?.focus();
+    else if (asked.current) {
+      const back = was.current;
+      if (back?.isConnected) back.focus();
+      else frame.current?.closest("dialog")?.focus();
+    }
+    asked.current = hasAsk;
   }, [hasAsk]);
   return (
     <>
-      <div className={s.frame} inert={hasAsk}>
+      <div
+        ref={frame}
+        className={s.frame}
+        inert={hasAsk}
+        onFocus={(e) => {
+          if (e.target instanceof HTMLElement) was.current = e.target;
+        }}
+      >
         <span className={s.close}>
           <Button variant="quiet" icon="close" title="Close  Esc" onClick={onClose} />
         </span>
@@ -97,7 +115,15 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
   });
   const side = (
     <>
-      <div className={s.body}>{open ? children : null}</div>
+      <div className={s.body}>
+        {open
+          ? Children.toArray(children).map((section, i) => (
+              <section key={i} className={s.section}>
+                {section}
+              </section>
+            ))
+          : null}
+      </div>
       {open && foot ? <div className={s.foot}>{foot}</div> : null}
     </>
   );

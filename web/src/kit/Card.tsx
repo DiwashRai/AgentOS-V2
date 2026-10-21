@@ -7,12 +7,12 @@
 //   cards in a row line up; a queued one recedes to a hairline. A Meter drawn `edge` in it lies
 //   along its bottom edge (its summary, the card's full height, is the Meter's containing block).
 // - ticket: a ticket on a board (All teams): its lines one under another on a hairline card.
-// The keyboard and assistive tech get one real button, unseen over the summary and out of the
-// pointer's way, the focus ring round the card; a pointer opens it from anywhere on it but its own controls or the end of a text
-// selection, so its lines keep their own tooltips. What the lines say is the screen's.
-import type { MouseEvent, ReactNode } from "react";
+// It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
+// ring round the card, and a click anywhere on it for a pointer. What the lines say is the screen's.
+import type { ReactNode } from "react";
 
 import s from "./Card.module.css";
+import { Opener, openOnClick } from "./opener";
 
 interface Common {
   /** What it is: a stage's button says "Edit Implement"; the others say this whole ("Peek at …"). */
@@ -55,29 +55,6 @@ export type CardProps = Common &
         off?: never;
       }
   );
-
-/** The card's own button, visually hidden: a stage's says whether it is open; the others name what
- *  they open. */
-function Hit({ say, expanded, onOpen }: { say: string; expanded?: boolean; onOpen: () => void }) {
-  return (
-    <button
-      type="button"
-      className={s.hit}
-      aria-expanded={expanded}
-      aria-label={say}
-      onClick={onOpen}
-    />
-  );
-}
-
-/** For a pointer, a click anywhere on the card opens it too: not one on a control inside it, nor
- *  the end of a text selection. */
-function openOnClick(onOpen: () => void) {
-  return (e: MouseEvent) => {
-    const control = e.target instanceof Element && e.target.closest("a, button, [role=combobox]");
-    if (!control && document.getSelection()?.isCollapsed !== false) onOpen();
-  };
-}
 
 /** Under the summary: a stage's problem, then its settings while it is open. */
 function Foot({ problem, open }: { problem: string | undefined; open: ReactNode }) {
@@ -133,7 +110,12 @@ export function Card(props: CardProps) {
         onClick={onOpen ? openOnClick(onOpen) : undefined}
       >
         {onOpen ? (
-          <Hit say={c.say} expanded={stage ? c.open !== undefined : undefined} onOpen={onOpen} />
+          <Opener
+            className={s.hit}
+            say={c.say}
+            expanded={stage ? c.open !== undefined : undefined}
+            onOpen={onOpen}
+          />
         ) : null}
         {c.face !== undefined ? <span className={s.face}>{c.face}</span> : null}
         <div className={s.main}>{children}</div>

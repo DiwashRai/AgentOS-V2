@@ -86,6 +86,9 @@
   align-items: center;
   gap: var(--sp-3);
   min-width: 0;
+  /* room inside the clip for a link's focus ring, the head's own line unmoved */
+  margin: calc(var(--focus-room) * -1);
+  padding: var(--focus-room);
   overflow: hidden;
   font-size: var(--fs-2);
   color: var(--ink-2);
@@ -129,4 +132,11 @@
 .line .icon {
   color: var(--ink-3);
   font-size: var(--fs-3);
+}
+/* a group head in a scrolling list stays at its top while its rows pass under it (Linear's) */
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: linear-gradient(var(--list-band), var(--list-band)), var(--recess);
 }

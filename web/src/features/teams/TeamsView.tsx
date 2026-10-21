@@ -60,7 +60,7 @@ function columnsOf(counts: Record<Phase, number>): readonly Column[] {
  *  (Linear's board heads); an empty stage's name muted over its folded lane. */
 function Head({ counts }: { counts: Record<Phase, number> }) {
   return (
-    <Row kind="band" look="flat">
+    <Row kind="columns">
       <Text variant="meta" weight={500}>
         Team
       </Text>

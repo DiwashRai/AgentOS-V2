@@ -18,7 +18,8 @@ export interface ComposerProps {
 export function Composer({ label, value, onChange, onSend }: ComposerProps) {
   return (
     <div className={s.compose}>
-      {/* the label wraps the text alone (a click on the box's padding focuses it), Send beside it */}
+      {/* the label wraps the text and the box's padding round it (a click there focuses it); Send
+          beside it */}
       <label className={s.text}>
         <textarea
           rows={1}
@@ -33,9 +34,11 @@ export function Composer({ label, value, onChange, onSend }: ComposerProps) {
           }}
         />
       </label>
-      <Button size="sm" onClick={onSend}>
-        Send
-      </Button>
+      <span className={s.send}>
+        <Button size="sm" onClick={onSend}>
+          Send
+        </Button>
+      </span>
     </div>
   );
 }
