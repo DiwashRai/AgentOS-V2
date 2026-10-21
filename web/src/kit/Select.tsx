@@ -60,7 +60,10 @@ function TriggerBody({ label, current, slot, look, icon }: TriggerProps) {
             <Icon name={icon} />
           </span>
         ) : null}
-        <span className={s.text}>{label}</span>
+        {/* the name says the label; the content is the value, the current choice */}
+        <span className={s.text} aria-hidden="true">
+          {label}
+        </span>
         <span className={s.now}>{current?.label}</span>
         <span className={cx(s.chev, s.up)}>
           <Icon name="chevron" />
@@ -100,7 +103,7 @@ export function Select({ label, value, options, onChange, look = "chip", icon }:
       sheet={side ? s.sideSheet : s.sheet}
       trigger={{
         className: side ? s.side : cx(s.trigger, look === "field" && s.field),
-        name: side ? `${label}: ${current?.label ?? "none"}` : label,
+        name: label,
         body: <TriggerBody label={label} current={current} slot={slot} look={look} icon={icon} />,
       }}
       row={(o) => (

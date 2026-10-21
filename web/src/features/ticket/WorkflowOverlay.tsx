@@ -134,7 +134,7 @@ function CopyEditor({ t, w, open, onClose }: OverlayProps & { w: TicketWorkflow 
                 close();
               },
             })
-          : null
+          : undefined
       }
     >
       <Editor

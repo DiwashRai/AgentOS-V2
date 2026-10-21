@@ -107,6 +107,8 @@ function useRoom(key: string) {
     measure();
     const watch = new ResizeObserver(measure);
     watch.observe(t);
+    // and when the chips' own widths change (the ruler holds them at their natural width)
+    watch.observe(r);
     return () => {
       watch.disconnect();
     };

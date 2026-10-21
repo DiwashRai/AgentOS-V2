@@ -31,8 +31,8 @@ export type DialogProps = {
     }
   | {
       look: "full";
-      /** A question over it, modal inside it; the view under it is inert. Or nothing (null). */
-      ask?: DialogAsk | null;
+      /** A question over it, modal inside it; the view under it is inert. */
+      ask?: DialogAsk | undefined;
       foot?: never;
     }
 );
@@ -59,14 +59,14 @@ function Full({
 }: {
   onClose: () => void;
   children: ReactNode;
-  ask: DialogAsk | null | undefined;
+  ask: DialogAsk | undefined;
 }) {
   const asking = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
   // where the person was in the view, to go back to when the question is dismissed (the view is
   // inert while it is asked, so its focus is lost)
   const was = useRef<HTMLElement | null>(null);
-  const hasAsk = ask != null;
+  const hasAsk = ask !== undefined;
   const said = useId();
   const asked = useRef(false);
   useEffect(() => {
@@ -76,20 +76,23 @@ function Full({
   }, [hasAsk]);
   return (
     <>
-      <div ref={frame} className={s.frame} inert={hasAsk}>
+      <div
+        ref={frame}
+        className={s.frame}
+        inert={hasAsk}
+        onFocus={(e) => {
+          if (e.target instanceof HTMLElement) was.current = e.target;
+        }}
+        // focus moved on to the dialog itself (where it opens, past the close the browser's
+        // showModal lands on first) is no longer where the person was
+        onBlur={(e) => {
+          if (e.relatedTarget === e.currentTarget.closest("dialog")) was.current = null;
+        }}
+      >
         <span className={s.close}>
           <Button variant="quiet" icon="close" title="Close (Esc)" onClick={onClose} />
         </span>
-        {/* only what the person reached in the view is where focus goes back (not the close the
-            browser's showModal lands on first) */}
-        <div
-          className={s.view}
-          onFocus={(e) => {
-            if (e.target instanceof HTMLElement) was.current = e.target;
-          }}
-        >
-          {children}
-        </div>
+        <div className={s.view}>{children}</div>
       </div>
       {hasAsk ? (
         <div className={s.scrim}>
@@ -134,7 +137,7 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
       d.showModal();
       // the full look opens on itself, not its close; Tab goes on from there (not while it asks:
       // the question has the focus)
-      if (look === "full" && ask == null) d.focus();
+      if (look === "full" && ask === undefined) d.focus();
     }
     if (!open && d.open) d.close();
   });

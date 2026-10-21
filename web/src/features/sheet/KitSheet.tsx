@@ -394,7 +394,7 @@ function OverlaySheet() {
                   </>
                 ),
               }
-            : null
+            : undefined
         }
       >
         <Page title="A full-window editor" action={<Button variant="you">Save</Button>}>
