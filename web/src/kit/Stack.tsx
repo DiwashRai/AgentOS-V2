@@ -13,8 +13,9 @@ export interface StackProps {
   wrap?: boolean;
   /** Take the free space, and let the content shrink below its own width. */
   grow?: boolean;
-  /** Lay the children out in this many equal columns instead (tiles, a rack). */
-  cols?: 3 | 5;
+  /** Lay the children out in equal columns instead: 3, the agents' cards; 2, a form's settings
+   *  side by side, one under another where the column is too narrow for two. */
+  cols?: 2 | 3;
 }
 
 /** The one layout box: screens lay out with it instead of raw <div>s. */
@@ -34,6 +35,7 @@ export function Stack({
       data-dir={dir}
       data-align={align}
       data-justify={justify}
+      data-cols={cols}
       style={vars({ "--gap": space(gap), "--n": cols ? String(cols) : undefined })}
     >
       {children}

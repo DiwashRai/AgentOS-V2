@@ -30,6 +30,30 @@
   height: var(--h-field);
   padding: 0 var(--sp-5);
 }
+/* a search: the glyph inside the box at its start, the text after it */
+.searchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.searchWrap > :first-child {
+  position: absolute;
+  left: var(--sp-5);
+  display: inline-flex;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+.searchWrap svg {
+  width: var(--sp-6);
+  height: var(--sp-6);
+}
+.find {
+  padding-left: calc(var(--sp-5) + var(--sp-6) + var(--sp-4));
+}
+.find::-webkit-search-cancel-button {
+  display: none;
+}
 .mono {
   font-family: var(--font-mono);
   font-size: var(--fs-2);

@@ -33,3 +33,6 @@
   grid-template-columns: repeat(var(--n), minmax(0, 1fr));
   align-items: start;
 }
+.cols[data-cols="2"] {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--w-form-col)), 1fr));
+}

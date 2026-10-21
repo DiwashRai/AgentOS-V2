@@ -351,6 +351,9 @@
         },
         "mono": {
           "why": "A command or a path reads in monospace."
+        },
+        "search": {
+          "why": "A search over a panel's own list (the workflow editor's library): the glyph before it, Esc to clear, the input the sidebar's Search finds."
         }
       }
     },
@@ -446,7 +449,7 @@
           "values": {
             "zone": "A band run through its surface's padding, edge to edge (My queue's Agents at work, over its cards).",
             "group": "A list's band edge to edge (Linear's group head): Compact's and Intake's fold, My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
-            "rack": "The rack's small static heads."
+            "line": "A plain line of the list (Intake's queries): on its hairline, lit like a row, its fold across it; the row a Swap in its summary answers to."
           }
         },
         "fold": {
@@ -625,7 +628,16 @@
           "why": "The bar's buttons at its right end (New ticket; the ticket's actions)."
         },
         "side": {
-          "why": "A full-height column beside the body, ruled off by one hairline with no card, so what it holds can pin its foot to the window's bottom (the ticket's Talk and its reply box); a column of settings (FormRows: an item editor's properties) is a narrower rail, so the content keeps the width, and fills its column flush with the title out to the rail (no reading width), so the item editor lines up the same full window over the ticket as beside the sidebar."
+          "why": "A full-height column beside the body, ruled off by one hairline; its look says how wide.",
+          "items": {
+            "look": {
+              "why": "How wide the column is.",
+              "values": {
+                "column": "A reading column (the ticket's Talk, the workflow editor's library): the default.",
+                "rail": "A narrow rail of settings (an item editor's properties), the body beside it an editor out to its gutter."
+              }
+            }
+          }
         },
         "children": {
           "why": "The body."
@@ -790,8 +802,8 @@
         "cols": {
           "why": "Equal columns (run tiles, the rack).",
           "values": {
-            "3": "The run tiles (three at most).",
-            "5": "The rack's columns."
+            "2": "A form's settings side by side (a stage's settings), one under the other where too narrow for two.",
+            "3": "The run tiles (three at most)."
           }
         }
       }

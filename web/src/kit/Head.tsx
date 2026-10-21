@@ -1,6 +1,7 @@
-// The head over a group (Compact, Intake, My queue's lists), a zone (My queue's cards) or a rack
-// group: name, count, note, and a summary slot at the far end. A zone or group head is a band. A
-// head with `fold` collapses its group; the screen then leaves the group's rows out.
+// The head over a group (Compact, My queue's lists), a zone (My queue's cards) or a list's run of
+// lines (Intake): name, count, note, and a summary slot at the far end. A zone or group head is a
+// band; a line head is a plain line of the list. A head with `fold` collapses its group; the
+// screen then leaves the group's rows out.
 import type { ReactNode } from "react";
 
 import { Badge } from "./Badge";
@@ -21,8 +22,9 @@ export interface HeadProps {
   summary?: ReactNode;
   /** group: a list's edge-to-edge band (with or without a fold), its glyph over the rows' first
    *  cell; zone: the same band run through its surface's padding (over My queue's agent cards);
-   *  rack: a small static head on a hairline. */
-  level?: "zone" | "group" | "rack";
+   *  line: a plain line of the list, on its hairline, lit on hover like a row (it is the row a
+   *  Swap in its summary answers to), its fold reaching across it (Intake's queries). */
+  level?: "zone" | "group" | "line";
   /** Collapsible: whether the group is open, and how to flip it. */
   fold?: { open: boolean; toggle: () => void };
 }
@@ -49,7 +51,11 @@ export function Head({
     </>
   );
   return (
-    <div className={cx(s.head, s[level], s[tone])} data-head={level}>
+    <div
+      className={cx(s.head, s[level], s[tone])}
+      data-head={level}
+      data-row={level === "line" ? "" : undefined}
+    >
       {fold ? (
         <button type="button" className={s.toggle} aria-expanded={fold.open} onClick={fold.toggle}>
           <span className={s.chev}>

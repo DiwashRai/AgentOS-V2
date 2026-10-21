@@ -184,9 +184,9 @@
   grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 30vw, var(--w-talk-max));
   border-top: var(--line-1) solid var(--tk-card-edge);
 }
-/* a side column of settings (an item editor's properties, in form rows) is a narrower rail, so
-   the content beside it keeps the width */
-.split:has(> .side [data-setting]) {
+/* a rail of settings (an item editor's properties) is narrower than a reading column, so the
+   content beside it keeps the width */
+.split[data-side="rail"] {
   grid-template-columns: minmax(0, 1fr) var(--w-rail);
 }
 /* the body: one calm reading column, room under its last line when scrolled to the end */
@@ -200,7 +200,7 @@
 }
 /* beside a rail of settings the body is an editor: flush with the title, out to the rail's gutter,
    so it lines up the same full window over the ticket as beside the sidebar */
-.split:has(> .side [data-setting]) > .body > * {
+.split[data-side="rail"] > .body > * {
   max-width: none;
 }
 /* the column beside: no card, the page's own ground ruled off by one hairline, full height, so what

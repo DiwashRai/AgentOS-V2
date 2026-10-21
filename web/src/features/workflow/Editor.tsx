@@ -344,16 +344,18 @@ export function Editor({ title, draft, context, middle, banner }: EditorProps) {
       {...(context ? { context } : {})}
       {...(middle ? { middle } : {})}
       action={<Actions draft={draft} problems={problems.count} />}
-      side={
-        <LibraryPanel
-          lib={lib}
-          target={s ? { name: s.name, shell: s.kind === "shell" } : null}
-          where={(kind, id) => whereFor(draft.body, s, kind, id)}
-          pick={(kind, id) => {
-            if (s) pickFor({ draft, s, insert, land }, kind, id);
-          }}
-        />
-      }
+      side={{
+        content: (
+          <LibraryPanel
+            lib={lib}
+            target={s ? { name: s.name, shell: s.kind === "shell" } : null}
+            where={(kind, id) => whereFor(draft.body, s, kind, id)}
+            pick={(kind, id) => {
+              if (s) pickFor({ draft, s, insert, land }, kind, id);
+            }}
+          />
+        ),
+      }}
     >
       <Stack gap={6}>
         {banner}

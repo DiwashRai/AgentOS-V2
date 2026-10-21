@@ -11,6 +11,7 @@ import {
   Badge,
   Button,
   type Column,
+  Head,
   Icon,
   Notice,
   Page,
@@ -151,22 +152,19 @@ interface LabelProps {
 
 /** A group's label: a plain line of the list, as Linear labels a run of its inbox. The chevron,
  *  the muted project key, the name in the row's own size (bold), the count muted; a click
- *  anywhere on it (or Enter on it) folds the group. */
+ *  anywhere on it but its end (or Enter on it) folds the group. */
 function GroupLabel({ q, count, jiraUrl, collapsed, toggle }: LabelProps) {
   const prefix = sharedPrefix(q);
   return (
-    <Row kind="line" action={{ label: `${collapsed ? "Show" : "Hide"} ${q.name}`, run: toggle }}>
-      <Stack dir="row" gap={4} align="center">
-        <Icon name={collapsed ? "arrow" : "chevron"} />
-        {prefix ? <Quiet>{prefix}</Quiet> : null}
-        <Text variant="label" weight={600} truncate>
-          {q.name}
-        </Text>
-        {count > 0 ? <Quiet>{String(count)}</Quiet> : null}
-        {q.result.kind === "error" ? <Quiet>didn&apos;t answer</Quiet> : null}
-      </Stack>
-      <LabelEnd q={q} jiraUrl={jiraUrl} />
-    </Row>
+    <Head
+      level="line"
+      name={q.name}
+      icon={prefix ?? undefined}
+      {...(count > 0 ? { count } : {})}
+      {...(q.result.kind === "error" ? { note: "didn't answer" } : {})}
+      summary={<LabelEnd q={q} jiraUrl={jiraUrl} />}
+      fold={{ open: !collapsed, toggle }}
+    />
   );
 }
 

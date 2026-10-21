@@ -75,7 +75,7 @@
 .zone .name {
   color: var(--ink-1);
 }
-/* the spacer between the title and the summary; drawn only on the rack's bare head */
+/* the spacer between the title and the summary */
 .rule {
   flex: 1;
   min-width: var(--sp-8);
@@ -97,15 +97,33 @@
   font-size: var(--fs-2);
   color: var(--ink-3);
 }
-.rack {
-  height: var(--h-control-sm);
+/* line: a plain line of the list on its hairline, lit on hover like a row; its fold reaches across
+   it (a click anywhere but the summary folds), the chevron hanging in the inset */
+.line {
+  height: var(--h-line);
+  padding: 0 var(--list-pad) 0 var(--list-inset);
   box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
-  margin-bottom: var(--sp-2);
+  transition: background-color var(--dur-fast) ease;
 }
-.rack .name {
-  font-size: var(--fs-2);
-  color: var(--ink-2);
+.line:is(:hover, :focus-within) {
+  background: var(--list-hover);
 }
-.rack:not(:first-child) {
-  margin-top: var(--sp-5);
+.line .toggle {
+  flex: 1;
+  min-width: 0;
+  margin-left: calc(var(--sp-9) * -1);
+}
+.line .rule {
+  display: none;
+}
+.line .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--fs-4);
+  font-weight: 600;
+  color: var(--ink-1);
+}
+.line .icon {
+  color: var(--ink-3);
+  font-size: var(--fs-3);
 }

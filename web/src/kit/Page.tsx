@@ -34,8 +34,10 @@ export interface PageProps {
   search?: Search;
   /** The bar's buttons at its right end (New ticket; a ticket's actions). */
   action?: ReactNode;
-  /** A full-height column beside the body, ruled off by one hairline (the ticket's Talk). */
-  side?: ReactNode;
+  /** A full-height column beside the body, ruled off by one hairline. column: a reading column (the
+   *  ticket's Talk, the workflow editor's library); rail: a narrow rail of settings (an item
+   *  editor's properties), the body beside it an editor out to the rail's gutter. */
+  side?: { look?: "column" | "rail"; content: ReactNode };
   children: ReactNode;
 }
 
@@ -141,9 +143,9 @@ export function Page({
         {action ? <span className={s.actions}>{action}</span> : null}
       </header>
       {side ? (
-        <div className={s.split}>
+        <div className={s.split} data-side={side.look ?? "column"}>
           <div className={s.body}>{children}</div>
-          <aside className={s.side}>{side}</aside>
+          <aside className={s.side}>{side.content}</aside>
         </div>
       ) : (
         <div className={s.body}>{children}</div>

@@ -17,8 +17,7 @@ export interface FormRowProps {
 
 export function FormRow({ label, children, note, problem }: FormRowProps) {
   return (
-    // data-setting: a page's side column of settings is a narrower rail than its Talk (Page)
-    <div className={s.row} role="group" aria-label={label} data-setting="">
+    <div className={s.row} role="group" aria-label={label}>
       <span className={s.label} aria-hidden="true">
         {label}
       </span>

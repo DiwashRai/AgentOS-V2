@@ -133,6 +133,7 @@ export function LibraryPanel({ lib, target, where, pick }: PanelProps) {
       >
         <Stack gap={5}>
           <Field
+            search
             label={`Search ${WORDS[tab]}`}
             placeholder={`Search ${WORDS[tab]}`}
             value={q}

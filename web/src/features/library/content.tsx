@@ -119,45 +119,39 @@ function Blocks({
     onChange(next);
   };
   return (
-    // the empty first child and the gap leave the handles their gutter at the list's left
-    <Stack dir="row" gap={9}>
-      <Stack />
-      <Stack grow>
-        <Sortable
-          label="AGENTS.md blocks"
-          gap={6}
-          onMove={move}
-          items={blocks.map((b, i) => {
-            const key = keys[i] ?? b.name;
-            return {
-              id: key,
-              label: b.name,
-              content: (
-                <BlockCard
-                  block={b}
-                  at={i}
-                  of={blocks.length}
-                  open={!folded.has(key)}
-                  onFold={() => {
-                    setFolded((f) => {
-                      const next = new Set(f);
-                      if (!next.delete(key)) next.add(key);
-                      return next;
-                    });
-                  }}
-                  onChange={(nb) => {
-                    onChange(blocks.map((x, k) => (k === i ? nb : x)));
-                  }}
-                  onMove={(to) => {
-                    move(i, to);
-                  }}
-                />
-              ),
-            };
-          })}
-        />
-      </Stack>
-    </Stack>
+    <Sortable
+      label="AGENTS.md blocks"
+      gap={6}
+      onMove={move}
+      items={blocks.map((b, i) => {
+        const key = keys[i] ?? b.name;
+        return {
+          id: key,
+          label: b.name,
+          content: (
+            <BlockCard
+              block={b}
+              at={i}
+              of={blocks.length}
+              open={!folded.has(key)}
+              onFold={() => {
+                setFolded((f) => {
+                  const next = new Set(f);
+                  if (!next.delete(key)) next.add(key);
+                  return next;
+                });
+              }}
+              onChange={(nb) => {
+                onChange(blocks.map((x, k) => (k === i ? nb : x)));
+              }}
+              onMove={(to) => {
+                move(i, to);
+              }}
+            />
+          ),
+        };
+      })}
+    />
   );
 }
 

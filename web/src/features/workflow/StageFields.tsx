@@ -35,21 +35,17 @@ export interface FieldsProps {
   fresh: Fresh | null;
 }
 
-/** Two settings side by side, each with its own label column. */
+/** Two settings side by side, each with its own label column; one under the other when narrow. */
 function Pair({ children }: { children: ReactNode }) {
   return (
-    <Stack dir="row" gap={9}>
+    <Stack cols={2} gap={9}>
       {children}
     </Stack>
   );
 }
 
 function Half({ children }: { children?: ReactNode }) {
-  return (
-    <Stack grow gap={4}>
-      {children}
-    </Stack>
-  );
+  return <Stack gap={4}>{children}</Stack>;
 }
 
 const opts = (xs: readonly string[], inherit: string): Option[] => [

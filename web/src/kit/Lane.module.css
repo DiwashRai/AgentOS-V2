@@ -9,6 +9,7 @@
   padding: var(--sp-5) var(--sp-5) var(--sp-4) var(--sp-6);
 }
 .lane[data-edit] {
+  --sortable-gutter: 0;
   --out: calc(var(--w-grip) + var(--sp-3));
   --h: var(--h-joint);
   --reach: var(--sp-5);

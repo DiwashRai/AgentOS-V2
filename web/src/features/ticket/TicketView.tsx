@@ -186,7 +186,7 @@ export function TicketView() {
             action: headerActions(t.actions.filter((a) => a.id !== "cancel")).map((a) => (
               <ActionButton key={a.id} action={a} size="md" header />
             )),
-            side: <Talk t={t} me={me} />,
+            side: { content: <Talk t={t} me={me} /> },
           }
         : {})}
     >

@@ -213,7 +213,9 @@ export function ItemEditor(props: ItemEditorProps) {
           <Actions e={e} />
         </>
       }
-      {...(e.theirs ? {} : { side: <Side e={e} props={props} /> })}
+      {...(e.theirs
+        ? {}
+        : { side: { look: "rail" as const, content: <Side e={e} props={props} /> } })}
     >
       {e.theirs ? (
         <Conflict
