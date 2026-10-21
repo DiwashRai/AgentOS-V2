@@ -10,7 +10,7 @@
   color: var(--id-text);
   font-family: var(--font-mono);
   font-size: var(--fs-1);
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1;
   white-space: nowrap;
 }
@@ -52,8 +52,7 @@
   height: var(--h-chip-sm);
   padding: 0 var(--sp-3);
   border-radius: var(--r-pill);
-  background: var(--rule-soft);
-  box-shadow: inset 0 0 0 var(--line-1) var(--rule);
+  background: var(--field);
   color: var(--ink-2);
   font-size: var(--fs-2);
   font-weight: 600;
@@ -62,12 +61,10 @@
 }
 .count[data-tone="you"] {
   background: var(--you-tint);
-  box-shadow: none;
   color: var(--you-text);
 }
 .count[data-tone="done"] {
   background: var(--done-tint);
-  box-shadow: none;
   color: var(--done-text);
 }
 

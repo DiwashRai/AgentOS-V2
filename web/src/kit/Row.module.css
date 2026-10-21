@@ -20,38 +20,27 @@
     0 0 0 var(--line-1) var(--row-raised-edge),
     var(--shadow-row);
 }
-/* the needs-you wash: the one gradient */
-.you {
-  background: linear-gradient(90deg, var(--you-tint), transparent 45%), var(--row-raised);
-}
 .flat {
   background: var(--row-flat);
   box-shadow: inset 0 0 0 var(--line-1) var(--row-flat-edge);
 }
 
-/* a line lights up on hover and focus, never moves */
-.line:is(:hover, :has(:focus-visible)) {
+/* a row lights up on hover and focus, never moves */
+.row:not(.rack):is(:hover, :has(:focus-visible)) {
   z-index: 1;
   background: var(--row-hover);
   box-shadow:
     0 0 0 var(--line-1) var(--row-hover-edge),
     var(--shadow-halo);
 }
-.line.you:is(:hover, :has(:focus-visible)),
-.you.open {
-  background: linear-gradient(90deg, var(--you-tint), transparent 45%), var(--row-hover);
-}
-/* an item, a tile and a rack line rise */
-.item:is(:hover, :has(:focus-visible)),
-.tile:is(:hover, :has(:focus-visible)) {
-  transform: translateY(calc(var(--line-3) * -1));
-}
-.rack:is(:hover, :has(:focus-visible)) {
-  transform: translateY(calc(var(--line-2) * -1));
+.rack:is(:hover, :has(:focus-visible)) > .inner {
+  background: var(--field);
 }
 .open {
   background: var(--row-hover);
-  box-shadow: 0 0 0 var(--line-1) var(--ink-1);
+  box-shadow:
+    0 0 0 var(--line-1) var(--row-hover-edge),
+    var(--shadow-float);
 }
 /* the row's own button, for the keyboard: visually hidden; the ring goes round the row */
 .hit {
@@ -116,21 +105,16 @@
   border-radius: var(--r-2);
 }
 
-/* the status edge: inset on a line, full height on an item */
+/* the status edge: a short inset tick */
 .row[data-edge] > .inner::before {
   content: "";
   position: absolute;
   left: 0;
-  top: var(--sp-4);
-  bottom: var(--sp-4);
-  width: var(--line-3);
+  top: var(--sp-6);
+  bottom: var(--sp-6);
+  width: var(--line-2);
   border-radius: 0 var(--line-2) var(--line-2) 0;
   background: var(--edge);
-}
-.item[data-edge] > .inner::before {
-  top: 0;
-  bottom: 0;
-  border-radius: var(--r-3) 0 0 var(--r-3);
 }
 .row[data-edge="you"] {
   --edge: var(--you);
@@ -141,11 +125,9 @@
 .row[data-edge="blocked"] {
   --edge: var(--blocked);
 }
-.row[data-edge="done"] {
-  --edge: var(--progress);
-}
+.row[data-edge="done"],
 .row[data-edge="quiet"] {
-  --edge: var(--rule-strong);
+  --edge: transparent;
 }
 
 .cell {

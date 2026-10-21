@@ -21,6 +21,7 @@
   gap: var(--sp-5);
   padding: var(--sp-7) 0;
   background: var(--rail);
+  border-right: var(--line-1) solid var(--rail-edge);
 }
 .logo {
   flex: none;
@@ -31,7 +32,6 @@
   margin-bottom: var(--sp-1);
   border-radius: var(--r-3);
   background: var(--accent);
-  box-shadow: 0 var(--line-2) var(--sp-4) calc(var(--line-2) * -1) var(--glow-accent);
 }
 .logo > i {
   width: var(--sp-5);
