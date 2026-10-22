@@ -61,25 +61,17 @@ export interface TableProps {
   /** Out to the main sheet's edges with no surface of its own, under a head on a grey band, its
    *  first cell under the bar's title (Linear's lists: the library's, Intake's, All teams'). */
   edge?: boolean;
-  /** Its foot held at the page's bottom when the list is short, a status line (Intake's last check). */
-  pin?: boolean;
   children: ReactNode;
 }
 
 export function Table(props: TableProps) {
-  const { columns, head = true, scroll = true, foot, bleed, edge, pin, children } = props;
+  const { columns, head = true, scroll = true, foot, bleed, edge, children } = props;
   const cols = columns.map(track);
   return (
     <Columns.Provider value={columns}>
       <Scrolling.Provider value={scroll}>
         <div
-          className={cx(
-            s.table,
-            scroll && s.scroll,
-            bleed && s.bleed,
-            edge && s.edge,
-            pin && s.pin,
-          )}
+          className={cx(s.table, scroll && s.scroll, bleed && s.bleed, edge && s.edge)}
           style={vars({ "--cols": cols.join(" ") })}
           data-edge={edge}
         >

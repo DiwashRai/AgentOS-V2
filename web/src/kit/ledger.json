@@ -480,7 +480,7 @@
           "values": {
             "zone": "A band run through its surface's padding, edge to edge (My queue's Agents at work, over its cards).",
             "group": "A list's band edge to edge (Linear's group head): Compact's fold, My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
-            "line": "A query's head (Intake's queries): a label row a hair off the page on a hairline, lighter than a group's band so the titles outweigh it, parting one run from the next, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first in the faces' column, so its key starts where the titles do; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
+            "line": "A query's head (Intake's queries): Linear's group band, a grey fill edge to edge that parts one run from the next, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first in the faces' column, so its key starts where the titles do; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
           }
         },
         "fold": {
@@ -974,9 +974,6 @@
         },
         "edge": {
           "why": "Out to the main sheet's edges with no surface of its own, as Linear's lists run: the column labels on a group's grey band, each row's first cell under the bar's title (the library's four lists, Intake's queries without a head, and All teams' board, its legend in the foot)."
-        },
-        "pin": {
-          "why": "Hold the foot at the page's bottom when the list is short, a status line rather than a last row (Intake's last check)."
         }
       }
     },

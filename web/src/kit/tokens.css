@@ -365,8 +365,6 @@
   --face-dashed: color-mix(in srgb, var(--ink-3) 75%, transparent);
   /* intake · Notice: a failed query's halo, the blocked dot's disc in the faces' column */
   --notice-halo: color-mix(in srgb, var(--blocked) 15%, transparent);
-  /* intake · Head: a query's label row, a few points off the page (under half a group's band) */
-  --line-band: color-mix(in srgb, var(--list-band) 40%, transparent);
   --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
   /* themes · faces: a hue each, the same in every theme (a person reads the same everywhere), white
      initials on it */
