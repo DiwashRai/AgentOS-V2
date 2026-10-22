@@ -40,6 +40,15 @@ const router = createBrowserRouter([
       { path: "kit", element: <KitSheet /> },
     ],
   },
+  // Linear's reference screens drawn with the kit, for the restyle's judges; not in the build.
+  ...(import.meta.env.DEV
+    ? [
+        {
+          path: "twins/:name",
+          lazy: async () => ({ Component: (await import("../features/sheet/Twins")).Twins }),
+        },
+      ]
+    : []),
   { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
