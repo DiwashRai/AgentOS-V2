@@ -41,7 +41,7 @@ const ticket = (
 
 const RUN: Attention = { kind: "running", run_id: 1, agent: "Builder", step: "", progress: null };
 const BLOCKED: Attention = { kind: "blocked", reason: "Tests failed" };
-const MINE: Attention = { kind: "waiting", on: ADA, ask: "Plan sign-off" };
+const MINE = { kind: "waiting", on: ADA, ask: "Plan sign-off" } satisfies Attention;
 
 describe("All teams' groups", () => {
   it("runs a repo's tickets in flight down the stages, what needs you first in a stage", () => {
@@ -69,11 +69,9 @@ describe("All teams' groups", () => {
 });
 
 describe("a ticket's state in words", () => {
-  it("says your move in the accent and someone else's by name", () => {
-    expect(stateOf(ticket("NW-1", "web", "plan", MINE), ADA)).toMatchObject({ tone: "you" });
-    expect(stateOf(ticket("NW-1", "web", "plan", MINE), BEA)).toMatchObject({
-      text: "Plan sign-off · Ada",
-      tone: "plain",
-    });
+  it("says your move by its ask and someone else's by name", () => {
+    const t = ticket("NW-1", "web", "plan", MINE);
+    expect(stateOf(t, MINE, ADA).text).toBe("Plan sign-off");
+    expect(stateOf(t, MINE, BEA).text).toBe("Plan sign-off · Ada");
   });
 });

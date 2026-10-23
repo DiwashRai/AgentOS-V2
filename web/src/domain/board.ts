@@ -302,6 +302,11 @@ export function nowLine(t: TicketRow, me: Person | null): NowLine {
   }
 }
 
+/** A run is at work on it, or queued for a runner. */
+export type AtWork = Extract<Attention, { kind: "running" | "queued" }>;
+
+export const atWork = (a: Attention): a is AtWork => a.kind === "running" || a.kind === "queued";
+
 /** The live label over a run: "Builder · Run #42 · 6:00 · 2/5". */
 export function runLine(t: Pick<TicketRow, "attention" | "since">, now: number): string {
   const a = t.attention;

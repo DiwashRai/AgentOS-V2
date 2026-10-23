@@ -1,15 +1,14 @@
 // My queue (home): only what is mine. Click, Enter or Space on an item opens the peek (`?peek=`).
 import { useSearchParams } from "react-router";
 
-import type { Attention, Person, TicketRow } from "../../api/types";
-import { groupOf, stepText } from "../../domain/board";
-import { age, matches } from "../../domain/format";
+import type { Person, TicketRow } from "../../api/types";
+import { atWork, groupOf } from "../../domain/board";
+import { matches } from "../../domain/format";
 import {
   Button,
   type Column,
   Head,
   Mark,
-  Meter,
   Notice,
   Page,
   Row,
@@ -18,9 +17,9 @@ import {
   Stack,
   Surface,
   Table,
-  Text,
 } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
+import { RunNow } from "../../patterns/runNow";
 import { KeyCell, LINE_END, lineEnd, TicketTitle } from "../../patterns/ticketLine";
 import { ActionButton, rowActions } from "../shared/Actions";
 import { contextOf, useBoard, useSpace } from "../shared/board";
@@ -80,46 +79,9 @@ function Buttons({ t, me }: { t: TicketRow; me: Person | null }) {
   );
 }
 
-type AtWork = Extract<Attention, { kind: "running" | "queued" }>;
-
-const atWork = (a: Attention): a is AtWork => a.kind === "running" || a.kind === "queued";
-
-/** A run's Now, where a gate's buttons stand on the rows above: who works it, the step under way
- *  of all, and a still meter ending on the stage's edge, so the meters line up down the zone; a
- *  queued run says only that it is queued, quiet. Its run's number in the tooltip. */
-function RunNow({ a, since, now }: { a: AtWork; since: string; now: number }) {
-  if (a.kind === "queued")
-    return (
-      <Stack dir="row" gap={5} align="center">
-        <Text
-          variant="meta"
-          tone="3"
-          title={`Run #${String(a.run_id)}, queued for ${age(since, now)}`}
-        >
-          Queued
-        </Text>
-        <Meter size="list" queued />
-      </Stack>
-    );
-  const p = a.progress;
-  const say = [`${a.agent} · run #${String(a.run_id)}`, p ? `step ${stepText(p)}` : null]
-    .filter(Boolean)
-    .join(" · ");
-  return (
-    <Stack dir="row" gap={5} align="center">
-      <Text variant="meta" tone="3" truncate title={say}>
-        <Text variant="meta" weight={500} tone="2">
-          {a.agent}
-        </Text>
-        {p ? <Text variant="meta" tabular>{`\u2002${stepText(p)}`}</Text> : null}
-      </Text>
-      {p ? <Meter size="list" done={p.done} total={p.total} /> : null}
-    </Stack>
-  );
-}
-
 /** One line of the queue: the key, the glyph and title with what it waits on after it; then a
- *  gate's buttons, or a run's agent and steps; then the plain end every zone shares. */
+ *  gate's buttons, or a run's Now (its agent, steps and meter, ending on the stage's edge so the
+ *  meters line up down the zone); then the plain end every zone shares. */
 function Item({ t, me, now, onOpen }: ItemProps) {
   const a = t.attention;
   return (
@@ -133,7 +95,7 @@ function Item({ t, me, now, onOpen }: ItemProps) {
     >
       <KeyCell t={t} />
       <TicketTitle t={t} me={me} />
-      {atWork(a) ? <RunNow a={a} since={t.since} now={now} /> : <Buttons t={t} me={me} />}
+      {atWork(a) ? <RunNow run={a} since={t.since} now={now} /> : <Buttons t={t} me={me} />}
       {lineEnd({ t, me, now })}
     </Row>
   );

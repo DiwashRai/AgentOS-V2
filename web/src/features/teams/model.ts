@@ -2,8 +2,8 @@
 // list), one group per repo in the Space's order. A group's rows run down the stages (Plan, Build,
 // Verify, Review), and inside a stage what needs you leads, then blocked, running, waiting and
 // queued. Its head carries who works there; a repo with nothing in flight is quiet.
-import type { Attention, Person, Phase, Progress, TicketRow } from "../../api/types";
-import { type Group, groupOf, isMyMove, stepText } from "../../domain/board";
+import type { Attention, Person, Phase, TicketRow } from "../../api/types";
+import { type AtWork, type Group, groupOf, isMyMove } from "../../domain/board";
 import { firstName } from "../../domain/format";
 
 /** Work in flight: inbox and merged work live in each repo's list. */
@@ -86,15 +86,10 @@ export function stageCounts(groups: readonly RepoGroup[]): { name: string; n: nu
   }));
 }
 
-/** The State column: what a ticket in flight is doing or waits on, in words. */
+/** The State column, while no run is at work or queued (patterns/runNow draws one that is): what
+ *  the ticket waits on, in words, and the whole of it on hover (why it is blocked, the ask). */
 export interface StateWords {
   text: string;
-  /** you: your move (the accent); firm: blocked (the first ink); live: an agent at work (the
-   *  second, a weight up); plain: it waits on someone; quiet: nothing is at work on it yet. */
-  tone: "you" | "firm" | "live" | "plain" | "quiet";
-  /** A running agent's steps, for its count and meter; a queued run has a dashed one. */
-  run: { progress: Progress | null; step: string | null } | "queued" | null;
-  /** The whole of it, on hover: what the agent is doing, why it is blocked, the ask. */
   say: string;
 }
 
@@ -103,43 +98,29 @@ function gateOf(t: TicketRow): string | undefined {
   return t.rail.find((s) => s.gate?.state === "waiting")?.gate?.short;
 }
 
-type Running = Extract<Attention, { kind: "running" }>;
 type Waiting = Extract<Attention, { kind: "waiting" }>;
-
-/** An agent at work: its name, its step of all, the run and what it is doing on hover. */
-function running(a: Running): StateWords {
-  const step = a.progress ? stepText(a.progress) : null;
-  const run = `${a.agent} · run #${String(a.run_id)}`;
-  return {
-    text: a.agent,
-    tone: "live",
-    run: { progress: a.progress, step },
-    say: [run, step ? `step ${step}` : null, a.step].filter(Boolean).join(" · "),
-  };
-}
 
 /** On you: its gate and You (else the ask); on someone else: where it is parked and who. */
 function waiting(t: TicketRow, a: Waiting, me: Person | null): StateWords {
   const gate = gateOf(t);
-  if (isMyMove(a.on, me))
-    return { text: gate ? `${gate} · You` : a.ask, tone: "you", run: null, say: a.ask };
+  if (isMyMove(a.on, me)) return { text: gate ? `${gate} · You` : a.ask, say: a.ask };
   const who = firstName(a.on?.name ?? "someone");
-  return { text: `${gate ?? a.ask} · ${who}`, tone: "plain", run: null, say: `${a.ask} · ${who}` };
+  return { text: `${gate ?? a.ask} · ${who}`, say: `${a.ask} · ${who}` };
 }
 
-export function stateOf(t: TicketRow, me: Person | null): StateWords {
-  const a = t.attention;
+/** `a` is the ticket's attention, once the caller knows no run is at work on it. */
+export function stateOf(
+  t: TicketRow,
+  a: Exclude<Attention, AtWork>,
+  me: Person | null,
+): StateWords {
   switch (a.kind) {
-    case "running":
-      return running(a);
     case "waiting":
       return waiting(t, a, me);
-    case "queued":
-      return { text: "Queued", tone: "quiet", run: "queued", say: `Run #${String(a.run_id)}` };
     case "blocked":
-      return { text: "Blocked", tone: "firm", run: null, say: `Blocked · ${a.reason}` };
+      return { text: "Blocked", say: `Blocked · ${a.reason}` };
     case "inbox":
     case "done":
-      return { text: "", tone: "quiet", run: null, say: "" };
+      return { text: "", say: "" };
   }
 }

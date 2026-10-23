@@ -11,14 +11,13 @@ import { useSearchParams } from "react-router";
 
 import { useSettings } from "../../api/queries";
 import type { Person, TicketRow } from "../../api/types";
-import { groupOf, parseFilter, pills, stageModel, stageWord } from "../../domain/board";
+import { atWork, groupOf, parseFilter, pills, stageModel, stageWord } from "../../domain/board";
 import { firstName, fromPerson, plural, repoShort } from "../../domain/format";
 import {
   Button,
   type Column,
   Head,
   Icon,
-  Meter,
   Page,
   Row,
   Segmented,
@@ -29,6 +28,7 @@ import {
 } from "../../kit";
 import { TicketAge } from "../../patterns/age";
 import { LoadNotice } from "../../patterns/load";
+import { RunNow } from "../../patterns/runNow";
 import { KeyCell, TicketTitle } from "../../patterns/ticketLine";
 import { Who } from "../../patterns/who";
 import { contextOf, useBoard, useSpace } from "../shared/board";
@@ -73,24 +73,16 @@ function Legend({ stages }: { stages: readonly { name: string; n: number }[] }) 
 }
 
 /** The state in words, all in one plain ink (the row's glyph already says the state, so nothing here
- *  competes with the title); a queued run's quieter; a running agent's step count quieter still and
- *  its meter at the column's end, so the meters line up. */
-function StateCell({ t, me }: { t: TicketRow; me: Person | null }) {
-  const st = stateOf(t, me);
-  const run = st.run;
+ *  competes with the title); a run's Now (its agent, steps and meter) while one is at work or
+ *  queued. */
+function StateCell({ t, me, now }: { t: TicketRow; me: Person | null; now: number }) {
+  const a = t.attention;
+  if (atWork(a)) return <RunNow run={a} since={t.since} now={now} />;
+  const st = stateOf(t, a, me);
   return (
-    <Stack dir="row" gap={5} align="center" justify="between" grow>
-      <Text tone={st.tone === "quiet" ? "3" : "2"} truncate title={st.say}>
-        {st.text}
-        {run !== null && run !== "queued" && run.step ? (
-          <Text tone="3" weight={400} tabular>{`\u2002${run.step}`}</Text>
-        ) : null}
-      </Text>
-      {run === "queued" ? <Meter size="list" queued /> : null}
-      {run !== null && run !== "queued" && run.progress ? (
-        <Meter size="list" done={run.progress.done} total={run.progress.total} />
-      ) : null}
-    </Stack>
+    <Text tone="2" truncate title={st.say}>
+      {st.text}
+    </Text>
   );
 }
 
@@ -120,7 +112,7 @@ function TicketLine({
       <Text tone="2" truncate title={stage.path}>
         {STAGE[t.phase] ?? stage.word}
       </Text>
-      <StateCell t={t} me={me} />
+      <StateCell t={t} me={me} now={now} />
       <Who who={fromPerson(t.owner)} place="cell" />
       <TicketAge t={t} now={now} />
     </Row>
