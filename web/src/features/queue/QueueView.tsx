@@ -2,7 +2,7 @@
 import { useSearchParams } from "react-router";
 
 import type { Attention, Person, TicketRow } from "../../api/types";
-import { groupOf, nowLine, stepText } from "../../domain/board";
+import { groupOf, stepText } from "../../domain/board";
 import { age, matches } from "../../domain/format";
 import {
   Button,
@@ -21,7 +21,7 @@ import {
   Text,
 } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
-import { KeyCell, LINE_END, lineEnd, TitleCell } from "../compact/TicketLine";
+import { KeyCell, LINE_END, lineEnd, TicketTitle } from "../../patterns/ticketLine";
 import { ActionButton, rowActions } from "../shared/Actions";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
@@ -119,8 +119,7 @@ function RunNow({ a, since, now }: { a: AtWork; since: string; now: number }) {
 }
 
 /** One line of the queue: the key, the glyph and title with what it waits on after it; then a
- *  gate's buttons, or a run's agent and steps; then the plain end every zone shares. A queued
- *  run's title recedes a step: nothing is at work on it yet. */
+ *  gate's buttons, or a run's agent and steps; then the plain end every zone shares. */
 function Item({ t, me, now, onOpen }: ItemProps) {
   const a = t.attention;
   return (
@@ -133,7 +132,7 @@ function Item({ t, me, now, onOpen }: ItemProps) {
       }}
     >
       <KeyCell t={t} />
-      <TitleCell t={t} me={me} after={nowLine(t, me).after} recede={a.kind === "queued"} />
+      <TicketTitle t={t} me={me} />
       {atWork(a) ? <RunNow a={a} since={t.since} now={now} /> : <Buttons t={t} me={me} />}
       {lineEnd({ t, me, now })}
     </Row>

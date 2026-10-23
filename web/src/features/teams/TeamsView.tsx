@@ -1,33 +1,24 @@
 // All teams (new in V2): every ticket in flight across the org's repos, as one table (Linear's list
 // grouped by team). Each ticket is a line on the page's column grid, its facts reading down the
-// list as a ledger: the key; its state's glyph and the title; the stage it is at; its state in
-// words (a running agent's steps on a still meter); its owner; how long it has been so. The repos
-// are its groups, in the Space's order, each under a head that carries the repo, its path, who
-// works there and how many of its tickets are in flight, with its list at the head's end; inside a
-// group the rows run down the stages.
+// list as a ledger: its priority and key; its state's glyph and the title (the lists' own cells,
+// patterns/ticketLine); the stage it is at; its state in words (a running agent's steps on a still
+// meter); its owner; how long it has been so ("now" while it runs). The repos are its groups, in
+// the Space's order, each under a head that carries the repo, its path, who works there and how
+// many of its tickets are in flight, with its list at the head's end; inside a group the rows run
+// down the stages.
 // A repo with nothing in flight is one quiet line at the foot. Click a row to peek.
 import { useSearchParams } from "react-router";
 
 import { useSettings } from "../../api/queries";
 import type { Person, TicketRow } from "../../api/types";
-import {
-  groupOf,
-  markOf,
-  parseFilter,
-  pills,
-  stageModel,
-  stageWord,
-  STATE_WORD,
-} from "../../domain/board";
+import { groupOf, parseFilter, pills, stageModel, stageWord } from "../../domain/board";
 import { age, firstName, fromPerson, plural, repoShort } from "../../domain/format";
 import {
   Age,
-  Badge,
   Button,
   type Column,
   Head,
   Icon,
-  Mark,
   Meter,
   Page,
   Row,
@@ -38,6 +29,7 @@ import {
   Text,
 } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
+import { KeyCell, TicketTitle } from "../../patterns/ticketLine";
 import { Who } from "../../patterns/who";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
@@ -77,26 +69,6 @@ function Legend({ stages }: { stages: readonly { name: string; n: number }[] }) 
       </Text>
       <Text variant="meta">Inbox and merged work live in each repo&apos;s list.</Text>
     </>
-  );
-}
-
-/** The state's glyph and the title, firm; a queued run's title recedes a step, as My queue's: nothing
- *  is at work on it yet. */
-function TitleCell({ t, me }: { t: TicketRow; me: Person | null }) {
-  const a = t.attention;
-  const kind = markOf(a, me).kind;
-  return (
-    <Stack dir="row" gap={4} align="center">
-      <Mark
-        kind={kind}
-        glyph
-        name={STATE_WORD[kind]}
-        progress={a.kind === "running" ? a.progress : null}
-      />
-      <Text weight={500} tone={a.kind === "queued" ? "2" : "1"} truncate title={t.title}>
-        {t.title}
-      </Text>
-    </Stack>
   );
 }
 
@@ -143,15 +115,15 @@ function TicketLine({
         },
       }}
     >
-      <Badge kind="key">{t.key}</Badge>
-      <TitleCell t={t} me={me} />
+      <KeyCell t={t} />
+      <TicketTitle t={t} me={me} />
       <Text tone="2" truncate title={stage.path}>
         {STAGE[t.phase] ?? stage.word}
       </Text>
       <StateCell t={t} me={me} />
       <Who who={fromPerson(t.owner)} place="cell" />
       <Text variant="meta" tone="3">
-        <Age text={age(t.since, now)} />
+        <Age text={t.attention.kind === "running" ? "now" : age(t.since, now)} />
       </Text>
     </Row>
   );

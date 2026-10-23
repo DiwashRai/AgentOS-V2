@@ -37,12 +37,12 @@ import {
   Thread,
 } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
+import { KeyCell, LINE_END, lineEnd, TicketTitle } from "../../patterns/ticketLine";
 import { ActionButton, expandedActions } from "../shared/Actions";
 import { contextOf, threadMessage, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
 import { chipWords, footOf, moveText, searched, sections } from "./model";
-import { KeyCell, LINE_END, lineEnd, TitleCell } from "./TicketLine";
 
 // Linear's list: the key and the title on the left, what it waits on receding after the title;
 // then the row's one tag (its Now: the agent and its step, who it waits on), hugging the plain
@@ -158,7 +158,6 @@ function CompactRow({
   open: boolean;
   onToggle: () => void;
 }) {
-  const g = groupOf(t, me);
   const line = nowLine(t, me);
   return (
     <Row
@@ -167,9 +166,9 @@ function CompactRow({
       more={<Expanded t={t} me={me} now={now} />}
     >
       <KeyCell t={t} />
-      <TitleCell t={t} me={me} after={line.after} />
+      <TicketTitle t={t} me={me} />
       <NowTag mark={line.chip} count={line.count} />
-      {lineEnd({ t, me, now, ...(g === "running" ? { age: "now" } : {}) })}
+      {lineEnd({ t, me, now })}
     </Row>
   );
 }

@@ -1,20 +1,22 @@
-// The cells a ticket's line shares between Compact and My queue, as Linear lists an issue: the
-// priority bars and the key; the one coloured status glyph and the title, with what it waits on
-// receding after it on the same line; then, at the far end, the line's properties as plain words
-// on fixed columns (the stage, the source), the age and the owner's face, so they read down the
-// list as a ledger, not a pile of pills. Each screen sets what leads that end (its Now tag, a
-// row's buttons).
-import type { Person, Priority, TicketRow, TicketType } from "../../api/types";
+// The cells a ticket's line shares between the lists (Compact, My queue, All teams), as Linear lists
+// an issue: the priority bars and the key; the one coloured status glyph and the title, with what it
+// waits on in the title's tooltip; then, at the far end, the line's properties as plain words on
+// fixed columns (the stage, the source), the age and the owner's face, so they read down the list
+// as a ledger, not a pile of pills. Each screen sets what leads that end (its Now tag, a row's
+// buttons).
+import type { Person, Priority, TicketRow, TicketType } from "../api/types";
 import {
   markOf,
   type MarkModel,
+  nowLine,
   sourceText,
   STATE_WORD,
   stageModel,
   stageWord,
-} from "../../domain/board";
-import { age } from "../../domain/format";
-import { Age, Avatar, Badge, type Column, Icon, Mark, Stack, Text } from "../../kit";
+} from "../domain/board";
+import { age, fromPerson } from "../domain/format";
+import { Age, Badge, type Column, Icon, Mark, Stack, Text } from "../kit";
+import { Who } from "./who";
 
 /** High and low priority are said; normal is the bars' resting form, said by nothing. */
 const PRIORITY_SAY: Record<Exclude<Priority, "normal">, string> = {
@@ -60,22 +62,13 @@ export function KeyCell({ t }: { t: TicketRow }) {
 }
 
 /** The status glyph and the title alone, what it waits on in its tooltip (the row's Now and stage
- *  already say it): one line, cut at its end. A settled line (done, closed) recedes
- *  a step: its title in the second ink; so does one the screen says to (My queue's queued runs). */
-export function TitleCell({
-  t,
-  me,
-  after,
-  recede = false,
-}: {
-  t: TicketRow;
-  me: Person | null;
-  after: string;
-  recede?: boolean;
-}) {
+ *  already say it): one line, cut at its end. A line nothing is at work on recedes a step, its
+ *  title in the second ink: a settled one (done, closed) and a queued one (no runner has it yet). */
+export function TicketTitle({ t, me }: { t: TicketRow; me: Person | null }) {
   const a = t.attention;
   const kind = markOf(a, me).kind;
-  const settled = recede || kind === "done" || kind === "abandoned";
+  const after = nowLine(t, me).after;
+  const recedes = kind === "queued" || kind === "done" || kind === "abandoned";
   return (
     <Stack dir="row" gap={4} align="center">
       <Mark
@@ -86,7 +79,7 @@ export function TitleCell({
       />
       <Text
         weight={500}
-        tone={settled ? "2" : "1"}
+        tone={recedes ? "2" : "1"}
         truncate
         title={after ? `${t.title} · ${after}` : t.title}
       >
@@ -97,9 +90,9 @@ export function TitleCell({
 }
 
 /** The quiet end of a line, as cells (spread into the Row, one per LINE_END column): the stage
- *  ("Review 2/3", the whole way on hover) and the source in plain words, the age, the owner's face
- *  (Linear's dashed ring when nobody owns it). */
-export function lineEnd({ t, me, now, age: shown }: LineEndProps) {
+ *  ("Review 2/3", the whole way on hover) and the source in plain words, the age ("now" while it
+ *  runs), the owner's face (Linear's dashed ring when nobody owns it). */
+export function lineEnd({ t, me, now }: { t: TicketRow; me: Person | null; now: number }) {
   const stage = stageWord(stageModel(t, me));
   const source = sourceText(t);
   return [
@@ -110,20 +103,8 @@ export function lineEnd({ t, me, now, age: shown }: LineEndProps) {
       {source}
     </Text>,
     <Text key="age" variant="meta" tone="3">
-      <Age text={shown ?? age(t.since, now)} />
+      <Age text={t.attention.kind === "running" ? "now" : age(t.since, now)} />
     </Text>,
-    t.owner ? (
-      <Avatar key="owner" name={t.owner.name} seed={String(t.owner.id)} />
-    ) : (
-      <Avatar key="owner" dashed />
-    ),
+    <Who key="owner" who={fromPerson(t.owner)} place="face" />,
   ];
-}
-
-interface LineEndProps {
-  t: TicketRow;
-  me: Person | null;
-  now: number;
-  /** In place of the age since it changed ("now" while it runs). */
-  age?: string;
 }
