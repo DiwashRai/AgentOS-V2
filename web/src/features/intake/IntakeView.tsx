@@ -2,6 +2,7 @@
 // Every row lights up on hover; the key opens Jira; the button takes it in. W0 is
 // static, so Take in does nothing yet.
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 
 import { useIntake, useNow, useSession } from "../../api/queries";
 import type { IntakeIssue, IntakeQuery } from "../../api/types";
@@ -13,9 +14,12 @@ import {
   type Column,
   Head,
   Icon,
+  Mark,
   Notice,
   Page,
   Row,
+  type Segment,
+  Segmented,
   Stack,
   Surface,
   Swap,
@@ -34,8 +38,8 @@ import {
   issueFacts,
   issuesOf,
   jqlHref,
-  metaFact,
   sharedPrefix,
+  statusMark,
   toTakeIn,
   visible,
 } from "./model";
@@ -44,8 +48,8 @@ import {
 // bar and one row of column labels, each saved query a section of it under its heading (chevron,
 // project key, name, count) that stays at the top while its run scrolls past, parted from the one
 // before by room and a hairline. An issue is one line on fixed columns, so its facts read down
-// the list: the Jira key (a link to it), the title firm, one fact (a priority worth saying, led by
-// its bars, else the Jira status; the rest in its tooltip), who has it (a face and a name,
+// the list: the Jira key (a link to it), the title firm, its priority's bars and
+// its Jira status in the app's glyphs with the status's words (the rest in its tooltip), who has it (a face and a name,
 // Unassigned a dashed ring), the age ("1h ago", in its largest unit; to the minute in its
 // tooltip). Under the pointer or with focus, Take in takes the age's place. A query that didn't
 // answer says so on a panel of the blocked hue. When the queries were checked closes the list.
@@ -67,7 +71,6 @@ function Quiet({ children, title }: { children: string; title?: string }) {
 }
 
 function IssueRow({ issue, now }: { issue: IntakeIssue; now: number }) {
-  const fact = metaFact(issue);
   return (
     <Row>
       <Button variant="link" href={issue.url} title={`Open ${issue.key} in Jira`}>
@@ -76,10 +79,11 @@ function IssueRow({ issue, now }: { issue: IntakeIssue; now: number }) {
       <Text variant="label" truncate title={issue.title}>
         {issue.title}
       </Text>
-      <Stack dir="row" gap={3} align="center">
-        {fact.priority ? <Icon name={fact.priority} /> : null}
+      <Stack dir="row" gap={4} align="center">
+        <Icon name={issue.priority} />
+        <Mark kind={statusMark(issue.status)} glyph name={false} />
         <Text tone="2" truncate title={issueFacts(issue)}>
-          {fact.text}
+          {issue.status}
         </Text>
       </Stack>
       <Stack dir="row" gap={4} align="center">
@@ -227,8 +231,23 @@ function Group({ q, query, jiraUrl, now }: GroupProps) {
   );
 }
 
+/** The bar's chips, as the other lists': everything to take in, then each query and its count; a
+ *  query that didn't answer carries the blocked glyph. One pressed lists that query alone. */
+function queryChips(queries: readonly IntakeQuery[], total: number): Segment[] {
+  return [
+    { id: "all", label: "Everything", count: total },
+    ...queries.map((q) =>
+      q.result.kind === "error"
+        ? { id: q.name, label: q.name, mark: "blk" as const }
+        : { id: q.name, label: q.name, count: issuesOf(q, []).length },
+    ),
+  ];
+}
+
 export function IntakeView() {
   const intake = useIntake();
+  const [params, setParams] = useSearchParams();
+  const only = params.get("q");
   const space = useSpace();
   const jiraUrl = useSession().data?.jira_url ?? null;
   const { query, search } = useSearch();
@@ -241,19 +260,30 @@ export function IntakeView() {
       action={<NewTicket />}
       {...(data
         ? {
-            counters: [
-              { n: toTakeIn(data), label: "to take in" },
-              { n: data.queries.length, label: data.queries.length === 1 ? "query" : "queries" },
-            ],
+            middle: (
+              <Segmented
+                label="Filter"
+                items={queryChips(data.queries, toTakeIn(data))}
+                value={only ?? "all"}
+                onChange={(id) => {
+                  setParams((p) => {
+                    const out = new URLSearchParams(p);
+                    if (id === "all") out.delete("q");
+                    else out.set("q", id);
+                    return out;
+                  });
+                }}
+              />
+            ),
           }
         : {})}
       search={search}
     >
       <Table columns={COLUMNS} edge scroll={false} {...(data ? { foot: footNote(data, now) } : {})}>
         {data ? (
-          data.queries.map((q) => (
-            <Group key={q.name} q={q} query={query} jiraUrl={jiraUrl} now={now} />
-          ))
+          data.queries
+            .filter((q) => only === null || q.name === only)
+            .map((q) => <Group key={q.name} q={q} query={query} jiraUrl={jiraUrl} now={now} />)
         ) : intake.error ? (
           <Notice kind="status" error>
             {`Can't reach the server · ${intake.error.message}`}

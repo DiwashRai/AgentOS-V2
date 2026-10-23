@@ -17,8 +17,9 @@ const WORD: Record<ActionId, string> = {
   reopen: "Reopen",
 };
 
-/** The variants an action takes: the strong two, the accent (Dispatch on the header), the rest. */
-type ActionLook = "you" | "ink" | "accent" | "default";
+/** The variants an action takes: the strong two, the accent (Dispatch on the header), the rest; in a
+ *  list's line the gate's primary is outlined and the rest wait for the row's hover or focus. */
+type ActionLook = "you" | "ink" | "outline" | "aside" | "accent" | "default";
 const VARIANT: Partial<Record<ActionId, "you" | "ink">> = { continue: "you", retry: "ink" };
 const RANK: Record<Role, number> = { pending: 0, viewer: 1, writer: 2, admin: 3 };
 
@@ -60,14 +61,17 @@ function blockedFor(action: Action, role: Role | undefined): string | null {
   return RANK[role] < RANK[action.role] ? `Needs the ${action.role} role` : null;
 }
 
-function variantOf(action: Action, header: boolean): ActionLook {
+function variantOf(action: Action, header: boolean, line: boolean): ActionLook {
   if (header && action.id === "dispatch") return "accent";
-  return VARIANT[action.id] ?? "default";
+  const look = VARIANT[action.id] ?? "default";
+  if (!line) return look;
+  return look === "you" ? "outline" : look === "default" ? "aside" : look;
 }
 
 export function ActionButton({ action, size = "sm", header = false }: ActionButtonProps) {
   const blocked = blockedFor(action, useSession().data?.me?.role);
-  const variant = variantOf(action, header);
+  // xs is a list's dense line
+  const variant = variantOf(action, header, size === "xs");
   return blocked !== null ? (
     <Button size={size} variant={variant} blocked={blocked}>
       {WORD[action.id]}

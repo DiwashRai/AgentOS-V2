@@ -114,7 +114,12 @@ export function LibraryList(props: LibraryListProps) {
       search={search}
       action={<Button>{`New ${noun}`}</Button>}
     >
-      <Table columns={columns} edge foot={<Foot noun={noun} total={total} shown={hrefs.length} />}>
+      <Table
+        columns={columns}
+        edge
+        narrow
+        foot={<Foot noun={noun} total={total} shown={hrefs.length} />}
+      >
         {hrefs.length === 0 && total > 0 ? (
           <Notice kind="empty" lead="No match">
             {`nothing in ${title.toLowerCase()} matches this search`}

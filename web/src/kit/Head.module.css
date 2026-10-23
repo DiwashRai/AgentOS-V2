@@ -15,7 +15,7 @@
   position: relative;
   height: var(--h-group);
   margin-top: var(--group-gap);
-  padding: 0 var(--list-inset);
+  padding: 0 var(--list-end, var(--list-inset)) 0 var(--list-inset);
 }
 .group:first-child {
   margin-top: 0;
@@ -120,7 +120,7 @@
   z-index: var(--z-sticky);
   height: var(--h-group);
   margin-top: var(--group-gap);
-  padding: 0 var(--list-inset);
+  padding: 0 var(--list-end, var(--list-inset)) 0 var(--list-inset);
   background: var(--ground);
 }
 .line:first-child {

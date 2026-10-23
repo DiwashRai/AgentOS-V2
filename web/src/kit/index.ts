@@ -30,7 +30,7 @@ export { Meter, type MeterProps } from "./Meter";
 export { Notice, type NoticeProps } from "./Notice";
 export { NumberField, type NumberFieldProps } from "./NumberField";
 export { Override, type OverrideProps } from "./Override";
-export { type Counter, Page, type PageProps, type Search } from "./Page";
+export { Page, type PageProps, type Search } from "./Page";
 export { Radio, type RadioOption, type RadioProps } from "./Radio";
 export { type Action, Row, type RowProps } from "./Row";
 export { Section, type SectionProps } from "./Section";

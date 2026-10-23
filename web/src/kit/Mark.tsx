@@ -17,7 +17,7 @@ export type MarkProps = Common &
         /** The glyph alone (counters, legends, group heads, a card's state). */
         glyph: true;
         /** Its name, a choice every glyph makes: the state's word where the glyph is the only sign of
-         *  it; `false` where the words beside it say the state (a filter chip, a counter, a head):
+         *  it; `false` where the words beside it say the state (a filter chip, a head):
          *  it is then drawing alone. */
         name: string | false;
         /** Still: no breathing halo (a grid of cards, a board, would pulse all at once). */

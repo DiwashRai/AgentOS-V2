@@ -96,15 +96,15 @@
 .line > .inner {
   column-gap: var(--sp-5);
   min-height: var(--h-line);
-  padding: 0 var(--list-inset);
+  padding: 0 var(--list-end, var(--list-inset)) 0 var(--list-inset);
 }
 .item > .inner {
   min-height: var(--h-list-item);
-  padding: var(--sp-7) var(--list-inset);
+  padding: var(--sp-7) var(--list-end, var(--list-inset)) var(--sp-7) var(--list-inset);
 }
 .triage > .inner {
   min-height: var(--h-triage);
-  padding: var(--sp-3) var(--list-inset);
+  padding: var(--sp-3) var(--list-end, var(--list-inset)) var(--sp-3) var(--list-inset);
 }
 .rack > .inner {
   column-gap: var(--sp-4);

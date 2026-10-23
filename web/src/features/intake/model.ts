@@ -62,12 +62,13 @@ const PRIORITY_WORD: Record<IntakeIssue["priority"], string> = {
   low: "Low priority",
 };
 
-/** The meta line's one fact after the assignee: a priority worth saying (high or low), led by its
- *  signal bars so it never reads as a status, else the Jira status. */
-export function metaFact(issue: IntakeIssue): { text: string; priority: "high" | "low" | null } {
-  return issue.priority === "normal"
-    ? { text: issue.status, priority: null }
-    : { text: PRIORITY_WORD[issue.priority], priority: issue.priority };
+/** A Jira status in the app's glyphs, from the words Jira's workflows use for it: finished, under
+ *  way (someone else's, so the waiting ring), or not started. */
+export function statusMark(status: string): "done" | "wait" | "idle" {
+  const s = status.toLowerCase();
+  if (/done|closed|resolved|shipped/.test(s)) return "done";
+  if (/progress|review|doing|testing/.test(s)) return "wait";
+  return "idle";
 }
 
 /** Everything the meta line leaves out, for its tooltip: "Bug · To Do · High priority". */

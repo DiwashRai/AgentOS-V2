@@ -125,7 +125,9 @@
           "values": {
             "default": "A soft fill with no edge, a step firmer under the pointer.",
             "ink": "A primary that isn't a gate (Retry): the default's fill in a firmer weight, so it sits with its neighbours.",
-            "you": "The gate primary (Approve), and an editor's Save: the bar's one filled button; blocked, a soft wash of the accent with its words in the accent's ink, still the bar's primary and plainly not lit; the same solid fill in a list's row, so the ask reads as the row's one action.",
+            "you": "The gate primary (Approve), and an editor's Save: the bar's one filled button; blocked, a soft wash of the accent with its words in the accent's ink, still the bar's primary and plainly not lit; in a list's line it is the outline instead.",
+            "outline": "A primary in a list's line (Approve in My queue's Your move): the accent's words inside an edge of the accent, so the row still says act here without being the page's loudest thing.",
+            "aside": "A row's second action (Request changes): the default's look, shown only while its row is under the pointer or holds the focus, its room kept so the row never moves.",
             "accent": "Only Dispatch run, only on a ticket.",
             "quiet": "A button with no fill at rest (+N, icon buttons in a bar, a lane's +); blocked, its faded words or glyph alone.",
             "link": "A bare text action in secondary ink, primary on hover (Show all, Open ticket)."
@@ -648,16 +650,8 @@
         "context": {
           "why": "Quiet after the title: the Space, a scope, who."
         },
-        "counters": {
-          "why": "The bar's counts; a zero recedes, a non-zero need-you takes the accent's ink, with no fill.",
-          "items": {
-            "mark": {
-              "why": "The state the count is of (MarkKind)."
-            }
-          }
-        },
         "middle": {
-          "why": "The view's own controls (filter pills, a crumb)."
+          "why": "The view's own controls: every list's filter chips (Compact, My queue, All teams, Intake), a crumb."
         },
         "search": {
           "why": "The search field, with / and Esc."
@@ -977,6 +971,9 @@
         },
         "edge": {
           "why": "Out to the main sheet's edges with no surface of its own, as Linear's lists run: the column labels quiet over the rows, no band, each row's first cell under the bar's title (the library's four lists, Intake's queries without a head, and All teams' table, its legend in the foot)."
+        },
+        "narrow": {
+          "why": "A short list's columns held to a reading width on a wide sheet, its rules, washes and foot still out to the edges: the library's four lists, whose few rows otherwise stretch across empty canvas."
         }
       }
     },

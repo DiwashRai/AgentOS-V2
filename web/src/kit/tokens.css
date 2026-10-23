@@ -112,7 +112,7 @@
   --side: color-mix(in srgb, #000000 32%, var(--page));
   --ink-1: #eceef3;
   --ink-2: #b7bac6;
-  --ink-3: #a1a5b3;
+  --ink-3: #aeb2bf;
   --ink-hover: #d3d6df;
   --wash: #dde3f5;
   --hair: #dde3f5;
@@ -178,6 +178,8 @@
   --ring-you: color-mix(in srgb, var(--you) 22%, transparent);
   /* a blocked primary's wash, a pressed filter's */
   --you-soft: color-mix(in srgb, var(--you) 15%, transparent);
+  /* an outlined primary's edge */
+  --you-edge: color-mix(in srgb, var(--you) 55%, transparent);
   --sweep-live: color-mix(in srgb, var(--live) 30%, transparent);
   --ring-ink: color-mix(in srgb, var(--ink-1) 22%, transparent);
   /* rows: a hover, a heading's count; a row's Chip, its grey dot or glyph; Unassigned's ring */
@@ -427,6 +429,7 @@
   --w-menu: 268px; /* menus */
   --w-search: 240px; /* the bar's search field */
   --w-peek: 640px;
+  --w-list: 1000px; /* a narrow list's columns, at most */
   --w-talk-min: 400px; /* the ticket page's Talk column */
   --w-talk-max: 500px;
   --w-meter: 48px; /* a run meter inline in a row */

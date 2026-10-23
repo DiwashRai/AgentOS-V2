@@ -115,6 +115,22 @@
 .link:hover {
   color: var(--ink-1);
 }
+/* outline: a primary in a list's line (Approve in My queue): the accent's words on the control's face
+   inside an edge of the accent, so the row says act here without being the loudest thing on the
+   page; under the pointer the accent's soft wash */
+.outline {
+  border-color: var(--you-edge);
+  color: var(--you-text);
+}
+.outline:hover {
+  border-color: var(--you);
+  background: var(--you-soft);
+}
+/* aside: a row's second action (Request changes): the default's look, shown while its row is under
+   the pointer or holds the focus, its room kept so nothing moves */
+:where([data-row]:not(:hover, :focus-within)) .aside {
+  visibility: hidden;
+}
 /* blocked (R11): an empty dashed outline in muted ink that hover leaves alone, the one line a button
    draws; a quiet one is its faded glyph alone (no box), and the primary a soft wash of the accent
    with its words in the accent's ink (still the bar's primary, plainly not lit) */

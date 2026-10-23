@@ -14,6 +14,8 @@ import {
   Notice,
   Page,
   Row,
+  type Segment,
+  Segmented,
   Stack,
   Surface,
   Table,
@@ -37,6 +39,23 @@ const ITEM: readonly Column[] = [
   { label: "", width: "2xl", hug: true, end: true, keep: true },
   ...LINE_END,
 ];
+
+/** The bar's chips, as Compact's: Everything, then each zone with its count; one pressed shows that
+ *  zone alone (`?z=`). */
+type Zone = "all" | "you" | "work" | "ready" | "done";
+const ZONE_IDS: readonly Zone[] = ["all", "you", "work", "ready", "done"];
+const zoneOf = (v: string | null): Zone => ZONE_IDS.find((z) => z === v) ?? "all";
+
+function zoneChips(z: Zones): Segment[] {
+  const all = z.yourMove.length + z.agents.length + z.ready.length + z.done.length;
+  return [
+    { id: "all", label: "Everything", count: all },
+    { id: "you", label: "Your move", count: z.yourMove.length, mark: "you" },
+    { id: "work", label: "Agents at work", count: z.agents.length, mark: "run" },
+    { id: "ready", label: "Ready to start", count: z.ready.length, mark: "idle" },
+    { id: "done", label: "Done recently", count: z.done.length, mark: "done" },
+  ];
+}
 
 type Open = (key: string) => void;
 
@@ -122,113 +141,139 @@ function Item({ t, me, now, onOpen }: ItemProps) {
   );
 }
 
-interface ZoneListProps {
+interface ZoneProps {
   z: Zones;
   me: Person | null;
   now: number;
   open: Open;
 }
 
-function ZoneList({ z, me, now, open }: ZoneListProps) {
-  const n = shipped(z.done);
-  // each zone a section of lines on one grid: no band and no card; one after another parts by room
-  // and a hairline
+function YourMove({ z, me, now, open }: ZoneProps) {
+  return (
+    <Surface level="list" label="Your move">
+      {z.yourMove.length === 0 ? (
+        <Notice kind="empty" lead="All clear">
+          nothing is your move
+        </Notice>
+      ) : (
+        <Table columns={ITEM} head={false} scroll={false}>
+          <Head
+            icon={<Mark kind="you" glyph name={false} />}
+            name="Your move"
+            count={z.yourMove.length}
+            note="Longest wait first"
+            tone="you"
+          />
+          {z.yourMove.map((t) => (
+            <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
+          ))}
+        </Table>
+      )}
+    </Surface>
+  );
+}
+
+function AtWork({ z, me, now, open }: ZoneProps) {
+  return (
+    <Surface level="list" label="Agents at work">
+      {z.agents.length === 0 ? (
+        <Notice kind="empty" lead="All quiet">
+          nothing running, nothing queued
+        </Notice>
+      ) : (
+        <Table columns={ITEM} head={false} scroll={false}>
+          <Head
+            icon={<Mark kind="run" glyph name={false} />}
+            name="Agents at work"
+            tone="live"
+            count={z.agents.length}
+            note={atWorkNote(z)}
+          />
+          {z.agents.slice(0, CAP.agents).map((t) => (
+            <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
+          ))}
+          {z.agents.length > CAP.agents ? (
+            <Button variant="link" href="/compact">
+              {`+${String(z.agents.length - CAP.agents)} more running or queued`}
+            </Button>
+          ) : null}
+        </Table>
+      )}
+    </Surface>
+  );
+}
+
+function Ready({ z, me, now, open }: ZoneProps) {
+  return (
+    <Surface level="list" label="Ready to start">
+      <Table columns={ITEM} head={false} scroll={false}>
+        <Head
+          icon={<Mark kind="idle" glyph name={false} />}
+          name="Ready to start"
+          count={z.ready.length}
+          note="Oldest first"
+        />
+        {z.ready.map((t) => (
+          <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
+        ))}
+      </Table>
+    </Surface>
+  );
+}
+
+/** Done's head end: how many shipped this week, and the way to all of them. */
+function Shipped({ n }: { n: number }) {
+  return (
+    <Stack dir="row" gap={7} align="center">
+      {n > 0 ? (
+        <Stack dir="row" gap={3} align="center">
+          <Icon name="tick-sm" />
+          <Text variant="meta" tone="2">
+            <Text weight={600} tone="done">{`${String(n)} shipped`}</Text> this week
+          </Text>
+        </Stack>
+      ) : null}
+      <Button variant="link" href="/compact?f=done">
+        All done tickets
+      </Button>
+    </Stack>
+  );
+}
+
+function Done({ z, me, now, open }: ZoneProps) {
+  return (
+    <Surface level="list" label="Done recently">
+      <Table columns={ITEM} head={false} scroll={false}>
+        <Head
+          icon={<Mark kind="done" glyph name={false} />}
+          name="Done recently"
+          count={z.done.length}
+          note="Yours, last 7 days"
+          tone="done"
+          summary={<Shipped n={shipped(z.done)} />}
+        />
+        {z.done.slice(0, CAP.done).map((t) => (
+          <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
+        ))}
+        {z.done.length > CAP.done ? (
+          <Notice kind="more" lead={`+${String(z.done.length - CAP.done)} more`} />
+        ) : null}
+      </Table>
+    </Surface>
+  );
+}
+
+/** Each zone a section of lines on one grid, one after another parted by room; the bar's filter
+ *  shows one alone. Ready and Done only when they hold something. */
+function ZoneList({ only, ...props }: ZoneProps & { only: Zone }) {
+  const { z } = props;
+  const show = (id: Zone) => only === "all" || only === id;
   return (
     <Stack>
-      <Surface level="list" label="Your move">
-        {z.yourMove.length === 0 ? (
-          <Notice kind="empty" lead="All clear">
-            nothing is your move
-          </Notice>
-        ) : (
-          <Table columns={ITEM} head={false} scroll={false}>
-            <Head
-              icon={<Mark kind="you" glyph name={false} />}
-              name="Your move"
-              count={z.yourMove.length}
-              note="Longest wait first"
-              tone="you"
-            />
-            {z.yourMove.map((t) => (
-              <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
-            ))}
-          </Table>
-        )}
-      </Surface>
-      <Surface level="list" label="Agents at work">
-        {z.agents.length === 0 ? (
-          <Notice kind="empty" lead="All quiet">
-            nothing running, nothing queued
-          </Notice>
-        ) : (
-          <Table columns={ITEM} head={false} scroll={false}>
-            <Head
-              icon={<Mark kind="run" glyph name={false} />}
-              name="Agents at work"
-              tone="live"
-              count={z.agents.length}
-              note={atWorkNote(z)}
-            />
-            {z.agents.slice(0, CAP.agents).map((t) => (
-              <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
-            ))}
-            {z.agents.length > CAP.agents ? (
-              <Button variant="link" href="/compact">
-                {`+${String(z.agents.length - CAP.agents)} more running or queued`}
-              </Button>
-            ) : null}
-          </Table>
-        )}
-      </Surface>
-      {z.ready.length > 0 ? (
-        <Surface level="list" label="Ready to start">
-          <Table columns={ITEM} head={false} scroll={false}>
-            <Head
-              icon={<Mark kind="idle" glyph name={false} />}
-              name="Ready to start"
-              count={z.ready.length}
-              note="Oldest first"
-            />
-            {z.ready.map((t) => (
-              <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
-            ))}
-          </Table>
-        </Surface>
-      ) : null}
-      {z.done.length > 0 ? (
-        <Surface level="list" label="Done recently">
-          <Table columns={ITEM} head={false} scroll={false}>
-            <Head
-              icon={<Mark kind="done" glyph name={false} />}
-              name="Done recently"
-              count={z.done.length}
-              note="Yours, last 7 days"
-              tone="done"
-              summary={
-                <Stack dir="row" gap={7} align="center">
-                  {n > 0 ? (
-                    <Stack dir="row" gap={3} align="center">
-                      <Icon name="tick-sm" />
-                      <Text variant="meta" tone="2">
-                        <Text weight={600} tone="done">{`${String(n)} shipped`}</Text> this week
-                      </Text>
-                    </Stack>
-                  ) : null}
-                  <Button variant="link" href="/compact?f=done">
-                    All done tickets
-                  </Button>
-                </Stack>
-              }
-            />
-            {z.done.slice(0, CAP.done).map((t) => (
-              <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
-            ))}
-            {z.done.length > CAP.done ? (
-              <Notice kind="more" lead={`+${String(z.done.length - CAP.done)} more`} />
-            ) : null}
-          </Table>
-        </Surface>
-      ) : null}
+      {show("you") ? <YourMove {...props} /> : null}
+      {show("work") ? <AtWork {...props} /> : null}
+      {show("ready") && z.ready.length > 0 ? <Ready {...props} /> : null}
+      {show("done") && z.done.length > 0 ? <Done {...props} /> : null}
     </Stack>
   );
 }
@@ -236,7 +281,8 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
 export function QueueView() {
   const board = useBoard();
   const { rows, me, now } = board;
-  const [, setParams] = useSearchParams();
+  const [params, setParams] = useSearchParams();
+  const zone = zoneOf(params.get("z"));
   const space = useSpace();
   const { query, search } = useSearch();
   const z = zones(
@@ -257,12 +303,21 @@ export function QueueView() {
       context={contextOf(space, me?.name)}
       search={search}
       action={<NewTicket />}
-      counters={[
-        { n: z.yourMove.length, label: "your move", mark: "you" },
-        { n: z.mine, label: "runs yours" },
-        { n: z.running, label: "running", mark: "run" },
-        { n: z.queued, label: "queued", mark: "queued" },
-      ]}
+      middle={
+        <Segmented
+          label="Filter"
+          items={zoneChips(z)}
+          value={zone}
+          onChange={(id) => {
+            setParams((p) => {
+              const out = new URLSearchParams(p);
+              if (id === "all") out.delete("z");
+              else out.set("z", id);
+              return out;
+            });
+          }}
+        />
+      }
     >
       <Surface>
         {board.error ? (
@@ -270,7 +325,7 @@ export function QueueView() {
         ) : board.pending ? (
           <Notice kind="status">Loading</Notice>
         ) : (
-          <ZoneList z={z} me={me} now={now} open={open} />
+          <ZoneList z={z} me={me} now={now} open={open} only={zone} />
         )}
       </Surface>
     </Page>

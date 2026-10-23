@@ -100,50 +100,6 @@
   padding-inline: 0;
 }
 
-/* counters: the number carries the weight; a zero recedes; a non-zero "need you" takes the accent's
-   ink, with no fill, so nothing in the bar is a filled block */
-.counters {
-  flex: 0 0.001 auto;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-8);
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-}
-.counter {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--sp-2);
-  padding: var(--line-3) 0;
-  font-size: var(--fs-3);
-  color: var(--ink-2);
-}
-.counter > b {
-  font-size: var(--fs-5);
-  font-weight: 600;
-  color: var(--ink-1);
-  font-variant-numeric: tabular-nums;
-}
-.counter > span:first-child {
-  align-self: center;
-}
-.zero,
-.zero > b {
-  color: var(--ink-3);
-  font-weight: 500;
-}
-.zero > b {
-  font-size: var(--fs-3);
-}
-.you {
-  color: var(--you-text);
-  font-weight: 500;
-}
-.you > b {
-  color: var(--you-text);
-}
-
 /* the bar's search: 240 wide, giving way first when the bar is short */
 .search {
   flex: 0 1 var(--w-search);

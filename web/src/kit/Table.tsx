@@ -59,17 +59,20 @@ export interface TableProps {
    *  column edge the bar's title's and its rows ruled apart faintly under their words (Linear's
    *  lists: the library's, Intake's, All teams'). */
   edge?: boolean;
+  /** Its columns held to a reading width, its rules still to the edges (the library's short lists
+   *  on a wide sheet). */
+  narrow?: boolean;
   children: ReactNode;
 }
 
 export function Table(props: TableProps) {
-  const { columns, head = true, scroll = true, foot, edge, children } = props;
+  const { columns, head = true, scroll = true, foot, edge, narrow, children } = props;
   const cols = columns.map(track);
   return (
     <Columns.Provider value={columns}>
       <Scrolling.Provider value={scroll}>
         <div
-          className={cx(s.table, scroll && s.scroll, edge && s.edge)}
+          className={cx(s.table, scroll && s.scroll, edge && s.edge, narrow && s.narrow)}
           style={vars({ "--cols": cols.join(" ") })}
           data-edge={edge}
         >

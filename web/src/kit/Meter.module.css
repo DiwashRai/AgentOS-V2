@@ -50,14 +50,11 @@
 .list {
   width: var(--w-meter-list);
 }
-/* queued: no steps yet, the track drawn as dashes (the kit's "not here now") */
+/* queued: no steps yet, the track alone and empty, the quietest a meter gets */
 .queued {
   height: var(--line-3);
-  background: repeating-linear-gradient(
-    90deg,
-    var(--track) 0 var(--sp-2),
-    transparent var(--sp-2) calc(var(--sp-2) + var(--line-3))
-  );
+  border-radius: var(--line-3);
+  background: var(--track);
 }
 .list .seg[data-seg="done"] {
   background: var(--live);

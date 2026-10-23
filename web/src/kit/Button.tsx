@@ -6,7 +6,8 @@ import { Icon, type IconName } from "./Icon";
 import { Tip } from "./tip";
 import { cx } from "./vars";
 
-export type ButtonVariant = "default" | "ink" | "you" | "accent" | "quiet" | "link";
+export type ButtonVariant =
+  "default" | "ink" | "you" | "outline" | "aside" | "accent" | "quiet" | "link";
 
 interface Common {
   variant?: ButtonVariant;

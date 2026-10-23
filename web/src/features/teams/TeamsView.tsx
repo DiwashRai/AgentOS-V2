@@ -25,12 +25,13 @@ import {
   Notice,
   Page,
   Row,
+  Segmented,
   Stack,
   Surface,
   Table,
   Text,
 } from "../../kit";
-import { stageWord } from "../compact/model";
+import { parseFilter, pills, stageWord } from "../compact/model";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
@@ -285,7 +286,9 @@ export function TeamsView() {
   const repos = useSettings().data?.repos.value ?? [];
   const space = useSpace();
   const { query, search } = useSearch("Jump to a repo or ticket");
-  const [, setParams] = useSearchParams();
+  const [params, setParams] = useSearchParams();
+  // the bar's chips, as Compact's and with its `?f=`: one pressed lists that group's tickets alone
+  const filter = parseFilter(params.get("f"));
   const open = (key: string) => {
     setParams((p) => {
       const out = new URLSearchParams(p);
@@ -293,11 +296,8 @@ export function TeamsView() {
       return out;
     });
   };
-  const live = rows.filter((t) => t.attention.kind === "running").length;
-  const queued = rows.filter((t) => t.attention.kind === "queued").length;
-  const needYou = rows.filter((t) => groupOf(t, me) === "needs_you").length;
   const { active, quiet } = groupsOf(
-    rows,
+    rows.filter((t) => filter === "all" || groupOf(t, me) === filter),
     repos.map((r) => r.name),
     me,
     query,
@@ -307,11 +307,21 @@ export function TeamsView() {
       title="All teams"
       context={contextOf(space, plural(repos.length, "repo"))}
       action={<NewTicket />}
-      counters={[
-        { n: needYou, label: "need you", mark: "you" },
-        { n: live, label: "running", mark: "run" },
-        { n: queued, label: "queued", mark: "queued" },
-      ]}
+      middle={
+        <Segmented
+          label="Filter"
+          items={pills(rows, me, filter)}
+          value={filter}
+          onChange={(id) => {
+            setParams((p) => {
+              const out = new URLSearchParams(p);
+              if (id === "all") out.delete("f");
+              else out.set("f", id);
+              return out;
+            });
+          }}
+        />
+      }
       search={search}
     >
       <Table columns={COLUMNS} edge foot={<Legend stages={stageCounts(active)} />}>
@@ -322,7 +332,7 @@ export function TeamsView() {
         {active.map((g) => (
           <RepoSection key={g.repo} g={g} me={me} now={now} onOpen={open} />
         ))}
-        {quiet.length > 0 ? <QuietSection quiet={quiet} /> : null}
+        {filter === "all" && quiet.length > 0 ? <QuietSection quiet={quiet} /> : null}
       </Table>
     </Page>
   );
