@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from baseline import BASELINE, unexplained_raises
-from common import AGENTOS, FAN_OUT_EXEMPT, FEATURES, KINDS, NO_LAYER, Finding
+from common import AGENTOS, FAN_OUT_EXEMPT, KINDS, NO_LAYER, WEB_SRC, Finding
 from measures import Measures
 
 HINTS = {
@@ -147,13 +147,13 @@ def gate_raw_tags(m: Measures, baseline: dict[str, Any]) -> Result:
     caps: dict[str, int] = baseline["allowed"]["raw_tags"]
     details: list[str] = []
     failed = 0
-    for feature, count in sorted(m.raw_tags.items(), key=lambda kv: -kv[1]):
-        cap = caps.get(feature, 0)
+    for folder, count in sorted(m.raw_tags.items(), key=lambda kv: -kv[1]):
+        cap = caps.get(folder, 0)
         failed += count > cap
         mark = "  over" if count > cap else ""
-        details.append(f"{FEATURES}{feature}  raw tags  {count}/{cap}{mark}")
+        details.append(f"{WEB_SRC}{folder}  raw tags  {count}/{cap}{mark}")
     total = sum(m.raw_tags.values())
-    summary = f"{failed} of {len(m.raw_tags)} features over their cap, {total} raw tags"
+    summary = f"{failed} of {len(m.raw_tags)} folders over their cap, {total} raw tags"
     return Result("raw_tags", not failed, summary, details)
 
 

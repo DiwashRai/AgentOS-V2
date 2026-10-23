@@ -6,11 +6,11 @@ never raises it. `--init` writes the first baseline.
 
 The baseline (`quality-baseline.json` at the repo root) holds the limits, the layers (path globs,
 first match wins: core, shell, boundary; a Python file in none fails the `layers` gate), the
-defensive and suppression caps per file, the raw-tag caps per feature, the named existing
-offenders and a `raises` list; it is checked against its schema on load. With no baseline every
-cap is 0, nothing is named and the limits are the defaults. A number that went up against the
-baseline at the base revision (HEAD, or with `--base REF` the merge base with REF) needs a new
-`raises` entry naming it, and every new entry is listed for the owner to approve.
+defensive and suppression caps per file, the raw-tag caps per web feature and for the patterns,
+the named existing offenders and a `raises` list; it is checked against its schema on load. With
+no baseline every cap is 0, nothing is named and the limits are the defaults. A number that went
+up against the baseline at the base revision (HEAD, or with `--base REF` the merge base with REF)
+needs a new `raises` entry naming it, and every new entry is listed for the owner to approve.
 
 The core holds no `Any` (mypy with every `Any` an error, run on the core files only) and no domain
 class with optional fields that stand in for a missing state type. The baseline's

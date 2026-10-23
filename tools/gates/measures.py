@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from common import FAN_OUT_EXEMPT, FEATURES, ROOT, Finding, layer_of, module_of
+from common import FAN_OUT_EXEMPT, ROOT, TAGGED, Finding, layer_of, module_of, tag_folder
 from mypy_any import core_overrides, finish_any, start_any
 from pyfile import analyse_python
 from python_measures import cognitive_python, cyclomatic_python, fan_out, python_files
@@ -30,7 +30,7 @@ class Measures:
     any_problems: list[str] = field(default_factory=list[str])  # other errors, unreadable output
     any_overrides: list[str] = field(default_factory=list[str])  # mypy overrides on the core
     suppressions: list[tuple[str, int, str]] = field(default_factory=list)  # (path, line, marker)
-    raw_tags: dict[str, int] = field(default_factory=dict[str, int])  # feature -> count
+    raw_tags: dict[str, int] = field(default_factory=dict[str, int])  # tag folder -> count
 
     def scores(self, gate: str) -> dict[str, int]:
         """The current score per named id for an exception gate (the worst on a name clash)."""
@@ -98,7 +98,7 @@ def measure(layers: dict[str, list[str]], limits: dict[str, Any]) -> Measures:
     for path, data in ts_measures.items():
         m.file_lines.append(Finding(path, 1, "file", data["code_lines"]))
         m.suppressions += [(path, line, marker) for line, marker in data["suppressions"]]
-        if path.startswith(FEATURES) and path.endswith(".tsx"):
-            feature = path.removeprefix(FEATURES).split("/")[0]
-            m.raw_tags[feature] = m.raw_tags.get(feature, 0) + len(data["raw_tags"])
+        if path.startswith(TAGGED) and path.endswith(".tsx"):
+            folder = tag_folder(path)
+            m.raw_tags[folder] = m.raw_tags.get(folder, 0) + len(data["raw_tags"])
     return m

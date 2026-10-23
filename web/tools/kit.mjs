@@ -9,33 +9,41 @@
 //           code lines in src/kit; raising one against the base needs a `raises` entry (the
 //           owner's to add, as the gate baseline's are). The budget is a checkpoint, not a wall:
 //           a failure means ask the owner, with the reuse tried first; the card lists each raise;
-//   reuse   each component's screens (a features/ folder; a shared module counts for the screens
-//           that import it; the app's layout is "app"); one drawn by a single screen needs a
-//           `single` reason. The card lists the variants 0 or 1 screens choose;
-//   tokens  no token is defined twice across tokens.css's blocks of one selector (./tokens.mjs).
+//   reuse   each component's screens (a features/ folder; a shared module or a pattern counts for
+//           every screen that reaches it through its imports; the app's layout is "app"); one
+//           drawn by a single screen needs a `single` reason, and one 2 or more screens draw has
+//           none. The card lists the variants 0 or 1 screens choose;
+//   tokens  no token is defined twice across tokens.css's blocks of one selector (./tokens.mjs);
+//   patterns  each value src/patterns exports is imported by 2 or more screens, and a component's
+//           props are domain values or slots, at most `budget.props` (the rules are
+//           ./patterns.mjs, tested beside it). The card lists each export with its screens.
 // Usage: node tools/kit.mjs --check [--base REF]  (exit 1 on any failure; `just gates` runs it)
 //        node tools/kit.mjs --card [--base REF]   (markdown for a PR description)
 //   The base is the merge base with REF (default HEAD for --check, origin/main for --card), as
 //   the gates compare; a REF that doesn't resolve fails.
 //        node tools/kit.mjs --list                (the kit's components, props and variants)
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { ledgerProblems, mergeProp } from "./ledger.mjs";
+import { patternProblems, staleSingles } from "./patterns.mjs";
 import { repeatedTokens } from "./tokens.mjs";
 
 const WEB = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = join(WEB, "src");
 const KIT = join(SRC, "kit");
 const FEATURES = join(SRC, "features");
+const PATTERNS = join(SRC, "patterns");
+const APP = join(SRC, "app");
 const LEDGER = join(KIT, "ledger.json");
 const MEASURES = resolve(WEB, "../tools/gates/ts_measures.mjs");
 const VOCAB = ["Space", "Width", "Length", "Tone", "MarkKind", "IconName"];
-// Not screens: shared modules count for their importers; the kit sheet draws everything on purpose.
-const NOT_SCREENS = new Set(["shared", "sheet"]);
+// Not screens: shared modules and patterns count for their importers; the kit sheet draws
+// everything on purpose.
+const NOT_SCREENS = new Set(["shared", "patterns", "sheet"]);
 const ts = createRequire(join(WEB, "package.json"))("typescript");
 
 const walk = (dir) =>
@@ -168,15 +176,35 @@ function setBy(checker, attr) {
   return inKit(t.aliasSymbol) ? [] : literals(t);
 }
 
-/** What a file draws: kit components, and the variants it sets on them ("Button.variant=lit"). */
+/** The names an import (or a re-export) takes from its module: "default", "*" for all of them. */
+function namesOf(node) {
+  if (ts.isExportDeclaration(node))
+    return node.exportClause && ts.isNamedExports(node.exportClause)
+      ? node.exportClause.elements.map((e) => (e.propertyName ?? e.name).text)
+      : ["*"];
+  const clause = node.importClause;
+  if (!clause) return [];
+  const names = clause.name ? ["default"] : [];
+  const bound = clause.namedBindings;
+  if (bound && ts.isNamespaceImport(bound)) names.push("*");
+  else if (bound) names.push(...bound.elements.map((e) => (e.propertyName ?? e.name).text));
+  return names;
+}
+
+/** What a file draws: kit components, and the variants it sets on them ("Button.variant=lit");
+ *  and what it imports: each module's file (as the compiler resolves it) and the names it takes. */
 function scan(path, kit) {
   const checker = program().getTypeChecker();
   const sf = program().getSourceFile(path);
+  const options = program().getCompilerOptions();
   const used = new Set();
   const imports = [];
   const visit = (node) => {
-    if (ts.isImportDeclaration(node))
-      imports.push(resolve(dirname(path), node.moduleSpecifier.text) + ".tsx");
+    if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier) {
+      const to = ts.resolveModuleName(node.moduleSpecifier.text, path, options, ts.sys);
+      const file = to.resolvedModule?.resolvedFileName;
+      if (file) imports.push({ file: resolve(file), names: namesOf(node) });
+    }
     if (
       (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
       node.tagName.getText() in kit
@@ -195,23 +223,102 @@ function scan(path, kit) {
   return { used, imports };
 }
 
+/** A folder's modules (none when it doesn't exist yet), tests aside. */
+const sources = (dir) =>
+  existsSync(dir)
+    ? walk(dir)
+        .filter((p) => /\.tsx?$/.test(p) && !/\.test\.tsx?$/.test(p))
+        .map((p) => resolve(p))
+    : [];
+/** Where a module sits: its screen (a features/ folder), "shared", "sheet", "patterns" or "app". */
+const placeOf = (p) => {
+  const [top, folder] = posix(relative(SRC, p)).split("/");
+  return top === "features" ? folder : top;
+};
+
+/** Each screen's drawing, through everything it imports: what its modules draw and what the
+ *  modules they reach draw, transitively (shared modules, patterns, and, until no screen imports
+ *  another, the other screen's modules). The app follows only shared modules and patterns, since
+ *  it imports every screen to route them. `kit` maps each component and variant to its screens;
+ *  `patterns` each pattern export ("patterns/who.tsx#Who") to the screens that import it. */
 function screenUses(kit) {
-  const files = walk(FEATURES).filter((p) => p.endsWith(".tsx") && !p.endsWith(".test.tsx"));
-  const screenOf = (p) => posix(relative(FEATURES, p)).split("/")[0];
-  const scanned = new Map(files.map((p) => [resolve(p), scan(resolve(p), kit)]));
-  const out = new Map();
-  const add = (screen, set) => {
-    for (const u of set) out.set(u, new Set([...(out.get(u) ?? []), screen]));
+  const scanned = new Map(
+    [...sources(FEATURES), ...sources(PATTERNS), ...sources(APP)].map((p) => [p, scan(p, kit)]),
+  );
+  const follows = (screen, place) =>
+    screen === "app" ? ["app", "shared", "patterns"].includes(place) : place !== "app";
+  const reached = (screen) => {
+    const seen = new Set();
+    const go = (p) => {
+      if (seen.has(p) || !scanned.has(p) || !follows(screen, placeOf(p))) return;
+      seen.add(p);
+      for (const imp of scanned.get(p).imports) go(imp.file);
+    };
+    for (const p of scanned.keys()) if (placeOf(p) === screen) go(p);
+    return seen;
   };
-  for (const [path, s] of scanned) {
-    const screen = screenOf(path);
-    if (NOT_SCREENS.has(screen)) continue;
-    add(screen, s.used);
-    for (const imp of s.imports)
-      if (screenOf(imp) === "shared" && scanned.has(imp)) add(screen, scanned.get(imp).used);
+  const out = { kit: new Map(), patterns: new Map() };
+  const add = (map, key, screen) => map.set(key, new Set([...(map.get(key) ?? []), screen]));
+  const screens = new Set([...scanned.keys()].map(placeOf).filter((s) => !NOT_SCREENS.has(s)));
+  for (const screen of screens)
+    for (const p of reached(screen)) {
+      const s = scanned.get(p);
+      for (const u of s.used) add(out.kit, u, screen);
+      for (const imp of s.imports)
+        if (placeOf(imp.file) === "patterns")
+          for (const name of imp.names)
+            add(out.patterns, `${posix(relative(SRC, imp.file))}#${name}`, screen);
+    }
+  return out;
+}
+
+/** The kit's declared types a type node names (`MarkKind`, `ChecklistProps["look"]`, `Fact`), and
+ *  the kit aliases its type resolves to through a local one. */
+function kitTypesIn(checker, prop) {
+  const out = new Set();
+  const visit = (node) => {
+    if (ts.isTypeReferenceNode(node)) {
+      let sym = checker.getSymbolAtLocation(node.typeName);
+      if (sym && sym.flags & ts.SymbolFlags.Alias) sym = checker.getAliasedSymbol(sym);
+      if (inKit(sym)) out.add(node.typeName.getText());
+    }
+    ts.forEachChild(node, visit);
+  };
+  const node = prop.valueDeclaration?.type;
+  if (node) visit(node);
+  const t = checker.getTypeOfSymbol(prop);
+  for (const x of [t, ...(t.isUnion() ? t.types : [])])
+    if (inKit(x.aliasSymbol)) out.add(x.aliasSymbol.name);
+  return [...out];
+}
+
+/** The patterns: each value a patterns file exports, its screens (`uses` from screenUses), and,
+ *  for a component, its props with the kit types each names. */
+function readPatterns(uses) {
+  const checker = program().getTypeChecker();
+  const out = [];
+  for (const path of sources(PATTERNS)) {
+    const sf = program().getSourceFile(path);
+    const file = posix(relative(SRC, path));
+    const mod = checker.getSymbolAtLocation(sf);
+    if (!mod) continue; // a file that exports nothing
+    for (const sym of checker.getExportsOfModule(mod)) {
+      const target = sym.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(sym) : sym;
+      if (!(target.flags & ts.SymbolFlags.Value)) continue;
+      const screens = new Set([
+        ...(uses.get(`${file}#${sym.name}`) ?? []),
+        ...(uses.get(`${file}#*`) ?? []),
+      ]);
+      const signature = checker.getTypeOfSymbolAtLocation(target, sf).getCallSignatures()[0];
+      const param = /^[A-Z]/.test(sym.name) ? signature?.getParameters()[0] : undefined;
+      const type = param ? checker.getTypeOfSymbolAtLocation(param, sf) : null;
+      const props = {};
+      for (const member of type?.isUnion() ? type.types : type ? [type] : [])
+        for (const prop of checker.getPropertiesOfType(member))
+          props[prop.name] = kitTypesIn(checker, prop);
+      out.push({ file, name: sym.name, screens: [...screens].sort(), props: type ? props : null });
+    }
   }
-  for (const path of walk(join(SRC, "app")).filter((p) => p.endsWith(".tsx")))
-    add("app", scan(resolve(path), kit).used);
   return out;
 }
 
@@ -259,7 +366,8 @@ function check(base) {
   const led = JSON.parse(readFileSync(LEDGER, "utf8"));
   const names = Object.keys(kit);
   const lines = kitLines();
-  const used = screenUses(kit);
+  const uses = screenUses(kit);
+  const used = uses.kit;
   const problems = BUDGET.filter((k) => typeof led.budget[k] !== "number").map(
     (k) => `budget.${k} is missing from the ledger`,
   );
@@ -278,13 +386,21 @@ function check(base) {
         `${name}: drawn by ${String(n)} screen${n === 1 ? "" : "s"} and no \`single\` reason`,
       );
   }
+  problems.push(...staleSingles(used, led));
   const ok = problems.length === 0;
   const head = `${String(names.length)}/${String(led.budget.components)} components, ${linesText(lines)}`;
   console.log(
     `  ${ok ? "ok  " : "FAIL"} kit             ${head}, budget ${String(led.budget.lines)}; props <= ${String(led.budget.props)}`,
   );
   for (const p of problems) console.log(`         ${p}`);
-  return ok;
+  const patterns = readPatterns(uses.patterns);
+  const wrong = patternProblems(patterns, led.budget.props);
+  const files = new Set(patterns.map((p) => p.file)).size;
+  console.log(
+    `  ${wrong.length ? "FAIL" : "ok  "} patterns        ${String(patterns.length)} exports in ${String(files)} files; 2+ screens each, domain props <= ${String(led.budget.props)}`,
+  );
+  for (const p of wrong) console.log(`         ${p}`);
+  return ok && wrong.length === 0;
 }
 
 /** Ledger entries new or changed since the base: components, props, variants, single reasons. */
@@ -318,7 +434,8 @@ function card(base) {
   const led = JSON.parse(readFileSync(LEDGER, "utf8"));
   const before = ledgerAt(base);
   const lines = kitLines();
-  const used = screenUses(kit);
+  const uses = screenUses(kit);
+  const used = uses.kit;
   console.log(
     `### Kit\n\n${String(Object.keys(kit).length)}/${String(led.budget.components)} components, ${linesText(lines)}, budget ${String(led.budget.lines)}.\n`,
   );
@@ -357,6 +474,15 @@ function card(base) {
     `\n**Variants chosen by 0 or 1 screens** (${String(variants.length)}; a literal, or an expression's literal type)\n`,
   );
   for (const v of variants) console.log(`- ${v}`);
+  const patterns = readPatterns(uses.patterns);
+  console.log(`\n### Patterns\n\n${String(patterns.length)} exports (2+ screens each).\n`);
+  if (patterns.length) console.log(`| Pattern | Screens | Props |\n|---|---|---|`);
+  for (const p of patterns) {
+    const props = p.props ? String(Object.keys(p.props).length) : "-";
+    console.log(
+      `| \`${p.file} ${p.name}\` | ${String(p.screens.length)} (${p.screens.join(", ")}) | ${props} |`,
+    );
+  }
 }
 
 const args = process.argv.slice(2);

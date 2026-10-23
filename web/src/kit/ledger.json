@@ -247,7 +247,6 @@
     },
     "Compare": {
       "why": "A version conflict shows both sides (the spec's keep-mine and take-theirs): two versions of one text line against line in monospace, each side's changed lines tinted, a gap where a side has none, its choice at its head; no other piece draws two texts in step.",
-      "single": "The library's item editors draw it on a version conflict, for the ticket's Context items too (one shared editor); the workflow editor's refused Promote can take it up.",
       "props": {
         "label": {
           "why": "Its accessible name."
@@ -262,7 +261,6 @@
     },
     "Dialog": {
       "why": "A modal on the browser's <dialog> (focus held, Esc, inert page, focus returned), in two looks: the peek's side panel and the full-window editor.",
-      "single": "The peek draws the side look and the ticket page the full one; new ticket and the confirms join them in W4.",
       "props": {
         "label": {
           "why": "Its accessible name."
@@ -296,7 +294,6 @@
     },
     "Drag": {
       "why": "A thing to drag from a palette onto a target (the workflow editor's library panel: an agent, a skill, a file) as a list's row, bare until hovered; a click or Enter is the alternative to dragging.",
-      "single": "The workflow editor's library panel is the one palette; the same editor serves the library's workflows and a ticket's copy.",
       "props": {
         "payload": {
           "why": "What it carries: its kind, which decides the targets that take it, and its id."
@@ -314,7 +311,6 @@
     },
     "Drop": {
       "why": "A place a drag can land (a stage's card, the workflow-context strip): ringed in your move's accent while a drag it takes is over it, saying what a drop does; the innermost target wins.",
-      "single": "The workflow editor's stage cards and workflow-context strip; the same editor serves the library's workflows and a ticket's copy.",
       "props": {
         "accept": {
           "why": "The kinds it takes (an agent onto a card; a skill or a file onto a card or the strip)."
@@ -586,7 +582,6 @@
     },
     "NumberField": {
       "why": "A whole number in a range (a stage's timeout, a loop's rounds, a check's repairs): its digits and unit between − and +; arrow keys step it.",
-      "single": "The workflow editor's timeout, rounds and repairs; the same editor serves the library's workflows and a ticket's copy.",
       "props": {
         "label": {
           "why": "Its accessible name."
@@ -610,7 +605,6 @@
     },
     "Override": {
       "why": "A value set over another it replaces (a stage's effort over its agent's): the set value, the replaced one struck through.",
-      "single": "The workflow editor's stage cards and the ticket's Workflow tab (one card summary); the item editors' agent copies can take it up.",
       "props": {
         "value": {
           "why": "The value set (xhigh)."
@@ -685,7 +679,6 @@
     },
     "Segmented": {
       "why": "Filter chips, one row on the bar that never clips: Linear's view tabs, separate small rounded chips, bare words but for the pressed one, the selected one on the accent's soft wash in its ink with no edge; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
-      "single": "Compact's filter, and a stage's Maker | Check in the workflow editor (one of two, said on screen, where a switch's off would need decoding); Settings › Mappings' Try it and the settings nav use it in W8 and W9.",
       "props": {
         "label": {
           "why": "The group's name, and the overflow filter's prompt (Change filter…)."
@@ -738,7 +731,6 @@
     },
     "Sortable": {
       "why": "A list reordered by dragging (a workflow's stages, AGENTS.md's blocks): each row handed its handle to place in its own head, so no gutter hangs off the column, a drop line where the row will land, ↑ and ↓ on the handle as the keyboard way, a live region saying where it went; it takes drops from outside between rows too.",
-      "single": "AGENTS.md's blocks in the shared item editor, which the library's Files and the ticket's Context items both open.",
       "props": {
         "label": {
           "why": "The list's accessible name."
@@ -958,7 +950,6 @@
     },
     "Tabs": {
       "why": "Underline tabs with no rule across them (plain words, the current one in ink over a 2px bar of the accent), so a tab never reads as a button beside the real ones: Base UI's roving focus and arrow keys, our look.",
-      "single": "The ticket page's sections today; Settings' areas use them in W8.",
       "props": {
         "label": {
           "why": "The tab list's name."

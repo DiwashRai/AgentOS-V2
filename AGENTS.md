@@ -21,7 +21,7 @@ Shell files are named `service.py`, `loops.py`, `reaper.py` or `dispatcher.py`; 
 | `src/agentos/<feature>/` | The server, one package per row of the module map |
 | `src/agentos_worker/` | The worker (stdlib only) |
 | `src/agentos_protocol/` | The protocol shared by both (stdlib only) |
-| `web/` | The web: `src/kit` alone renders elements and holds CSS (each component, prop and variant has a reason in `src/kit/ledger.json`), `src/features/<screen>` composes the kit, `src/api` is the one data module; ESLint (`web/eslint.config.js`) enforces the layers |
+| `web/` | The web: `src/kit` alone renders elements and holds CSS (each component, prop and variant has a reason in `src/kit/ledger.json`), `src/patterns` composes the kit over domain values for two or more screens, `src/features/<screen>` composes the kit and the patterns, `src/domain` holds the pure rules and words, `src/api` is the one data module; ESLint (`web/eslint.config.js`) enforces the layers, `web/tools/kit.mjs` the kit's and the patterns' rules (`docs/architecture.md` › The web) |
 | `tests/` | The fast suite (`conftest.py` at the root: clean environment, speed gate) |
 | `tests/integration/` | Real processes and git (everything here is marked `integration`) |
 | `tools/gates/` | The gates and their tests |

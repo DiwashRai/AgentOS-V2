@@ -7,7 +7,7 @@
 | Server | Python 3.11+, FastAPI. The API, the run state machine, the dispatcher and the worker protocol. |
 | Database | Turso, behind one boundary module, so SQLite can replace it without touching anything else. |
 | Worker | Python 3.11, standard library only (runners have plain Python). Served by the server as one file. |
-| Web | V1's web app until V2's API exists; then an adapter or a rebuild on a component kit (Q3, plan step 10). |
+| Web | TypeScript and React on our own component kit, on fixtures until V2's API exists (plan step 10); its layers are under The web. |
 
 ## Core, shell, boundary
 
@@ -77,6 +77,32 @@ Anything that doesn't have to be a timeout isn't. Normal paths run on explicit m
 - Designed from the requirements, as small as it can be: the resources and actions the requirements need, nothing per screen.
 - Models are discriminated unions where the domain is; the web's types are generated from the server's schema.
 - Writes that can conflict carry a version and get `stale_version` back.
+
+## The web
+
+The web (`web/src`) is layered like the server: each layer imports only what its row names, and only the kit renders elements. ESLint (`web/eslint.config.js`) enforces the imports and bans raw tags outside the kit; `web/tools/kit.mjs` checks the kit's ledger and budget and the patterns' rules (`just gates`).
+
+| Layer | Holds | May import | Draws |
+|---|---|---|---|
+| `domain/` | Pure rules and words over the API's types: a ticket's group and stage, plain English for ages and names, a plan's steps | `api/types` | Nothing: no React |
+| `api/` | The one data module: the `DataSource` (fixtures until the API exists), the query hooks, the types | `domain` | Nothing |
+| `kit/` | Every element and all the CSS. Each component, prop and variant has a reason in `kit/ledger.json`, within its budget | React, Base UI | Elements |
+| `patterns/` | A composition of the kit over domain values that two or more screens draw (a person's face and name, a ticket's key cell), one file per family, no index | the kit's index, `domain`, `api/types`, other patterns, React for local state | Kit components only |
+| `features/shared/` | What two or more screens use that reads the session, the URL or the data: hooks (`useBoard`, `useSearch`), and parts like `ActionButton` | as a screen | as a screen |
+| `features/<screen>/` | One screen: its view, its own model, its parts | the kit's index, patterns, `domain`, `api/queries`, `api/types`, `features/shared` | Kit components and patterns |
+| `app/` | The routes and the frame: the composition root | every screen | Kit components |
+
+- A pattern's props are domain values (`TicketRow`, `Person`, an ISO time) or `ReactNode` slots, never the kit's vocabularies (`Tone`, `MarkKind`, a kit prop's type), and at most the kit's `budget.props`. Its data comes in as props: no query hooks, no router.
+- Each pattern export is imported by at least two screens, directly or through a shared module; one screen's part stays in that screen. The kit's reuse count credits a screen with everything it draws through its imports.
+- A screen doesn't import another screen: what two screens share goes down a layer. (A few cross-screen imports remain while they move; the lint ban follows.)
+
+Where a new piece goes:
+
+1. Text or a rule over domain values, with no drawing: `domain/`.
+2. A new look (an element, a variant, CSS): the kit, with its reason in the ledger, after trying the components it has.
+3. The same kit composition over the same domain values on two screens: a pattern.
+4. State, a URL parameter, the session or a data read that two screens share: `features/shared/`.
+5. Anything only one screen draws: that screen's folder.
 
 ## Tests and gates
 

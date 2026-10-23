@@ -23,7 +23,7 @@ def _baseline(**changes: Any) -> dict[str, Any]:
             "uncapped": {"boundary": ["try"]},
             "defensive": {"a.py": {"isinstance": 3, "try": 1}},
             "suppressions": {"a.py": 5, "b.py": 2},
-            "raw_tags": {"queue": 10},
+            "raw_tags": {"features/queue": 10},
         },
         "exceptions": {"cognitive": {"a.py::worse": 20, "a.py::better": 30, "a.py::fixed": 18}},
     }
@@ -35,7 +35,7 @@ def _measures() -> Measures:
     m = Measures(layer={"a.py": "core"})
     m.defensive = {"a.py": {"isinstance": [1] * 5, "try": []}}  # isinstance up, try down
     m.suppressions = [("a.py", 1, "noqa")] * 7 + [("b.py", 1, "noqa")]  # a up, b down
-    m.raw_tags = {"queue": 4}  # down
+    m.raw_tags = {"features/queue": 4}  # down
     m.cognitive = [
         Finding("a.py", 1, "worse", 25),
         Finding("a.py", 2, "better", 22),
@@ -56,7 +56,7 @@ def test_ratchet_lowers_what_improved_and_never_raises() -> None:
     assert "allowed.defensive.a.py.try" not in after  # a cap that reaches 0 goes
     assert after["allowed.suppressions.a.py"] == 5
     assert after["allowed.suppressions.b.py"] == 1
-    assert after["allowed.raw_tags.queue"] == 4
+    assert after["allowed.raw_tags.features/queue"] == 4
     assert baseline["exceptions"]["cognitive"] == {"a.py::worse": 20, "a.py::better": 22}
 
 
@@ -188,6 +188,19 @@ def test_a_python_file_in_no_layer_fails() -> None:
 
     assert not result.ok
     assert [line.split()[0] for line in result.details] == ["elsewhere.py"]
+
+
+def test_raw_tags_count_per_feature_and_for_the_patterns_as_one() -> None:
+    m = Measures(raw_tags={common.tag_folder("web/src/patterns/ticket/line.tsx"): 1})
+    m.raw_tags[common.tag_folder("web/src/features/queue/parts/row.tsx")] = 2
+
+    result = results.gate_raw_tags(m, _baseline())
+
+    assert not result.ok
+    assert [line.split()[0] for line in result.details] == [
+        "web/src/features/queue",
+        "web/src/patterns",
+    ]
 
 
 def test_new_raises_are_listed_for_approval() -> None:

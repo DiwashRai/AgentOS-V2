@@ -4,22 +4,31 @@ import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-// The layers (AGENTS.md › Layout): only the kit renders elements or holds CSS; screens reach the data
-// only through the query hooks. Each block lists everything its folder may not import, because a
-// later block's `no-restricted-imports` replaces an earlier one's for the same file.
+// The layers (AGENTS.md › Layout, docs/architecture.md › The web): only the kit renders elements or
+// holds CSS; patterns compose the kit over domain values; screens reach the data only through the
+// query hooks. Each block lists everything its folder may not import, because a later block's
+// `no-restricted-imports` replaces an earlier one's for the same file.
 const CSS = { group: ["**/*.css"], message: "Only src/kit/ has CSS; compose kit components." };
 const KIT = { group: ["**/kit/**", "!**/kit"], message: "Import the kit from its index." };
 const LAYERS = {
   "src/kit/**": [
     {
-      group: ["**/api/**", "**/domain/**", "**/features/**", "**/app/**"],
+      group: ["**/api/**", "**/domain/**", "**/patterns/**", "**/features/**", "**/app/**"],
       message: "The kit is presentation only.",
     },
   ],
   "src/domain/**": [
     CSS,
     {
-      group: ["react", "react-*", "**/kit", "**/kit/**", "**/features/**", "**/app/**"],
+      group: [
+        "react",
+        "react-*",
+        "**/kit",
+        "**/kit/**",
+        "**/patterns/**",
+        "**/features/**",
+        "**/app/**",
+      ],
       message: "domain/ is pure.",
     },
     { group: ["**/api/*", "!**/api/types"], message: "domain/ may use the API's types only." },
@@ -27,8 +36,26 @@ const LAYERS = {
   "src/api/**": [
     CSS,
     {
-      group: ["**/kit", "**/kit/**", "**/features/**", "**/app/**"],
+      group: ["**/kit", "**/kit/**", "**/patterns/**", "**/features/**", "**/app/**"],
       message: "api/ is data only.",
+    },
+  ],
+  "src/patterns/**": [
+    CSS,
+    KIT,
+    {
+      group: [
+        "**/features/**",
+        "**/app/**",
+        "**/domain/fixtures",
+        "**/domain/library-fixtures",
+        "react-router",
+      ],
+      message: "A pattern draws what its props say: no screens, routes or fixtures.",
+    },
+    {
+      group: ["**/api/*", "!**/api/types"],
+      message: "Patterns take data as props: the API's types only.",
     },
   ],
   "src/features/**": [
@@ -58,7 +85,8 @@ const DRAWS = {
   ],
   patterns: [{ group: ["@base-ui/*", "react-dom/*"], message: "Headless pieces live in the kit." }],
 };
-const SCREENS = new Set(["src/features/**", "src/app/**"]);
+// Everything that draws through the kit: patterns, screens and the app.
+const SCREENS = new Set(["src/patterns/**", "src/features/**", "src/app/**"]);
 
 export default tseslint.config(
   { ignores: ["dist"] },
@@ -90,7 +118,7 @@ export default tseslint.config(
   })),
   {
     // Only the kit renders elements: no intrinsic JSX tag anywhere else (the raw-tag gate measures
-    // features; this covers the app and the rest too).
+    // features and patterns; this covers the app and the rest too).
     files: ["src/**/*.tsx"],
     ignores: ["src/kit/**"],
     rules: {
