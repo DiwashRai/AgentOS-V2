@@ -210,7 +210,7 @@ function Item({ t, onOpen }: { t: Task; onOpen: (key: string) => void }) {
             {t.key}
           </Badge>
           <Stack dir="row" gap={2} align="center">
-            {t.pill ? <Chip tone="edge" label={t.pill} /> : null}
+            {t.pill ? <Chip tone="pill" label={t.pill} /> : null}
             <Faces names={t.faces} />
           </Stack>
         </Stack>
@@ -226,10 +226,10 @@ function Item({ t, onOpen }: { t: Task; onOpen: (key: string) => void }) {
             <Stack dir="row" gap={2} align="center">
               <Button size="xs" icon={priority.icon} title={`Priority: ${priority.word}`} />
               {t.labels.map(([label, dot]) => (
-                <Chip key={label} tone="edge" dot={dot} label={label} />
+                <Chip key={label} tone="pill" dot={dot} label={label} />
               ))}
               {t.prs.map((pr) => (
-                <Chip key={pr} tone="edge" lead="branch" label={pr} />
+                <Chip key={pr} tone="pill" lead="branch" label={pr} />
               ))}
             </Stack>
           </Stack>

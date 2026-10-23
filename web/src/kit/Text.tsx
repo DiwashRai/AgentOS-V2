@@ -11,7 +11,8 @@ export interface TextProps {
   /** The type role: its size, weight, line height and default ink. */
   variant?: TextVariant;
   tone?: Tone;
-  /** 400 sets a label-sized line in the regular weight (a run's step, a card's title). */
+  /** 400 sets a label-sized line in the regular weight (a run's step, a card's title); 500 is
+   *  medium on Paper and regular on Carbon (light on dark reads a weight heavier). */
   weight?: 400 | 500 | 600;
   /** One line (or two), cut with an ellipsis; give the full text as `title`. */
   truncate?: boolean | 2;

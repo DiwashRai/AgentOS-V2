@@ -1,7 +1,7 @@
 // The kit's one tag: a stage, a repo, a skill on a stage, a property, an agent's state. A flat
-// tag of faint ink with no outline (borders are for controls), regular muted words cut at their end, led by a small glyph
-// or a dot in a state's hue (one or the other), with a quieter step count after the words, and,
-// where it can be taken off, a remove at its end. A chip that was just added (or clicked for again) scrolls into view and
+// tag on a hairline, regular muted words cut at their end, led by a small glyph or a dot in a
+// state's hue (one or the other), with a quieter step count after the words, and, where it can be
+// taken off, a remove at its end. A chip that was just added (or clicked for again) scrolls into view and
 // flashes once, so a click far from it shows where it landed. What a chip says is the screen's
 // to decide; the chip only draws it.
 import { useEffect, useRef } from "react";
@@ -25,10 +25,10 @@ export interface ChipAfter {
 export type ChipProps = {
   /** Its words (tests, AGENTS.md, Implement, northwind/web). */
   label: string;
-  /** line: a faint fill, no outline (the default; in a list's row, the same fill as a pill); fill: a firmer fill (a stage's phase); edge: a round pill of the same fill (a board card's state, Linear's
-   *  card pill); blocked: the words in the blocked ink (a conflict); a ChipTint: a hue washed into it,
-   *  no edge, its glyph in the hue (Linear's resources). */
-  tone?: "line" | "fill" | "edge" | "blocked" | ChipTint;
+  /** line: the default, on a hairline (in a list's row, round as a pill); pill: the same, round
+   *  anywhere (a board card's state); blocked: the words in the blocked ink (a conflict); a
+   *  ChipTint: a hue washed into it, no edge, its glyph in the hue (a resource's kind). */
+  tone?: "line" | "pill" | "blocked" | ChipTint;
   /** The full text on hover, when it says more than the words. */
   title?: string;
   after?: ChipAfter;

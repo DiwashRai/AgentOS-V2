@@ -7,8 +7,8 @@ type Size = "sm" | "md" | "lg" | "talk";
 
 /** One of: a person's face; a row of faces; or an empty slot. */
 export type AvatarProps = {
-  /** sm is a neutral disc (a run's starter); md (rows, pickers), talk and lg keep the person's
-   *  hue. */
+  /** sm is a neutral disc (a run's starter); md (rows, pickers) one slate disc for everyone; talk
+   *  and lg keep the person's hue. */
   size?: Size;
 } & (
   | {
@@ -63,8 +63,9 @@ function Face({ name, seed, size, beside }: FaceProps) {
   );
 }
 
-/** A person's face (a small neutral disc, their own hue in rows, pickers, a team and the
- *  conversation), a row of faces (named together by the row), or an empty slot. */
+/** A person's face (a neutral disc small, one slate in rows and pickers, their own hue in the
+ *  conversation and the account sheet), a row of faces (named together by the row), or an empty
+ *  slot. */
 export function Avatar({ name, seed, size = "md", beside = false, dashed, people }: AvatarProps) {
   if (people) {
     const names = people.map((p) => p.name).join(", ");

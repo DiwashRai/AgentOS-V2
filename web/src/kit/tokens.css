@@ -7,41 +7,42 @@
    on the list's column edge with its words inset. Hierarchy is the type's: its size, its weight
    and its ink (--ink-1 leads, --ink-2 says, --ink-3 recedes), never a box. A line is kept where
    it is a picture (a stepper's bars, a lane's axis, a loop's bracket), where structure needs one
-   (a faint one between a wide list's rows), round a card, whose tone is barely off the sheet (a
-   board's card, the run card, a reply box, a text sheet), and round a layer that floats over the
-   sheet (a popover: its hairline and its soft shadow).
+   (a faint one between a wide list's rows), round what you can press or pick (a button, a field,
+   a tag) and round a card, whose tone is barely off the sheet (a board's card, the run card, a
+   reply box, a text sheet), and round a layer that floats over the sheet (a popover: its
+   hairline and its soft shadow).
    Hue rules: --you is the theme's one accent and it means "act here" or "this one": your move, a
-   primary button, the current tab, the current view's glyph, a check, a switch, focus (indigo on
-   Paper and Carbon, with white on it). The state hues (orange running, red blocked, green done) live in glyphs and meters; their
-   words stay in ink. The --id-* hues are people's faces. Text pairs keep >= 4.5:1.
+   primary button, the current tab, the current view's glyph, a check, a switch, focus (indigo,
+   with white on it). The state hues (orange running, red blocked, green done) live in glyphs and
+   meters; their words stay in ink. The --id-* hues are people's faces. Text pairs keep >= 4.5:1.
    Themes (kit/theme.ts lists them, index.html allows them): Paper (light) and Carbon (dark), on the
-   same names. Each block mixes every other colour from a few steps (the sheet --page, what is raised
-   on it --raised, the ground --side), the inks and its wash (--wash for fills, --hair for lines). A
-   new colour token is a color-mix of those, or white or black at low alpha, never a raw neutral. */
+   same names. Each theme's block holds every token whose value differs between them, mixed from a
+   few steps (the sheet --page, what is raised on it --raised, the ground --side), the inks and its
+   one wash (--wash, for tones, fills and lines alike); the block after them holds what is the same
+   in both, or is mixed the same way from those. A new colour token is a color-mix of those, or
+   white or black at low alpha, never a raw neutral. */
 
-/* Paper · light · default: Linear's light: a sheet a hair off white in a pale cool ground, one indigo.
-   What sits on the sheet (a card, a control, a field, a tag) is white on a hairline, a shade lighter
-   than the sheet, never darker; grey is left to a group's band, a hover and a pressed control, each a
-   faint cool slate. */
+/* Paper · light · default: a sheet a hair off white in a pale cool ground, one indigo. What sits on
+   the sheet (a card, a control, a field, a tag) is white on a hairline, a shade lighter than the
+   sheet, never darker; grey is left to a group's band, a hover and a pressed control, each a faint
+   cool slate. */
 :root:not([data-theme]),
 [data-theme="light"] {
   color-scheme: light;
-  /* themes · the steps: the sheet (and what sits flush on it), the ground under it */
+  /* the steps: the sheet (and what sits flush on it), what is raised on it, the ground under it */
   --page: #fcfcfd;
-  --recess: #fcfcfd;
   --surface: #ffffff;
   --raised: #ffffff;
-  --side: #eceef5; /* Linear's Ash ground (#edeef3), a touch cooler */
+  --side: #eceef5; /* a pale cool ground, a step under the sheet so the sheet stands off it */
   /* ink: a cool near-black and slates */
   --ink-1: #14151b;
   --ink-2: #3d404d;
   --ink-3: #626778;
   --ink-hover: #282a35;
   --focus: #5e6ad2;
-  /* the wash the tones and fills are mixed from (--wash) and the lines' (--hair): a cool slate */
+  /* the wash the tones, fills and lines are mixed from: a cool slate */
   --wash: #2a3b6e;
-  --hair: #2a3b6e;
-  /* flat: the tones on the sheet (a card, the Talk column), white over it, a card under the pointer a
+  /* the tones on the sheet (a card, the Talk column), white over it, a card under the pointer a
      faint step into it; the fills over anything (a hover, a pressed control), each a small step */
   --tone-1: var(--raised);
   --tone-2: var(--raised);
@@ -49,28 +50,19 @@
   --fill-1: color-mix(in srgb, var(--wash) 3%, transparent);
   --fill-2: color-mix(in srgb, var(--wash) 4.8%, transparent);
   --fill-3: color-mix(in srgb, var(--wash) 8%, transparent);
-  /* the floating layers' one hairline */
-  --edge: color-mix(in srgb, var(--hair) 14%, transparent);
-  /* themes · mixed from the steps and inks above */
-  --track: color-mix(in srgb, var(--hair) 9%, var(--page));
-  --rule: color-mix(in srgb, var(--hair) 8.5%, var(--page));
-  --rule-strong: color-mix(in srgb, var(--hair) 16%, var(--page));
+  /* lines, a meter's track, a neutral face */
+  --track: color-mix(in srgb, var(--wash) 9%, var(--page));
+  --rule: color-mix(in srgb, var(--wash) 8.5%, var(--page));
+  --rule-strong: color-mix(in srgb, var(--wash) 16%, var(--page));
   --face: color-mix(in srgb, var(--ink-1) 9%, var(--surface));
   --face-ink: var(--ink-2);
-  /* rows: a row's face, its hue at full strength */
-  --face-id: 100%;
-  /* accent: the logo's tile */
-  --accent: var(--ink-1);
-  --accent-hover: var(--ink-hover);
-  --accent-ink: var(--page);
+  --face-id: 100%; /* a row's face, its slate at full strength */
   /* live: running agents */
   --live: #e8590c;
   --live-text: #b53b0b;
   --live-past: #f5a878;
-  /* you: the accent */
-  --you: #5e6ad2;
+  /* you: the accent's words and its pressed fill */
   --you-text: #4a54bd;
-  --you-ink: #ffffff;
   --you-lift: color-mix(in srgb, var(--you) 88%, var(--ink-1));
   --blocked: #c92a2a;
   --done: #15803d;
@@ -84,29 +76,52 @@
   --kind-file: #0284c7;
   /* sidebar: on the ground, its labels near the ink; the current view lit to the sheet's own white */
   --side-ink: color-mix(in srgb, var(--ink-1) 86%, var(--side));
-  --side-hover: var(--fill-1);
   --side-on: var(--raised);
-  --side-on-ink: var(--ink-1);
-  /* ticket: the ticket page and the peek */
-  --tk-ink: var(--ink-1); /* body-size text: a property, a plan item, a message */
-  --tk-label: var(--ink-3); /* a property's head, a section head: clearly under the values */
+  /* ticket: body-size text (a property, a plan item, a message); the peek's scrim */
+  --tk-ink: var(--ink-1);
   --tk-scrim: color-mix(in srgb, var(--ink-1) 14%, transparent);
   /* the popover: the sheet's white on its one hairline, lifted by a soft shadow (the one layer that
      floats, so the one shadow) */
   --pop: var(--raised);
-  --pop-hover: var(--fill-2);
-  --pop-rule: var(--fill-2);
+  --pop-edge: color-mix(in srgb, var(--wash) 14%, transparent);
   --pop-shadow:
     0 12px 32px -6px color-mix(in srgb, #000000 16%, transparent),
     0 2px 6px color-mix(in srgb, #000000 6%, transparent);
+  /* what you can press or pick (a button, a field, a picker's chip, a tag, a switch off): white at
+     rest on a hairline, so nothing at rest is a grey slab; a button's hover a faint step, a field
+     white under the pointer (its edge firms) */
+  --ctl: var(--raised);
+  --ctl-lift: var(--tone-3);
+  --ctl-rest-edge: var(--rule-strong);
+  --input: var(--raised);
+  --input-hover: var(--raised);
+  --field: var(--raised);
+  --chip-rest: var(--raised);
+  --select-edge: var(--rule-strong);
+  --list-chip-fill: var(--raised);
+  --tag-edge: var(--rule-strong);
+  --chip-tint: 10%; /* a tinted tag's wash: its hue this strong over what it sits on */
+  --switch-off: var(--raised);
+  --switch-edge: var(--rule-strong);
+  /* surfaces: a group's band, lighter than a hover and a step firmer under the pointer; the open
+     row's band; a card's hairline; a card inside a card a faint step under it; the sheet's rim, a
+     2px line a step darker than the ground */
+  --group-band: color-mix(in srgb, var(--wash) 4%, transparent);
+  --group-band-hover: color-mix(in srgb, var(--wash) 6.5%, transparent);
+  --list-open: color-mix(in srgb, var(--you) 7%, transparent);
+  --card-edge: color-mix(in srgb, var(--wash) 11%, var(--page));
+  --nest: color-mix(in srgb, var(--wash) 3%, var(--raised));
+  --sheet-rim: color-mix(in srgb, var(--wash) 5%, var(--side));
+  --sheet-rim-w: var(--line-2);
 }
 
-/* Carbon · dark: a pitch sheet a step over a blacker ground, Linear's indigo. */
+/* Carbon · dark: a pitch sheet a step over a blacker ground, one indigo. What you can press or
+   pick is a fill barely over the sheet inside a hairline, so the step is in the edge, not the fill;
+   a tag is its outline alone. */
 [data-theme="dark"] {
   color-scheme: dark;
-  /* themes · the steps: a pitch sheet (CIE L* about 5, Linear's), the ground a little under it */
+  /* the steps: a pitch sheet (CIE L* about 5), the ground a little under it */
   --page: #0f1012;
-  --recess: #0f1012;
   --surface: #18191d;
   --raised: #1e1f24;
   --side: color-mix(in srgb, #000000 32%, var(--page));
@@ -114,35 +129,26 @@
   --ink-2: #a9adb9;
   --ink-3: #8b909d;
   --ink-hover: #d0d3db;
+  --focus: #8a94f2;
   --wash: #dde3f5;
-  --hair: #dde3f5;
-  /* flat: light on dark, small steps, as Linear's cards sit barely over its sheet: a card is told
-     by its hairline more than its shade */
+  /* light on dark, small steps: a card is told by its hairline more than its shade */
   --tone-1: color-mix(in srgb, var(--wash) 1.4%, var(--page));
   --tone-2: color-mix(in srgb, var(--wash) 2.8%, var(--page));
   --tone-3: color-mix(in srgb, var(--wash) 4.5%, var(--page));
   --fill-1: color-mix(in srgb, var(--wash) 4%, transparent);
   --fill-2: color-mix(in srgb, var(--wash) 6.5%, transparent);
   --fill-3: color-mix(in srgb, var(--wash) 10%, transparent);
-  --edge: color-mix(in srgb, var(--hair) 14%, transparent);
-  --track: color-mix(in srgb, var(--hair) 13%, var(--page));
-  --rule: color-mix(in srgb, var(--hair) 9%, var(--page));
-  --rule-strong: color-mix(in srgb, var(--hair) 17%, var(--page));
+  --track: color-mix(in srgb, var(--wash) 13%, var(--page));
+  --rule: color-mix(in srgb, var(--wash) 9%, var(--page));
+  --rule-strong: color-mix(in srgb, var(--wash) 17%, var(--page));
   --face: color-mix(in srgb, var(--ink-1) 15%, var(--surface));
   --face-ink: var(--ink-1);
-  /* rows: a face toned a little into the sheet */
-  --face-id: 84%;
-  --accent: var(--ink-1);
-  --accent-hover: var(--ink-hover);
-  --accent-ink: var(--page);
+  --face-id: 84%; /* a row's face, toned a little into the sheet */
   --live: #fb923c;
   --live-text: #fdba74;
   --live-past: #9a5a2e;
-  /* you: a solid indigo with white on it, a lighter indigo for its words and the focus ring */
-  --you: #5e6ad2;
+  /* you: a lighter indigo for its words and the focus ring */
   --you-text: #a8aff8;
-  --you-ink: #ffffff;
-  --focus: #8a94f2;
   --you-lift: color-mix(in srgb, var(--you) 90%, #000000);
   --blocked: #fc8a8a;
   --done: #4ade80;
@@ -155,123 +161,126 @@
   --kind-file: #38bdf8;
   /* sidebar: the current view lit a step over the sheet */
   --side-ink: color-mix(in srgb, var(--ink-1) 84%, var(--side));
-  --side-hover: var(--fill-1);
   --side-on: color-mix(in srgb, var(--wash) 7%, var(--page));
-  --side-on-ink: var(--ink-1);
-  --tk-scrim: color-mix(in srgb, #000000 66%, transparent);
-  --tk-label: var(--ink-3);
-  /* light on dark reads a weight heavier */
+  /* light on dark reads a weight heavier: body-size text a step under the lead ink */
   --tk-ink: color-mix(in srgb, var(--ink-1) 55%, var(--ink-2));
-  /* the popover: a clear step over what it opens on, a deeper shadow under it */
+  --tk-scrim: color-mix(in srgb, #000000 66%, transparent);
+  /* the popover: a clear step over what it opens on, a firmer edge and a deeper shadow, so a menu
+     stands off the dark sheet it covers */
   --pop: color-mix(in srgb, var(--wash) 9%, var(--page));
-  --pop-hover: var(--fill-2);
-  --pop-rule: var(--fill-2);
+  --pop-edge: color-mix(in srgb, var(--wash) 24%, transparent);
   --pop-shadow:
     0 14px 36px -6px color-mix(in srgb, #000000 55%, transparent),
     0 2px 8px color-mix(in srgb, #000000 30%, transparent);
+  /* what you can press or pick: a breath of fill inside a hairline; a hover fills a step */
+  --ctl: color-mix(in srgb, var(--wash) 2%, transparent);
+  --ctl-lift: var(--fill-3);
+  --ctl-rest-edge: var(--rule);
+  --input: color-mix(in srgb, var(--wash) 2%, transparent);
+  --input-hover: var(--fill-2);
+  --field: color-mix(in srgb, var(--wash) 2%, transparent);
+  --chip-rest: color-mix(in srgb, var(--wash) 2%, transparent);
+  --select-edge: var(--rule);
+  --list-chip-fill: transparent;
+  --tag-edge: var(--rule);
+  --chip-tint: 12%;
+  --switch-off: color-mix(
+    in srgb,
+    var(--ink-1) 20%,
+    var(--page)
+  ); /* a firm grey, so it reads off */
+  --switch-edge: transparent;
+  /* surfaces: the open row's band firmer, so it reads on the dark sheet; a card's edge a clear
+     step over its tone */
+  --group-band: var(--fill-1);
+  --group-band-hover: var(--fill-2);
+  --list-open: color-mix(in srgb, var(--you) 14%, transparent);
+  --card-edge: color-mix(in srgb, var(--wash) 13%, var(--page));
+  --nest: color-mix(in srgb, var(--wash) 8%, var(--page));
+  --sheet-rim: var(--rule);
+  --sheet-rim-w: var(--line-1);
 }
 
-/* Derived per theme: mixed from a theme's own steps, so a subtree with its own theme (the swatches,
-   the kit sheet) mixes its own. Each names the role it plays and maps it onto the tones. */
+/* The same in both themes, or mixed the same way from a theme's own steps, so a subtree with its
+   own theme (the swatches, the kit sheet) mixes its own. Each names the role it plays and maps it
+   onto the steps. */
 :root:not([data-theme]),
 [data-theme] {
+  /* you: the accent, a solid indigo with white on it; the logo's tile in the ink */
+  --you: #5e6ad2;
+  --you-ink: #ffffff;
+  --accent: var(--ink-1);
+  --accent-hover: var(--ink-hover);
+  --accent-ink: var(--page);
   --ring-you: color-mix(in srgb, var(--you) 22%, transparent);
   /* a blocked primary's wash, a pressed filter's */
   --you-soft: color-mix(in srgb, var(--you) 15%, transparent);
-  /* an outlined primary's edge */
-  --you-edge: color-mix(in srgb, var(--you) 55%, transparent);
   --sweep-live: color-mix(in srgb, var(--live) 30%, transparent);
   --ring-ink: color-mix(in srgb, var(--ink-1) 22%, transparent);
   /* rows: a hover, a heading's count; a row's Chip, its grey dot or glyph; Unassigned's ring */
   --list-hover: var(--fill-1);
-  /* the open row: a soft band of the accent, no edge */
-  --list-open: color-mix(in srgb, var(--you) 7%, transparent);
   --list-band: var(--fill-2);
-  /* a group's band: a lighter block than a selected row, a step firmer under the pointer */
-  --group-band: var(--fill-1);
-  --group-band-hover: var(--fill-2);
   --list-rule: var(--fill-2);
-  --list-chip-fill: var(--fill-2);
   --prop-mark: color-mix(in srgb, var(--ink-3) 72%, transparent);
   --face-dashed: color-mix(in srgb, var(--ink-3) 75%, transparent);
-  --field: var(--fill-2);
-  /* controls: a button's fill at rest and under the pointer, a quiet one's hover; a dashed line
-     says a blocked button or an off stage */
-  --ctl: var(--fill-2);
-  --ctl-lift: var(--fill-3);
+  /* controls: a quiet one's hover, a button's edge under the pointer, a picker chip's hover and
+     open; a dashed line says a blocked button or an off stage */
   --ctl-hover: var(--fill-1);
   --ctl-edge-hover: var(--rule-strong);
   --chip-hover: var(--fill-1);
   --chip-on: var(--fill-2);
-  --chip-rest: var(--fill-1); /* a property you can change, at rest (a picker's chip) */
-  /* the rest edges: a button's, a field's and a tag's (none on Carbon, where the fill shows it), a
-     picker chip's faint line */
-  --ctl-rest-edge: transparent;
-  --tag-edge: transparent;
-  --select-edge: var(--fill-2);
-  /* a firmer tag (a list row's Now) and its edge */
-  --chip-firm: var(--fill-3);
-  --chip-firm-edge: transparent;
-  /* a tinted tag (Linear's resources): a kind's hue at the theme's strength over what it sits on;
-     neutral the theme's grey at half */
+  /* a tinted tag: a kind's hue at the theme's strength over what it sits on; neutral the theme's
+     grey at half */
   --chip-tint-indigo: color-mix(in srgb, var(--kind-workflow) var(--chip-tint), transparent);
   --chip-tint-teal: color-mix(in srgb, var(--kind-agent) var(--chip-tint), transparent);
   --chip-tint-amber: color-mix(in srgb, var(--kind-skill) var(--chip-tint), transparent);
   --chip-tint-neutral: color-mix(in srgb, var(--wash) calc(var(--chip-tint) / 2), transparent);
-  /* a field under the pointer; the sheet's rim against the ground; a switch's edge off; a problem's
-     edge */
-  --input-hover: var(--fill-3);
-  --sheet-rim: var(--rule);
-  --sheet-rim-w: var(--line-1);
-  --switch-edge: transparent;
-  /* a card inside a card: flat, a step lighter, no line (Linear's chat bubble in its panel) */
-  --nest: color-mix(in srgb, var(--wash) 8%, var(--page));
   /* how far a list's heads and rows lie past their own box: to the sheet's edges (a Table edge is
      already there) */
   --list-reach: calc(var(--gutter) * -1);
   /* their corners: square where they reach the sheet's edges, round where they stop short of them */
   --list-radius: 0;
   --problem-edge: color-mix(in srgb, var(--blocked) 22%, transparent);
-  --pop-edge: var(--edge);
+  /* the popover: an option under the pointer, a divider, an option's muted detail */
+  --pop-hover: var(--fill-2);
+  --pop-rule: var(--fill-2);
   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
   /* surfaces on the sheet: a board's card one tone, a step more under the pointer; the run card
      and the peek's ground */
   --tile-hover: var(--tone-3);
   --teams-card: var(--tone-2);
   --tk-card: var(--tone-2);
-  /* a card's hairline (a board's card, the run card, a reply box): its shape, the tone barely there */
-  --card-edge: var(--rule);
   /* an editor's text sheet: half a tone over the page inside a hairline, firmer under the pointer */
   --sheet: color-mix(in srgb, var(--tone-1) 50%, var(--page));
   --sheet-edge: var(--rule);
   --sheet-edge-hover: var(--rule-strong);
+  /* ticket: a property's head and a section head, clearly under the values; the Talk column, a
+     hover, my own message */
+  --tk-label: var(--ink-3);
   --tk-side: var(--page);
   --tk-hover: var(--fill-1);
   --tk-mine: var(--tone-2);
-  /* sidebar: a section's label, a view's count and a glyph, quieter than the labels (AA on --side) */
+  /* sidebar: a hover, the current view's words; a section's label, a view's count and a glyph,
+     quieter than the labels (AA on --side) */
+  --side-hover: var(--fill-1);
+  --side-on-ink: var(--ink-1);
   --side-title: color-mix(in srgb, var(--side-ink) 70%, var(--side));
   --side-icon: color-mix(in srgb, var(--side-ink) 70%, var(--side));
   --notice-halo: color-mix(in srgb, var(--blocked) 15%, transparent);
   --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
-  /* themes · faces: a hue each, the same in every theme, white initials on it */
+  /* faces: a hue each, the same in every theme, white initials on it (the conversation, the
+     account sheet); in a row or a picker every face is the one slate, so a list's colour is left
+     to its states */
   --id-violet: #7c3aed;
   --id-blue: #2563eb;
   --id-rose: #db2777;
   --id-teal: #0f766e;
   --id-slate: #4b5b78;
   --id-on: #ffffff;
-  /* in a row every face is the one neutral slate (a list's colour belongs to its states); the hues
-     stay where a face stands for a voice (a thread, a picker's own row) */
-  --id-violet-row: var(--id-slate-row);
-  --id-blue-row: var(--id-slate-row);
-  --id-rose-row: var(--id-slate-row);
-  --id-teal-row: var(--id-slate-row);
-  --id-slate-row: color-mix(in srgb, var(--id-slate) var(--face-id), var(--page));
+  --face-row: color-mix(in srgb, var(--id-slate) var(--face-id), var(--page));
   /* agents: a still meter in a list of runs, the step under way a soft live */
   --meter-now: color-mix(in srgb, var(--live) 38%, transparent);
-  /* form: a switch's track off (a firm grey, so an off switch still reads) and its white knob */
-  --input: var(--fill-2);
-  --switch-off: color-mix(in srgb, var(--ink-1) 20%, var(--page));
+  /* form: a switch's white knob */
   --switch-knob: #ffffff;
   /* drag: a drop target's wash under the accent's ring, the drop line in it */
   --drop-fill: color-mix(in srgb, var(--you) 7%, transparent);
@@ -280,72 +289,13 @@
   --diff-mine: color-mix(in srgb, var(--you) 11%, transparent);
   --diff-theirs: var(--fill-2);
   --diff-gap: var(--fill-1);
-  /* sidebar · Icon: a priority's lit and unlit bars, a type's faint square and its glyph, all grey,
-     so a row's status glyph is its one colour */
+  /* Icon: a priority's lit and unlit bars and normal's faint ones (every row's slot kept), a
+     type's faint square and its glyph, all grey, so a row's status glyph is its one colour */
   --priority-on: var(--ink-2);
   --priority-off: color-mix(in srgb, var(--ink-1) 16%, transparent);
-  --priority-none: color-mix(
-    in srgb,
-    var(--ink-1) 18%,
-    transparent
-  ); /* normal: faint, every row's slot kept */
+  --priority-none: color-mix(in srgb, var(--ink-1) 18%, transparent);
   --type-square: transparent;
   --type-glyph: var(--ink-2);
-}
-
-/* Paper's controls and tags, over the derived ones: white at rest on a hairline, as Linear's light
-   buttons, fields and labels are, so nothing at rest is a grey slab; a hover still fills a step */
-:root:not([data-theme]),
-[data-theme="light"] {
-  --ctl: var(--raised);
-  --input: var(--raised);
-  --field: var(--raised);
-  --chip-rest: var(--raised);
-  --list-chip-fill: var(--raised);
-  --ctl-rest-edge: var(--rule-strong);
-  --select-edge: var(--rule-strong);
-  --tag-edge: var(--rule-strong);
-  --chip-firm: var(--raised);
-  --chip-firm-edge: var(--rule-strong);
-  /* a tinted tag's wash: its hue this strong over what it sits on (Linear's resources) */
-  --chip-tint: 10%;
-  /* a hover a faint step, a field white under the pointer (its edge firms); a group's band lighter
-     than a hover; the sheet's rim a line darker than the ground (Linear's Ash: #e3e4ec on #edeef3);
-     a switch white on an edge when off */
-  --ctl-lift: var(--tone-3);
-  --input-hover: var(--raised);
-  --group-band: color-mix(in srgb, var(--wash) 4%, transparent);
-  --group-band-hover: color-mix(in srgb, var(--wash) 6.5%, transparent);
-  --card-edge: color-mix(in srgb, var(--hair) 11%, var(--page));
-  --nest: color-mix(in srgb, var(--wash) 3%, var(--raised));
-  --sheet-rim-w: var(--line-2);
-  --sheet-rim: color-mix(in srgb, var(--hair) 5%, var(--side));
-  --switch-off: var(--raised);
-  --switch-edge: var(--rule-strong);
-}
-
-/* Carbon's controls and tags, over the derived ones: Linear's dark, a fill barely over the sheet
-   inside a hairline, so the step is in the edge, not the fill; a hover fills (--ctl-lift), a tag is
-   its outline alone */
-[data-theme="dark"] {
-  --ctl: color-mix(in srgb, var(--wash) 2%, transparent);
-  --input: color-mix(in srgb, var(--wash) 2%, transparent);
-  --field: color-mix(in srgb, var(--wash) 2%, transparent);
-  --chip-rest: color-mix(in srgb, var(--wash) 2%, transparent);
-  --input-hover: var(--fill-2);
-  --ctl-rest-edge: var(--rule);
-  --select-edge: var(--rule);
-  --list-chip-fill: transparent;
-  --tag-edge: var(--rule);
-  --chip-firm: transparent;
-  --chip-firm-edge: var(--rule-strong);
-  --chip-tint: 12%;
-  /* the open row's band firmer, as Linear's dark selection (about 16% of its indigo) */
-  --list-open: color-mix(in srgb, var(--you) 14%, transparent);
-  /* the popover's edge firmer, so a menu stands off the dark sheet it covers */
-  --pop-edge: color-mix(in srgb, var(--hair) 24%, transparent);
-  /* a card's edge as Linear's: about 26 levels over the sheet, the card itself about 6 */
-  --card-edge: color-mix(in srgb, var(--hair) 13%, var(--page));
 }
 
 /* Theme-independent */
@@ -402,15 +352,13 @@
   --h-group: 36px;
   --h-list-head: 32px;
   --h-list-chip: 20px;
-  /* rows: one column edge for every shape (the sheet's gutter, where the bar's title and buttons
-     end): a row's words, a group's glyph, a column head, a foot's words and a tile's side all
-     stand on it; a row's wash, an open row's panel and a foot strip reach --list-in past it, so
-     the words keep the edge and the wash still has room round them. The bleed is that room, kept
-     by a scroller at its sides */
+  /* rows: a list's words stand --list-inset in from its box (none on the sheet, whose gutter is
+     the column edge the bar's title stands on; a panel and a Table edge set their own), and a
+     row's wash, a group's band and the rule between rows reach --list-reach past it; --list-in is
+     a panel's inset, --list-pad where a notice's mark stands (each list sets its own) */
   --list-in: 16px;
   --list-pad: calc(var(--list-in) * -1);
   --list-inset: 0px;
-  --list-bleed: var(--list-in);
   --bar-thin: 10px; /* a thin scrollbar's gutter, which a scroller keeps at its right */
   /* the room above a group's band; a section (My queue's
      zones, Intake's queries) parts from the one before by more room and one hairline */
@@ -456,9 +404,8 @@
   --notice-mark: 12px;
   --notice-measure: 72ch;
   --notice-dot: 6px;
-  /* intake: a triage row, a face over two tight lines; the faces' column, which the query heads'
-     chevron and the notices' glyphs share, so every line's words start on one edge */
-  --h-triage: 52px;
+  /* intake: the faces' column, which the query heads' chevron and the notices' glyphs share, so
+     every line's words start on one edge */
   --triage-face: var(--sp-9);
   /* controls */
   --w-pop: 304px; /* the theme menu */
@@ -467,7 +414,7 @@
   --w-swatch: 34px;
   --h-swatch: 22px;
   --w-swatch-side: 9px;
-  --h-pop-item: 32px; /* a menu's or picker's row, Linear's 13px on 32 */
+  --h-pop-item: 32px; /* a menu's or picker's row, 13px words on 32 */
   --h-pop-find: 40px; /* a picker's filter field */
   --h-pop-head: 28px; /* a menu's section label */
 

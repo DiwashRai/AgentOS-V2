@@ -443,17 +443,12 @@
   gap: var(--sp-4);
   min-width: 0;
   min-height: var(--h-field);
-}
-/* a form row's picker (Select) takes the control's room, up to a popover's width, its chevron at its
-   end, so the selects down a form (a display popover's) share one width and one right edge */
-.control > [role="combobox"] {
-  flex: 1 1 auto;
-  max-width: var(--w-pop);
-  justify-content: space-between;
-}
-/* a picker's chip (Select) lines its words up with the plain values, its padding in the gap */
-.control:has(> [role="combobox"]:first-child) {
-  margin-left: calc(var(--sp-4) * -1);
+  /* a form row's picker (Select reads these) takes the control's room, up to a popover's width, so
+     the selects down a form (a display popover's) share one width and one right edge; a first one
+     lines its words up with the plain values, its padding in the gap */
+  --select-grow: 1 1 auto;
+  --select-max: var(--w-pop);
+  --select-pull: calc(var(--sp-4) * -1);
 }
 .note {
   color: var(--ink-3);

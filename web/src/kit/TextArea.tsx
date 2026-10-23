@@ -21,19 +21,26 @@ export interface TextAreaProps {
   placeholder?: string;
   /** Its least height in lines (3 by default); it grows with its text. */
   lines?: number;
-  /** A sheet: this strip over the text (an item editor's content: its title and length, or a
-   *  block's fold and name), the pop-out at its end, its rule lit while the text has the focus. */
-  head?: ReactNode;
-  /** A sheet's controls at its head's end, before the pop-out (a block's moves, then its handle):
-   *  all but the last show while the sheet is hovered or holds the focus. */
+  /** Read as a document under a head strip; none is a plain area. */
+  sheet?: TextSheet;
+}
+
+export interface TextSheet {
+  /** The strip over the text (an item editor's content: its title and length, or a block's fold
+   *  and name), the pop-out at its end, its rule lit while the text has the focus. */
+  head: ReactNode;
+  /** Controls at the head's end, before the pop-out (a block's moves, then its handle): all but
+   *  the last show while the sheet is hovered or holds the focus. */
   tools?: ReactNode;
-  /** Folded to its head strip alone (a block of AGENTS.md; its head says the first line). */
+  /** It folds (a block of AGENTS.md; its head says the first line): whether it is folded now, to
+   *  its head strip alone. None: it doesn't fold. */
   folded?: boolean;
 }
 
 export function TextArea(props: TextAreaProps) {
-  const { label, value, onChange, placeholder, lines = 3, head, tools, folded } = props;
-  const sheet = head !== undefined;
+  const { label, value, onChange, placeholder, lines = 3 } = props;
+  const sheet = props.sheet !== undefined;
+  const folds = props.sheet?.folded !== undefined;
   const [out, setOut] = useState(false);
   const popped = useRef<HTMLTextAreaElement>(null);
   const description = useDescription();
@@ -53,13 +60,7 @@ export function TextArea(props: TextAreaProps) {
   const area = (full: boolean) => (
     <textarea
       ref={full ? popped : undefined}
-      className={cx(
-        s.box,
-        s.area,
-        full && s.fill,
-        sheet && !full && s.leaf,
-        folded !== undefined && s.under,
-      )}
+      className={cx(s.box, s.area, full && s.fill, sheet && !full && s.leaf, folds && s.under)}
       style={vars({ "--lines": String(lines) })}
       aria-label={label}
       {...(full ? own : inline)}
@@ -85,19 +86,10 @@ export function TextArea(props: TextAreaProps) {
   );
   return (
     <div className={cx(s.areaWrap, sheet && s.sheet)}>
-      {sheet ? (
-        <>
-          <div className={s.sheetHead}>
-            {head}
-            {tools !== undefined ? <span className={s.tools}>{tools}</span> : null}
-            {pop}
-          </div>
-          {folded ? null : (
-            <Read value={value} under={folded !== undefined}>
-              {area(false)}
-            </Read>
-          )}
-        </>
+      {props.sheet ? (
+        <SheetBody sheet={props.sheet} value={value} pop={pop}>
+          {area(false)}
+        </SheetBody>
       ) : (
         <>
           {area(false)}
@@ -108,7 +100,7 @@ export function TextArea(props: TextAreaProps) {
         <Page
           title={label}
           action={
-            <Button variant="ink" size="sm" onClick={close}>
+            <Button variant="strong" size="sm" onClick={close}>
               Done
             </Button>
           }
@@ -121,6 +113,34 @@ export function TextArea(props: TextAreaProps) {
         </Page>
       </Dialog>
     </div>
+  );
+}
+
+interface SheetBodyProps {
+  sheet: TextSheet;
+  value: string;
+  /** The pop-out, at the head strip's end. */
+  pop: ReactNode;
+  /** The source. */
+  children: ReactNode;
+}
+
+/** A sheet: its head strip (the head, its tools, the pop-out), then, unless folded, its text read
+ *  as a document over its source. */
+function SheetBody({ sheet: { head, tools, folded }, value, pop, children }: SheetBodyProps) {
+  return (
+    <>
+      <div className={s.sheetHead}>
+        {head}
+        {tools !== undefined ? <span className={s.tools}>{tools}</span> : null}
+        {pop}
+      </div>
+      {folded ? null : (
+        <Read value={value} under={folded !== undefined}>
+          {children}
+        </Read>
+      )}
+    </>
   );
 }
 
@@ -185,7 +205,8 @@ function span(w: string, i: number): ReactNode {
 }
 const runs = (text: string) => text.split(/(`[^`\n]+`|\*\*[^*\n]+\*\*)/).map(span);
 
-const item = (l: string) => <li key={l}>{runs(l.slice(2))}</li>;
+// keyed by place: two items may say the same words
+const item = (l: string, i: number) => <li key={i}>{runs(l.slice(2))}</li>;
 
 /** A paragraph: front matter as a code block, a list when every line is an item, a heading, or
  *  plain words. */

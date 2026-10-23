@@ -12,21 +12,19 @@
 }
 /* small, a face is one neutral disc (initials say who) */
 .sm {
+  width: var(--h-face-sm);
+  height: var(--h-face-sm);
   color: var(--face-ink);
   background: var(--face);
+  font-size: var(--fs-face-sm);
 }
-/* in rows and pickers: Linear's small face, a solid disc of the person's hue (a touch toned into
-   the page on dark) with white initials that read */
+/* in rows and pickers: one slate disc for everyone with white initials, so a list's colour is left
+   to its states */
 .md {
   width: var(--h-face);
   height: var(--h-face);
-  background: var(--id-row);
+  background: var(--face-row);
   font-size: var(--fs-face);
-}
-.sm {
-  width: var(--h-face-sm);
-  height: var(--h-face-sm);
-  font-size: var(--fs-face-sm);
 }
 .talk {
   width: var(--sp-9);
@@ -41,29 +39,24 @@
 .slot {
   background: none;
 }
-/* Unassigned: Linear's dashed circle, at the strength of a quiet glyph */
+/* Unassigned: a dashed circle, at the strength of a quiet glyph */
 .dashed {
   border: var(--line-mark) dashed var(--face-dashed);
 }
 .violet {
   --id: var(--id-violet);
-  --id-row: var(--id-violet-row);
 }
 .blue {
   --id: var(--id-blue);
-  --id-row: var(--id-blue-row);
 }
 .rose {
   --id: var(--id-rose);
-  --id-row: var(--id-rose-row);
 }
 .teal {
   --id: var(--id-teal);
-  --id-row: var(--id-teal-row);
 }
 .slate {
   --id: var(--id-slate);
-  --id-row: var(--id-slate-row);
 }
 .faces {
   display: inline-flex;

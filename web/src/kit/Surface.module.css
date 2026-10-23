@@ -6,8 +6,8 @@
 }
 /* a recess is flush on the sheet: the view's one zone, no tone of its own */
 .recess {
-  --ground: var(--recess);
-  background: var(--recess);
+  --ground: var(--page);
+  background: var(--page);
   border-radius: var(--r-5);
 }
 /* a sheet is a card on the page (an options panel, an agent's side panel, a comment): a faint step

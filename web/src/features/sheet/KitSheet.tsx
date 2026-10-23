@@ -517,12 +517,6 @@ export function KitSheet() {
               </Badge>
               <Badge kind="key">{"NW-14"}</Badge>
               <Badge kind="count">{3}</Badge>
-              <Badge kind="count" tone="you">
-                {2}
-              </Badge>
-              <Badge kind="count" tone="done">
-                {5}
-              </Badge>
               <Badge kind="kbd">Esc</Badge>
               <Chip label={"Bug"} />
               <Chip tone="blocked" label={"High"} />
@@ -548,7 +542,7 @@ export function KitSheet() {
           </Block>
           <Block name="Button">
             <Stack dir="row" gap={4} wrap align="center">
-              {(["default", "ink", "you", "accent", "quiet", "link"] as const).map((v) => (
+              {(["default", "strong", "you", "accent", "quiet", "link"] as const).map((v) => (
                 <Button key={v} variant={v}>
                   {v}
                 </Button>

@@ -179,7 +179,7 @@ export function TicketView() {
         ? {
             action: [
               ...headerActions(t.actions.filter((a) => a.id !== "cancel")).map((a) => (
-                <ActionButton key={a.id} action={a} size="md" header />
+                <ActionButton key={a.id} action={a} place="header" />
               )),
               <TicketMenu key="more" t={t} size="md" />,
             ],

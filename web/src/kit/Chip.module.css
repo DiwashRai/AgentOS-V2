@@ -1,6 +1,6 @@
-/* Chip: the kit's one tag. A flat tag of faint ink (on Paper white on a faint hairline), regular
-   muted words cut at their end, led by a muted glyph or a state's dot; something quieter after the
-   words; a remove at its end that lights on hover, the tag's padding tucked in round it */
+/* Chip: the kit's one tag. A flat tag on a hairline (white inside it on Paper), regular muted words
+   cut at their end, led by a muted glyph or a state's dot; something quieter after the words; a
+   remove at its end that lights on hover, the tag's padding tucked in round it */
 .chip {
   display: inline-flex;
   flex: 0 1 auto;
@@ -22,17 +22,13 @@
 .chip[data-lead] {
   padding-left: var(--sp-3);
 }
-/* a label (in a list's row) and a pill (a card's state): the same fill, as a pill */
+/* a label (in a list's row) and a pill (a card's state): the same tag, round */
 :where([data-row]) .chip[data-tone="line"],
-.chip[data-tone="edge"] {
+.chip[data-tone="pill"] {
   border-radius: var(--r-pill);
 }
-.chip[data-tone="fill"] {
-  background: var(--chip-firm);
-  box-shadow: inset 0 0 0 var(--line-1) var(--chip-firm-edge);
-}
-/* a tint: a hue washed into the tag, no edge, the glyph in the hue and the words in full ink (Linear's
-   resources); neutral is the same wash of the theme's grey, its glyph muted */
+/* a tint: a hue washed into the tag, no edge, the glyph in the hue and the words in full ink (a
+   resource's kind); neutral is the same wash of the theme's grey, its glyph muted */
 .chip:is([data-tone="neutral"], [data-tone="indigo"], [data-tone="teal"], [data-tone="amber"]) {
   background: var(--tint);
   box-shadow: none;

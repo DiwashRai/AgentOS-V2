@@ -1,6 +1,7 @@
-/* Flat controls: on Carbon a button is a fill, on Paper white on a hairline (Linear's light). At rest
-   over whatever it sits on, under the pointer a fill a step firmer; the weight never changes by state. `you` is the primary, the
-   accent's one solid fill with white on it; `accent` the logo's ink, only Dispatch run. */
+/* Flat controls: at rest a button is a faint face on a hairline (white on Paper, a breath of fill on
+   Carbon), so it reads as something to press without being a slab; under the pointer a fill a step
+   firmer; the weight never changes by state. `you` is the primary, the accent's one solid fill with
+   white on it; `accent` the logo's ink, only Dispatch run. */
 .btn {
   flex: none;
   display: inline-flex;
@@ -63,14 +64,14 @@
 
 /* icon-only and filled buttons draw their glyph in the button's own ink */
 .square .glyph,
-:is(.ink, .you, .accent) .glyph,
-.btn:is(.ink, .you, .accent):hover .glyph,
+:is(.strong, .you, .accent) .glyph,
+.btn:is(.strong, .you, .accent):hover .glyph,
 .btn[aria-disabled="true"] .glyph {
   color: inherit;
 }
-/* ink: a primary that isn't a gate, the default's fill in a firmer weight (the solid one is the
+/* strong: a primary that isn't a gate, the default's face in a firmer weight (the solid one is the
    accent's alone) */
-.ink {
+.strong {
   font-weight: 600;
 }
 .you,
@@ -115,15 +116,14 @@
 .link:hover {
   color: var(--ink-1);
 }
-/* outline: a primary in a list's line (Approve in My queue): the accent's words alone at rest, an
-   inline action, so the row says act here without a box; under the pointer its edge and the
-   accent's soft wash */
-.outline {
+/* inline: a primary in a list's line (Approve in My queue): the accent's words alone at rest, so the
+   row says act here without a box; under the pointer the accent's edge and soft wash */
+.inline {
   border-color: transparent;
   background: none;
   color: var(--you-text);
 }
-.outline:hover {
+.inline:hover {
   border-color: var(--you);
   background: var(--you-soft);
 }

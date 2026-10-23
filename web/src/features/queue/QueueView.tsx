@@ -74,7 +74,7 @@ function Buttons({ t, me }: { t: TicketRow; me: Person | null }) {
       {shown
         .filter((x) => !blocked || x.id === "retry")
         .map((action) => (
-          <ActionButton key={action.id} action={action} size="xs" />
+          <ActionButton key={action.id} action={action} place="line" />
         ))}
     </Stack>
   );

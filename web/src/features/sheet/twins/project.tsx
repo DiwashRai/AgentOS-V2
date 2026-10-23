@@ -134,13 +134,13 @@ function Rows() {
                   l.group ? (
                     <Chip
                       key={l.label}
-                      tone="edge"
+                      tone="pill"
                       dot={l.dot}
                       label={l.label}
                       after={{ text: "▾" }}
                     />
                   ) : (
-                    <Chip key={l.label} tone="edge" dot={l.dot} label={l.label} />
+                    <Chip key={l.label} tone="pill" dot={l.dot} label={l.label} />
                   ),
                 )}
                 <Add what="label" />

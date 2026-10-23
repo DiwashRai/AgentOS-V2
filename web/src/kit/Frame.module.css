@@ -1,7 +1,7 @@
-/* the frame: two planes and one line, the sheet's rim. The ground runs under everything; the sidebar sits on it, and
+/* the frame: two planes and one line. The ground runs under everything; the sidebar sits on it, and
    the main column is the sheet, set into the ground by a small margin with a rounded corner (a step
-   of tone, no edge, no shadow), a sized flex column so a screen that fills it (flex: 1) scrolls to
-   its foot. The sheet is the one plane a view lies on: a list's rows lie straight on it */
+   of tone, its rim the one line, no shadow), a sized flex column so a screen that fills it (flex: 1)
+   scrolls to its foot. The sheet is the one plane a view lies on: a list's rows lie straight on it */
 .app {
   display: grid;
   grid-template-columns: var(--w-side) minmax(0, 1fr);
@@ -9,7 +9,6 @@
   background: var(--side);
 }
 .main {
-  --recess: var(--page);
   display: flex;
   flex-direction: column;
   min-width: 0;

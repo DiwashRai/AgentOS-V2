@@ -37,10 +37,10 @@
   --type-glyph: var(--ink-3);
 }
 /* a picker among the values reads as one of them: plain words at rest, its chip and edge only under
-   the pointer or while open (Linear's property rows) */
-.fact[data-picker] [role="combobox"]:not(:hover, [data-popup-open]) {
-  background: none;
-  box-shadow: none;
+   the pointer or while open (Select reads these) */
+.fact[data-picker] {
+  --select-fill: none;
+  --select-line: transparent;
 }
 .fact:not([data-picker]):hover {
   background: var(--tk-hover);

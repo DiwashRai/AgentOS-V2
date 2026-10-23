@@ -61,7 +61,7 @@
           "why": "Four places draw faces at four sizes.",
           "values": {
             "sm": "16px, one neutral disc: a run's starter.",
-            "md": "Rows, heads, pickers and who last changed a library item (18px): Linear's small face, a disc in the person's own hue.",
+            "md": "Rows, heads, pickers and who last changed a library item (18px): one neutral slate disc for everyone, so a list's colour is left to its states and the initials say who.",
             "lg": "The signed-in face in the sidebar's account popover (30px).",
             "talk": "The conversation, the sidebar head's signed-in face and who has an Intake issue, leading its row (24px), on the person's hue."
           }
@@ -101,21 +101,11 @@
         },
         "title": {
           "why": "The full text or what a click does, on hover."
-        },
-        "tone": {
-          "why": "A count says its head's state: your move's in the accent, a state that calls for a look a step firmer in ink, the hue left to the head's glyph.",
-          "values": {
-            "neutral": "The default.",
-            "you": "Needs-you heads.",
-            "live": "Running heads (Compact's Running, My queue's Agents at work): a step firmer in ink.",
-            "blocked": "Blocked heads: a step firmer in ink.",
-            "done": "Done heads: a step firmer in ink."
-          }
         }
       }
     },
     "Button": {
-      "why": "Every button and button-like link, as Linear's quiet filled controls.",
+      "why": "Every button and button-like link: quiet controls that read as something to press without being slabs.",
       "props": {
         "children": {
           "why": "The label; none makes an icon-only button."
@@ -123,10 +113,10 @@
         "variant": {
           "why": "V1's gate primacy: at most one strong button per group.",
           "values": {
-            "default": "A soft fill with no edge, a step firmer under the pointer.",
-            "ink": "A primary that isn't a gate (Retry): the default's fill in a firmer weight, so it sits with its neighbours.",
-            "you": "The gate primary (Approve), and an editor's Save: the bar's one filled button; blocked, a soft wash of the accent with its words in the accent's ink, still the bar's primary and plainly not lit; in a list's line it is the outline instead.",
-            "outline": "A primary in a list's line (Approve, Retry in My queue): the accent's words alone at rest, an inline action, its edge and soft wash under the pointer, so the row still says act here without a box.",
+            "default": "A faint face on a hairline at rest (white on Paper), a step firmer under the pointer.",
+            "strong": "A primary that isn't a gate (Retry): the default's face in a firmer weight, so it sits with its neighbours.",
+            "you": "The gate primary (Approve), and an editor's Save: the bar's one filled button; blocked, a soft wash of the accent with its words in the accent's ink, still the bar's primary and plainly not lit; in a list's line it is the inline one instead.",
+            "inline": "A primary in a list's line (Approve, Retry in My queue): the accent's words alone at rest, its edge and soft wash under the pointer, so the row still says act here without a box.",
             "aside": "A row's second action (Request changes): the default's look, shown only while its row is under the pointer or holds the focus, its room kept so the row never moves.",
             "accent": "Only Dispatch run, only on a ticket.",
             "quiet": "A button with no fill at rest (+N, icon buttons in a bar, a lane's +); blocked, its faded words or glyph alone.",
@@ -192,7 +182,7 @@
       }
     },
     "Chip": {
-      "why": "The kit's one tag, a flat fill with no outline, or in a list's row a label pill: a stage, a repo, a skill on a stage, a property, an agent's state (Badge's tag and prop pills and Mark's chip folded into it).",
+      "why": "The kit's one tag, on a hairline, in a list's row a round pill: a stage, a repo, a skill on a stage, a property, an agent's state (Badge's tag and prop pills and Mark's chip folded into it).",
       "props": {
         "label": {
           "why": "Its words (tests, AGENTS.md, Implement, northwind/web)."
@@ -217,14 +207,13 @@
           }
         },
         "tone": {
-          "why": "Most chips are muted words on a faint fill; a few stand out.",
+          "why": "Most chips are muted words on a hairline; a few stand out.",
           "values": {
-            "line": "A faint fill, no outline: the default; in a list's row, the same fill as a pill.",
-            "fill": "A firmer fill: a stage's phase, and a list line's one tag (Compact's Now: the agent and its step, who it waits on).",
-            "edge": "A round pill of the same faint fill: a board card's state on its key's line (Linear's card pill), a step over the card in every theme.",
+            "line": "The default: muted words on a hairline (white inside it on Paper, nothing on Carbon); in a list's row, round as a pill.",
+            "pill": "The default's look, round wherever it stands: a board card's state on its key's line (the board twin's).",
             "blocked": "The words in the blocked ink: a conflict.",
             "neutral": "A tint, the theme's grey at half the strength: a resource of no kind of its own (a doc, a link), and a blank placeholder bar (the sub-issues twin's skeleton rows).",
-            "indigo": "A tint, the workflow kind's hue washed into it with no edge, its glyph in the hue, as Linear marks a project's resources by kind: the project twin's launch plans.",
+            "indigo": "A tint, the workflow kind's hue washed into it with no edge, its glyph in the hue, so a resource's kind reads before its words: the project twin's launch plans.",
             "teal": "A tint, the agent kind's hue: the project twin's spec.",
             "amber": "A tint, the skill kind's hue: the project twin's approvals and sign-up lists."
           }
@@ -526,10 +515,10 @@
           "why": "What it waits for (Sign off the plan)."
         },
         "glyph": {
-          "why": "The glyph alone: before a row's title (its one accent), counters, legends, heads."
+          "why": "The glyph alone: before a row's title (its one accent), filter chips, legends, heads."
         },
         "small": {
-          "why": "The glyph a size down, for counters, pills and heads."
+          "why": "The glyph a size down, for filter chips, pills and heads."
         },
         "progress": {
           "why": "A running glyph's pie fills as far as its run is (Linear's in-progress circle), so a running row says it in its one glyph (Compact's, My queue's, All teams')."
@@ -632,7 +621,7 @@
       }
     },
     "Page": {
-      "why": "A view: the top bar (title, context, counters, the view's controls, search, its buttons) and the body.",
+      "why": "A view: the top bar (title, context, the view's controls, search, its buttons) and the body.",
       "props": {
         "title": {
           "why": "The view's name, and the tab's; a pair is Linear's breadcrumb, its last step the name; a pair's first step is a link back (the ticket: My queue › NW-17, the way back to the queue)."
@@ -677,7 +666,6 @@
           "values": {
             "line": "A list's row (Compact, My queue, Intake, All teams, the library's four lists): one dense line, its rhythm and the room above each heading parting the rows (a faint hairline under its words in a list out at the sheet's edges); its words on the column edge the group head's glyph and the bar's title stand on; hover and open wash a rounded patch reaching a little past that edge, so the words keep it.",
             "item": "A two-line row (a ticket's context): roomy, unruled, washed on hover.",
-            "triage": "A triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; washed on hover.",
             "rack": "A bare entry: a run's stage in the Runs tab, lit on hover."
           }
         },
@@ -1014,7 +1002,7 @@
           "why": "Weight beside the variant's own.",
           "values": {
             "400": "Regular: a label-sized line that shouldn't read bold (a run's step).",
-            "500": "Medium: names, a title in a list.",
+            "500": "Medium: names, a title in a list. On Carbon it sets regular, as light on dark reads a weight heavier (the style lint keeps var() out of font-weight, so the theme's rule in Text's sheet says it).",
             "600": "Semibold: a lead word, a count."
           }
         },
@@ -1059,14 +1047,8 @@
         "lines": {
           "why": "Its least height in lines (a prompt's few, an editor's many)."
         },
-        "head": {
-          "why": "An item editor's content is a section of its document, as Linear writes a description under its properties: a head strip parted from the one before by room (its title and length; a block's fold and name), the text under it as tall as its lines, read at rest as a document (paragraphs, lists, `code` chips, front matter and a fenced block in mono) over its hidden source, which a click edits in place, the whole of it one quiet panel of tone taking the column's free height (a click anywhere in it writes), ringed by a hairline of the focus colour while it has the focus; popped out, it is the plain box at a readable measure."
-        },
-        "tools": {
-          "why": "A block's controls at its head's end (its moves, then its handle): the moves show while the block is in use, so a head at rest is its name and its handle."
-        },
-        "folded": {
-          "why": "A block of AGENTS.md folds to its head strip alone, which then says its first line and length; unfolded, its text sits under its name, past the fold."
+        "sheet": {
+          "why": "An item editor's content is a section of its document, under its properties: a head strip parted from the one before by room (its title and length; a block's fold and name), the text under it as tall as its lines, read at rest as a document (paragraphs, lists, `code` chips, front matter and a fenced block in mono) over its hidden source, which a click edits in place, the whole of it one quiet panel taking the column's free height (a click anywhere in it writes), ringed by a hairline of the focus colour while it has the focus; popped out, it is the plain box at a readable measure. One object, so a head's tools and fold can't be given without a head: its tools (a block's moves, then its handle; the moves show while the block is in use), and whether it folds and is folded (a block of AGENTS.md folds to its head strip alone, which then says its first line and length)."
         }
       }
     },
@@ -1262,7 +1244,6 @@
         "compact": "The sidebar: Compact.",
         "filter": "A view's filter control: three lines, each shorter (the twins' Linear toolbars).",
         "display": "A view's display options: two sliders (the twins' Linear toolbars).",
-        "sort": "Ordering: an arrow up beside one down (the twins' display options).",
         "order": "The order's direction: an arrow up beside lines that shorten (the twins' display options).",
         "intake": "The sidebar: Intake.",
         "agents": "The sidebar's Context: Agents.",

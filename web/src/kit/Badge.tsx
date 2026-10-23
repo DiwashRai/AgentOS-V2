@@ -7,7 +7,7 @@ export type BadgeProps =
   /** A ticket or project key: quiet tabular text. */
   | { kind: "key"; children: string; size?: "sm" | "md"; title?: string }
   /** The bare count of heads and pills. */
-  | { kind: "count"; children: number; tone?: "neutral" | "you" | "live" | "blocked" | "done" }
+  | { kind: "count"; children: number }
   /** A keycap ("/", "Esc", "J"). */
   | { kind: "kbd"; children: string }
   /** The YOU pill: the only YOU form, and the only mono caps in the product. */
@@ -22,11 +22,7 @@ export function Badge(props: BadgeProps) {
         </Tip>
       );
     case "count":
-      return (
-        <span className={s.count} data-tone={props.tone ?? "neutral"}>
-          {props.children}
-        </span>
-      );
+      return <span className={s.count}>{props.children}</span>;
     case "kbd":
       return <kbd className={s.kbd}>{props.children}</kbd>;
     case "you":

@@ -1,4 +1,4 @@
-/* key: an issue id as Linear writes one, quiet tabular text, no chip */
+/* key: an issue id, quiet text, no chip, so a row's title leads */
 .key {
   display: inline-flex;
   align-items: center;
@@ -16,9 +16,7 @@
   font-size: var(--fs-2);
 }
 
-/* count: a bare quiet number after the name; the state's hue is its head's glyph, so only your
-   move's count takes a colour (the accent: act here); a state that calls for a look (running,
-   blocked, done) says so a step firmer in ink */
+/* count: a bare quiet number after the name; the state's hue is its head's glyph, never its count */
 .count {
   display: inline-grid;
   place-items: center;
@@ -29,13 +27,6 @@
   font-weight: 400;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-}
-.count[data-tone="you"] {
-  color: var(--you-text);
-  font-weight: 500;
-}
-.count:is([data-tone="live"], [data-tone="blocked"], [data-tone="done"]) {
-  color: var(--ink-2);
 }
 
 /* keycap: a flat key, a fill (on Paper white on a faint hairline) */

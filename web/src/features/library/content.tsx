@@ -103,14 +103,16 @@ function BlockCard(props: BlockCardProps) {
   const { block, at, of, open, onChange, onMove, grip } = props;
   return (
     <TextArea
-      head={<BlockHead {...props} />}
-      tools={
-        <>
-          <Moves name={block.name || "this block"} at={at} of={of} onMove={onMove} />
-          {grip}
-        </>
-      }
-      folded={!open}
+      sheet={{
+        head: <BlockHead {...props} />,
+        tools: (
+          <>
+            <Moves name={block.name || "this block"} at={at} of={of} onMove={onMove} />
+            {grip}
+          </>
+        ),
+        folded: !open,
+      }}
       label={`${block.name} block`}
       value={block.text}
       lines={2}
@@ -219,7 +221,7 @@ export function Content({
     case "text":
       return (
         <TextArea
-          head={<Head title={title} text={body.text} />}
+          sheet={{ head: <Head title={title} text={body.text} /> }}
           label={title}
           value={body.text}
           onChange={(text) => {
@@ -230,7 +232,7 @@ export function Content({
     case "agent":
       return (
         <TextArea
-          head={<Head title={title} text={body.agent.instructions} />}
+          sheet={{ head: <Head title={title} text={body.agent.instructions} /> }}
           label={title}
           value={body.agent.instructions}
           onChange={(instructions) => {

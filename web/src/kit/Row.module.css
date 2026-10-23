@@ -8,16 +8,15 @@
     transform var(--dur-fast) var(--ease-out);
 }
 
-/* lists: a line, an item and a triage row are flat: the rhythm and the room above each group part
+/* lists: a line and an item are flat: the rhythm and the room above each group part
    the rows. Their words stand on the list's column edge; what lies under them (a hover's wash, the
    open card, the hairline between rows) is square and runs --list-reach past them, the same reach
    as their group's band, so a list's heads and rows always meet the same edges. Nothing moves */
 .line,
-.item,
-.triage {
+.item {
   border-radius: 0;
 }
-.row:is(.line, .item, .triage)::before {
+.row:is(.line, .item)::before {
   content: "";
   position: absolute;
   inset: 0 var(--list-reach);
@@ -26,7 +25,7 @@
 }
 /* a list out at the sheet's edges (Table edge) rules its rows apart with a faint hairline across its
    reach, so a wide row reads as one line; a lit row hides the ones at its edges */
-.row:is(.line, .item, .triage) + .row:is(.line, .item, .triage)::after {
+.row:is(.line, .item) + .row:is(.line, .item)::after {
   content: "";
   position: absolute;
   top: 0;
@@ -38,7 +37,7 @@
 .row:is(:hover, .open) + .row::after {
   opacity: 0;
 }
-.row:is(.line, .item, .triage):is(:hover, :has(:focus-visible))::before {
+.row:is(.line, .item):is(:hover, :has(:focus-visible))::before {
   background: var(--list-hover);
 }
 /* open (a row expanded, a row selected): one soft band of the accent's tint, no edge, so rows open one
@@ -73,10 +72,10 @@
   outline-offset: var(--focus-out);
 }
 /* a list row's ring goes round its patch */
-.row:is(.line, .item, .triage):has(.hit:focus-visible) {
+.row:is(.line, .item):has(.hit:focus-visible) {
   outline: 0;
 }
-.row:is(.line, .item, .triage):has(.hit:focus-visible)::before {
+.row:is(.line, .item):has(.hit:focus-visible)::before {
   outline: var(--line-2) solid var(--focus);
   outline-offset: var(--focus-in);
 }
@@ -94,8 +93,7 @@
   border-radius: var(--r-3);
 }
 .line > .inner,
-.item > .inner,
-.triage > .inner {
+.item > .inner {
   column-gap: var(--sp-6);
   border-radius: 0;
 }
@@ -109,10 +107,6 @@
 .item > .inner {
   min-height: var(--h-list-item);
   padding: var(--sp-7) var(--list-end, var(--list-inset)) var(--sp-7) var(--list-inset);
-}
-.triage > .inner {
-  min-height: var(--h-triage);
-  padding: var(--sp-3) var(--list-end, var(--list-inset)) var(--sp-3) var(--list-inset);
 }
 .rack > .inner {
   column-gap: var(--sp-4);

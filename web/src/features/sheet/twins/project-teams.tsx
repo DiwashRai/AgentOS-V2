@@ -85,7 +85,7 @@ const ROWS: readonly { label: string; items: readonly Fact[] }[] = [
     items: [
       // Linear's label is a bordered pill that brings its own padding, so its edge sits left of
       // the values' glyphs: the picker slot places it so
-      { label: "Label", picker: <Chip tone="edge" dot="you" label="Wave 1" /> },
+      { label: "Label", picker: <Chip tone="pill" dot="you" label="Wave 1" /> },
       {
         label: "Add label",
         picker: <Button variant="quiet" size="sm" icon="plus" title="Add label" />,

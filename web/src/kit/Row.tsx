@@ -1,4 +1,4 @@
-// One item of a list: its cells on the Table's columns. A line, an item and a triage row are flat,
+// One item of a list: its cells on the Table's columns. A line and an item are flat,
 // a rounded patch on the list's column edge (its words inset) washed on hover, focus and open; a
 // list out at the sheet's edges rules them apart faintly. A rack is a bare entry. A card on its
 // own surface is a Card. Nothing changes size.
@@ -20,9 +20,8 @@ export interface RowProps {
    *  not drawn. Outside a table they stack. */
   children: ReactNode;
   /** line: a list's one-line row (Compact, My queue, All teams, the library); item: a roomy
-   *  two-line row (a ticket's context); triage: a tight two-line row led by a face (Intake); rack:
-   *  a bare entry (a run's stage). */
-  kind?: "line" | "item" | "triage" | "rack";
+   *  two-line row (a ticket's context); rack: a bare entry (a run's stage). */
+  kind?: "line" | "item" | "rack";
   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
    *  names what it opens, for assistive tech. */
   action?: Action;

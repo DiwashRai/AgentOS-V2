@@ -140,7 +140,7 @@ function Chat() {
           <Stack dir="row" gap={4} align="center">
             <Avatar size="sm" name="Linear" beside />
             <Text variant="label">Linear</Text>
-            <Chip tone="edge" label="Opus 5.5" />
+            <Chip tone="pill" label="Opus 5.5" />
             <Stack grow />
             <Button variant="quiet" size="sm" icon="minus" title="Minimize" />
             <Button variant="quiet" size="sm" icon="expand" title="Expand" />
