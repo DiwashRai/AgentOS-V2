@@ -224,10 +224,12 @@
   --sheet-rim-w: var(--line-1);
   --switch-edge: transparent;
   /* a card inside a card: flat, a step lighter, no line (Linear's chat bubble in its panel) */
-  --nest: color-mix(in srgb, var(--wash) 6%, var(--page));
+  --nest: color-mix(in srgb, var(--wash) 8%, var(--page));
   /* how far a list's heads and rows lie past their own box: to the sheet's edges (a Table edge is
      already there) */
   --list-reach: calc(var(--gutter) * -1);
+  /* their corners: square where they reach the sheet's edges, round where they stop short of them */
+  --list-radius: 0;
   --problem-edge: color-mix(in srgb, var(--blocked) 35%, transparent);
   --pop-edge: var(--edge);
   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));

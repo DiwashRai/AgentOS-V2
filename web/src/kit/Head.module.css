@@ -25,6 +25,7 @@
   content: "";
   position: absolute;
   inset: 0 var(--list-reach);
+  border-radius: var(--list-radius);
   background: var(--group-band);
   transition: background-color var(--dur-fast) ease;
 }

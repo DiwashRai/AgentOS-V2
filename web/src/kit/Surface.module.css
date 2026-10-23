@@ -15,13 +15,14 @@
    (a popover, a dialog) casts one */
 .sheet {
   --ground: var(--tone-2);
-  --well: var(--page);
+  --well: var(--nest);
   --thread-rule: var(--card-edge);
   background: var(--tone-2);
   border-radius: var(--r-4);
   box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
 }
-/* a sheet inside a sheet (a message, a change in an agent's panel) lies flat, a step lighter */
+/* a sheet inside a sheet (a message, a change in an agent's panel) lies flat, a clear step lighter, as
+   its reply box (the well) is: Linear's are about 8 levels over their panel */
 .sheet .sheet {
   --ground: var(--nest);
   background: var(--nest);

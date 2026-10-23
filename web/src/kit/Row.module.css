@@ -21,6 +21,7 @@
   content: "";
   position: absolute;
   inset: 0 var(--list-reach);
+  border-radius: var(--list-radius);
   transition: background-color var(--dur-fast) ease;
 }
 /* a list out at the sheet's edges (Table edge) rules its rows apart with a faint hairline across its

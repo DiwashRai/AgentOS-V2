@@ -167,6 +167,7 @@
   --list-pad: 0;
   --list-inset: var(--list-in);
   --list-reach: 0;
+  --list-radius: var(--r-3);
   margin-right: 0;
   padding: var(--sp-8) var(--sp-9) calc(var(--sp-10) * 2) var(--gutter);
 }

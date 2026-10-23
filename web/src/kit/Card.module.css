@@ -17,14 +17,17 @@
   --ground: var(--tile-hover);
   background: var(--tile-hover);
 }
-/* a disabled stage: no tone, a dashed outline alone (the card's only line), dimmed */
+/* a disabled stage: the sheet's own ground, opaque like every card, so the lane's line stops at its
+   edge and never runs through it; no tone and no hairline, a dashed outline alone (the card's only
+   line, in a skipped stage's dashes), dimmed */
 .card[data-look="stage"][data-off]:not([data-open]) {
   --ground: var(--page);
-  background: none;
+  background: var(--page);
+  box-shadow: none;
 }
 /* (the focus ring takes the outline's place while it has the focus) */
 .card[data-look="stage"][data-off]:not([data-open], :has(.hit:focus-visible)) {
-  outline: var(--line-1) dashed var(--ctl-edge-hover);
+  outline: var(--line-1) dashed var(--tk-skip);
   outline-offset: calc(var(--line-1) * -1);
 }
 .card[data-open],
