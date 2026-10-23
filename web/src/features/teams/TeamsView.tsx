@@ -93,21 +93,15 @@ function TitleCell({ t, me }: { t: TicketRow; me: Person | null }) {
   );
 }
 
-const INK = { you: "you", firm: "1", live: "2", plain: "2", quiet: "3" } as const;
-
-/** The state in words: your move in the accent; a running agent firm, its step count quieter and
- *  its still meter at the column's end (a queued run's dashed), so the meters line up. */
+/** The state in words, all in one plain ink (the row's glyph already says the state, so nothing here
+ *  competes with the title); a queued run's quieter; a running agent's step count quieter still and
+ *  its meter at the column's end, so the meters line up. */
 function StateCell({ t, me }: { t: TicketRow; me: Person | null }) {
   const st = stateOf(t, me);
   const run = st.run;
   return (
     <Stack dir="row" gap={5} align="center" justify="between" grow>
-      <Text
-        tone={INK[st.tone]}
-        {...(st.tone === "plain" || st.tone === "quiet" ? {} : { weight: 500 as const })}
-        truncate
-        title={st.say}
-      >
+      <Text tone={st.tone === "quiet" ? "3" : "2"} truncate title={st.say}>
         {st.text}
         {run !== null && run !== "queued" && run.step ? (
           <Text tone="3" weight={400} tabular>{`\u2002${run.step}`}</Text>

@@ -122,10 +122,23 @@ function usedByFacts(usedBy: UsedBy): Fact[] {
   return [...flows, { label: "Tickets", value: <Tickets keys={usedBy.tickets} /> }];
 }
 
-/** The latest few versions, newest first: the number, who wrote it (a face, or the run's glyph),
- *  and how long ago. */
+/** How many versions the History row names before the rest fold into "+N earlier", so it reads as a
+ *  line, not a crowd. */
+const LATEST = 2;
+
+/** The latest versions, newest first: the number, who wrote it (a face, or the run's glyph), and
+ *  how long ago; then how many came before. */
 function historyFacts(versions: readonly Version[], now: number): Fact[] {
-  return versions.map((v) => ({
+  const earlier = versions.length - LATEST;
+  return [
+    ...versions.slice(0, LATEST).map(versionFact(now)),
+    ...(earlier > 0 ? [{ label: "Earlier versions", value: `+${String(earlier)} earlier` }] : []),
+  ];
+}
+
+const versionFact =
+  (now: number) =>
+  (v: Version): Fact => ({
     label: `Version ${String(v.version)}`,
     value: (
       <>
@@ -139,8 +152,7 @@ function historyFacts(versions: readonly Version[], now: number): Fact[] {
       </>
     ),
     note: `· ${age(v.at, now)}`,
-  }));
-}
+  });
 
 export interface PropertyRowsProps {
   agent: { value: AgentSettings; onChange: (a: AgentSettings) => void } | null;

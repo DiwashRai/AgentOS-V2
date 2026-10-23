@@ -110,10 +110,10 @@
   --surface: #18191d;
   --raised: #1e1f24;
   --side: color-mix(in srgb, #000000 32%, var(--page));
-  --ink-1: #eceef3;
-  --ink-2: #b7bac6;
-  --ink-3: #aeb2bf;
-  --ink-hover: #d3d6df;
+  --ink-1: #e2e4ea;
+  --ink-2: #a9adb9;
+  --ink-3: #8b909d;
+  --ink-hover: #d0d3db;
   --wash: #dde3f5;
   --hair: #dde3f5;
   /* flat: light on dark, small steps, as Linear's cards sit barely over its sheet: a card is told
@@ -159,7 +159,7 @@
   --side-on: color-mix(in srgb, var(--wash) 7%, var(--page));
   --side-on-ink: var(--ink-1);
   --tk-scrim: color-mix(in srgb, #000000 66%, transparent);
-  --tk-label: color-mix(in srgb, var(--ink-3) 70%, var(--page)); /* dark ink-3 sits near ink-2 */
+  --tk-label: var(--ink-3);
   /* light on dark reads a weight heavier */
   --tk-ink: color-mix(in srgb, var(--ink-1) 55%, var(--ink-2));
   /* the popover: a clear step over what it opens on, a deeper shadow under it */
@@ -184,9 +184,8 @@
   --ring-ink: color-mix(in srgb, var(--ink-1) 22%, transparent);
   /* rows: a hover, a heading's count; a row's Chip, its grey dot or glyph; Unassigned's ring */
   --list-hover: var(--fill-1);
-  --list-open: var(
-    --tone-2
-  ); /* the open row: a card of the sheet's tone on a hairline, not a slab */
+  /* the open row: a soft band of the accent, no edge */
+  --list-open: color-mix(in srgb, var(--you) 7%, transparent);
   --list-band: var(--fill-2);
   /* a group's band: a lighter block than a selected row, a step firmer under the pointer */
   --group-band: var(--fill-1);
@@ -335,6 +334,8 @@
   --chip-firm: transparent;
   --chip-firm-edge: var(--rule-strong);
   --chip-tint: 12%;
+  /* the open row's band firmer, as Linear's dark selection (about 16% of its indigo) */
+  --list-open: color-mix(in srgb, var(--you) 14%, transparent);
   /* a card's edge as Linear's: about 26 levels over the sheet, the card itself about 6 */
   --card-edge: color-mix(in srgb, var(--hair) 13%, var(--page));
 }
@@ -481,7 +482,7 @@
   --side-account-w: 224px; /* the switcher's sheet */
 
   /* ticket: a large title over a dense body at the lists' row type */
-  --fs-ticket: 22px; /* a document's title: the ticket's, an editor's */
+  --fs-ticket: 26px; /* a document's title, the ticket's and an editor's: clearly over its body */
   --fs-ticket-lead: 15px; /* the ticket's description */
   --fs-tk: 14px; /* the page's body: a property, a stage, a plan item, a message */
   --w-fact-label: 104px; /* the properties row's head column */

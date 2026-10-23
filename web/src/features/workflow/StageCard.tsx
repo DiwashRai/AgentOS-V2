@@ -136,8 +136,8 @@ interface SummaryProps {
   grip?: ReactNode;
 }
 
-/** The card's first line: the last run's glyph, the name, the phase (unless the name says it), the
- *  run's words; at its end, Skipped, the check or maker mark and the editor's handle. */
+/** The card's first line: the last run's glyph, the name, the phase in quiet words (unless the name
+ *  says it), the run's words; at its end, Skipped, the check or maker mark and the editor's handle. */
 function HeadLine({ stage, run, grip }: { stage: Stage; run: LastRun | null; grip: ReactNode }) {
   const phase = phaseWord(stage.phase);
   const samePhase = phase.toLowerCase() === stage.name.toLowerCase();
@@ -147,7 +147,11 @@ function HeadLine({ stage, run, grip }: { stage: Stage; run: LastRun | null; gri
       <Text variant="label" truncate>
         {stage.name}
       </Text>
-      {samePhase ? null : <Chip tone="fill" label={phase} title={`Phase: ${phase}`} />}
+      {samePhase ? null : (
+        <Text variant="meta" tone="3" title={`Phase: ${phase}`}>
+          {phase}
+        </Text>
+      )}
       {run ? (
         <Text variant="meta" tone="2" title={run.title}>
           {run.text}
@@ -172,7 +176,7 @@ export function StageSummary({ stage, lib, show = "all", run, fresh, grip }: Sum
       <HeadLine stage={stage} run={run ?? null} grip={grip} />
       <Who stage={stage} lib={lib} />
       {prompt ? (
-        <Text variant="code" tone="2" truncate title={prompt}>
+        <Text tone="3" truncate title={prompt}>
           {firstLine(prompt)}
         </Text>
       ) : null}

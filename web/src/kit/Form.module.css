@@ -137,8 +137,8 @@
 
 /* a sheet (an item editor's content): one editable object, as Linear draws a document's block: a
    hairline round a shade barely off the page, its head strip (a heading's weight) over its text (a
-   folding block's under its name, past the fold); it takes the column's free height, all of it a
-   place to click and write. Its line firms under the pointer; while the text has the focus the
+   folding block's under its name, past the fold); as tall as its text and no taller, so a short
+   one never leaves an empty box down the page. Its line firms under the pointer; while the text has the focus the
    line takes the focus colour */
 .sheet {
   position: relative;
@@ -227,6 +227,10 @@
   flex-direction: column;
   width: 100%;
   min-width: 0;
+}
+/* a sheet is as tall as its text (the area alone fills its column) */
+.areaWrap.sheet {
+  flex: none;
 }
 /* a sheet's controls: the last (a block's handle) always; the rest while the sheet is in use */
 .tools {
