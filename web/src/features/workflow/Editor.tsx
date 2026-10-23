@@ -33,21 +33,19 @@ import {
   type DragPayload,
   Drop,
   FormRow,
-  Icon,
   Lane,
   type LaneLoop,
   type LaneStage,
-  NumberField,
   Page,
   type PageProps,
   Stack,
   Text,
 } from "../../kit";
+import { type Fresh, LoopFoot, StageFace, StageSummary } from "../../patterns/stage";
+import { useLibrary } from "../shared/library";
 import type { Draft } from "./draft";
-import { useLibrary } from "./library";
 import { LibraryPanel, type PanelKind } from "./LibraryPanel";
 import { StageFields } from "./StageFields";
-import { type Fresh, StageFace, StageSummary } from "./StageCard";
 
 export interface EditorProps {
   title: PageProps["title"];
@@ -101,46 +99,6 @@ function ContextStrip({ draft, lib, fresh, land }: Lands & { draft: Draft; lib: 
         <Text variant="meta">Drop a skill or a file here</Text>
       </FormRow>
     </Drop>
-  );
-}
-
-/** A loop's foot: what it repeats, its rounds, and what's wrong with it. */
-export function LoopFoot({
-  body,
-  i,
-  problem,
-  setTo,
-}: {
-  body: WorkflowBody;
-  i: number;
-  problem: string | undefined;
-  setTo?: (n: number) => void;
-}) {
-  const l = body.loops[i];
-  if (!l) return null;
-  const name = (id: string) => body.stages.find((s) => s.id === id)?.name ?? id;
-  return (
-    <>
-      <Icon name="loop" />
-      <Text variant="meta" tone="2">{`Back to ${name(l.first)} until its checks pass, up to`}</Text>
-      {setTo ? (
-        <NumberField
-          label="Rounds"
-          value={l.rounds}
-          min={1}
-          max={5}
-          unit="rounds"
-          onChange={setTo}
-        />
-      ) : (
-        <Text variant="meta" tone="2" weight={500}>{`${String(l.rounds)} rounds`}</Text>
-      )}
-      {problem ? (
-        <Text variant="meta" tone="blocked" weight={500}>
-          {problem}
-        </Text>
-      ) : null}
-    </>
   );
 }
 

@@ -10,15 +10,14 @@ import { authorText } from "../../domain/format";
 import { type Library, refName } from "../../domain/workflow";
 import { Button, Card, Chip, Lane, Section, Stack, Text } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
-import { LoopFoot } from "../workflow/Editor";
-import { useLibrary } from "../workflow/library";
-import { type LastRun, StageFace, StageSummary } from "../workflow/StageCard";
+import { type LastRun, LoopFoot, StageFace, StageSummary } from "../../patterns/stage";
+import { useLibrary } from "../shared/library";
 import { copyTitle } from "./copy";
 import { ticketHref, WORKFLOW } from "./tabs";
 import { DriftChips } from "./WorkflowOverlay";
 
 /** A run's state at a stage, in the stepper's words (Live, as the stepper says a running stage). */
-const WORD: Record<LastRun["kind"], string> = { run: "Live", blk: "Failed", done: "Done" };
+const WORD: Record<LastRun["kind"], string> = { live: "Live", failed: "Failed", done: "Done" };
 
 /** A stage's last run: the newest run that reached it, at its latest round there. */
 function lastRun(runs: readonly Run[], stage: string, rounds: number): LastRun | null {
@@ -26,7 +25,7 @@ function lastRun(runs: readonly Run[], stage: string, rounds: number): LastRun |
     const at = run.stages.filter((s) => s.stage_id === stage && s.state !== "pending").at(-1);
     if (!at) continue;
     const failed = at.state === "failed" || at.verdict === "fail";
-    const kind: LastRun["kind"] = at.state === "running" ? "run" : failed ? "blk" : "done";
+    const kind: LastRun["kind"] = at.state === "running" ? "live" : failed ? "failed" : "done";
     const round = rounds > 1 ? ` · round ${String(at.round)} of ${String(rounds)}` : "";
     return {
       kind,

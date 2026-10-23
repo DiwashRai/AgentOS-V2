@@ -3,10 +3,10 @@
 // struck through) or its command, the prompt's first line, its own skills and files, and whether
 // it is a check or a maker, as plain words (nothing on a card looks like a button). The ticket's
 // tab draws it compact (no prompt) with the stage's last run as a status glyph before its name.
-// In the editor its handle ends its first line.
+// In the editor its handle ends its first line. Under the lane, a loop's foot says what it repeats.
 import type { ReactNode } from "react";
 
-import type { Stage } from "../../api/types";
+import type { Stage, WorkflowBody } from "../api/types";
 import {
   agentOf,
   isCheck,
@@ -15,8 +15,8 @@ import {
   type RefKind,
   refName,
   runtimeName,
-} from "../../domain/workflow";
-import { Avatar, Chip, Icon, Mark, type MarkKind, Override, Stack, Text } from "../../kit";
+} from "../domain/workflow";
+import { Avatar, Chip, Icon, Mark, NumberField, Override, Stack, Text } from "../kit";
 
 export function StageFace({ stage, lib }: { stage: Stage; lib: Library }) {
   if (stage.kind === "shell") return <Icon name="shell" label="Shell stage" />;
@@ -124,9 +124,10 @@ export function StageChips({
   );
 }
 
-/** A stage's last run on the ticket: its glyph's state, and its words (the stepper's). */
+/** A stage's last run on the ticket: how it stands (under way, failed, done), and its words (the
+ *  stepper's). */
 export interface LastRun {
-  kind: Extract<MarkKind, "run" | "blk" | "done">;
+  kind: "live" | "failed" | "done";
   /** Its words, its state's first ("Live · round 2 of 3"): the glyph beside them is drawing. */
   text: string;
   title: string;
@@ -145,6 +146,9 @@ interface SummaryProps {
   grip?: ReactNode;
 }
 
+/** A last run's glyph: the running one, a blocked one for a failure, a done one. */
+const MARK = { live: "run", failed: "blk", done: "done" } as const;
+
 /** The card's first line: the last run's glyph, the name, the phase in quiet words (unless the name
  *  says it), the run's words; at its end, Skipped, the check or maker mark and the editor's handle. */
 function HeadLine({ stage, run, grip }: { stage: Stage; run: LastRun | null; grip: ReactNode }) {
@@ -152,7 +156,7 @@ function HeadLine({ stage, run, grip }: { stage: Stage; run: LastRun | null; gri
   const samePhase = phase.toLowerCase() === stage.name.toLowerCase();
   return (
     <Stack dir="row" gap={4} align="center">
-      {run ? <Mark kind={run.kind} glyph small name={false} /> : null}
+      {run ? <Mark kind={MARK[run.kind]} glyph small name={false} /> : null}
       <Text variant="label" truncate>
         {stage.name}
       </Text>
@@ -191,5 +195,45 @@ export function StageSummary({ stage, lib, show = "all", run, fresh, grip }: Sum
       ) : null}
       {show === "head" ? null : <StageChips stage={stage} lib={lib} fresh={fresh ?? null} />}
     </Stack>
+  );
+}
+
+/** A loop's foot: what it repeats, its rounds, and what's wrong with it. */
+export function LoopFoot({
+  body,
+  i,
+  problem,
+  setTo,
+}: {
+  body: WorkflowBody;
+  i: number;
+  problem: string | undefined;
+  setTo?: (n: number) => void;
+}) {
+  const l = body.loops[i];
+  if (!l) return null;
+  const name = (id: string) => body.stages.find((s) => s.id === id)?.name ?? id;
+  return (
+    <>
+      <Icon name="loop" />
+      <Text variant="meta" tone="2">{`Back to ${name(l.first)} until its checks pass, up to`}</Text>
+      {setTo ? (
+        <NumberField
+          label="Rounds"
+          value={l.rounds}
+          min={1}
+          max={5}
+          unit="rounds"
+          onChange={setTo}
+        />
+      ) : (
+        <Text variant="meta" tone="2" weight={500}>{`${String(l.rounds)} rounds`}</Text>
+      )}
+      {problem ? (
+        <Text variant="meta" tone="blocked" weight={500}>
+          {problem}
+        </Text>
+      ) : null}
+    </>
   );
 }

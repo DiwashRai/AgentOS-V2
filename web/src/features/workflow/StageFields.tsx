@@ -26,7 +26,7 @@ import {
   TextArea,
   Toggle,
 } from "../../kit";
-import { type Fresh, StageChips } from "./StageCard";
+import { type Fresh, StageChips } from "../../patterns/stage";
 
 const EFFORTS: readonly Effort[] = ["low", "medium", "high", "xhigh", "max"];
 const REPAIRS = [0, 1, 2, 3] as const;
