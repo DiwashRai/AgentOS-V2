@@ -170,7 +170,7 @@ export function Twin() {
                 <Rows />
               </Stack>
               <Stack gap={2} align="end">
-                <Button variant="quiet" size="sm" icon="compact" title="Display" onClick={NONE} />
+                <Button variant="quiet" size="sm" icon="display" title="Display" onClick={NONE} />
                 <Display />
               </Stack>
               <Stack gap={9} align="center">

@@ -43,6 +43,19 @@ const GLYPHS = {
     ),
   },
   compact: { ...LINE16, d: <path d="M2.5 3.5h11M2.5 6.5h11M2.5 9.5h11M2.5 12.5h11" /> },
+  // a view's own controls, each its own picture: filter narrows (three lines, each shorter),
+  // display sets (two sliders), ordering sorts (an arrow up beside one down), and the order's
+  // direction (an arrow up beside lines that shorten)
+  filter: { ...LINE16, d: <path d="M2.5 4h11M4.5 8h7M6.5 12h3" /> },
+  display: {
+    ...LINE16,
+    d: <path d="M2 5h3.5M9 5h5M2 11h7.5M13 11h1M7.25 3v4M11.25 9v4" />,
+  },
+  sort: {
+    ...LINE16,
+    d: <path d="M5 13V3M2.75 5.25 5 3l2.25 2.25M11 3v10M8.75 10.75 11 13l2.25-2.25" />,
+  },
+  order: { ...LINE16, d: <path d="M4 13V3M1.75 5.25 4 3l2.25 2.25M8.5 4H14M8.5 8h4M8.5 12H11" /> },
   intake: {
     ...LINE16,
     d: (

@@ -922,6 +922,9 @@
         "fill": {
           "why": "Fill the page; only the inside scrolls."
         },
+        "parts": {
+          "why": "Its children are its parts, a hairline between each and the next run edge to edge (Linear's options panels part their sections so)."
+        },
         "pad": {
           "why": "Its padding, a spacing token (Space)."
         },
@@ -1265,6 +1268,10 @@
         "teams": "The sidebar: All teams.",
         "queue": "The sidebar: My queue.",
         "compact": "The sidebar: Compact.",
+        "filter": "A view's filter control: three lines, each shorter (the twins' Linear toolbars).",
+        "display": "A view's display options: two sliders (the twins' Linear toolbars).",
+        "sort": "Ordering: an arrow up beside one down (the twins' display options).",
+        "order": "The order's direction: an arrow up beside lines that shorten (the twins' display options).",
         "intake": "The sidebar: Intake.",
         "agents": "The sidebar's Context: Agents.",
         "skills": "The sidebar's Context: Skills.",

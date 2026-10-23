@@ -275,8 +275,8 @@ export function Twin() {
           <Stack />
           <Segmented label="Views" items={TABS} value={tab} onChange={setTab} />
           <Stack dir="row" gap={4} align="center">
-            <Button size="sm" icon="compact" title="Filter" />
-            <Button size="sm" icon="settings" title="Display options" />
+            <Button size="sm" icon="filter" title="Filter" />
+            <Button size="sm" icon="display" title="Display options" />
             <Button size="sm" icon="high" title="Insights" />
             <Button size="sm" icon="intake" title="Details" />
           </Stack>

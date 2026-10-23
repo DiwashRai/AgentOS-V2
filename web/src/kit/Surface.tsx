@@ -11,14 +11,17 @@ export interface SurfaceProps {
   level?: "recess" | "sheet" | "list";
   /** Fill the page's height; only the content inside scrolls. */
   fill?: boolean;
+  /** Its children are its parts (an options panel's sections, as Linear's): a hairline between
+   *  each and the next, its padding's room on both sides of it. */
+  parts?: boolean;
   pad?: Space;
   label?: string;
 }
 
-export function Surface({ children, level = "recess", fill, pad = 0, label }: SurfaceProps) {
+export function Surface({ children, level = "recess", fill, parts, pad = 0, label }: SurfaceProps) {
   return (
     <section
-      className={cx(s.surface, s[level], fill && s.fill)}
+      className={cx(s.surface, s[level], fill && s.fill, parts && s.parts)}
       style={vars({ "--pad": space(pad) })}
       aria-label={label}
     >

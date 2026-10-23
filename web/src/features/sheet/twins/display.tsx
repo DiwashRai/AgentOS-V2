@@ -38,18 +38,16 @@ function Switch({ label, on }: { label: string; on: boolean }) {
 
 interface PickerProps {
   label: string;
-  icon: "compact" | "loop";
+  icon: "compact" | "sort";
   value: string;
   extra?: ReactNode;
 }
 
-/** A picker on a line: its glyph and words at the start, the picker (and its extra) at the end.
- *  The loop glyph is 14px to compact's 16, so it takes 2px more room and both words start on one
- *  column, as Linear's do. */
+/** A picker on a line: its glyph and words at the start, the picker (and its extra) at the end. */
 function Picker({ label, icon, value, extra }: PickerProps) {
   return (
     <Stack dir="row" justify="between" align="center">
-      <Stack dir="row" gap={icon === "loop" ? 5 : 4} align="center">
+      <Stack dir="row" gap={4} align="center">
         <Icon name={icon} quiet />
         <Text tone="3">{label}</Text>
       </Stack>
@@ -85,9 +83,9 @@ function View() {
           <Picker label="Grouping" icon="compact" value="Status" />
           <Picker
             label="Ordering"
-            icon="loop"
+            icon="sort"
             value="Priority"
-            extra={<Button size="sm" icon="up" title="Ordering direction" />}
+            extra={<Button size="sm" icon="order" title="Ordering direction" />}
           />
         </Stack>
       </Stack>
@@ -121,16 +119,14 @@ function ListOptions() {
 export function Twin() {
   return (
     <Frame space="Northwind" nav={[]} sections={[]} foot={[]} me={null}>
-      <Page title="Issues" action={<Button icon="compact">Display</Button>}>
+      <Page title="Issues" action={<Button icon="display">Display</Button>}>
         <Stack cols={3}>
           <Stack />
           <Stack />
-          <Surface level="sheet" pad={7} label="Display options">
-            <Stack gap={10}>
-              <View />
-              <Switch label="Show sub-issues" on />
-              <ListOptions />
-            </Stack>
+          <Surface level="sheet" pad={7} parts label="Display options">
+            <View />
+            <Switch label="Show sub-issues" on />
+            <ListOptions />
           </Surface>
         </Stack>
       </Page>

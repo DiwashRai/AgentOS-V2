@@ -127,7 +127,7 @@ export function Twin() {
         {/* the filter's glyph over the list's first column, as Linear's */}
         <Stack dir="row" gap={6} align="center">
           <Stack />
-          <Button variant="quiet" size="sm" icon="compact">
+          <Button variant="quiet" size="sm" icon="filter">
             Filter
           </Button>
         </Stack>

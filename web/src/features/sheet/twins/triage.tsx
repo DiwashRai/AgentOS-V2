@@ -84,8 +84,8 @@ export function Twin() {
         action={
           <>
             <Avatar name="Ada Park" seed="1" />
-            <Button size="sm" icon="compact" title="Filter" />
-            <Button size="sm" icon="compact">
+            <Button size="sm" icon="filter" title="Filter" />
+            <Button size="sm" icon="display">
               <Text tone="3">
                 <Icon name="chevron" label="Display options" />
               </Text>

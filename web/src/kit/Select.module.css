@@ -1,8 +1,10 @@
 /* The trigger: a borderless property chip (face, name, chevron) in the type of its neighbours in
    a properties row (it takes the row's size, weight and ink), 28px with the chip's padding. It
-   rests on a quiet fill, so a value you can change reads apart from the read-only ones beside it;
-   hover lights it a step, open fills it a step firmer */
+   rests on a quiet fill inside a faint hairline, a field as Linear's, so a value you can change
+   reads apart from the read-only ones beside it; hover lights it a step, open fills it a step
+   firmer */
 .trigger {
+  box-shadow: inset 0 0 0 var(--line-1) var(--fill-2);
   display: inline-flex;
   align-items: center;
   gap: var(--sp-4);

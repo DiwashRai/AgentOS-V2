@@ -93,32 +93,32 @@
     0 2px 6px color-mix(in srgb, #000000 6%, transparent);
 }
 
-/* Carbon · dark · default: a warm graphite sheet a step over a darker ground, Linear's indigo.
+/* Carbon · dark · default: a cool near-black sheet a step over a blacker ground, Linear's indigo.
    Midnight, Harbour and Plum take this block and set its steps, washes, inks and accent. */
 [data-theme="dark"],
 [data-theme="midnight"],
 [data-theme="plum"],
 [data-theme="harbour"] {
   color-scheme: dark;
-  /* themes · the steps: the sheet (CIE L* about 10), the ground about 4 L* under it */
-  --page: #1c1b1a;
-  --recess: #1c1b1a;
-  --surface: #262524;
-  --raised: #2d2c2b;
-  --side: color-mix(in srgb, #000000 34%, var(--page));
-  --ink-1: #edebe8;
-  --ink-2: #bdbab6;
-  --ink-3: #a9a5a1;
-  --ink-hover: #d6d3cf;
-  --wash: #ece6e0;
-  --hair: #ece6e0;
-  /* flat: light on dark, each step a little firmer than on paper */
-  --tone-1: color-mix(in srgb, var(--wash) 3.5%, var(--page));
-  --tone-2: color-mix(in srgb, var(--wash) 5.5%, var(--page));
-  --tone-3: color-mix(in srgb, var(--wash) 8.5%, var(--page));
-  --fill-1: color-mix(in srgb, var(--wash) 4.5%, transparent);
-  --fill-2: color-mix(in srgb, var(--wash) 7%, transparent);
-  --fill-3: color-mix(in srgb, var(--wash) 11%, transparent);
+  /* themes · the steps: the sheet (CIE L* about 8), the ground about 4 L* under it */
+  --page: #161619;
+  --recess: #161619;
+  --surface: #202024;
+  --raised: #27272c;
+  --side: color-mix(in srgb, #000000 44%, var(--page));
+  --ink-1: #ededf0;
+  --ink-2: #b9b9c2;
+  --ink-3: #a3a3ae;
+  --ink-hover: #d5d5dc;
+  --wash: #e2e2f0;
+  --hair: #e2e2f0;
+  /* flat: light on dark, each step firmer than on paper, so a card clears the sheet it sits on */
+  --tone-1: color-mix(in srgb, var(--wash) 4%, var(--page));
+  --tone-2: color-mix(in srgb, var(--wash) 6.5%, var(--page));
+  --tone-3: color-mix(in srgb, var(--wash) 10%, var(--page));
+  --fill-1: color-mix(in srgb, var(--wash) 5%, transparent);
+  --fill-2: color-mix(in srgb, var(--wash) 8%, transparent);
+  --fill-3: color-mix(in srgb, var(--wash) 12%, transparent);
   --edge: color-mix(in srgb, var(--hair) 16%, transparent);
   --track: color-mix(in srgb, var(--hair) 14%, var(--page));
   --rule: color-mix(in srgb, var(--hair) 10%, var(--page));

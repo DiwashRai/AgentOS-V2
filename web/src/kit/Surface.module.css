@@ -39,6 +39,21 @@
   height: var(--line-1);
   background: var(--rule);
 }
+/* parts: a hairline between each part and the next, run edge to edge, the padding's room on both
+   sides of it (a floating layer's rule, so it reads on any tone) */
+.parts > * + * {
+  position: relative;
+  margin-top: var(--pad);
+  padding-top: var(--pad);
+}
+.parts > * + *::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: calc(var(--pad) * -1);
+  height: var(--line-1);
+  background: var(--pop-rule);
+}
 .fill {
   flex: 1;
   min-height: 0;
