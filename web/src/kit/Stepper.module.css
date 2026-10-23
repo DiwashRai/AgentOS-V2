@@ -183,12 +183,13 @@
   font-size: var(--fs-2);
 }
 
-/* the run card: the stages and what happens now in one card, a step of tone with no line, a larger
-   radius */
+/* the run card: the stages and what happens now in one card, a small step of tone inside a hairline,
+   a larger radius */
 .card {
   padding: var(--sp-8) var(--sp-8) 0;
   border-radius: var(--r-5);
   background: var(--tk-card);
+  box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
 }
 .card .bar {
   margin-top: var(--sp-2);

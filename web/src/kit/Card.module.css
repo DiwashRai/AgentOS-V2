@@ -1,5 +1,5 @@
-/* Card: one object as a step of tone on the sheet, no edge and no shadow; under the pointer it takes
-   a step more. A stage lies on the lane, its summary washed on hover like a row; selected, the
+/* Card: one object as a small step of tone on the sheet inside a hairline, no shadow; under the
+   pointer it takes a step more. A stage lies on the lane, its summary washed on hover like a row; selected, the
    accent rings it, its settings under the summary on the sheet's own white. A ticket's look
    follows below. */
 .card {
@@ -8,6 +8,7 @@
   min-width: 0;
   border-radius: var(--r-4);
   background: var(--teams-card);
+  box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
   transition:
     background-color var(--dur-fast) ease,
     box-shadow var(--dur-fast) ease;

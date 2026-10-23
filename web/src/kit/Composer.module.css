@@ -1,4 +1,4 @@
-/* the composer: a reply box of tone, no edge, one line of text with Send at its right end, growing
+/* the composer: a reply box of tone inside a hairline, one line of text with Send at its right end, growing
    as you type; in a full-height column it sits at the foot and stays there while the thread
    scrolls. On a held panel of tone (a Surface sheet) it is a well of the sheet's own (--well) */
 .compose {
@@ -11,6 +11,7 @@
   padding-right: var(--sp-3);
   border-radius: var(--r-4);
   background: var(--well, var(--tone-2));
+  box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
   transition: background-color var(--dur-fast);
 }
 /* the text's label fills the box but Send, its padding the box's, so a click anywhere round the text
