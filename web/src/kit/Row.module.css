@@ -9,8 +9,9 @@
 }
 
 /* lists: a line, an item and a triage row are flat: the rhythm and the room above each group part
-   the rows. Their words stand on the list's column edge; their wash (hover, open) is a rounded
-   patch reaching --list-in past it. No card, nothing moves */
+   the rows. Their words stand on the list's column edge; what lies under them (a hover's wash, the
+   open card, the hairline between rows) is square and runs --list-reach past them, the same reach
+   as their group's band, so a list's heads and rows always meet the same edges. Nothing moves */
 .line,
 .item,
 .triage {
@@ -19,17 +20,16 @@
 .row:is(.line, .item, .triage)::before {
   content: "";
   position: absolute;
-  inset: 0 var(--list-pad);
-  border-radius: var(--r-3);
+  inset: 0 var(--list-reach);
   transition: background-color var(--dur-fast) ease;
 }
-/* a list out at the sheet's edges (Table edge) rules its rows apart with a faint hairline under
-   their words, so a wide row reads as one line; a lit patch hides the ones at its edges */
+/* a list out at the sheet's edges (Table edge) rules its rows apart with a faint hairline across its
+   reach, so a wide row reads as one line; a lit row hides the ones at its edges */
 .row:is(.line, .item, .triage) + .row:is(.line, .item, .triage)::after {
   content: "";
   position: absolute;
   top: 0;
-  inset-inline: var(--list-inset);
+  inset-inline: var(--list-reach);
   height: var(--line-1);
   background: var(--row-rule, transparent);
 }
@@ -44,15 +44,6 @@
 .row:is(.line, .item).open::before {
   background: var(--list-open);
   box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
-}
-/* selected rows one after another join into one patch */
-.row.open:has(+ .open)::before {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-.row.open + .open::before {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
 }
 
 .rack:is(:hover, :has(:focus-visible)) > .inner {

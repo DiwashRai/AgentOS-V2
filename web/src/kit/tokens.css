@@ -211,6 +211,12 @@
   /* a firmer tag (a list row's Now) and its edge */
   --chip-firm: var(--fill-3);
   --chip-firm-edge: transparent;
+  /* a tinted tag (Linear's resources): a kind's hue at the theme's strength over what it sits on;
+     neutral the theme's grey at half */
+  --chip-tint-indigo: color-mix(in srgb, var(--kind-workflow) var(--chip-tint), transparent);
+  --chip-tint-teal: color-mix(in srgb, var(--kind-agent) var(--chip-tint), transparent);
+  --chip-tint-amber: color-mix(in srgb, var(--kind-skill) var(--chip-tint), transparent);
+  --chip-tint-neutral: color-mix(in srgb, var(--wash) calc(var(--chip-tint) / 2), transparent);
   /* a field under the pointer; the sheet's rim against the ground; a switch's edge off; a problem's
      edge */
   --input-hover: var(--fill-3);
@@ -219,8 +225,9 @@
   --switch-edge: transparent;
   /* a card inside a card: flat, a step lighter, no line (Linear's chat bubble in its panel) */
   --nest: color-mix(in srgb, var(--wash) 6%, var(--page));
-  /* how far a group's band runs past its head: to the sheet's edges */
-  --band-out: calc(var(--gutter) * -1);
+  /* how far a list's heads and rows lie past their own box: to the sheet's edges (a Table edge is
+     already there) */
+  --list-reach: calc(var(--gutter) * -1);
   --problem-edge: color-mix(in srgb, var(--blocked) 35%, transparent);
   --pop-edge: var(--edge);
   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
@@ -291,6 +298,8 @@
   --tag-edge: var(--rule-strong);
   --chip-firm: var(--raised);
   --chip-firm-edge: var(--rule-strong);
+  /* a tinted tag's wash: its hue this strong over what it sits on (Linear's resources) */
+  --chip-tint: 10%;
   /* a hover a faint step, a field white under the pointer (its edge firms); a group's band lighter
      than a hover; the sheet's rim a line darker than the ground (Linear's Ash: #e3e4ec on #edeef3);
      a switch white on an edge when off */
@@ -321,6 +330,7 @@
   --tag-edge: var(--rule);
   --chip-firm: transparent;
   --chip-firm-edge: var(--rule-strong);
+  --chip-tint: 12%;
   /* a card's edge as Linear's: about 26 levels over the sheet, the card itself about 6 */
   --card-edge: color-mix(in srgb, var(--hair) 13%, var(--page));
 }

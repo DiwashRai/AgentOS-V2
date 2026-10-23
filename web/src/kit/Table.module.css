@@ -99,7 +99,7 @@
   --list-pad: calc(var(--gutter) - var(--list-in));
   --list-inset: var(--gutter);
   --row-rule: var(--list-rule);
-  --band-out: 0;
+  --list-reach: 0;
 }
 /* no gutter kept for a scrollbar a short list never shows */
 .edge > * {

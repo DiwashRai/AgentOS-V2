@@ -220,7 +220,11 @@
             "line": "A faint fill, no outline: the default; in a list's row, the same fill as a pill.",
             "fill": "A firmer fill: a stage's phase, and a list line's one tag (Compact's Now: the agent and its step, who it waits on).",
             "edge": "A round pill of the same faint fill: a board card's state on its key's line (Linear's card pill), a step over the card in every theme.",
-            "blocked": "The words in the blocked ink: a conflict."
+            "blocked": "The words in the blocked ink: a conflict.",
+            "neutral": "A tint, the theme's grey at half the strength: a resource of no kind of its own (a doc, a link).",
+            "indigo": "A tint, the workflow kind's hue washed into it with no edge, its glyph in the hue, as Linear marks a project's resources by kind: the project twin's launch plans.",
+            "teal": "A tint, the agent kind's hue: the project twin's spec.",
+            "amber": "A tint, the skill kind's hue: the project twin's approvals and sign-up lists."
           }
         },
         "title": {

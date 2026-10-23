@@ -166,7 +166,7 @@
      inset as the card's are */
   --list-pad: 0;
   --list-inset: var(--list-in);
-  --band-out: 0;
+  --list-reach: 0;
   margin-right: 0;
   padding: var(--sp-8) var(--sp-9) calc(var(--sp-10) * 2) var(--gutter);
 }

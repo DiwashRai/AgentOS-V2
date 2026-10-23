@@ -14,6 +14,9 @@ import { tokenPx } from "./vars";
 /** A state's hue for a chip's dot. */
 export type ChipDot = "neutral" | "live" | "you" | "blocked" | "done";
 
+/** A hue washed into a tag (a tone of its own), how strong set by the theme (--chip-tint). */
+export type ChipTint = "neutral" | "indigo" | "teal" | "amber";
+
 /** After the words, a quieter count (a running agent's step). */
 export interface ChipAfter {
   text: string;
@@ -23,8 +26,9 @@ export type ChipProps = {
   /** Its words (tests, AGENTS.md, Implement, northwind/web). */
   label: string;
   /** line: a faint fill, no outline (the default; in a list's row, the same fill as a pill); fill: a firmer fill (a stage's phase); edge: a round pill of the same fill (a board card's state, Linear's
-   *  card pill); blocked: the words in the blocked ink (a conflict). */
-  tone?: "line" | "fill" | "edge" | "blocked";
+   *  card pill); blocked: the words in the blocked ink (a conflict); a ChipTint: a hue washed into it,
+   *  no edge, its glyph in the hue (Linear's resources). */
+  tone?: "line" | "fill" | "edge" | "blocked" | ChipTint;
   /** The full text on hover, when it says more than the words. */
   title?: string;
   after?: ChipAfter;

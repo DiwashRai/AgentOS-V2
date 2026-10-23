@@ -7,6 +7,7 @@ import {
   Button,
   Chip,
   type ChipDot,
+  type ChipTint,
   type Fact,
   Facts,
   Icon,
@@ -41,19 +42,21 @@ const LABELS: readonly { label: string; dot: ChipDot; group: boolean }[] = [
   { label: "Hackathon", dot: "live", group: false },
 ];
 
-const RESOURCES: readonly { label: string; lead: IconName; out?: boolean }[] = [
-  { label: "Key Features", lead: "feature" },
-  { label: "PRD/Spec", lead: "files" },
-  { label: "Approval Chain", lead: "gate" },
-  { label: "Private Beta Sign Up List", lead: "compact" },
-  { label: "figma.com", lead: "link", out: true },
-  { label: "Launch Run of Show", lead: "feature" },
-  { label: "Launch Run of Show", lead: "feature" },
-  { label: "Launch Run of Show", lead: "feature" },
-  { label: "Jobs to Be Done", lead: "files" },
-  { label: "Marketing Comms", lead: "files" },
-  { label: "Project spec", lead: "files" },
-  { label: "Project spec", lead: "files" },
+// Linear washes each resource in its kind's hue: the launch plans indigo, the spec teal, the approvals
+// and the sign-up list amber, the rest its grey
+const RESOURCES: readonly { label: string; lead: IconName; tint: ChipTint; out?: boolean }[] = [
+  { label: "Key Features", lead: "feature", tint: "indigo" },
+  { label: "PRD/Spec", lead: "files", tint: "teal" },
+  { label: "Approval Chain", lead: "gate", tint: "amber" },
+  { label: "Private Beta Sign Up List", lead: "compact", tint: "amber" },
+  { label: "figma.com", lead: "link", tint: "neutral", out: true },
+  { label: "Launch Run of Show", lead: "feature", tint: "indigo" },
+  { label: "Launch Run of Show", lead: "feature", tint: "indigo" },
+  { label: "Launch Run of Show", lead: "feature", tint: "indigo" },
+  { label: "Jobs to Be Done", lead: "files", tint: "neutral" },
+  { label: "Marketing Comms", lead: "files", tint: "neutral" },
+  { label: "Project spec", lead: "files", tint: "neutral" },
+  { label: "Project spec", lead: "files", tint: "neutral" },
 ];
 
 function Add({ what }: { what: string }) {
@@ -155,9 +158,15 @@ function Rows() {
               <Stack dir="row" gap={2} align="center" wrap>
                 {RESOURCES.map((r, i) =>
                   r.out ? (
-                    <Chip key={i} lead={r.lead} label={r.label} after={{ text: "↗" }} />
+                    <Chip
+                      key={i}
+                      tone={r.tint}
+                      lead={r.lead}
+                      label={r.label}
+                      after={{ text: "↗" }}
+                    />
                   ) : (
-                    <Chip key={i} lead={r.lead} label={r.label} />
+                    <Chip key={i} tone={r.tint} lead={r.lead} label={r.label} />
                   ),
                 )}
                 <Add what="resource" />

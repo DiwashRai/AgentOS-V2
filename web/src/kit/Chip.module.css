@@ -31,6 +31,37 @@
   background: var(--chip-firm);
   box-shadow: inset 0 0 0 var(--line-1) var(--chip-firm-edge);
 }
+/* a tint: a hue washed into the tag, no edge, the glyph in the hue and the words in full ink (Linear's
+   resources); neutral is the same wash of the theme's grey, its glyph muted */
+.chip:is([data-tone="neutral"], [data-tone="indigo"], [data-tone="teal"], [data-tone="amber"]) {
+  background: var(--tint);
+  box-shadow: none;
+  color: var(--ink-1);
+}
+.chip[data-tone="neutral"] {
+  --tint: var(--chip-tint-neutral);
+}
+.chip[data-tone="indigo"] {
+  --tint: var(--chip-tint-indigo);
+}
+.chip[data-tone="teal"] {
+  --tint: var(--chip-tint-teal);
+}
+.chip[data-tone="amber"] {
+  --tint: var(--chip-tint-amber);
+}
+.chip[data-tone="neutral"] .lead {
+  color: var(--prop-mark);
+}
+.chip[data-tone="indigo"] .lead {
+  color: var(--kind-workflow);
+}
+.chip[data-tone="teal"] .lead {
+  color: var(--kind-agent);
+}
+.chip[data-tone="amber"] .lead {
+  color: var(--kind-skill);
+}
 .chip[data-tone="blocked"] {
   color: var(--blocked);
   font-weight: 500;
