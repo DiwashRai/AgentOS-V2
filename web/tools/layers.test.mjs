@@ -81,6 +81,7 @@ const FILES = {
     `export const K = () => [<List />, <Kit.Checklist />, <Also />, <CELL.list />, <Checklist />];`,
     ``,
   ].join("\n"),
+  "features/library/Untyped.tsx": `declare const Thing: any;\nexport const T = () => <Thing />;\n`,
   "features/shared/kitAgain.ts": `export { Checklist } from "../../kit";\n`,
   "features/compact/Ns.tsx": `import * as Parts from "../shared/peek";\nexport const N = Parts;\n`,
   // a class component; the API's error class is fine
@@ -134,6 +135,12 @@ describe("the layers, on what each import resolves to", () => {
     expect(lines).toEqual([1, 2, 4, 5].map((n) => `features/intake/IntakeView.tsx:${String(n)}`));
     const alias = [...new Set(at("features/library/Alias.tsx").map((p) => p.split(" ")[0]))];
     expect(alias).toEqual([2, 5].map((n) => `features/library/Alias.tsx:${String(n)}`));
+  });
+
+  it("says a tag whose type didn't resolve, rather than calling it a string", () => {
+    expect(at("features/library/Untyped.tsx:2 ")).toHaveLength(1);
+    expect(at("features/library/Untyped.tsx:2 ")[0]).toContain("didn't resolve");
+    expect(at("features/library/Alias.tsx:5 ").join("\n")).toContain("may be a string");
   });
 
   it('reads a glob from the web\'s root, and fails one that matches nothing (a "!" one aside)', () => {

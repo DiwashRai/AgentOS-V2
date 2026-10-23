@@ -77,11 +77,15 @@ function globbed(w, call, from) {
   }
   return out.filter((g) => g.file === null || !left.has(g.file));
 }
-/** A JSX tag whose type is a string, or may be one (`const Div: "div" | "span"`). */
-function stringTag(checker, tag) {
+/** What is wrong with a JSX tag's type, if anything: it is, or may be, a string (`const Div: "div"
+ *  | "span"`); or it didn't resolve (`any`, say when a package's types are missing), so it may be
+ *  anything. */
+function tagTypeProblem(checker, tag) {
   const t = checker.getTypeAtLocation(tag);
-  const stringy = (x) => (x.flags & (ts.TypeFlags.StringLike | ts.TypeFlags.Any)) !== 0;
-  return stringy(t) || (t.isUnion() && t.types.some(stringy));
+  const all = t.isUnion() ? t.types : [t];
+  if (all.some((x) => x.flags & ts.TypeFlags.StringLike)) return "a tag that may be a string";
+  if (all.some((x) => x.flags & ts.TypeFlags.Any)) return "a tag whose type didn't resolve (any)";
+  return null;
 }
 
 /** Whether a mention of a kit component is anything but its tag, a call's argument (`memo(Text)`)
@@ -157,8 +161,10 @@ function readModule(w, path) {
       const tag = node.tagName;
       if (ts.isIdentifier(tag) && ts.isIntrinsicJsxName(tag.text))
         flag(node, "element", `renders <${tag.text}>`);
-      else if (stringTag(checker, tag))
-        flag(node, "element", `renders <${tag.getText()}>, a tag that may be a string`);
+      else {
+        const problem = tagTypeProblem(checker, tag);
+        if (problem) flag(node, "element", `renders <${tag.getText()}>, ${problem}`);
+      }
     }
     if (ts.isIdentifier(node) && node.text === "createElement")
       flag(node, "element", "names createElement");

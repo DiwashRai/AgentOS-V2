@@ -206,13 +206,45 @@ function drawn(w, kit, node, u, knobs) {
   }
 }
 
-/** The name a lazy `import()` takes from its module: `(await import("…")).Twins` takes Twins;
- *  anything else, all of them. */
-function lazyName(ts, call) {
+/** The names a `.then(…)` callback takes from the module it is handed: `(m) => m.A` (and each
+ *  `m.X` in its body), `({ A }) => …`; none it can name, all of them. */
+function thenNames(ts, callback) {
+  const param = callback && ts.isFunctionLike(callback) ? callback.parameters[0] : undefined;
+  if (!param) return ["*"];
+  if (ts.isObjectBindingPattern(param.name)) {
+    const names = param.name.elements.map((e) => (e.propertyName ?? e.name).getText());
+    return names.length && !param.name.elements.some((e) => e.dotDotDotToken) ? names : ["*"];
+  }
+  const m = param.name.getText();
+  const names = new Set();
+  // `m.X` takes X; `m` any other way (handed on whole) takes all of them
+  const visit = (n) => {
+    if (
+      ts.isPropertyAccessExpression(n) &&
+      ts.isIdentifier(n.expression) &&
+      n.expression.text === m
+    )
+      names.add(n.name.text);
+    else if (ts.isIdentifier(n) && n.text === m && !ts.isParameter(n.parent)) names.add("*");
+    else ts.forEachChild(n, visit);
+  };
+  visit(callback.body);
+  return names.size && !names.has("*") ? [...names] : ["*"];
+}
+
+/** The names a lazy `import()` takes from its module: `(await import("…")).Twins` takes Twins,
+ *  `import("…").then((m) => m.A)` A; anything else (`lazy(() => import("…"))`, which takes its
+ *  default), all of them. */
+function lazyNames(ts, call) {
   let e = call;
   let p = call.parent;
   while (ts.isAwaitExpression(p) || ts.isParenthesizedExpression(p)) [e, p] = [p, p.parent];
-  return ts.isPropertyAccessExpression(p) && p.expression === e ? p.name.text : "*";
+  if (!ts.isPropertyAccessExpression(p) || p.expression !== e) return ["*"];
+  if (p.name.text !== "then") return [p.name.text];
+  const call2 = p.parent;
+  return ts.isCallExpression(call2) && call2.expression === p
+    ? thenNames(ts, call2.arguments[0])
+    : ["*"];
 }
 
 /** A module's units: what each references (`:name` here, `file#name` an import), the kit it
@@ -243,7 +275,7 @@ function unitsOf(w, kit, rel) {
       if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
         const arg = node.arguments[0];
         const to = arg && ts.isStringLiteralLike(arg) ? resolveSpec(w, arg.text, path).to : null;
-        if (to) u.refs.add(`${to}#${lazyName(ts, node)}`);
+        if (to) for (const n of lazyNames(ts, node)) u.refs.add(`${to}#${n}`);
       }
       if (
         (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
@@ -254,7 +286,7 @@ function unitsOf(w, kit, rel) {
     };
     visit(body);
   }
-  return { units, exports: t.exports, knobs: knobs ?? [] };
+  return { units, exports: t.exports, stars: t.stars, knobs: knobs ?? [] };
 }
 
 /** Where a module counts for: its screen (a features/ folder; the app is "app"), or null for a

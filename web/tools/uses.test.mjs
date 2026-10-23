@@ -12,6 +12,7 @@ import { readWeb } from "./uses.mjs";
 const FILES = {
   "main.tsx": `import { App } from "./app/App";\nexport const root = App;\n`,
   "app/App.tsx": [
+    `import { lazy } from "react";`,
     `import { A } from "../features/a/A";`,
     `import { B } from "../features/b/B";`,
     `import { Who } from "../features/c/C";`,
@@ -21,6 +22,10 @@ const FILES = {
     `import { F } from "../features/f/F";`,
     `export const App = () => [A, B, Who, D, E, F, GView];`,
     `export const lazyH = async () => (await import("../features/h/H")).H;`,
+    `export const LazyI = lazy(() => import("../features/i/I"));`,
+    `import { JView } from "../features/j";`,
+    `export const J = JView;`,
+    `export const lazyK = () => import("../features/k/K").then((m) => m.K);`,
     ``,
   ].join("\n"),
   "kit/index.ts": [
@@ -113,6 +118,25 @@ const FILES = {
     `export const H = () => <Who name="Cy" />;`,
     ``,
   ].join("\n"),
+  // a screen's default export loaded by lazy(); a star barrel; a .then() taking one export
+  "features/i/I.tsx": [
+    `import { Who } from "../../patterns/who";`,
+    `export default function I() { return <Who name="Dee" />; }`,
+    ``,
+  ].join("\n"),
+  "features/j/index.ts": `export * from "./JView";\n`,
+  "features/j/JView.tsx": [
+    `import { Who } from "../../patterns/who";`,
+    `export const JView = () => <Who name="Eve" />;`,
+    ``,
+  ].join("\n"),
+  "features/k/K.tsx": [
+    `import { Who } from "../../patterns/who";`,
+    `import { Steps } from "../../patterns/plan";`,
+    `export const K = () => <Who name="Fay" />;`,
+    `export const Spare = () => <Steps where="roomy" />;`,
+    ``,
+  ].join("\n"),
   "features/d/D.tsx": [
     `import { Who } from "../../patterns/who";`,
     `export const D = () => <Who name="Ada" />;`,
@@ -133,9 +157,11 @@ const pattern = (file, name) => web.patterns.find((p) => p.file === file && p.na
 
 describe("a screen's credit, by the names it uses", () => {
   it("credits what a shared module's used name reaches, not all it imports", () => {
-    expect(pattern("patterns/who.tsx", "Who").screens).toEqual(["a", "d", "g", "h"]);
+    const all = ["a", "d", "g", "h", "i", "j", "k"];
+    expect(pattern("patterns/who.tsx", "Who").screens).toEqual(all);
     expect(pattern("patterns/plan.tsx", "Plan").screens).toEqual([]);
-    expect([...web.used.get("Avatar")].sort()).toEqual(["a", "d", "g", "h"]);
+    expect(pattern("patterns/plan.tsx", "Steps").screens).toEqual([]); // K's Spare isn't taken
+    expect([...web.used.get("Avatar")].sort()).toEqual(all);
     expect(web.used.get("Checklist")).toBeUndefined();
   });
 
