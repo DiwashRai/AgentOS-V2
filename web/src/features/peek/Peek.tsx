@@ -8,18 +8,13 @@ import { useSearchParams } from "react-router";
 
 import { loadOf, useMessages, usePlan, useTicket } from "../../api/queries";
 import type { Person, Ticket } from "../../api/types";
-import { stageModel } from "../../domain/board";
-import { fromPerson, paragraphs } from "../../domain/format";
-import { parsePlan, type PlanItem } from "../../domain/plan";
-import { Button, Composer, Dialog, Icon, Section, Stack, Stepper, Text, Thread } from "../../kit";
+import { parsePlan } from "../../domain/plan";
+import { Button, Composer, Dialog, Icon, Section, Stack, Text, Thread } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
-import { Who } from "../../patterns/who";
+import { PlanSection, TalkSection, TicketHead } from "../../patterns/ticketHead";
+import { CancelButton } from "../shared/Actions";
 import { threadMessage, useBoard } from "../shared/board";
 import { TicketMenu } from "../shared/TicketMenu";
-import { Now } from "../ticket/now";
-import { PlanSection } from "../ticket/plan";
-import { Properties } from "../ticket/properties";
-import { TalkSection } from "../ticket/talk";
 
 interface BodyProps {
   t: Ticket;
@@ -48,28 +43,6 @@ function Bar({ ticketKey, onClose }: { ticketKey: string; onClose: () => void })
   );
 }
 
-/** The ticket's head, as the ticket page's: title, its lead, properties, the stepper. */
-function Head({ t, me, now, plan }: BodyProps & { plan: readonly PlanItem[] }) {
-  return (
-    <Stack gap={8}>
-      <Stack gap={4}>
-        <Text variant="display" as="h2">
-          {t.title}
-        </Text>
-        <Text variant="body" as="p">
-          {paragraphs(t.description).lead}
-        </Text>
-      </Stack>
-      <Properties
-        t={t}
-        now={now}
-        owner={{ value: <Who who={fromPerson(t.owner)} place="fact" /> }}
-      />
-      <Stepper model={stageModel(t, me)} now={<Now t={t} me={me} now={now} plan={plan} />} />
-    </Stack>
-  );
-}
-
 function Talk({ t, me }: { t: Ticket; me: Person | null }) {
   const messages = useMessages(t.key).data?.items ?? [];
   const people = [...new Map(messages.map((m) => [m.author.id, m.author])).values()];
@@ -85,10 +58,10 @@ function Body(props: BodyProps) {
   return (
     <>
       <Section label={props.t.title}>
-        <Head {...props} plan={plan} />
+        <TicketHead {...props} plan={plan} place="peek" stop={<CancelButton t={props.t} />} />
       </Section>
       <Talk t={props.t} me={props.me} />
-      <PlanSection plan={plan} look="peek" />
+      <PlanSection plan={plan} place="peek" />
     </>
   );
 }

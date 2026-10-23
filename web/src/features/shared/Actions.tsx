@@ -3,7 +3,7 @@
 // ticket's header. The web applies what the payload leaves to the viewer: the role an action needs.
 // W0 is static: they do nothing yet.
 import { useSession } from "../../api/queries";
-import type { Action, ActionId, Role } from "../../api/types";
+import type { Action, ActionId, Role, Ticket } from "../../api/types";
 import { Button } from "../../kit";
 
 const WORD: Record<ActionId, string> = {
@@ -83,4 +83,11 @@ export function ActionButton({ action, place }: ActionButtonProps) {
       {WORD[action.id]}
     </Button>
   );
+}
+
+/** The run's Cancel, on the run's own line (the ticket page's and the peek's), while the ticket
+ *  offers it. */
+export function CancelButton({ t }: { t: Ticket }) {
+  const cancel = t.actions.find((a) => a.id === "cancel");
+  return cancel ? <ActionButton action={cancel} /> : null;
 }

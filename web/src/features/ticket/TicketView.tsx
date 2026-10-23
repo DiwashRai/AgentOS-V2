@@ -16,34 +16,19 @@ import {
   useTicket,
 } from "../../api/queries";
 import type { Person, Ticket } from "../../api/types";
-import { stageModel } from "../../domain/board";
 import { firstName, paragraphs } from "../../domain/format";
 import { parsePlan, type PlanItem } from "../../domain/plan";
-import {
-  Chip,
-  Composer,
-  Page,
-  Section,
-  Select,
-  Stack,
-  Stepper,
-  Tabs,
-  Text,
-  Thread,
-} from "../../kit";
+import { Chip, Composer, Page, Section, Select, Stack, Tabs, Text, Thread } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
-import { ActionButton, headerActions } from "../shared/Actions";
+import { PlanSection, TalkSection, TicketHead } from "../../patterns/ticketHead";
+import { ActionButton, CancelButton, headerActions } from "../shared/Actions";
 import { threadMessage, useBoard } from "../shared/board";
 import { TicketMenu } from "../shared/TicketMenu";
 import { useSearch } from "../shared/useSearch";
 import { ContextTab } from "./ContextTab";
-import { Now } from "./now";
-import { PlanSection } from "./plan";
 import { TicketOverlays } from "./overlays";
-import { Properties } from "./properties";
 import { RunsTab } from "./RunsTab";
 import { type TabId, useTicketUrl } from "./tabs";
-import { TalkSection } from "./talk";
 import { WorkflowTab } from "./WorkflowTab";
 
 /** The owner, as a picker in its chip. */
@@ -63,32 +48,6 @@ function Owner({ t }: { t: Ticket }) {
   );
 }
 
-interface HeaderProps {
-  t: Ticket;
-  me: Person | null;
-  now: number;
-  plan: readonly PlanItem[];
-}
-
-/** The head, as Linear's project page: the title and lead, the labelled property rows under them,
- *  then the run card (the stepper with what happens now at its foot). */
-function Header({ t, me, now, plan }: HeaderProps) {
-  const { lead } = paragraphs(t.description);
-  return (
-    <Stack gap={8}>
-      <Stack gap={4}>
-        <Text variant="display" as="h1">
-          {t.title}
-        </Text>
-        <Text variant="body" as="p">
-          {lead}
-        </Text>
-      </Stack>
-      <Properties t={t} now={now} owner={{ picker: <Owner t={t} /> }} />
-      <Stepper model={stageModel(t, me)} now={<Now t={t} me={me} now={now} plan={plan} />} />
-    </Stack>
-  );
-}
 function Overview({
   t,
   plan,
@@ -106,7 +65,7 @@ function Overview({
           {p}
         </Text>
       ))}
-      <PlanSection plan={plan} look="page" />
+      <PlanSection plan={plan} place="page" />
       <Section title="The agent reads">
         <Stack dir="row" gap={3} wrap>
           {items.map((name) => (
@@ -154,7 +113,15 @@ function Body({ t, me, now }: { t: Ticket; me: Person | null; now: number }) {
   };
   return (
     <Stack gap={8}>
-      <Header t={t} me={me} now={now} plan={plan} />
+      <TicketHead
+        t={t}
+        me={me}
+        now={now}
+        plan={plan}
+        place="page"
+        owner={<Owner t={t} />}
+        stop={<CancelButton t={t} />}
+      />
       <Tabs
         label="Ticket sections"
         value={tab}
