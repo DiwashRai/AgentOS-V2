@@ -1,10 +1,11 @@
 // What each screen uses, by name: a module's top-level names are its units, and a screen reaches a
-// unit of a shared module or a pattern only by naming it in code that runs (a type-only import, a
-// `typeof` in a type, a re-export give no reach and no credit), starting from its units the app
-// reaches from main.tsx (a screen's export nothing imports runs nowhere). A screen is credited
-// with each kit component and variant the units it reaches draw, and with each pattern and shared
-// export they are. Read with the compiler over the web (./reach.mjs opens it); kit.mjs checks the counts. In a
-// pattern, a top-level function's prop (React's memo and forwardRef aside) handed unchanged to a
+// unit of a shared module or a pattern only by naming it in code that runs (a type-only import or
+// a `typeof` in a type gives no reach and no credit; a re-export or a lazy `import()` hands on the
+// names a reference takes through it, so an unused one gives nothing), starting from its units
+// the app reaches from main.tsx (a screen's export nothing imports runs nowhere). A screen is
+// credited with each kit component and variant the units it reaches draw, and with each pattern
+// and shared export they are or take. Read with the compiler over the web (./reach.mjs opens it);
+// kit.mjs checks the counts. In a pattern, a top-level function's prop (React's memo and forwardRef aside) handed unchanged to a
 // kit variant (`look={place}`, or the props or their rest spread onto a kit tag) is noted: it is a
 // styling knob, whatever its name.
 import { join } from "node:path";
@@ -22,11 +23,17 @@ function bound(ts, name) {
 }
 
 /** A module's top level: each import's runtime bindings (`file#name`, `file#*`), each declaration
- *  with its unit and the code it runs, and its exports (a name to its unit; null for a
- *  re-export). Types declare no unit. */
+ *  with its unit and the code it runs, and its exports: a name to its unit, or, re-exported, to
+ *  the module and name it comes from (`stars`, the modules `export *` hands on). Types declare no
+ *  unit. */
 function topOf(w, sf, path) {
   const { ts } = w;
-  const t = { bindings: new Map(), tops: new Map(), bodies: [], exports: new Map() };
+  const t = { bindings: new Map(), tops: new Map(), bodies: [], exports: new Map(), stars: [] };
+  const byName = new Map(); // a binding's local name to what it imports
+  const from = (ref) => {
+    const at = ref.lastIndexOf("#");
+    return { to: ref.slice(0, at), name: ref.slice(at + 1) };
+  };
   const unit = (decl, name, body) => {
     t.tops.set(decl, name);
     if (body) t.bodies.push([name, body]);
@@ -37,12 +44,16 @@ function topOf(w, sf, path) {
       const { to } = resolveSpec(w, st.moduleSpecifier.text, path);
       const c = st.importClause;
       if (!to || !c || c.isTypeOnly) continue;
-      if (c.name) t.bindings.set(c, `${to}#default`);
+      const bind = (node, local, ref) => {
+        t.bindings.set(node, ref);
+        byName.set(local, ref);
+      };
+      if (c.name) bind(c, c.name.text, `${to}#default`);
       const named = c.namedBindings;
-      if (named && ts.isNamespaceImport(named)) t.bindings.set(named, `${to}#*`);
+      if (named && ts.isNamespaceImport(named)) bind(named, named.name.text, `${to}#*`);
       else
         for (const e of named?.elements ?? [])
-          if (!e.isTypeOnly) t.bindings.set(e, `${to}#${(e.propertyName ?? e.name).text}`);
+          if (!e.isTypeOnly) bind(e, e.name.text, `${to}#${(e.propertyName ?? e.name).text}`);
     } else if (
       ts.isFunctionDeclaration(st) ||
       ts.isClassDeclaration(st) ||
@@ -62,11 +73,19 @@ function topOf(w, sf, path) {
       unit(st, "default", st.expression);
       t.exports.set("default", "default");
     } else if (ts.isExportDeclaration(st)) {
+      if (st.isTypeOnly) continue;
+      const to = st.moduleSpecifier ? resolveSpec(w, st.moduleSpecifier.text, path).to : null;
       const clause = st.exportClause;
-      if (st.isTypeOnly || !clause || !ts.isNamedExports(clause)) continue;
-      for (const e of clause.elements)
-        if (!e.isTypeOnly)
-          t.exports.set(e.name.text, st.moduleSpecifier ? null : (e.propertyName ?? e.name).text);
+      if (st.moduleSpecifier && !to) continue;
+      if (!clause) t.stars.push(to);
+      else if (ts.isNamespaceExport(clause)) t.exports.set(clause.name.text, { to, name: "*" });
+      else
+        for (const e of clause.elements) {
+          if (e.isTypeOnly) continue;
+          const name = (e.propertyName ?? e.name).text;
+          const local = to ? { to, name } : byName.has(name) ? from(byName.get(name)) : name;
+          t.exports.set(e.name.text, local);
+        }
     } else if (
       !ts.isInterfaceDeclaration(st) &&
       !ts.isTypeAliasDeclaration(st) &&
@@ -187,6 +206,15 @@ function drawn(w, kit, node, u, knobs) {
   }
 }
 
+/** The name a lazy `import()` takes from its module: `(await import("…")).Twins` takes Twins;
+ *  anything else, all of them. */
+function lazyName(ts, call) {
+  let e = call;
+  let p = call.parent;
+  while (ts.isAwaitExpression(p) || ts.isParenthesizedExpression(p)) [e, p] = [p, p.parent];
+  return ts.isPropertyAccessExpression(p) && p.expression === e ? p.name.text : "*";
+}
+
 /** A module's units: what each references (`:name` here, `file#name` an import), the kit it
  *  draws; the module's exports; in a pattern, its knobs. */
 function unitsOf(w, kit, rel) {
@@ -212,6 +240,11 @@ function unitsOf(w, kit, rel) {
     const visit = (node) => {
       if (ts.isTypeNode(node) && !ts.isExpressionWithTypeArguments(node)) return; // types run nothing
       if (ts.isIdentifier(node)) for (const r of refs(node)) u.refs.add(r);
+      if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+        const arg = node.arguments[0];
+        const to = arg && ts.isStringLiteralLike(arg) ? resolveSpec(w, arg.text, path).to : null;
+        if (to) u.refs.add(`${to}#${lazyName(ts, node)}`);
+      }
       if (
         (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
         node.tagName.getText() in kit
@@ -235,8 +268,9 @@ const screenOf = (rel) => {
 };
 
 /** The units reached from `starts` ([path, unit] pairs), following each reference into the modules
- *  `may` lets it enter; `each` sees every one once. */
-function reach(read, starts, may, each) {
+ *  `may` lets it enter, and a re-export to what it hands on; `each`, if given, sees every unit
+ *  once, and `named` every export (`path`, `name`) a reference takes. */
+function reach(read, starts, may, each, named) {
   const seen = new Set();
   const go = (rel, unit) => {
     const m = read.get(rel);
@@ -250,17 +284,29 @@ function reach(read, starts, may, each) {
         continue;
       }
       const at = r.lastIndexOf("#");
-      const [to, name] = [r.slice(0, at), r.slice(at + 1)];
-      const target = read.get(to);
-      if (!target || !may(to)) continue;
-      const locals = name === "*" ? [...target.exports.values()] : [target.exports.get(name)];
-      for (const l of locals) if (l) go(to, l);
+      enter(r.slice(0, at), r.slice(at + 1));
+    }
+  };
+  // an export by name ("*" for all of them): its unit, or, re-exported, where it comes from
+  const enter = (to, name) => {
+    const target = read.get(to);
+    if (!target || !may(to) || seen.has(`export ${to}#${name}`)) return;
+    seen.add(`export ${to}#${name}`);
+    if (name === "*") for (const s of target.stars) enter(s, "*");
+    for (const n of name === "*" ? [...target.exports.keys()] : [name]) {
+      const e = target.exports.get(n);
+      if (e === undefined) {
+        for (const s of target.stars) enter(s, n);
+        continue;
+      }
+      named?.(to, n);
+      if (typeof e === "string") go(to, e);
+      else enter(e.to, e.name);
     }
   };
   for (const [rel, unit] of starts) go(rel, unit);
-  return seen;
+  return [...seen].filter((k) => !k.startsWith("export "));
 }
-
 /**
  * Each screen's uses, through the units it reaches: `kit` maps each component and variant to its
  * screens, `exports` each shared or pattern export ("patterns/who.tsx#Who") to the screens that
@@ -275,7 +321,7 @@ function screenUses(read) {
   const roots = [...read]
     .filter(([rel]) => rel === "main.tsx" || screenOf(rel) === "app")
     .flatMap(([rel, m]) => [...m.units.keys()].map((unit) => [rel, unit]));
-  const live = [...reach(read, roots, () => true)].map((key) => {
+  const live = reach(read, roots, () => true).map((key) => {
     const at = key.lastIndexOf("#");
     return [key.slice(0, at), key.slice(at + 1)];
   });
@@ -290,6 +336,9 @@ function screenUses(read) {
         if (SHARED(rel))
           for (const [name, local] of m.exports)
             if (local === unit) add(out.exports, `${rel}#${name}`, screen);
+      },
+      (rel, name) => {
+        if (SHARED(rel)) add(out.exports, `${rel}#${name}`, screen);
       },
     );
   return out;

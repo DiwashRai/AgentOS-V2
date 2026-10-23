@@ -16,9 +16,11 @@ const FILES = {
     `import { B } from "../features/b/B";`,
     `import { Who } from "../features/c/C";`,
     `import { D } from "../features/d/D";`,
+    `import { GView } from "../features/g";`,
     `import { E } from "../features/e/E";`,
     `import { F } from "../features/f/F";`,
-    `export const App = () => [A, B, Who, D, E, F];`,
+    `export const App = () => [A, B, Who, D, E, F, GView];`,
+    `export const lazyH = async () => (await import("../features/h/H")).H;`,
     ``,
   ].join("\n"),
   "kit/index.ts": [
@@ -94,6 +96,23 @@ const FILES = {
     ``,
   ].join("\n"),
   "features/c/C.tsx": `export { Who, Plan } from "../../patterns/who";\n`,
+  // a screen behind its own barrel, through a shared one; a screen the app loads lazily
+  "features/g/index.ts": `export { GView } from "./GView";\n`,
+  "features/g/GView.tsx": [
+    `import { usesWho } from "../shared/again";`,
+    `export const GView = () => usesWho();`,
+    ``,
+  ].join("\n"),
+  "features/shared/again.ts": [
+    `export { usesWho } from "./parts";`,
+    `export { usesPlan as unusedPlan } from "./parts";`,
+    ``,
+  ].join("\n"),
+  "features/h/H.tsx": [
+    `import { Who } from "../../patterns/who";`,
+    `export const H = () => <Who name="Cy" />;`,
+    ``,
+  ].join("\n"),
   "features/d/D.tsx": [
     `import { Who } from "../../patterns/who";`,
     `export const D = () => <Who name="Ada" />;`,
@@ -114,9 +133,9 @@ const pattern = (file, name) => web.patterns.find((p) => p.file === file && p.na
 
 describe("a screen's credit, by the names it uses", () => {
   it("credits what a shared module's used name reaches, not all it imports", () => {
-    expect(pattern("patterns/who.tsx", "Who").screens).toEqual(["a", "d"]);
+    expect(pattern("patterns/who.tsx", "Who").screens).toEqual(["a", "d", "g", "h"]);
     expect(pattern("patterns/plan.tsx", "Plan").screens).toEqual([]);
-    expect([...web.used.get("Avatar")].sort()).toEqual(["a", "d"]);
+    expect([...web.used.get("Avatar")].sort()).toEqual(["a", "d", "g", "h"]);
     expect(web.used.get("Checklist")).toBeUndefined();
   });
 
@@ -130,11 +149,13 @@ describe("a screen's credit, by the names it uses", () => {
     expect(pattern("patterns/who.tsx", "Who").screens).not.toContain("c");
   });
 
-  it("holds features/shared to two screens", () => {
-    const problems = sharedProblems(web.shared);
-    expect(problems).toHaveLength(2);
-    expect(problems.join("\n")).toContain("usesWho: used by 1 screen");
-    expect(problems.join("\n")).toContain("usesPlan: used by 0 screens");
+  it("follows a re-export and a lazy import that are used, and credits an unused one nothing", () => {
+    const problems = sharedProblems(web.shared).map((p) => p.split(";")[0]);
+    expect(problems.sort()).toEqual([
+      "features/shared/again.ts unusedPlan: used by 0 screens",
+      "features/shared/again.ts usesWho: used by 1 screen",
+      "features/shared/parts.ts usesPlan: used by 0 screens",
+    ]);
   });
 });
 
