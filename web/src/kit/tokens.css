@@ -31,7 +31,7 @@
   --recess: #fcfcfd;
   --surface: #ffffff;
   --raised: #ffffff;
-  --side: color-mix(in srgb, var(--wash) 3.5%, var(--page));
+  --side: #eceef5; /* Linear's Ash ground (#edeef3), a touch cooler */
   /* ink: a cool near-black and slates */
   --ink-1: #14151b;
   --ink-2: #3d404d;
