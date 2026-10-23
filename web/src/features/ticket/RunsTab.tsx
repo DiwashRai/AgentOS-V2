@@ -1,8 +1,8 @@
 // The ticket's Runs tab (?tab=runs): its runs, newest first, in the app's list style. Each line is
 // one run: its key, its state glyph and where it is (the stage and round it is on, or where it
 // stopped, in the past tense once it has ended) with the stage it started from receding after it,
-// its time against its budget, how long ago it started and who started it (a dashed ring for
-// nobody, as every list's face). The newest is open: who started it when, its route and the time
+// its time against its budget, how long ago it started and who started it (the agents glyph for
+// AgentOS, when no person did). The newest is open: who started it when, its route and the time
 // it has left, then its stages in the order they ran, a loop's once per round, and the gate it
 // stopped at as the stepper's diamond. A stage's glyph says its state; a check's verdict sits at
 // the right end, or a word where it has none yet.
@@ -10,7 +10,7 @@ import { useState } from "react";
 
 import { loadOf, useRuns, useTicketWorkflow } from "../../api/queries";
 import type { Run, RunState, StageRun, Ticket, TicketWorkflow } from "../../api/types";
-import { clock, firstName, fromPerson } from "../../domain/format";
+import { clock, fromStarter, nameOf } from "../../domain/format";
 import {
   Badge,
   Chip,
@@ -109,7 +109,7 @@ function signedOff(r: Run, runs: readonly Run[], w: TicketWorkflow | undefined) 
   if (!gate) return null;
   const on = runs.find((x) => x.id > r.id && x.from_stage === gate.next);
   if (!on) return null;
-  return { run: on.id, who: on.by ? firstName(on.by.name) : "Someone", at: clock(on.created_at) };
+  return { run: on.id, who: nameOf(fromStarter(on.by), false), at: clock(on.created_at) };
 }
 
 /** Where the run is: the stage it's on and its round, or where it stopped, said in the past; and
@@ -158,7 +158,7 @@ function RunLine({ r, runs, w, now }: RunProps) {
       {time}
     </Text>,
     <AgeCell key="age" since={r.started_at ?? r.created_at} now={now} what="started" />,
-    <Who key="by" who={fromPerson(r.by)} place="face" />,
+    <Who key="by" who={fromStarter(r.by)} place="face" />,
   ];
 }
 
@@ -242,7 +242,7 @@ function RunDetail({ r, runs, w, now }: RunProps) {
   return (
     <Stack gap={6}>
       <Stack dir="row" gap={3} align="center">
-        <Who who={fromPerson(r.by)} place="starter" />
+        <Who who={fromStarter(r.by)} place="starter" />
         <Text tone="3">
           {`${r.started_at ? `started it at ${clock(r.started_at)}` : "queued it"} · ${ROUTE[r.route]} · ${end}`}
         </Text>

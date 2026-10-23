@@ -21,6 +21,7 @@ export type AvatarProps = {
        *  so the name isn't said twice. */
       beside?: boolean;
       dashed?: never;
+      label?: never;
       people?: never;
     }
   | {
@@ -30,10 +31,14 @@ export type AvatarProps = {
       seed?: never;
       beside?: never;
       dashed?: never;
+      label?: never;
     }
   | {
       /** An empty slot: drawn dashed (Unassigned), else an invisible spacer that keeps a column. */
       dashed?: boolean;
+      /** The empty slot's name when nothing beside it says one (Unassigned in a face's own
+       *  column): said, and shown on hover, as a face's. */
+      label?: string;
       name?: never;
       seed?: never;
       beside?: never;
@@ -66,7 +71,15 @@ function Face({ name, seed, size, beside }: FaceProps) {
 /** A person's face (a neutral disc small, one slate in rows and pickers, their own hue in the
  *  conversation and the account sheet), a row of faces (named together by the row), or an empty
  *  slot. */
-export function Avatar({ name, seed, size = "md", beside = false, dashed, people }: AvatarProps) {
+export function Avatar({
+  name,
+  seed,
+  size = "md",
+  beside = false,
+  dashed,
+  label,
+  people,
+}: AvatarProps) {
   if (people) {
     const names = people.map((p) => p.name).join(", ");
     return (
@@ -79,7 +92,14 @@ export function Avatar({ name, seed, size = "md", beside = false, dashed, people
       </Tip>
     );
   }
-  if (name === undefined)
-    return <span className={cx(s.av, s[size], s.slot, dashed && s.dashed)} aria-hidden="true" />;
+  if (name === undefined) {
+    const slot = cx(s.av, s[size], s.slot, dashed && s.dashed);
+    if (label === undefined) return <span className={slot} aria-hidden="true" />;
+    return (
+      <Tip text={label} said>
+        <span className={slot} role="img" aria-label={label} />
+      </Tip>
+    );
+  }
   return <Face name={name} seed={seed ?? name} size={size} beside={beside} />;
 }

@@ -26,6 +26,22 @@ export function ago(from: string, now: number): string {
   return a === "now" ? "just now" : `${a} ago`;
 }
 
+/** How long ago in full words, as an age's tooltip says it (the cell has `age`'s units): "3 hours
+ *  10 minutes ago", "2 days ago", "just now". */
+export function agoInWords(from: string, now: number): string {
+  const total = Math.round(minutesSince(from, now));
+  if (total < 1) return "just now";
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  const parts =
+    total < 60
+      ? [plural(total, "minute")]
+      : total < 1440
+        ? [plural(h, "hour"), ...(m ? [plural(m, "minute")] : [])]
+        : [plural(Math.floor(total / 1440), "day")];
+  return `${parts.join(" ")} ago`;
+}
+
 /** The time of day, "10:48". */
 export function clock(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
@@ -75,15 +91,19 @@ export function firstName(name: string): string {
 }
 
 /** Who someone is, as a face and a name say it (patterns/who.tsx): a person (the seed keeps their
- *  face's hue), a ticket's run, or nobody (Unassigned). */
+ *  face's hue), a ticket's run, AgentOS itself (a run no person started), or nobody (Unassigned). */
 export type Someone =
   | { kind: "person"; name: string; seed: string }
   | { kind: "run"; id: number; ticket: string }
+  | { kind: "agentos" }
   | { kind: "nobody" };
 
-/** An owner, a run's starter: a person or nobody. */
+/** An owner: a person or nobody. */
 export const fromPerson = (p: Person | null): Someone =>
   p ? { kind: "person", name: p.name, seed: String(p.id) } : { kind: "nobody" };
+
+/** Who started a run: a person, or AgentOS when none did (`Run.by` is null). */
+export const fromStarter = (p: Person | null): Someone => (p ? fromPerson(p) : { kind: "agentos" });
 
 /** Who wrote a version: a person or a ticket's run. */
 export const fromAuthor = (a: Author): Someone =>
@@ -97,6 +117,7 @@ export const fromAssignee = (name: string | null): Someone =>
  *  "Run #42 on NW-17"); nobody is Unassigned. */
 export function nameOf(s: Someone, full: boolean): string {
   if (s.kind === "nobody") return "Unassigned";
+  if (s.kind === "agentos") return "AgentOS";
   if (s.kind === "run")
     return full ? `Run #${String(s.id)} on ${s.ticket}` : `Run #${String(s.id)}`;
   return full ? s.name : firstName(s.name);
@@ -106,10 +127,9 @@ export function nameOf(s: Someone, full: boolean): string {
 export const authorName = (a: Author): string => nameOf(fromAuthor(a), true);
 
 /** Who changed a workflow last and when, as the editor's bar and the ticket's tab say it: "Ada
- *  Park · 2d ago", or "run #42 on NW-17 · 35m ago". */
+ *  Park · 2d ago", or "Run #42 on NW-17 · 35m ago". */
 export function authorText(by: Author, at: string, now: number): string {
-  const who = by.kind === "person" ? by.person.name : `run #${String(by.run_id)} on ${by.ticket}`;
-  return `${who} · ${ago(at, now)}`;
+  return `${authorName(by)} · ${ago(at, now)}`;
 }
 
 /** A description's paragraphs: its lead (the first), and the rest. */

@@ -69,6 +69,9 @@
         "dashed": {
           "why": "An empty slot drawn dashed: the owner picker's Unassigned choice, an unowned ticket on a list's line or an Intake row (without it, the invisible slot that keeps a row's missing owner in its column)."
         },
+        "label": {
+          "why": "The empty slot's name where nothing beside it says one: an unowned ticket's face at a list line's end says Unassigned to a screen reader and on hover, as a named face does."
+        },
         "people": {
           "why": "Who works on a repo, who is in a conversation: one row, named together."
         },

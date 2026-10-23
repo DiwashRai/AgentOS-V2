@@ -8,8 +8,8 @@
 import { useNavigate } from "react-router";
 
 import { loadOf, useItem, useItems, useSetWritable } from "../../api/queries";
-import type { Author, ItemSummary, Ticket } from "../../api/types";
-import { ago, firstName, plural } from "../../domain/format";
+import type { ItemSummary, Ticket } from "../../api/types";
+import { ago, fromAuthor, nameOf, plural } from "../../domain/format";
 import { Button, type Column, Icon, Row, Stack, Table, Text, Toggle } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
 import { useBoard } from "../shared/board";
@@ -24,14 +24,11 @@ const COLUMNS: readonly Column[] = [
   { label: "", width: "xs", end: true, keep: true },
 ];
 
-const who = (a: Author) =>
-  a.kind === "person" ? firstName(a.person.name) : `run #${String(a.run_id)}`;
-
 /** Under the name: what it is, its version and the library version it was copied from, and who
  *  changed it last and when. */
 function about(i: ItemSummary, now: number): string {
   const from = i.origin.kind === "copy" ? `, from library v${String(i.origin.version)}` : "";
-  return `${KIND[i.kind].word} · v${String(i.version)}${from} · ${who(i.updated_by)}, ${ago(i.updated_at, now)}`;
+  return `${KIND[i.kind].word} · v${String(i.version)}${from} · ${nameOf(fromAuthor(i.updated_by), false)}, ${ago(i.updated_at, now)}`;
 }
 
 /** An item's drift, stacked in its column. */

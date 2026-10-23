@@ -50,7 +50,7 @@ import {
 // before by room and a hairline. An issue is one line on fixed columns, so its facts read down
 // the list: the Jira key (a link to it), the title firm, its priority's bars and
 // its Jira status in the app's glyphs with the status's words (the rest in its tooltip), who has it (a face and a first
-// name, Unassigned a dashed ring), the age ("1h 10m", as every list's; "Updated 1h 10m ago" in its
+// name, Unassigned a dashed ring), the age ("1h 10m", as every list's; "Updated 1 hour 10 minutes ago" in its
 // tooltip). Under the pointer or with focus, Take in takes the age's place. A query that didn't
 // answer says so on a panel of the blocked hue. When the queries were checked closes the list.
 const COLUMNS: readonly Column[] = [
