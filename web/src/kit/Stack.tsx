@@ -13,7 +13,7 @@ export interface StackProps {
   wrap?: boolean;
   /** Take the free space, and let the content shrink below its own width. */
   grow?: boolean;
-  /** Lay the children out in equal columns instead: 3, the agents' cards; 2, a form's settings
+  /** Lay the children out in equal columns instead: 3, a board's lanes; 2, a form's settings
    *  side by side, one under another where the column is too narrow for two. */
   cols?: 2 | 3;
 }

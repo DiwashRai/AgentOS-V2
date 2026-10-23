@@ -1,14 +1,11 @@
 // My queue (home): only what is mine. Click, Enter or Space on an item opens the peek (`?peek=`).
 import { useSearchParams } from "react-router";
 
-import type { Person, TicketRow } from "../../api/types";
-import { groupOf, stageModel, stepText } from "../../domain/board";
-import { age, elapsed, matches } from "../../domain/format";
+import type { Attention, Person, TicketRow } from "../../api/types";
+import { groupOf, stepText } from "../../domain/board";
+import { age, matches } from "../../domain/format";
 import {
-  Avatar,
-  Badge,
   Button,
-  Card,
   type Column,
   Head,
   Icon,
@@ -31,10 +28,9 @@ import { useSearch } from "../shared/useSearch";
 import { atWorkNote, CAP, shipped, type Zones, zones } from "./model";
 
 // Linear's list, as Compact's: the key and the title on the left, what it waits on receding after
-// the title; a row's buttons where Compact has its Now tag, hugging the plain properties at the
-// far end, so the title line takes every width they leave and every zone's ends line up. My
-// queue's rows have no Now tag: they are your move, your inbox or done, which the group, the
-// glyph and the stage already say.
+// the title; then where Compact has its Now tag, a gate's buttons or a run's agent and steps,
+// hugging the plain properties at the far end, so the title line takes every width they leave
+// and every zone's ends line up, runs and all: one ledger down the page.
 const ITEM: readonly Column[] = [
   { label: "Key", width: "sm" },
   { label: "Ticket", width: "fill", min: "2xl" },
@@ -66,7 +62,49 @@ function Buttons({ t, me }: { t: TicketRow; me: Person | null }) {
   );
 }
 
+type AtWork = Extract<Attention, { kind: "running" | "queued" }>;
+
+const atWork = (a: Attention): a is AtWork => a.kind === "running" || a.kind === "queued";
+
+/** A run's Now, where a gate's buttons stand on the rows above: who works it, the step under way
+ *  of all, and a still meter ending on the stage's edge, so the meters line up down the zone; a
+ *  queued run says only that it is queued, quiet. Its run's number in the tooltip. */
+function RunNow({ a, since, now }: { a: AtWork; since: string; now: number }) {
+  if (a.kind === "queued")
+    return (
+      <Stack dir="row" gap={5} align="center">
+        <Text
+          variant="meta"
+          tone="3"
+          title={`Run #${String(a.run_id)}, queued for ${age(since, now)}`}
+        >
+          Queued
+        </Text>
+        <Meter size="list" queued />
+      </Stack>
+    );
+  const p = a.progress;
+  const say = [`${a.agent} · run #${String(a.run_id)}`, p ? `step ${stepText(p)}` : null]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <Stack dir="row" gap={5} align="center">
+      <Text variant="meta" tone="3" truncate title={say}>
+        <Text variant="meta" weight={500} tone="2">
+          {a.agent}
+        </Text>
+        {p ? <Text variant="meta" tabular>{`\u2002${stepText(p)}`}</Text> : null}
+      </Text>
+      {p ? <Meter size="list" done={p.done} total={p.total} /> : null}
+    </Stack>
+  );
+}
+
+/** One line of the queue: the key, the glyph and title with what it waits on after it; then a
+ *  gate's buttons, or a run's agent and steps; then the plain end every zone shares. A queued
+ *  run's title recedes a step: nothing is at work on it yet. */
 function Item({ t, me, now, onOpen }: ItemProps) {
+  const a = t.attention;
   return (
     <Row
       action={{
@@ -77,124 +115,10 @@ function Item({ t, me, now, onOpen }: ItemProps) {
       }}
     >
       <KeyCell t={t} />
-      <TitleCell t={t} me={me} after={nowLine(t, me).after} />
-      <Buttons t={t} me={me} />
+      <TitleCell t={t} me={me} after={nowLine(t, me).after} recede={a.kind === "queued"} />
+      {atWork(a) ? <RunNow a={a} since={t.since} now={now} /> : <Buttons t={t} me={me} />}
       {lineEnd({ t, me, now })}
     </Row>
-  );
-}
-/** "Implement", or "Implement · round 2 of 3" in a later round (in words, so it never reads as the
- *  step count). */
-function stageText(t: TicketRow, me: Person | null): string {
-  const m = stageModel(t, me);
-  return m.round ? `${m.label} · round ${String(m.round.n)} of ${String(m.round.of)}` : m.label;
-}
-
-/** A tile's top line, quiet: the key, its run and how long it has run or waited; at the end who
- *  works it (the agent in ink, or that it waits in the queue, muted), then the face of whose
- *  ticket it is. No pill: the tile's one colour is its glyph and its meter. */
-function Top({
-  t,
-  now,
-  run,
-}: {
-  t: TicketRow;
-  now: number;
-  run: { id: number; agent: string | null };
-}) {
-  const how = run.agent ? "running" : "queued";
-  return (
-    <Stack dir="row" gap={4} align="center">
-      <Badge kind="key" size="sm">
-        {t.key}
-      </Badge>
-      <Stack grow>
-        <Text
-          variant="meta"
-          tone="3"
-          tabular
-          truncate
-          title={`Run #${String(run.id)}, ${how} for ${elapsed(t.since, now)}`}
-        >
-          {`run #${String(run.id)} · ${age(t.since, now)}`}
-        </Text>
-      </Stack>
-      <Text variant="meta" weight={500} tone={run.agent ? "1" : "3"}>
-        {run.agent ?? "Queued"}
-      </Text>
-      {t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} /> : <Avatar dashed />}
-    </Stack>
-  );
-}
-
-/** A tile's body: its state glyph (Linear's in-progress ring, a dashed one queued) hanging before
- *  the title, and under the title where it is (the stage and the repo, plain words). A queued
- *  tile's title is muted, so the state reads down the left edge. */
-function Body({ t, me }: { t: TicketRow; me: Person | null }) {
-  const running = t.attention.kind === "running";
-  const where = [stageText(t, me), t.repo ?? ""].filter(Boolean).join(" · ");
-  return (
-    <Stack dir="row" gap={4} align="baseline">
-      <Mark kind={running ? "run" : "queued"} glyph still name={false} />
-      <Stack gap={2}>
-        <Text variant="label" tone={running ? "1" : "2"} truncate={2} title={t.title}>
-          {t.title}
-        </Text>
-        <Text variant="meta" tone="3" truncate title={where}>
-          {where}
-        </Text>
-      </Stack>
-    </Stack>
-  );
-}
-
-/** A tile's foot: what it is doing (or that it waits for a runner) and a running one's step count;
- *  under them its steps, the tile's whole width. */
-function Progress({ t }: { t: TicketRow }) {
-  const a = t.attention;
-  const step = a.kind === "running" ? a.step : "Waiting for a runner";
-  const p = a.kind === "running" ? a.progress : null;
-  return (
-    <Stack gap={3}>
-      <Stack dir="row" gap={4} align="center">
-        <Stack grow>
-          <Text variant="meta" tone="2" truncate title={step}>
-            {step}
-          </Text>
-        </Stack>
-        {p ? (
-          <Text variant="meta" tone="3" tabular>
-            {stepText(p)}
-          </Text>
-        ) : null}
-      </Stack>
-      {p ? <Meter size="tile" done={p.done} total={p.total} /> : null}
-    </Stack>
-  );
-}
-
-/** An agent's tile, Linear's lines each in its own space: the key, its run and who works it; the
- *  state glyph, the title and where it is; then its progress at the foot. */
-function AgentCard({ t, me, now, onOpen }: ItemProps) {
-  const a = t.attention;
-  if (a.kind !== "running" && a.kind !== "queued") return null;
-  return (
-    <Card
-      look="agent"
-      label={`Peek at ${t.key}: ${t.title}`}
-      off={a.kind === "queued"}
-      onOpen={() => {
-        onOpen(t.key);
-      }}
-    >
-      {/* the top line and the body take the free height, so the progress sinks to the foot and
-          lines up across a row of tiles */}
-      <Stack grow gap={5}>
-        <Top t={t} now={now} run={{ id: a.run_id, agent: a.kind === "running" ? a.agent : null }} />
-        <Body t={t} me={me} />
-      </Stack>
-      <Progress t={t} />
-    </Card>
   );
 }
 
@@ -207,8 +131,8 @@ interface ZoneListProps {
 
 function ZoneList({ z, me, now, open }: ZoneListProps) {
   const n = shipped(z.done);
-  // each zone a section: no band and no card; one after another parts by room and a hairline, the
-  // cards on the column edge the heads hang on
+  // each zone a section of lines on one grid: no band and no card; one after another parts by room
+  // and a hairline
   return (
     <Stack>
       <Surface level="list" label="Your move">
@@ -237,26 +161,23 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
             nothing running, nothing queued
           </Notice>
         ) : (
-          <Stack gap={4}>
+          <Table columns={ITEM} head={false} scroll={false}>
             <Head
-              level="zone"
               icon={<Mark kind="run" glyph name={false} />}
               name="Agents at work"
               tone="live"
               count={z.agents.length}
               note={atWorkNote(z)}
             />
-            <Stack cols={3} gap={5}>
-              {z.agents.slice(0, CAP.agents).map((t) => (
-                <AgentCard key={t.key} t={t} me={me} now={now} onOpen={open} />
-              ))}
-            </Stack>
+            {z.agents.slice(0, CAP.agents).map((t) => (
+              <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
+            ))}
             {z.agents.length > CAP.agents ? (
               <Button variant="link" href="/compact">
                 {`+${String(z.agents.length - CAP.agents)} more running or queued`}
               </Button>
             ) : null}
-          </Stack>
+          </Table>
         )}
       </Surface>
       {z.ready.length > 0 ? (

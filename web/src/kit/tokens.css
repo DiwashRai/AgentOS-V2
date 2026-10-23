@@ -265,9 +265,8 @@
   --chip-rest: var(--fill-1); /* a property you can change, at rest (a picker's chip) */
   --pop-edge: var(--edge);
   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
-  /* surfaces on the sheet: an agent's tile and a board's card one tone, a step more under the
-     pointer; the run card and the peek's ground */
-  --tile: var(--tone-2);
+  /* surfaces on the sheet: a board's card one tone, a step more under the pointer; the run card
+     and the peek's ground */
   --tile-hover: var(--tone-3);
   --teams-card: var(--tone-2);
   --tk-card: var(--tone-2);
@@ -291,8 +290,8 @@
   --id-rose-row: color-mix(in srgb, var(--id-rose) var(--face-id), var(--page));
   --id-teal-row: color-mix(in srgb, var(--id-teal) var(--face-id), var(--page));
   --id-slate-row: color-mix(in srgb, var(--id-slate) var(--face-id), var(--page));
-  /* agents: a card's meter, the step under way a soft live */
-  --tile-meter-now: color-mix(in srgb, var(--live) 38%, transparent);
+  /* agents: a still meter in a list of runs, the step under way a soft live */
+  --meter-now: color-mix(in srgb, var(--live) 38%, transparent);
   /* form: a switch's track off (a firm grey, so an off switch still reads) and its white knob */
   --input: var(--fill-2);
   --switch-off: color-mix(in srgb, var(--ink-1) 20%, var(--page));
@@ -407,6 +406,7 @@
   --w-talk-min: 400px; /* the ticket page's Talk column */
   --w-talk-max: 500px;
   --w-meter: 48px; /* a run meter inline in a row */
+  --w-meter-list: 88px; /* a still one in a list of runs, its steps told apart at a glance */
   --col-xs: 44px; /* rows: an age (as wide as "3h 10m"), a run's or a version's number */
   --prop-dot: 7px; /* rows: a property chip's dot */
   --h-face: 18px; /* rows: a face in a row or a picker */

@@ -1,6 +1,6 @@
 .meter {
   display: flex;
-  gap: var(--line-3);
+  gap: var(--line-2);
   min-width: 0;
 }
 .seg {
@@ -40,22 +40,31 @@
     opacity: 0.9;
   }
 }
-/* row: inline beside a step count; tile: an agent's card's whole width at its foot, still (a grid
-   of cards would sweep all at once), the step under way a soft live */
-.row {
+/* row: inline beside its step; list: the same in a list of runs, still (a column of meters would
+   sweep all at once), each finished step solid live and the one under way a soft live */
+.row,
+.list {
   flex: none;
-  gap: var(--line-2);
   width: var(--w-meter);
 }
-.tile {
-  gap: var(--line-2);
+.list {
+  width: var(--w-meter-list);
 }
-.tile .seg[data-seg="done"] {
+/* queued: no steps yet, the track drawn as dashes (the kit's "not here now") */
+.queued {
+  height: var(--line-3);
+  background: repeating-linear-gradient(
+    90deg,
+    var(--track) 0 var(--sp-2),
+    transparent var(--sp-2) calc(var(--sp-2) + var(--line-3))
+  );
+}
+.list .seg[data-seg="done"] {
   background: var(--live);
 }
-.tile .seg[data-seg="now"] {
-  background: var(--tile-meter-now);
+.list .seg[data-seg="now"] {
+  background: var(--meter-now);
 }
-.tile .seg[data-seg="now"]::after {
+.list .seg[data-seg="now"]::after {
   content: none;
 }

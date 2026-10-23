@@ -67,7 +67,7 @@
           }
         },
         "dashed": {
-          "why": "An empty slot drawn dashed: the owner picker's Unassigned choice, an unowned ticket on a list's line, an agent's tile or an Intake row (without it, the invisible slot that keeps a row's missing owner in its column)."
+          "why": "An empty slot drawn dashed: the owner picker's Unassigned choice, an unowned ticket on a list's line or an Intake row (without it, the invisible slot that keeps a row's missing owner in its column)."
         },
         "people": {
           "why": "Who works on a repo, who is in a conversation: one row, named together."
@@ -95,7 +95,7 @@
         "size": {
           "why": "Keys sit in rows, group heads and the ticket kicker.",
           "values": {
-            "sm": "Compact's foot and the cards' keys (an agent's, a board's).",
+            "sm": "Compact's foot and a board card's key.",
             "md": "Rows."
           }
         },
@@ -157,34 +157,33 @@
       }
     },
     "Card": {
-      "why": "A card: one object on its own surface, the whole of it one button. Three looks on one surface and one activation (a workflow stage, an agent at work, a ticket on a board).",
+      "why": "A card: one object on its own surface, the whole of it one button. Two looks on one surface and one activation (a workflow stage, a ticket on a board).",
       "props": {
         "label": {
-          "why": "What it is: a stage's button says Edit Implement or Close Implement; an agent's or a ticket's says what it opens (Peek at NW-17: …)."
+          "why": "What it is: a stage's button says Edit Implement or Close Implement; a ticket's says what it opens (Peek at NW-17: …)."
         },
         "face": {
           "why": "A stage's face (an agent's, or a shell's glyph), in the slot the lane's axis runs through."
         },
         "children": {
-          "why": "Its lines: a stage's summary; an agent's key and who works it, title and where, and progress; a ticket's key, title and state."
+          "why": "Its lines: a stage's summary; a ticket's key, title and state."
         },
         "open": {
           "why": "The selected stage's settings, drawn in place under the summary (the owner's rule: no dialog, every field visible)."
         },
         "onOpen": {
-          "why": "A click (or Enter) anywhere but its own controls: selects a stage (none: read only), or opens a peek at the agent's or ticket's ticket."
+          "why": "A click (or Enter) anywhere but its own controls: selects a stage (none: read only), or opens a peek at the ticket."
         },
         "off": {
-          "why": "A disabled stage is dimmed, still in its place; a queued agent's card loses its tone for a dashed outline, so running and queued read apart at a glance."
+          "why": "A disabled stage is dimmed, still in its place."
         },
         "problem": {
           "why": "A stage's inline validation (a gate inside a loop, a prompt naming an unknown field), at its foot in the blocked ink."
         },
         "look": {
-          "why": "Stages, agents at work and board tickets are cards in three places.",
+          "why": "Stages and board tickets are cards in two places.",
           "values": {
             "stage": "A workflow stage on the lane: a card of tone over the axis (its tone parts it from the next, inside a loop's bracket too; a disabled one no tone, a dashed outline alone), its face on the axis, ringed in the accent as it opens in place to its settings (the default).",
-            "agent": "An agent at work (My queue): a tile of tone while it runs, a dashed outline with no tone while it is queued (nothing at work there yet), its lines down to the card's foot, its steps a still Meter across the foot.",
             "ticket": "A ticket on a board (All teams): two tight lines on a tile of tone straight on the sheet (no lane under it), its key with its state's pill at the line's end, then its title (Linear's board card)."
           }
         }
@@ -448,7 +447,7 @@
       }
     },
     "Head": {
-      "why": "The head over a list's run: a zone (My queue's cards), a group (Compact's, My queue's lists), or a line (Intake's queries).",
+      "why": "The head over a list's run: a group (Compact's, My queue's zones) or a line (Intake's queries).",
       "props": {
         "name": {
           "why": "What the group is."
@@ -476,10 +475,9 @@
           "why": "The right slot at the head's far end: a stat, links, a JQL."
         },
         "level": {
-          "why": "Three heads over a list's runs.",
+          "why": "Two heads over a list's runs.",
           "values": {
-            "zone": "A heading run through its surface's padding to the list's edge, room above it, no band (My queue's Agents at work, over its cards).",
-            "group": "A list's heading, parted from the group before by room, no band: Compact's fold (its chevron after the count), My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
+            "group": "A list's heading, parted from the group before by room, no band: Compact's fold (its chevron after the count), My queue's zones' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
             "line": "A query's head (Intake's queries): a heading parted from the run before by room, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first on the list's column edge; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
           }
         },
@@ -538,7 +536,7 @@
           "why": "The glyph a size down, for counters, pills and heads."
         },
         "progress": {
-          "why": "A running glyph's pie fills as far as its run is (Linear's in-progress circle), so a row needs no meter beside it."
+          "why": "A running glyph's pie fills as far as its run is (Linear's in-progress circle), so a running row says it in its one glyph (Compact's, My queue's, a board card's)."
         },
         "still": {
           "why": "No breathing halo: a grid of cards or a board would pulse all at once."
@@ -546,7 +544,7 @@
       }
     },
     "Meter": {
-      "why": "A run's progress, one segment per step, the current one sweeping (V1's RunMeter).",
+      "why": "A run's progress, one segment per step (V1's RunMeter).",
       "props": {
         "done": {
           "why": "Steps finished."
@@ -555,11 +553,14 @@
           "why": "Steps in all."
         },
         "size": {
-          "why": "Two places draw a run's progress.",
+          "why": "Two places draw a run's progress: one run's, live, and a list of runs'.",
           "values": {
-            "row": "Inline (48px), the default: the ticket's Now line, where the stepper widens it to 120px.",
-            "tile": "An agent Card's: the card's whole width at its foot, under its step count, still (a grid of cards would sweep all at once)."
+            "row": "Inline (48px), the default, the step under way sweeping: the ticket's Now line, where the stepper widens it to 120px.",
+            "list": "A run's line in a list (My queue's Agents at work, after its agent and step count, 88px so its steps read apart): still (a column of meters would sweep all at once), each finished step solid live, the one under way a soft live."
           }
+        },
+        "queued": {
+          "why": "A queued run has no steps yet (My queue's queued lines): its track dashed, the kit's not here now, so the column of meters runs on through the queue; the word beside it says it, so it is unseen to assistive tech."
         }
       }
     },
@@ -830,7 +831,7 @@
           "why": "A grid instead of a line.",
           "values": {
             "2": "A form's settings two side by side (each at least half the width), one under the other where a column would be narrower than a form column.",
-            "3": "Equal columns: the agents' cards (three at most)."
+            "3": "Equal columns: a board's three lanes side by side (the board twin's), a panel held in the last third (the display options twin's)."
           }
         }
       }

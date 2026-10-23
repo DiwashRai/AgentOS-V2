@@ -11,25 +11,18 @@
    the rows' words, tiles and panels stand, so it heads them; its end on the rows' end; a
    fold's chevron after its count. One look for every group, so the list never stripes; the state
    is the glyph */
-.group,
-.zone {
+.group {
   height: var(--h-group);
   margin-top: var(--group-gap);
   padding: 0 var(--list-inset);
 }
-.group:first-child,
-.zone:first-child {
+.group:first-child {
   margin-top: 0;
 }
 .group .chev {
   order: 1;
   width: var(--sp-8);
   margin-left: calc(var(--sp-2) * -1);
-}
-/* zone: My queue's heading over its agents' cards, run through its surface's padding to the list's
-   edges, so its glyph stands on the rows' first edge */
-.zone {
-  margin-inline: calc(var(--pad) * -1);
 }
 /* a fold's heading is no box: its button lays out as the head's own child */
 .holds {

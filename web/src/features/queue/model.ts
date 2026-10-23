@@ -1,5 +1,5 @@
 // Pure selection for My queue: only what is the viewer's. Your move (waiting on me or nobody, or
-// blocked and mine or nobody's), Agents at work (every running and queued run as one card: mine
+// blocked and mine or nobody's), Agents at work (every running and queued run as one line: mine
 // first, then the team's by repo), Ready to start (my inbox), Done recently (mine, last 7 days).
 import type { Person, TicketRow } from "../../api/types";
 import { isMine, isYourMove } from "../../domain/board";
@@ -14,7 +14,7 @@ const newestFirst = (a: TicketRow, b: TicketRow) => sinceMs(b) - sinceMs(a);
 
 export interface Zones {
   yourMove: TicketRow[];
-  /** Every running and queued run, one card each: running before queued, mine before the team's,
+  /** Every running and queued run, one line each: running before queued, mine before the team's,
    *  the team's by repo. */
   agents: TicketRow[];
   ready: TicketRow[];

@@ -55,11 +55,21 @@ export function KeyCell({ t }: { t: TicketRow }) {
 
 /** The status glyph, the title, and after it the quiet words of what it waits on: one line, cut
  *  at its end, so the words give way before the title does. A settled line (done, closed) recedes
- *  a step: its title in the second ink. */
-export function TitleCell({ t, me, after }: { t: TicketRow; me: Person | null; after: string }) {
+ *  a step: its title in the second ink; so does one the screen says to (My queue's queued runs). */
+export function TitleCell({
+  t,
+  me,
+  after,
+  recede = false,
+}: {
+  t: TicketRow;
+  me: Person | null;
+  after: string;
+  recede?: boolean;
+}) {
   const a = t.attention;
   const kind = markOf(a, me).kind;
-  const settled = kind === "done" || kind === "abandoned";
+  const settled = recede || kind === "done" || kind === "abandoned";
   return (
     <Stack dir="row" gap={4} align="center">
       <Mark

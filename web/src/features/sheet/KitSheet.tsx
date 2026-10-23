@@ -476,7 +476,7 @@ function OverlaySheet() {
 function Block({ name, children }: { name: string; children: ReactNode }) {
   return (
     <Stack gap={5}>
-      <Head level="zone" name={name} />
+      <Head name={name} />
       {children}
     </Stack>
   );
@@ -590,6 +590,7 @@ export function KitSheet() {
             <Meter done={2} total={5} />
             <Stack dir="row" gap={6} align="center">
               <Meter size="row" done={1} total={4} />
+              <Meter size="list" done={1} total={4} />
             </Stack>
           </Block>
           <Block name="Table, Head, Row, Notice">

@@ -1,7 +1,7 @@
 /* Card: one object as a step of tone on the sheet, no edge and no shadow; under the pointer it takes
    a step more. A stage lies on the lane, its summary washed on hover like a row; selected, the
-   accent rings it, its settings under the summary on the sheet's own white. An agent's and a
-   ticket's looks follow below. */
+   accent rings it, its settings under the summary on the sheet's own white. A ticket's look
+   follows below. */
 .card {
   --ground: var(--teams-card);
   position: relative;
@@ -124,31 +124,4 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
-}
-
-/* agent: an agent's tile, as tall as its neighbours, its lines one under another down to its foot.
-   Running, a tile of tone; queued, nothing at work yet: no tone, a dashed outline (the kit's "not
-   here now"), the tone only under the pointer */
-.card[data-look="agent"] {
-  align-self: stretch;
-  border-radius: var(--r-4);
-  background: var(--tile);
-}
-.card[data-look="agent"][data-off]:not(:hover) {
-  --ground: var(--page);
-  background: none;
-}
-.card[data-look="agent"][data-off]:not(:has(.hit:focus-visible)) {
-  outline: var(--line-1) dashed var(--ctl-edge-hover);
-  outline-offset: calc(var(--line-1) * -1);
-}
-.card[data-look="agent"] .summary {
-  height: 100%;
-  padding: var(--sp-7) var(--sp-8) var(--sp-8);
-}
-.card[data-look="agent"] .main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-  height: 100%;
 }

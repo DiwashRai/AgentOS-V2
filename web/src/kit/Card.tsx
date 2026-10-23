@@ -1,10 +1,8 @@
-// A card: one object on its own surface, the whole of it one button. Three looks, one surface and
+// A card: one object on its own surface, the whole of it one button. Two looks, one surface and
 // one activation:
 // - stage: a workflow stage on the lane: its face in the slot the lane's axis runs through, its
 //   summary beside it; the summary selects it, and selected it opens in place to its settings (no
 //   dialog). A disabled stage is dimmed; a problem with it is said at its foot.
-// - agent: an agent at work (My queue): its lines one under another, filling the card's height so
-//   cards in a row line up; running, a tile of tone; queued, no tone and a dashed outline.
 // - ticket: a ticket on a board (All teams): two tight lines on a card lifted off its lane by tone.
 // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
 // ring round the card, and a click anywhere on it for a pointer. What the lines say is the
@@ -15,9 +13,9 @@ import s from "./Card.module.css";
 import { Opener, openOnClick } from "./opener";
 
 interface Common {
-  /** What it is: a stage's says "Edit Implement"; the others say this whole ("Peek at …"). */
+  /** What it is: a stage's says "Edit Implement"; a ticket's says this whole ("Peek at …"). */
   label: string;
-  /** Its lines: a stage's summary, an agent's or a ticket's lines. */
+  /** Its lines: a stage's summary, a ticket's lines. */
   children: ReactNode;
 }
 
@@ -38,17 +36,8 @@ export type CardProps = Common &
         problem?: string;
       }
     | {
-        look: "agent";
-        /** A click (or Enter) opens what the card is of (a peek). */
-        onOpen: () => void;
-        /** Queued, waiting for a runner: no tone, a dashed outline (nothing at work here yet). */
-        off?: boolean;
-        face?: never;
-        open?: never;
-        problem?: never;
-      }
-    | {
         look: "ticket";
+        /** A click (or Enter) opens what the card is of (a peek). */
         onOpen: () => void;
         face?: never;
         open?: never;
@@ -76,10 +65,8 @@ const flag = (on: boolean) => on || undefined;
 
 /** What a card draws, by its case: a stage's face, settings and problem, and its button's words. */
 function caseOf(props: CardProps) {
-  if (props.look === "agent" || props.look === "ticket") {
-    const off = props.look === "agent" && props.off === true;
-    return { face: undefined, open: undefined, off, problem: undefined, say: props.label };
-  }
+  if (props.look === "ticket")
+    return { face: undefined, open: undefined, off: false, problem: undefined, say: props.label };
   const opened = props.open !== undefined;
   return {
     face: props.face,
