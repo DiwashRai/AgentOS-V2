@@ -3,7 +3,8 @@
 // - stage: a workflow stage on the lane: its face in the slot the lane's axis runs through, its
 //   summary beside it; the summary selects it, and selected it opens in place to its settings (no
 //   dialog). A disabled stage is dimmed; a problem with it is said at its foot.
-// - ticket: a ticket on a board (All teams): two tight lines on a card lifted off its lane by tone.
+// - ticket: a ticket on a board (the board twin): two tight lines on a card lifted off its lane by
+//   tone.
 // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
 // ring round the card, and a click anywhere on it for a pointer. What the lines say is the
 // screen's.

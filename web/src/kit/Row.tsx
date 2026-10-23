@@ -1,7 +1,7 @@
 // One item of a list: its cells on the Table's columns. A line, an item and a triage row are flat,
 // a rounded patch on the list's column edge (its words inset) washed on hover, focus and open; a
-// list out at the sheet's edges rules them apart faintly. A rack is a bare entry; a band a board's
-// swimlane (its head, then its lanes). A card on its own surface is a Card. Nothing changes size.
+// list out at the sheet's edges rules them apart faintly. A rack is a bare entry. A card on its
+// own surface is a Card. Nothing changes size.
 import { Children, type ReactNode } from "react";
 
 import { Opener, openOnClick } from "./opener";
@@ -19,12 +19,10 @@ export interface RowProps {
   /** The cells, one per column; with fewer, the last spans the rest, and one past the columns is
    *  not drawn. Outside a table they stack. */
   children: ReactNode;
-  /** line: a list's one-line row (Compact, My queue, the library); item: a roomy two-line row (a
-   *  ticket's context); triage: a tight two-line row led by a face (Intake); rack: a bare entry (a
-   *  run's stage); band: a board's swimlane, its first cell a head line across the board and then
-   *  a lane per column; columns: the board's column head,
-   *  one short line of stage names over the swimlanes, on the same grid. */
-  kind?: "line" | "item" | "triage" | "rack" | "band" | "columns";
+  /** line: a list's one-line row (Compact, My queue, All teams, the library); item: a roomy
+   *  two-line row (a ticket's context); triage: a tight two-line row led by a face (Intake); rack:
+   *  a bare entry (a run's stage). */
+  kind?: "line" | "item" | "triage" | "rack";
   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
    *  names what it opens, for assistive tech. */
   action?: Action;
@@ -35,14 +33,13 @@ export interface RowProps {
   alert?: string;
 }
 
-/** `lead`: a band's head, a line of its own across every column before the cells that sit on them. */
-function useCells(children: ReactNode, stack: boolean, lead: number): ReactNode[] {
+function useCells(children: ReactNode, stack: boolean): ReactNode[] {
   const columns = useColumns();
   const cells = Children.toArray(children);
   if (stack) return cells;
-  return cells.slice(0, columns.length + lead).map((cell, i) => {
-    const last = i === cells.length - 1 && i - lead < columns.length - 1;
-    const column = last ? columns[columns.length - 1] : columns[i - lead];
+  return cells.slice(0, columns.length).map((cell, i) => {
+    const last = i === cells.length - 1 && i < columns.length - 1;
+    const column = last ? columns[columns.length - 1] : columns[i];
     return (
       <span
         key={i}
@@ -110,17 +107,9 @@ export function Row(props: RowProps) {
   const { children, kind = "line", action, open = false, more, alert } = props;
   const columns = useColumns();
   const stack = columns.length === 0;
-  const cells = useCells(children, stack, kind === "band" ? 1 : 0);
+  const cells = useCells(children, stack);
   return (
-    <div
-      className={cx(
-        s.row,
-        s[kind === "columns" ? "band" : kind],
-        kind === "columns" && s.columns,
-        open && s.open,
-      )}
-      data-row=""
-    >
+    <div className={cx(s.row, s[kind], open && s.open)} data-row="">
       <Inner action={action} stack={stack} open={open} more={more}>
         {cells}
       </Inner>

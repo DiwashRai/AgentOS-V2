@@ -1,78 +1,52 @@
-// All teams (new in V2): every repo by stage, as Linear's board grouped by team. The stages are the
-// board's columns, Plan · Build · Verify · Review; each repo is a swimlane across them, its head one
-// line (the repo, who works there, how much is in flight, a way to its list) over a column per stage
-// holding its tickets' cards (an empty stage across the board folds narrow; a repo with nothing in
-// flight is its head alone). Inbox and done work live in each repo's list. Click an item to peek.
-import { useState } from "react";
+// All teams (new in V2): every ticket in flight across the org's repos, as one table (Linear's list
+// grouped by team). Each ticket is a line on the page's column grid, its facts reading down the
+// list as a ledger: the key; its state's glyph and the title; the stage it is at; its state in
+// words (a running agent's steps on a still meter); its owner; how long it has been so. The repos
+// are its groups, in the Space's order, each under a head that carries the repo, its path, who
+// works there, how many of its tickets are in flight and a tally of their states (what needs you
+// in the accent), with its list at the head's end; inside a group the rows run down the stages.
+// A repo with nothing in flight is one quiet line at the foot. Click a row to peek.
 import { useSearchParams } from "react-router";
 
 import { useSettings } from "../../api/queries";
-import type { Person, Phase, TicketRow } from "../../api/types";
-import { groupOf, isMyMove, markOf, STATE_WORD, stepText } from "../../domain/board";
-import { firstName, plural, repoShort } from "../../domain/format";
+import type { Person, TicketRow } from "../../api/types";
+import { groupOf, markOf, stageModel, STATE_WORD } from "../../domain/board";
+import { age, firstName, plural, repoShort } from "../../domain/format";
 import {
+  Age,
+  Avatar,
   Badge,
-  Card,
   Button,
-  Chip,
-  type ChipDot,
   type Column,
+  Head,
   Icon,
   Mark,
-  type MarkKind,
+  Meter,
   Notice,
   Page,
   Row,
   Stack,
+  Surface,
   Table,
   Text,
 } from "../../kit";
+import { stageWord } from "../compact/model";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
+import { groupsOf, type RepoGroup, STAGE, stageCounts, stateOf, type Tally } from "./model";
 
-const STAGES: readonly { phase: Phase; name: string }[] = [
-  { phase: "plan", name: "Plan" },
-  { phase: "build", name: "Build" },
-  { phase: "verify", name: "Verify" },
-  { phase: "review", name: "Review" },
+// The page's one grid, labelled once over the groups: the key, the title taking what the plain
+// columns leave, then the stage, the state (wide enough for a run's agent, steps and meter), the
+// owner's face and name, the age.
+const COLUMNS: readonly Column[] = [
+  { label: "Key", width: "sm" },
+  { label: "Ticket", width: "fill", min: "2xl" },
+  { label: "Stage", width: "sm" },
+  { label: "State", width: "2xl" },
+  { label: "Owner", width: "md" },
+  { label: "Age", width: "xs", end: true },
 ];
-
-/** How many in-flight cards each stage holds, across the board. */
-function countsOf(work: readonly TicketRow[]): Record<Phase, number> {
-  const n: Record<Phase, number> = { inbox: 0, plan: 0, build: 0, verify: 0, review: 0, done: 0 };
-  for (const t of work) n[t.phase] += 1;
-  return n;
-}
-
-/** A column per stage in order: a stage holding cards takes an equal share of the board's width
- *  (Linear's board columns); an empty one folds to a narrow lane, as Linear folds an empty column,
- *  so its neighbours' cards get the room. */
-function columnsOf(counts: Record<Phase, number>): readonly Column[] {
-  return STAGES.map((st): Column => ({
-    label: st.name,
-    width: counts[st.phase] > 0 ? "fill" : "md",
-  }));
-}
-
-/** The board's column head, on the lanes' own grid: each stage's name and how many cards it holds
- *  (Linear's board heads); an empty stage's name muted over its folded lane. */
-function Head({ counts }: { counts: Record<Phase, number> }) {
-  return (
-    <Row kind="columns">
-      {STAGES.map((st) => (
-        <Stack key={st.phase} dir="row" gap={3} align="center">
-          <Text weight={500} tone={counts[st.phase] > 0 ? "1" : "3"}>
-            {st.name}
-          </Text>
-          <Text tone="3" tabular>
-            {String(counts[st.phase])}
-          </Text>
-        </Stack>
-      ))}
-    </Row>
-  );
-}
 
 const LEGEND = [
   ["run", "Running"],
@@ -82,10 +56,25 @@ const LEGEND = [
   ["queued", "Queued"],
 ] as const;
 
-/** The board's foot: where the rest of the work lives, and what each glyph says. */
-function Legend() {
+/** The table's foot: how much is at each stage across the repos (where work piles up), where the
+ *  rest of the work lives, and what each glyph says. */
+function Legend({ stages }: { stages: readonly { name: string; n: number }[] }) {
   return (
     <>
+      <Text variant="meta" tone="2" tabular>
+        <Text weight={600} tone="1">
+          {String(stages.reduce((n, st) => n + st.n, 0))}
+        </Text>
+        {" in flight"}
+        {stages.map((st) => (
+          <Text key={st.name} tone={st.n > 0 ? "2" : "3"}>
+            {` · ${st.name} `}
+            <Text weight={600} tone={st.n > 0 ? "1" : "3"}>
+              {String(st.n)}
+            </Text>
+          </Text>
+        ))}
+      </Text>
       <Text variant="meta">Inbox and merged work live in each repo&apos;s list.</Text>
       <Stack grow />
       {LEGEND.map(([kind, word]) => (
@@ -100,178 +89,199 @@ function Legend() {
   );
 }
 
-/** Work in flight: inbox and merged work live in each repo's list. */
-function inFlight(t: TicketRow): boolean {
-  return t.attention.kind !== "inbox" && t.attention.kind !== "done";
-}
-
-const CAP = 3;
-
-/** What a waiting ticket is parked at: its gate's short name, else the ask. */
-function parkedAt(t: TicketRow, ask: string): string {
-  return t.rail.find((s) => s.gate?.state === "waiting")?.gate?.short ?? ask;
-}
-
-/** An item's pill: the live agent and its progress, or what it waits on. */
-interface ItemBadge {
-  kind: MarkKind;
-  text: string;
-  /** A running agent's steps, for its glyph's pie and the pill's quieter count. */
-  progress?: { done: number; total: number } | null;
-}
-
-type Waiting = Extract<TicketRow["attention"], { kind: "waiting" }>;
-
-/** A waiting item's pill: on you, its gate and You (else the ask); on someone else, where it is
- *  parked and who. */
-function waitingBadge(t: TicketRow, a: Waiting, me: Person | null): ItemBadge {
-  if (isMyMove(a.on, me)) {
-    const gate = t.rail.find((s) => s.gate?.state === "waiting")?.gate?.short;
-    return { kind: "you", text: gate ? `${gate} · You` : a.ask };
-  }
-  const who = firstName(a.on?.name ?? "someone");
-  return { kind: "wait", text: `${parkedAt(t, a.ask)} · ${who}` };
-}
-
-/** The glyph's name: a running or waiting item's pill names who, so its glyph says the state;
- *  any other pill says the state itself, and its glyph is drawing alone. */
-function badgeSays(badge: ItemBadge): string | false {
-  return badge.kind === "run" || badge.kind === "wait" ? STATE_WORD[badge.kind] : false;
-}
-
-function itemBadge(t: TicketRow, me: Person | null): ItemBadge {
+/** The state's glyph and the title, firm; a queued run's title recedes a step, as My queue's: nothing
+ *  is at work on it yet. */
+function TitleCell({ t, me }: { t: TicketRow; me: Person | null }) {
   const a = t.attention;
-  if (a.kind === "running") {
-    const p = a.progress;
-    return { kind: "run", text: a.agent, progress: p };
-  }
-  if (a.kind === "waiting") return waitingBadge(t, a, me);
-  const m = markOf(a, me);
-  return { kind: m.kind, text: m.kind === "you" ? "" : m.name };
+  const kind = markOf(a, me).kind;
+  return (
+    <Stack dir="row" gap={4} align="center">
+      <Mark
+        kind={kind}
+        glyph
+        name={STATE_WORD[kind]}
+        progress={a.kind === "running" ? a.progress : null}
+      />
+      <Text weight={500} tone={a.kind === "queued" ? "2" : "1"} truncate title={t.title}>
+        {t.title}
+      </Text>
+    </Stack>
+  );
 }
 
-/** A pill's dot: the state's hue, so the pill says it as the glyph does. */
-const DOT: Partial<Record<MarkKind, ChipDot>> = {
-  run: "live",
-  you: "you",
-  blk: "blocked",
-  done: "done",
-};
+const INK = { you: "you", firm: "1", live: "2", plain: "2", quiet: "3" } as const;
 
-/** The pill on the key's line, its state's words after its dot (Linear's "Working…" pill): a
- *  running agent's name, its step a quieter count after it. */
-function Pill({ badge }: { badge: ItemBadge }) {
-  if (badge.text === "") return null;
-  const dot = DOT[badge.kind] ?? "neutral";
-  const p = badge.progress;
-  if (p) return <Chip tone="edge" dot={dot} label={badge.text} after={{ text: stepText(p) }} />;
-  return <Chip tone="edge" dot={dot} label={badge.text} />;
+/** The state in words: your move in the accent; a running agent firm, its step count quieter and
+ *  its still meter at the column's end (a queued run's dashed), so the meters line up. */
+function StateCell({ t, me }: { t: TicketRow; me: Person | null }) {
+  const st = stateOf(t, me);
+  const run = st.run;
+  return (
+    <Stack dir="row" gap={5} align="center" justify="between" grow>
+      <Text
+        tone={INK[st.tone]}
+        {...(st.tone === "plain" || st.tone === "quiet" ? {} : { weight: 500 as const })}
+        truncate
+        title={st.say}
+      >
+        {st.text}
+        {run !== null && run !== "queued" && run.step ? (
+          <Text tone="3" weight={400} tabular>{`\u2002${run.step}`}</Text>
+        ) : null}
+      </Text>
+      {run === "queued" ? <Meter size="list" queued /> : null}
+      {run !== null && run !== "queued" && run.progress ? (
+        <Meter size="list" done={run.progress.done} total={run.progress.total} />
+      ) : null}
+    </Stack>
+  );
 }
 
-/** One item, two lines (Linear's board card): its key (12px, muted) with its state's pill at the
- *  line's end; then the state's glyph (Linear's status circle, a running agent's pie showing its
- *  progress) and the title (14px, regular, up to two lines). */
-function Item({
+/** Who owns it: their face and first name; nobody, a dashed ring. */
+function OwnerCell({ owner }: { owner: Person | null }) {
+  return (
+    <Stack dir="row" gap={4} align="center">
+      {owner ? <Avatar name={owner.name} seed={String(owner.id)} beside /> : <Avatar dashed />}
+      <Text tone={owner ? "2" : "3"} truncate>
+        {owner ? firstName(owner.name) : "Nobody"}
+      </Text>
+    </Stack>
+  );
+}
+
+function TicketLine({
   t,
   me,
+  now,
   onOpen,
 }: {
   t: TicketRow;
   me: Person | null;
+  now: number;
   onOpen: (key: string) => void;
 }) {
-  const badge = itemBadge(t, me);
+  const stage = stageWord(stageModel(t, me));
   return (
-    <Card
-      look="ticket"
-      label={`Peek at ${t.key}: ${t.title}`}
-      onOpen={() => {
-        onOpen(t.key);
+    <Row
+      action={{
+        label: `Peek at ${t.key}: ${t.title}`,
+        run: () => {
+          onOpen(t.key);
+        },
       }}
     >
-      <Stack dir="row" gap={4} align="center" justify="between">
-        <Badge kind="key" size="sm">
-          {t.key}
-        </Badge>
-        <Pill badge={badge} />
-      </Stack>
-      <Stack dir="row" gap={4} align="baseline">
-        <Mark kind={badge.kind} glyph still name={badgeSays(badge)} progress={badge.progress} />
-        <Text variant="label" weight={400} tone="1" truncate={2} title={t.title}>
-          {t.title}
-        </Text>
-      </Stack>
-    </Card>
+      <Badge kind="key">{t.key}</Badge>
+      <TitleCell t={t} me={me} />
+      <Text tone="2" truncate title={stage.path}>
+        {STAGE[t.phase] ?? stage.word}
+      </Text>
+      <StateCell t={t} me={me} />
+      <OwnerCell owner={t.owner} />
+      <Text variant="meta" tone="3">
+        <Age text={age(t.since, now)} />
+      </Text>
+    </Row>
   );
 }
 
-function Cell({
-  items,
+/** A repo's tally: each state its tickets are in, its glyph and how many; your move's in the
+ *  accent. */
+function TallyLine({ tally }: { tally: readonly Tally[] }) {
+  return (
+    <Stack dir="row" gap={7} align="center">
+      {tally.map((s) => (
+        <Stack key={s.mark} dir="row" gap={3} align="center">
+          <Mark kind={s.mark} glyph small name={false} />
+          <Text variant="meta" tone={s.mark === "you" ? "you" : "2"} tabular>
+            <Text weight={600} tone={s.mark === "you" ? "you" : "1"}>
+              {String(s.n)}
+            </Text>
+            {` ${s.word}`}
+          </Text>
+        </Stack>
+      ))}
+    </Stack>
+  );
+}
+
+function OpenList({ repo }: { repo: string }) {
+  return (
+    <Button
+      variant="link"
+      icon="compact"
+      href={`/compact?repo=${encodeURIComponent(repo)}`}
+      title={`Every ticket in ${repoShort(repo)}`}
+    >
+      Open list
+    </Button>
+  );
+}
+
+/** Who works there, by first name (read at a glance where a row of tiny faces isn't). */
+const teamOf = (people: readonly Person[]) => people.map((p) => firstName(p.name)).join(", ");
+
+/** A repo's group: its head (the repo, how many in flight, its path and people, its tally and its
+ *  list), then a line per ticket. */
+function RepoSection({
+  g,
   me,
+  now,
   onOpen,
 }: {
-  items: readonly TicketRow[];
+  g: RepoGroup;
   me: Person | null;
+  now: number;
   onOpen: (key: string) => void;
 }) {
-  const [all, setAll] = useState(false);
-  const shown = all ? items : items.slice(0, CAP);
   return (
-    <>
-      {shown.map((t) => (
-        <Item key={t.key} t={t} me={me} onOpen={onOpen} />
+    <Surface level="list" label={repoShort(g.repo)}>
+      <Head
+        icon={<Icon name="repo" />}
+        name={repoShort(g.repo)}
+        count={g.rows.length}
+        note={[g.repo, teamOf(g.people)].filter(Boolean).join(" · ")}
+        summary={
+          <Stack dir="row" gap={9} align="center">
+            <TallyLine tally={g.tally} />
+            <OpenList repo={g.repo} />
+          </Stack>
+        }
+      />
+      {g.rows.map((t) => (
+        <TicketLine key={t.key} t={t} me={me} now={now} onOpen={onOpen} />
       ))}
-      {items.length > CAP ? (
-        <Stack dir="row">
-          <Button
-            variant="quiet"
-            size="xs"
-            onClick={() => {
-              setAll((v) => !v);
-            }}
-          >
-            {all ? "Show less" : `+${String(items.length - CAP)}`}
-          </Button>
-        </Stack>
-      ) : null}
-    </>
+    </Surface>
   );
 }
 
-/** A swimlane's head, one line across the board (Linear's group head): the repo's glyph and name,
- *  then one quiet line of its full name, who works there (first names, read at a glance where a
- *  row of tiny faces isn't) and how many of its tickets are in flight (or that none are); its list
- *  at the line's end. */
-function LaneHead({ repo, people, n }: { repo: string; people: readonly Person[]; n: number }) {
-  const team = people.map((p) => firstName(p.name)).join(", ");
-  const flight = n > 0 ? `${String(n)} in flight` : "Nothing in flight";
+/** The repos with nothing in flight, one quiet line each: the repo, its path and people, its list. */
+function QuietSection({ quiet }: { quiet: readonly RepoGroup[] }) {
   return (
-    <Stack dir="row" gap={4} align="center">
-      <Text variant="meta">
-        <Icon name="repo" />
-      </Text>
-      <Text variant="label" weight={600} as="h2" truncate>
-        {repoShort(repo)}
-      </Text>
-      <Text variant="meta" truncate tabular>
-        {[repo, team, flight].filter(Boolean).join(" · ")}
-      </Text>
-      <Stack grow />
-      <Button
-        variant="quiet"
-        size="xs"
-        icon="compact"
-        href={`/compact?repo=${encodeURIComponent(repo)}`}
-      >
-        Open list
-      </Button>
-    </Stack>
+    <Surface level="list" label="Quiet repos">
+      <Head name="Quiet repos" count={quiet.length} note="Nothing in flight" />
+      {quiet.map((g) => (
+        <Row key={g.repo}>
+          <Stack dir="row" gap={4} align="center">
+            <Text variant="meta">
+              <Icon name="repo" />
+            </Text>
+            <Text weight={500} tone="2" truncate>
+              {repoShort(g.repo)}
+            </Text>
+          </Stack>
+          <Text tone="3" truncate>
+            {[g.repo, teamOf(g.people)].filter(Boolean).join(" · ")}
+          </Text>
+          <OpenList repo={g.repo} />
+        </Row>
+      ))}
+    </Surface>
   );
 }
 
 export function TeamsView() {
   const board = useBoard();
-  const { rows, me } = board;
+  const { rows, me, now } = board;
   const repos = useSettings().data?.repos.value ?? [];
   const space = useSpace();
   const { query, search } = useSearch("Jump to a repo or ticket");
@@ -286,10 +296,12 @@ export function TeamsView() {
   const live = rows.filter((t) => t.attention.kind === "running").length;
   const queued = rows.filter((t) => t.attention.kind === "queued").length;
   const needYou = rows.filter((t) => groupOf(t, me) === "needs_you").length;
-  const shown = rows.filter((t) =>
-    query.every((q) => `${t.key} ${t.title}`.toLowerCase().includes(q)),
+  const { active, quiet } = groupsOf(
+    rows,
+    repos.map((r) => r.name),
+    me,
+    query,
   );
-  const counts = countsOf(shown.filter(inFlight));
   return (
     <Page
       title="All teams"
@@ -302,32 +314,15 @@ export function TeamsView() {
       ]}
       search={search}
     >
-      {board.pending ? <Notice kind="status">Loading</Notice> : null}
-      {board.error ? (
-        <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
-      ) : null}
-      <Table columns={columnsOf(counts)} head={false} edge foot={<Legend />}>
-        <Head counts={counts} />
-        {repos.map((repo) => {
-          const work = shown.filter((t) => t.repo === repo.name && inFlight(t));
-          const owners = rows.flatMap((t) => (t.repo === repo.name && t.owner ? [t.owner] : []));
-          const people = [...new Map(owners.map((p) => [p.id, p])).values()];
-          return (
-            <Row key={repo.name} kind="band">
-              <LaneHead repo={repo.name} people={people} n={work.length} />
-              {work.length === 0
-                ? null
-                : STAGES.map((st) => (
-                    <Cell
-                      key={st.phase}
-                      items={work.filter((t) => t.phase === st.phase)}
-                      me={me}
-                      onOpen={open}
-                    />
-                  ))}
-            </Row>
-          );
-        })}
+      <Table columns={COLUMNS} edge foot={<Legend stages={stageCounts(active)} />}>
+        {board.pending ? <Notice kind="status">Loading</Notice> : null}
+        {board.error ? (
+          <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
+        ) : null}
+        {active.map((g) => (
+          <RepoSection key={g.repo} g={g} me={me} now={now} onOpen={open} />
+        ))}
+        {quiet.length > 0 ? <QuietSection quiet={quiet} /> : null}
       </Table>
     </Page>
   );

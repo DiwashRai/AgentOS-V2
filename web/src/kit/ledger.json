@@ -184,7 +184,7 @@
           "why": "Stages and board tickets are cards in two places.",
           "values": {
             "stage": "A workflow stage on the lane: a card of tone over the axis (its tone parts it from the next, inside a loop's bracket too; a disabled one no tone, a dashed outline alone), its face on the axis, ringed in the accent as it opens in place to its settings (the default).",
-            "ticket": "A ticket on a board (All teams): two tight lines on a tile of tone straight on the sheet (no lane under it), its key with its state's pill at the line's end, then its title (Linear's board card)."
+            "ticket": "A ticket on a board (the board twin): two tight lines on a tile of tone straight on the sheet (no lane under it), its key with its state's pill at the line's end, then its title (Linear's board card)."
           }
         }
       }
@@ -205,7 +205,7 @@
           "why": "A small glyph before the words (skills, files, the repo, the clock, a version); one or the other with a dot."
         },
         "dot": {
-          "why": "A dot in a state's hue before the words, instead of a glyph: a board card's state, a verdict, drift.",
+          "why": "A dot in a state's hue before the words, instead of a glyph: a board card's label (the board twin's), a verdict, drift.",
           "values": {
             "neutral": "No state of its own.",
             "live": "Running.",
@@ -227,7 +227,7 @@
           "why": "The full text on hover, when it says more than the words."
         },
         "after": {
-          "why": "Quieter, after the words: a step count (a running board card's agent, Compact's Now tag)."
+          "why": "Quieter, after the words: a step count (Compact's Now tag), or a caret or an outward arrow (the project twin's labels and links)."
         }
       }
     },
@@ -536,7 +536,7 @@
           "why": "The glyph a size down, for counters, pills and heads."
         },
         "progress": {
-          "why": "A running glyph's pie fills as far as its run is (Linear's in-progress circle), so a running row says it in its one glyph (Compact's, My queue's, a board card's)."
+          "why": "A running glyph's pie fills as far as its run is (Linear's in-progress circle), so a running row says it in its one glyph (Compact's, My queue's, All teams')."
         },
         "still": {
           "why": "No breathing halo: a grid of cards or a board would pulse all at once."
@@ -556,11 +556,11 @@
           "why": "Two places draw a run's progress: one run's, live, and a list of runs'.",
           "values": {
             "row": "Inline (48px), the default, the step under way sweeping: the ticket's Now line, where the stepper widens it to 120px.",
-            "list": "A run's line in a list (My queue's Agents at work, after its agent and step count, 88px so its steps read apart): still (a column of meters would sweep all at once), each finished step solid live, the one under way a soft live."
+            "list": "A run's line in a list (My queue's Agents at work and All teams' state column, after its agent and step count, 88px so its steps read apart): still (a column of meters would sweep all at once), each finished step solid live, the one under way a soft live."
           }
         },
         "queued": {
-          "why": "A queued run has no steps yet (My queue's queued lines): its track dashed, the kit's not here now, so the column of meters runs on through the queue; the word beside it says it, so it is unseen to assistive tech."
+          "why": "A queued run has no steps yet (My queue's and All teams' queued lines): its track dashed, the kit's not here now, so the column of meters runs on through the queue; the word beside it says it, so it is unseen to assistive tech."
         }
       }
     },
@@ -679,7 +679,7 @@
       }
     },
     "Row": {
-      "why": "One item of a list: its cells on the table's columns; a flat row (Linear's list) with its words on the list's column edge and its wash reaching past it, a card or a swimlane.",
+      "why": "One item of a list: its cells on the table's columns; a flat row (Linear's list) with its words on the list's column edge and its wash reaching past it.",
       "props": {
         "children": {
           "why": "The cells."
@@ -687,12 +687,10 @@
         "kind": {
           "why": "The shapes the app's lists take.",
           "values": {
-            "line": "A list's row (Compact, My queue, Intake, the library's four lists): one dense line, its rhythm and the room above each heading parting the rows (a faint hairline under its words in a list out at the sheet's edges); its words on the column edge the group head's glyph and the bar's title stand on; hover and open wash a rounded patch reaching a little past that edge, so the words keep it.",
+            "line": "A list's row (Compact, My queue, Intake, All teams, the library's four lists): one dense line, its rhythm and the room above each heading parting the rows (a faint hairline under its words in a list out at the sheet's edges); its words on the column edge the group head's glyph and the bar's title stand on; hover and open wash a rounded patch reaching a little past that edge, so the words keep it.",
             "item": "A two-line row (a ticket's context): roomy, unruled, washed on hover.",
             "triage": "A triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; washed on hover.",
-            "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
-            "band": "A board's swimlane (All teams), out to the sheet's edges: its head, a heading across the board (the repo, its team, what is in flight), then a cell per stage, a column of ticket Cards straight on the sheet, the stages parted by room, so an empty stage is bare sheet.",
-            "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid, held at the board's top."
+            "rack": "A bare entry: a run's stage in the Runs tab, lit on hover."
           }
         },
         "action": {
@@ -971,7 +969,7 @@
           "why": "The groups and rows."
         },
         "edge": {
-          "why": "Out to the main sheet's edges with no surface of its own, as Linear's lists run: the column labels quiet over the rows, no band, each row's first cell under the bar's title (the library's four lists, Intake's queries without a head, and All teams' board, its legend in the foot)."
+          "why": "Out to the main sheet's edges with no surface of its own, as Linear's lists run: the column labels quiet over the rows, no band, each row's first cell under the bar's title (the library's four lists, Intake's queries without a head, and All teams' table, its legend in the foot)."
         }
       }
     },
