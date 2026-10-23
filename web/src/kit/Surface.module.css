@@ -10,16 +10,15 @@
   background: var(--recess);
   border-radius: var(--r-5);
 }
-/* a sheet is a panel held over the page (an options panel, an agent's side panel): a step of tone
-   on the popover's hairline and soft shadow, the kit's one lifted look */
+/* a sheet is a card on the page (an options panel, an agent's side panel, a comment): a faint step
+   of tone inside a card's hairline and no shadow, as Linear lays its cards flat; only what floats
+   (a popover, a dialog) casts one */
 .sheet {
   --ground: var(--tone-2);
   --well: var(--page);
   background: var(--tone-2);
   border-radius: var(--r-4);
-  box-shadow:
-    0 0 0 var(--line-1) var(--pop-edge),
-    var(--pop-shadow);
+  box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
 }
 /* a section of a view under its own head (a zone of My queue, an Intake query): no card, flush
    with the list's edges; one after another parts by more room than a group, its head's band

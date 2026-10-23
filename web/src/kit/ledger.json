@@ -915,7 +915,7 @@
           "why": "The view's zone, or a panel of tone resting on it.",
           "values": {
             "recess": "The view's zone, flush on the sheet (no tone, no line).",
-            "sheet": "A panel held over the page, a step of tone on the popover's hairline and soft shadow (Linear's options panels, its agent panel and latest-update card).",
+            "sheet": "A card on the page, a faint step of tone inside a hairline, no shadow (Linear's options panels, its comment cards, its agent panel and latest-update card).",
             "list": "A section of a view under its own head (a zone of My queue, an Intake query), named as a region: no card, flush with the list's edges, parted from the one before by room and one hairline on the column edge, so a busy screen reads as its sections."
           }
         },
