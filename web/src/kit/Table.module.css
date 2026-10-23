@@ -53,12 +53,12 @@
   --h-group: var(--h-group-dense);
   --group-gap: var(--group-gap-dense);
 }
-/* a list on a surface keeps room at its sides for its rows' wash, so the rows' words (and the
-   head's, over them) stay on the surface's edge; at its right the scrollbar's gutter is part of
-   that room */
+/* a list on a surface keeps room at its sides out to the sheet's edges, for its rows' wash and its
+   groups' bands, so the rows' words (and the head's, over them) stay on the surface's edge; at its
+   right the scrollbar's gutter is part of that room */
 .scroll:not(.edge) > :is(.list, .head) {
-  margin-inline: calc(var(--list-bleed) * -1);
-  padding-inline: var(--list-bleed) calc(var(--list-bleed) - var(--bar-thin));
+  margin-inline: calc(var(--gutter) * -1);
+  padding-inline: var(--gutter) calc(var(--gutter) - var(--bar-thin));
 }
 /* the foot: its words on the rows' edges, right under the list; it keeps the list's scrollbar
    gutter, so its far end lines up with the rows'. Under a list that scrolls it is the list's last
@@ -99,6 +99,7 @@
   --list-pad: calc(var(--gutter) - var(--list-in));
   --list-inset: var(--gutter);
   --row-rule: var(--list-rule);
+  --band-out: 0;
 }
 /* no gutter kept for a scrollbar a short list never shows */
 .edge > * {

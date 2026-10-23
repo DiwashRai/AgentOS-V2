@@ -10,10 +10,22 @@
   min-width: 0;
 }
 .msg {
+  position: relative;
   display: grid;
   grid-template-columns: var(--sp-9) minmax(0, 1fr);
   gap: var(--sp-5);
   min-width: 0;
+}
+/* in a card, a hairline parts one person's message from the next, from the words' edge to the card's
+   (Linear's comment thread); a run of one person's messages stays unbroken */
+.msg:not(.mine) + .msg:not(.same, .mine)::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--sp-9) / -2);
+  left: calc(var(--sp-9) + var(--sp-5));
+  right: calc(var(--pad) * -1);
+  height: var(--line-1);
+  background: var(--thread-rule, transparent);
 }
 .same {
   margin-top: calc(var(--sp-8) * -1);

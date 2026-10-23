@@ -6,7 +6,7 @@
   white-space: nowrap;
 }
 
-/* group: a list's band (Linear's group head): a light block of grey as wide as the rows' patches,
+/* group: a list's band (Linear's group head): a light block of grey square to the sheet's edges,
    the rows straight under it, its words at the rows' size; its glyph on the list's column edge,
    where the rows' words, tiles and panels stand, so it heads them; its end on the rows' end; a
    fold's chevron after its count. One grey for every group, so the list never stripes; the state
@@ -24,8 +24,7 @@
 .line::before {
   content: "";
   position: absolute;
-  inset: 0 var(--list-pad);
-  border-radius: var(--r-2);
+  inset: 0 var(--band-out);
   background: var(--group-band);
   transition: background-color var(--dur-fast) ease;
 }

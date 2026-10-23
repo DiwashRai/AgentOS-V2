@@ -18,7 +18,7 @@
   padding: 0 var(--gutter);
   border-radius: var(--r-5);
   background: var(--page);
-  outline: var(--line-1) solid var(--sheet-rim);
+  outline: var(--sheet-rim-w) solid var(--sheet-rim);
   overflow-y: auto;
 }
 
