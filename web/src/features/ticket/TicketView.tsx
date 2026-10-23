@@ -6,7 +6,15 @@
 import { type ReactNode, useState } from "react";
 import { useParams } from "react-router";
 
-import { useItems, useMessages, usePeople, usePlan, useRuns, useTicket } from "../../api/queries";
+import {
+  loadOf,
+  useItems,
+  useMessages,
+  usePeople,
+  usePlan,
+  useRuns,
+  useTicket,
+} from "../../api/queries";
 import type { Person, Ticket } from "../../api/types";
 import { stageModel } from "../../domain/board";
 import { firstName, paragraphs } from "../../domain/format";
@@ -14,7 +22,6 @@ import { parsePlan, type PlanItem } from "../../domain/plan";
 import {
   Chip,
   Composer,
-  Notice,
   Page,
   Section,
   Select,
@@ -24,6 +31,7 @@ import {
   Text,
   Thread,
 } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { ActionButton, headerActions } from "../shared/Actions";
 import { threadMessage, useBoard } from "../shared/board";
 import { TicketMenu } from "../shared/TicketMenu";
@@ -167,10 +175,10 @@ function Body({ t, me, now }: { t: Ticket; me: Person | null; now: number }) {
 
 export function TicketView() {
   const { key = "" } = useParams();
-  const ticket = useTicket(key);
+  const ticket = loadOf(useTicket(key));
   const { me, now } = useBoard();
   const { search } = useSearch();
-  const t = ticket.data;
+  const t = ticket.kind === "ready" ? ticket.data : null;
   return (
     <Page
       title={[{ label: "My queue", href: "/" }, key]}
@@ -188,12 +196,10 @@ export function TicketView() {
           }
         : {})}
     >
-      {t ? (
-        <Body t={t} me={me} now={now} />
+      {ticket.kind === "ready" ? (
+        <Body t={ticket.data} me={me} now={now} />
       ) : (
-        <Notice kind="status" error={ticket.isError}>
-          {ticket.isError ? `Ticket not found · ${key}` : `Loading ${key}`}
-        </Notice>
+        <LoadNotice load={ticket} noun="ticket" id={key} />
       )}
     </Page>
   );

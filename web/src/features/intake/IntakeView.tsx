@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 
-import { useIntake, useNow, useSession } from "../../api/queries";
+import { loadOf, useIntake, useNow, useSession } from "../../api/queries";
 import type { IntakeIssue, IntakeQuery } from "../../api/types";
 import {
   Age,
@@ -26,6 +26,7 @@ import {
   Table,
   Text,
 } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
@@ -245,14 +246,14 @@ function queryChips(queries: readonly IntakeQuery[], total: number): Segment[] {
 }
 
 export function IntakeView() {
-  const intake = useIntake();
+  const intake = loadOf(useIntake());
   const [params, setParams] = useSearchParams();
   const only = params.get("q");
   const space = useSpace();
   const jiraUrl = useSession().data?.jira_url ?? null;
   const { query, search } = useSearch();
   const now = useNow(30_000);
-  const data = intake.data;
+  const data = intake.kind === "ready" ? intake.data : null;
   return (
     <Page
       title="Intake"
@@ -280,16 +281,12 @@ export function IntakeView() {
       search={search}
     >
       <Table columns={COLUMNS} edge scroll={false} {...(data ? { foot: footNote(data, now) } : {})}>
-        {data ? (
-          data.queries
+        {intake.kind === "ready" ? (
+          intake.data.queries
             .filter((q) => only === null || q.name === only)
             .map((q) => <Group key={q.name} q={q} query={query} jiraUrl={jiraUrl} now={now} />)
-        ) : intake.error ? (
-          <Notice kind="status" error>
-            {`Can't reach the server · ${intake.error.message}`}
-          </Notice>
         ) : (
-          <Notice kind="status">Loading</Notice>
+          <LoadNotice load={intake} noun="intake" />
         )}
       </Table>
     </Page>

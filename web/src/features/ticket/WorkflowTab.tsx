@@ -4,11 +4,12 @@
 // with none of its editing affordances (the same cards, without their prompts), its gates and
 // loops, each stage with its last run as a status glyph before its name, in the stepper's words.
 // Edit opens the editor full window over the ticket (?edit=workflow); nothing is edited here.
-import { useNow, useRuns, useTicketWorkflow } from "../../api/queries";
+import { loadOf, useNow, useRuns, useTicketWorkflow } from "../../api/queries";
 import type { Run, Ticket, TicketWorkflow } from "../../api/types";
 import { authorText } from "../../domain/format";
 import { type Library, refName } from "../../domain/workflow";
-import { Button, Card, Chip, Lane, Notice, Section, Stack, Text } from "../../kit";
+import { Button, Card, Chip, Lane, Section, Stack, Text } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { LoopFoot } from "../workflow/Editor";
 import { useLibrary } from "../workflow/library";
 import { type LastRun, StageFace, StageSummary } from "../workflow/StageCard";
@@ -87,16 +88,11 @@ function Context({ w, lib }: { w: TicketWorkflow; lib: Library }) {
 }
 
 export function WorkflowTab({ t }: { t: Ticket }) {
-  const w = useTicketWorkflow(t.key);
+  const w = loadOf(useTicketWorkflow(t.key));
   const runs = useRuns(t.key).data?.items ?? [];
   const lib = useLibrary();
   const now = useNow(60_000);
-  if (!w.data)
-    return (
-      <Notice kind="status" error={w.isError}>
-        {w.isError ? `${t.key} has no workflow` : "Loading the workflow"}
-      </Notice>
-    );
+  if (w.kind !== "ready") return <LoadNotice load={w} noun="workflow" />;
   const copy = w.data;
   return (
     <Section

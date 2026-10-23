@@ -30,7 +30,6 @@ import {
   Icon,
   Mark,
   Meter,
-  Notice,
   Page,
   Row,
   Segmented,
@@ -39,6 +38,7 @@ import {
   Table,
   Text,
 } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
@@ -282,10 +282,7 @@ export function TeamsView() {
       search={search}
     >
       <Table columns={COLUMNS} edge foot={<Legend stages={stageCounts(active)} />}>
-        {board.pending ? <Notice kind="status">Loading</Notice> : null}
-        {board.error ? (
-          <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
-        ) : null}
+        {board.load ? <LoadNotice load={board.load} noun="tickets" /> : null}
         {active.map((g) => (
           <RepoSection key={g.repo} g={g} me={me} now={now} onOpen={open} />
         ))}

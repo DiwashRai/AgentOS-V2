@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 
-import { useMessages, usePlan, useTicket } from "../../api/queries";
+import { loadOf, useMessages, usePlan, useTicket } from "../../api/queries";
 import type { Person, Ticket } from "../../api/types";
 import { stageModel } from "../../domain/board";
 import { paragraphs } from "../../domain/format";
@@ -17,13 +17,13 @@ import {
   Composer,
   Dialog,
   Icon,
-  Notice,
   Section,
   Stack,
   Stepper,
   Text,
   Thread,
 } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { threadMessage, useBoard } from "../shared/board";
 import { TicketMenu } from "../shared/TicketMenu";
 import { Now } from "../ticket/now";
@@ -113,13 +113,11 @@ function Body(props: BodyProps) {
 }
 
 function Loaded({ ticketKey, ...rest }: Omit<BodyProps, "t"> & { ticketKey: string }) {
-  const ticket = useTicket(ticketKey);
-  if (ticket.data) return <Body t={ticket.data} {...rest} />;
+  const ticket = loadOf(useTicket(ticketKey));
+  if (ticket.kind === "ready") return <Body t={ticket.data} {...rest} />;
   return (
     <Section label={ticketKey}>
-      <Notice kind="status" error={ticket.isError}>
-        {ticket.isError ? `Ticket not found · ${ticketKey}` : `Loading ${ticketKey}`}
-      </Notice>
+      <LoadNotice load={ticket} noun="ticket" id={ticketKey} />
     </Section>
   );
 }

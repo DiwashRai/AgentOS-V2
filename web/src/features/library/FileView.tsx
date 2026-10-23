@@ -2,8 +2,9 @@
 // in the shared item editor; the other files a step or a pick away.
 import { useParams } from "react-router";
 
-import { useFile, useFiles } from "../../api/queries";
-import { Notice, Page, Text } from "../../kit";
+import { loadOf, useFile, useFiles } from "../../api/queries";
+import { Page, Text } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { ItemEditor } from "./ItemEditor";
 import { sizeText } from "./model";
 
@@ -11,17 +12,15 @@ const href = (id: string) => `/library/files/${id}`;
 
 export function FileView() {
   const { id = "" } = useParams();
-  const q = useFile(id);
+  const q = loadOf(useFile(id));
   const all = useFiles().data?.items ?? [];
-  const f = q.data;
-  if (!f)
+  if (q.kind !== "ready")
     return (
       <Page title={[{ label: "Files", href: "/library/files" }, id]}>
-        <Notice kind="status" error={q.isError}>
-          {q.isError ? `No file ${id}` : "Loading"}
-        </Notice>
+        <LoadNotice load={q} noun="file" id={id} />
       </Page>
     );
+  const f = q.data;
   return (
     <ItemEditor
       key={f.id}

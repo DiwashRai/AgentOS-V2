@@ -3,10 +3,25 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useState } from "react";
 
-import type { DataSource } from "./source";
+import type { Loaded } from "../domain/load";
+import { type DataSource, NotFound } from "./source";
 import type { Item, ItemSummary, Page } from "./types";
 
 export const SourceContext = createContext<DataSource | null>(null);
+
+/** A query's result, as far as a screen needs it (any of the hooks' results is one). */
+type Read<T> =
+  { status: "pending" } | { status: "error"; error: Error } | { status: "success"; data: T };
+
+/** A query as the screens say it: its data, or where it stands without it. The source's NotFound
+ *  is missing; any other failure is the server out of reach. */
+export function loadOf<T>(q: Read<T>): Loaded<T> {
+  if (q.status === "success") return { kind: "ready", data: q.data };
+  if (q.status === "pending") return { kind: "pending" };
+  return q.error instanceof NotFound
+    ? { kind: "missing" }
+    : { kind: "unreachable", message: q.error.message };
+}
 
 function useSource(): DataSource {
   const source = useContext(SourceContext);

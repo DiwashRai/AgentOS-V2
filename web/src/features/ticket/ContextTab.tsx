@@ -7,10 +7,11 @@
 // the ticket (?edit=<name>). A click anywhere on the line opens it too.
 import { useNavigate } from "react-router";
 
-import { useItem, useItems, useSetWritable } from "../../api/queries";
+import { loadOf, useItem, useItems, useSetWritable } from "../../api/queries";
 import type { Author, ItemSummary, Ticket } from "../../api/types";
 import { age, firstName, plural } from "../../domain/format";
-import { Button, type Column, Icon, Notice, Row, Stack, Table, Text, Toggle } from "../../kit";
+import { Button, type Column, Icon, Row, Stack, Table, Text, Toggle } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { useBoard } from "../shared/board";
 import { DriftChips } from "./copy";
 import { KIND, labelOf } from "./items";
@@ -110,10 +111,10 @@ function summary(items: readonly ItemSummary[]): string {
 }
 
 export function ContextTab({ t }: { t: Ticket }) {
-  const items = useItems(t.key);
+  const items = loadOf(useItems(t.key));
   const { now } = useBoard();
-  const list = items.data?.items ?? [];
-  if (items.isPending) return <Notice kind="status">Loading the context</Notice>;
+  if (items.kind !== "ready") return <LoadNotice load={items} noun="context" />;
+  const list = items.data.items;
   return (
     <Table
       columns={COLUMNS}

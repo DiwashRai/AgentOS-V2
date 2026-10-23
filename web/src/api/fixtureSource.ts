@@ -22,22 +22,19 @@ import {
   ticketWorkflowOf,
   WORKFLOWS,
 } from "../domain/library-fixtures";
-import type { DataSource } from "./source";
+import { type DataSource, NotFound } from "./source";
 import type { Page } from "./types";
 
 const page = <T>(items: readonly T[]): Page<T> => ({ items, next: null });
-/** A read that can fail, as the API's would: an unknown key rejects (a 404), it doesn't throw. */
-const settle = <T>(read: () => T): Promise<T> =>
-  new Promise((resolve) => {
-    resolve(read());
-  });
-/** One library item by id; an unknown id rejects. */
-const byId = <T extends { id: string }>(list: readonly T[], id: string): Promise<T> =>
-  settle(() => {
-    const found = list.find((x) => x.id === id);
-    if (!found) throw new Error(`no fixture ${id}`);
-    return found;
-  });
+/** A read of one thing, as the API answers it: read when it's there, else a 404 (NotFound). */
+const found = <T>(what: string, there: boolean, read: () => T): Promise<T> =>
+  there ? Promise.resolve().then(read) : Promise.reject(new NotFound(what));
+const isTicket = (key: string) => TICKETS.some((t) => t.key === key);
+/** One library item by id. */
+const byId = <T extends { id: string }>(list: readonly T[], id: string): Promise<T> => {
+  const hit = list.find((x) => x.id === id);
+  return hit ? Promise.resolve(hit) : Promise.reject(new NotFound(id));
+};
 
 export const fixtureSource: DataSource = {
   now: () => NOW,
@@ -46,13 +43,18 @@ export const fixtureSource: DataSource = {
   settings: () => Promise.resolve(SETTINGS),
   people: () => Promise.resolve(PEOPLE),
   tickets: () => Promise.resolve(page(TICKETS)),
-  ticket: (key) => settle(() => ticketOf(key)),
+  ticket: (key) => found(`ticket ${key}`, isTicket(key), () => ticketOf(key)),
   messages: (key) => Promise.resolve(page(MESSAGES[key] ?? [])),
   runs: (key) => Promise.resolve(page(RUNS[key] ?? [])),
   plan: (key) => Promise.resolve(PLANS[key] ?? null),
   items: (key) => Promise.resolve(page(itemsOf(key))),
-  item: (key, name) => settle(() => itemOf(key, name)),
-  ticketWorkflow: (key) => settle(() => ticketWorkflowOf(key)),
+  item: (key, name) =>
+    found(
+      `item ${name} on ${key}`,
+      itemsOf(key).some((i) => i.name === name),
+      () => itemOf(key, name),
+    ),
+  ticketWorkflow: (key) => found(`workflow on ${key}`, isTicket(key), () => ticketWorkflowOf(key)),
   intake: () => Promise.resolve(INTAKE),
   workflows: () => Promise.resolve(page(WORKFLOWS)),
   workflow: (id) => byId(WORKFLOWS, id),

@@ -36,6 +36,7 @@ import {
   Text,
   Thread,
 } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { ActionButton, expandedActions } from "../shared/Actions";
 import { contextOf, threadMessage, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
@@ -274,10 +275,7 @@ export function CompactView() {
             </>
           }
         >
-          {board.pending ? <Notice kind="status">Loading</Notice> : null}
-          {board.error ? (
-            <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
-          ) : null}
+          {board.load ? <LoadNotice load={board.load} noun="tickets" /> : null}
           {sections(listed, me, filter === "all" && query.length === 0).map((sec) => {
             if (sec.kind === "empty")
               return (

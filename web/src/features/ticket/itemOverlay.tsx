@@ -8,6 +8,7 @@
 import { useCallback, useRef, useState } from "react";
 
 import {
+  loadOf,
   useAgent,
   useFile,
   useItem,
@@ -16,7 +17,8 @@ import {
   useTicketWorkflow,
 } from "../../api/queries";
 import type { Item, ItemBody, Origin, Ticket } from "../../api/types";
-import { Button, Dialog, Icon, Notice, Page, Stack, Text, Toggle } from "../../kit";
+import { Button, Dialog, Icon, Page, Stack, Text, Toggle } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { type EditorActs, ItemEditor } from "../library/ItemEditor";
 import type { Fact } from "../library/side";
 import { copyTitle, DriftChips, saveAsk } from "./copy";
@@ -254,13 +256,11 @@ export function ItemOverlay({
 }
 
 function Loaded({ t, name, onDirty }: { t: Ticket; name: string; onDirty: OnDirty }) {
-  const item = useItem(t.key, name);
-  if (item.data) return <Editor key={name} t={t} i={item.data} onDirty={onDirty} />;
+  const item = loadOf(useItem(t.key, name));
+  if (item.kind === "ready") return <Editor key={name} t={t} i={item.data} onDirty={onDirty} />;
   return (
     <Page title={`${t.key}'s ${name}`}>
-      <Notice kind="status" error={item.isError}>
-        {item.isError ? `No item ${name} on ${t.key}` : `Loading ${name}`}
-      </Notice>
+      <LoadNotice load={item} noun="item" id={`${name} on ${t.key}`} />
     </Page>
   );
 }

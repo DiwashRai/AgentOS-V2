@@ -7,7 +7,7 @@
 // its state; a check's verdict sits at the right end, or a word where it has none yet.
 import { useState } from "react";
 
-import { useRuns, useTicketWorkflow } from "../../api/queries";
+import { loadOf, useRuns, useTicketWorkflow } from "../../api/queries";
 import type { Run, RunState, StageRun, Ticket, TicketWorkflow } from "../../api/types";
 import { clock, firstName } from "../../domain/format";
 import {
@@ -24,6 +24,7 @@ import {
   Table,
   Text,
 } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { useBoard } from "../shared/board";
 
 // Compact's line: the key, then the glyph and what the run is doing, then one quiet cluster at the
@@ -270,14 +271,14 @@ function RunDetail({ r, runs, w, now }: RunProps) {
 }
 
 export function RunsTab({ t }: { t: Ticket }) {
-  const runs = useRuns(t.key);
+  const runs = loadOf(useRuns(t.key));
   const w = useTicketWorkflow(t.key).data;
   const { now } = useBoard();
-  const items = runs.data?.items ?? [];
   // the newest is open until another is picked; picking the open one closes it
   const [picked, setPicked] = useState<number | null | undefined>(undefined);
+  if (runs.kind !== "ready") return <LoadNotice load={runs} noun="runs" />;
+  const items = runs.data.items;
   const open = picked === undefined ? items[0]?.id : picked;
-  if (runs.isPending) return <Notice kind="status">Loading runs</Notice>;
   if (items.length === 0)
     return (
       <Notice kind="empty" lead="No runs yet">

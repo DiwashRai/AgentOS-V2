@@ -2,25 +2,24 @@
 // lives, in the shared item editor; the other skills a step or a pick away.
 import { useParams } from "react-router";
 
-import { useSkill, useSkills } from "../../api/queries";
-import { Notice, Page, Text } from "../../kit";
+import { loadOf, useSkill, useSkills } from "../../api/queries";
+import { Page, Text } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { ItemEditor } from "./ItemEditor";
 
 const href = (id: string) => `/library/skills/${id}`;
 
 export function SkillView() {
   const { id = "" } = useParams();
-  const q = useSkill(id);
+  const q = loadOf(useSkill(id));
   const all = useSkills().data?.items ?? [];
-  const s = q.data;
-  if (!s)
+  if (q.kind !== "ready")
     return (
       <Page title={[{ label: "Skills", href: "/library/skills" }, id]}>
-        <Notice kind="status" error={q.isError}>
-          {q.isError ? `No skill ${id}` : "Loading"}
-        </Notice>
+        <LoadNotice load={q} noun="skill" id={id} />
       </Page>
     );
+  const s = q.data;
   return (
     <ItemEditor
       key={s.id}

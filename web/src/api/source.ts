@@ -1,5 +1,6 @@
 // The one data module's seam: everything the screens read, one method per endpoint. W0 serves it
-// from fixtures (fixtureSource.ts); W11 swaps in the HTTP client and the `/changes` stream.
+// from fixtures (fixtureSource.ts); W11 swaps in the HTTP client and the `/changes` stream. A read of
+// one thing by its key or id rejects with NotFound when there is none.
 import type {
   Agent,
   Intake,
@@ -20,6 +21,15 @@ import type {
   TicketWorkflow,
   Workflow,
 } from "./types";
+
+/** What a read of one thing rejects with when there is no such thing (the API's 404), so a screen
+ *  says it is missing rather than that the server is out of reach. Any other failure is an Error. */
+export class NotFound extends Error {
+  constructor(what: string) {
+    super(`No ${what}`);
+    this.name = "NotFound";
+  }
+}
 
 export interface DataSource {
   /** The clock, injected so screens and screenshots agree on "now". */

@@ -7,10 +7,11 @@
 // inside the overlay: Save, Discard, or keep editing.
 import { useState } from "react";
 
-import { useNow, useTicketWorkflow, useWorkflow } from "../../api/queries";
+import { loadOf, useNow, useTicketWorkflow, useWorkflow } from "../../api/queries";
 import type { Ticket, TicketWorkflow, Workflow, WorkflowBody } from "../../api/types";
 import { authorText } from "../../domain/format";
-import { Button, Chip, Dialog, FormRow, Notice, Page, Text } from "../../kit";
+import { Button, Chip, Dialog, FormRow, Page, Text } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { type Draft, useDraft } from "../workflow/draft";
 import { Editor } from "../workflow/Editor";
 import { copyTitle, DriftChips as SharedDrift, saveAsk } from "./copy";
@@ -148,14 +149,12 @@ function CopyEditor({ t, w, open, onClose }: OverlayProps & { w: TicketWorkflow 
 }
 
 export function WorkflowOverlay({ t, open, onClose }: OverlayProps) {
-  const w = useTicketWorkflow(t.key);
-  if (w.data) return <CopyEditor t={t} w={w.data} open={open} onClose={onClose} />;
+  const w = loadOf(useTicketWorkflow(t.key));
+  if (w.kind === "ready") return <CopyEditor t={t} w={w.data} open={open} onClose={onClose} />;
   return (
     <Dialog look="full" label={`${t.key}'s workflow`} open={open} onClose={onClose}>
       <Page title={`${t.key}'s workflow`}>
-        <Notice kind="status" error={w.isError}>
-          {w.isError ? `${t.key} has no workflow` : "Loading the workflow"}
-        </Notice>
+        <LoadNotice load={w} noun="workflow" />
       </Page>
     </Dialog>
   );

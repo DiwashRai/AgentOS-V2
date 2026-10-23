@@ -20,6 +20,7 @@ import {
   Table,
   Text,
 } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { KeyCell, LINE_END, lineEnd, TitleCell } from "../compact/TicketLine";
 import { ActionButton, rowActions } from "../shared/Actions";
 import { contextOf, useBoard, useSpace } from "../shared/board";
@@ -300,10 +301,8 @@ export function QueueView() {
       }
     >
       <Surface>
-        {board.error ? (
-          <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
-        ) : board.pending ? (
-          <Notice kind="status">Loading</Notice>
+        {board.load ? (
+          <LoadNotice load={board.load} noun="tickets" />
         ) : (
           <ZoneList z={z} me={me} now={now} open={open} only={zone} />
         )}

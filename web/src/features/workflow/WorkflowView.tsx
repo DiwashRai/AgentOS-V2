@@ -3,10 +3,11 @@
 // who changed it last.
 import { useParams } from "react-router";
 
-import { useNow, useWorkflow } from "../../api/queries";
+import { loadOf, useNow, useWorkflow } from "../../api/queries";
 import type { Workflow } from "../../api/types";
 import { authorText } from "../../domain/format";
-import { Chip, Notice, Page, Stack, Text } from "../../kit";
+import { Chip, Page, Stack, Text } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { useDraft } from "./draft";
 import { Editor } from "./Editor";
 
@@ -32,13 +33,11 @@ function Loaded({ w }: { w: Workflow }) {
 
 export function WorkflowView() {
   const { id = "" } = useParams();
-  const w = useWorkflow(id);
-  if (w.data) return <Loaded key={w.data.id} w={w.data} />;
+  const w = loadOf(useWorkflow(id));
+  if (w.kind === "ready") return <Loaded key={w.data.id} w={w.data} />;
   return (
     <Page title={[LIST, id]}>
-      <Notice kind="status" error={w.isError}>
-        {w.isError ? `No workflow ${id}` : "Loading the workflow"}
-      </Notice>
+      <LoadNotice load={w} noun="workflow" id={id} />
     </Page>
   );
 }

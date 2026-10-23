@@ -1,15 +1,15 @@
 // What every board screen reads: the tickets, who I am, and the clock.
-import { useNow, useSession, useSettings, useTickets } from "../../api/queries";
+import { loadOf, useNow, useSession, useSettings, useTickets } from "../../api/queries";
 import { clock } from "../../domain/format";
 
+/** The rows (none until they're there) and where their read stands. */
 export function useBoard() {
-  const tickets = useTickets();
+  const tickets = loadOf(useTickets());
   const me = useSession().data?.me ?? null;
   const now = useNow(30_000);
   return {
-    rows: tickets.data?.items ?? [],
-    pending: tickets.isPending,
-    error: tickets.error,
+    rows: tickets.kind === "ready" ? tickets.data.items : [],
+    load: tickets.kind === "ready" ? null : tickets,
     me,
     now,
   };

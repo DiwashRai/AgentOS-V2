@@ -3,25 +3,24 @@
 // step or a pick away.
 import { useParams } from "react-router";
 
-import { useAgent, useAgents } from "../../api/queries";
-import { Notice, Page } from "../../kit";
+import { loadOf, useAgent, useAgents } from "../../api/queries";
+import { Page } from "../../kit";
+import { LoadNotice } from "../../patterns/load";
 import { ItemEditor } from "./ItemEditor";
 
 const href = (id: string) => `/library/agents/${id}`;
 
 export function AgentView() {
   const { id = "" } = useParams();
-  const q = useAgent(id);
+  const q = loadOf(useAgent(id));
   const all = useAgents().data?.items ?? [];
-  const a = q.data;
-  if (!a)
+  if (q.kind !== "ready")
     return (
       <Page title={[{ label: "Agents", href: "/library/agents" }, id]}>
-        <Notice kind="status" error={q.isError}>
-          {q.isError ? `No agent ${id}` : "Loading"}
-        </Notice>
+        <LoadNotice load={q} noun="agent" id={id} />
       </Page>
     );
+  const a = q.data;
   return (
     <ItemEditor
       key={a.id}
