@@ -19,7 +19,7 @@
   flex: none;
   margin: 0;
   font-size: var(--fs-6);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: calc(var(--track-snug) * 2);
   color: var(--ink-1);
   white-space: nowrap;

@@ -4,7 +4,7 @@
 }
 .display {
   font-size: var(--fs-ticket);
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.2;
   letter-spacing: calc(var(--track-snug) * 2);
   color: var(--ink-1);

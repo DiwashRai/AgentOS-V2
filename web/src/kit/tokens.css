@@ -260,10 +260,12 @@
   --id-teal: #0f766e;
   --id-slate: #4b5b78;
   --id-on: #ffffff;
-  --id-violet-row: color-mix(in srgb, var(--id-violet) var(--face-id), var(--page));
-  --id-blue-row: color-mix(in srgb, var(--id-blue) var(--face-id), var(--page));
-  --id-rose-row: color-mix(in srgb, var(--id-rose) var(--face-id), var(--page));
-  --id-teal-row: color-mix(in srgb, var(--id-teal) var(--face-id), var(--page));
+  /* in a row every face is the one neutral slate (a list's colour belongs to its states); the hues
+     stay where a face stands for a voice (a thread, a picker's own row) */
+  --id-violet-row: var(--id-slate-row);
+  --id-blue-row: var(--id-slate-row);
+  --id-rose-row: var(--id-slate-row);
+  --id-teal-row: var(--id-slate-row);
   --id-slate-row: color-mix(in srgb, var(--id-slate) var(--face-id), var(--page));
   /* agents: a still meter in a list of runs, the step under way a soft live */
   --meter-now: color-mix(in srgb, var(--live) 38%, transparent);
@@ -282,7 +284,11 @@
      so a row's status glyph is its one colour */
   --priority-on: var(--ink-2);
   --priority-off: color-mix(in srgb, var(--ink-1) 16%, transparent);
-  --priority-none: transparent; /* normal priority: nothing drawn, its room kept so keys line up */
+  --priority-none: color-mix(
+    in srgb,
+    var(--ink-1) 18%,
+    transparent
+  ); /* normal: faint, every row's slot kept */
   --type-square: transparent;
   --type-glyph: var(--ink-2);
 }

@@ -115,11 +115,12 @@
 .link:hover {
   color: var(--ink-1);
 }
-/* outline: a primary in a list's line (Approve in My queue): the accent's words on the control's face
-   inside an edge of the accent, so the row says act here without being the loudest thing on the
-   page; under the pointer the accent's soft wash */
+/* outline: a primary in a list's line (Approve in My queue): the accent's words alone at rest, an
+   inline action, so the row says act here without a box; under the pointer its edge and the
+   accent's soft wash */
 .outline {
-  border-color: var(--you-edge);
+  border-color: transparent;
+  background: none;
   color: var(--you-text);
 }
 .outline:hover {

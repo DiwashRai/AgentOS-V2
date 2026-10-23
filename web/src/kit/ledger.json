@@ -126,7 +126,7 @@
             "default": "A soft fill with no edge, a step firmer under the pointer.",
             "ink": "A primary that isn't a gate (Retry): the default's fill in a firmer weight, so it sits with its neighbours.",
             "you": "The gate primary (Approve), and an editor's Save: the bar's one filled button; blocked, a soft wash of the accent with its words in the accent's ink, still the bar's primary and plainly not lit; in a list's line it is the outline instead.",
-            "outline": "A primary in a list's line (Approve in My queue's Your move): the accent's words inside an edge of the accent, so the row still says act here without being the page's loudest thing.",
+            "outline": "A primary in a list's line (Approve, Retry in My queue): the accent's words alone at rest, an inline action, its edge and soft wash under the pointer, so the row still says act here without a box.",
             "aside": "A row's second action (Request changes): the default's look, shown only while its row is under the pointer or holds the focus, its room kept so the row never moves.",
             "accent": "Only Dispatch run, only on a ticket.",
             "quiet": "A button with no fill at rest (+N, icon buttons in a bar, a lane's +); blocked, its faded words or glyph alone.",
