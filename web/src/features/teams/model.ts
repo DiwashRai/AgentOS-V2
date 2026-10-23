@@ -108,12 +108,11 @@ function waiting(t: TicketRow, a: Waiting, me: Person | null): StateWords {
   return { text: `${gate ?? a.ask} · ${who}`, say: `${a.ask} · ${who}` };
 }
 
-/** `a` is the ticket's attention, once the caller knows no run is at work on it. */
-export function stateOf(
-  t: TicketRow,
-  a: Exclude<Attention, AtWork>,
-  me: Person | null,
-): StateWords {
+/** A ticket no run is at work on or queued for: its attention says so. */
+type IdleRow = TicketRow & { attention: Exclude<Attention, AtWork> };
+
+export function stateOf(t: IdleRow, me: Person | null): StateWords {
+  const a = t.attention;
   switch (a.kind) {
     case "waiting":
       return waiting(t, a, me);

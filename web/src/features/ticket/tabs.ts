@@ -1,7 +1,7 @@
 // The ticket page's tabs and overlays live in its URL: `?tab=runs|context|workflow` (Overview has
 // none), and `?edit=workflow` (the ticket's workflow, full window) or `?edit=<item name>` (one of
 // its context items) over it. Closing an overlay leaves its tab where it was.
-import { useSearchParams } from "react-router";
+import { useParam } from "../shared/useParam";
 
 export const TABS = ["overview", "runs", "context", "workflow"] as const;
 export type TabId = (typeof TABS)[number];
@@ -18,28 +18,18 @@ export function ticketHref(key: string, tab: TabId, edit?: string): string {
   return s ? `/t/${key}?${s}` : `/t/${key}`;
 }
 
+/** The tab (switching one replaces the history entry) and the overlay over it. */
 export function useTicketUrl() {
-  const [params, setParams] = useSearchParams();
-  const raw = params.get("tab");
-  const set = (name: string, value: string | null) => {
-    setParams(
-      (p) => {
-        const out = new URLSearchParams(p);
-        if (value === null) out.delete(name);
-        else out.set(name, value);
-        return out;
-      },
-      { replace: name === "tab" },
-    );
-  };
+  const [raw, setTab] = useParam("tab", { replace: true });
+  const [edit, setEdit] = useParam("edit");
   return {
     tab: TABS.find((t) => t === raw) ?? "overview",
     setTab: (t: string) => {
-      set("tab", t === "overview" ? null : t);
+      setTab(t === "overview" ? null : t);
     },
-    edit: params.get("edit"),
+    edit,
     closeEdit: () => {
-      set("edit", null);
+      setEdit(null);
     },
   };
 }

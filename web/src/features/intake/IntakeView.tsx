@@ -38,6 +38,7 @@ import {
   issueFacts,
   issuesOf,
   jqlHref,
+  onlyOf,
   sharedPrefix,
   statusMark,
   toTakeIn,
@@ -240,12 +241,13 @@ function queryChips(queries: readonly IntakeQuery[], total: number): Segment[] {
 export function IntakeView() {
   const intake = loadOf(useIntake());
   // the bar's chip: `?only=` lists one query (the search box has `?q=`)
-  const [only, setOnly] = useParam("only");
+  const [asked, setOnly] = useParam("only");
   const space = useSpace();
   const jiraUrl = useSession().data?.jira_url ?? null;
   const { query, search } = useSearch();
   const now = useNow(30_000);
   const data = intake.kind === "ready" ? intake.data : null;
+  const only = onlyOf(asked, data?.queries ?? []);
   return (
     <Page
       title="Intake"

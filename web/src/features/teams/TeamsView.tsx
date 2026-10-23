@@ -75,7 +75,7 @@ function Legend({ stages }: { stages: readonly { name: string; n: number }[] }) 
 function StateCell({ t, me, now }: { t: TicketRow; me: Person | null; now: number }) {
   const a = t.attention;
   if (atWork(a)) return <RunNow run={a} since={t.since} now={now} />;
-  const st = stateOf(t, a, me);
+  const st = stateOf({ ...t, attention: a }, me);
   return (
     <Text tone="2" truncate title={st.say}>
       {st.text}

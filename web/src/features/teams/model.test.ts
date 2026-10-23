@@ -70,8 +70,8 @@ describe("All teams' groups", () => {
 
 describe("a ticket's state in words", () => {
   it("says your move by its ask and someone else's by name", () => {
-    const t = ticket("NW-1", "web", "plan", MINE);
-    expect(stateOf(t, MINE, ADA).text).toBe("Plan sign-off");
-    expect(stateOf(t, MINE, BEA).text).toBe("Plan sign-off · Ada");
+    const t = { ...ticket("NW-1", "web", "plan", MINE), attention: MINE };
+    expect(stateOf(t, ADA).text).toBe("Plan sign-off");
+    expect(stateOf(t, BEA).text).toBe("Plan sign-off · Ada");
   });
 });

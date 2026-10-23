@@ -11,6 +11,12 @@ export function issuesOf(q: IntakeQuery, query: readonly string[]): readonly Int
   return q.result.issues.filter((i) => matches([i.key, i.title], query));
 }
 
+/** The query `?only=` names, parsed at the edge against the queries there are: a name none of
+ *  them has lists every query, as no `?only=` does. */
+export function onlyOf(asked: string | null, queries: readonly IntakeQuery[]): string | null {
+  return queries.find((q) => q.name === asked)?.name ?? null;
+}
+
 /** The top bar's "N to take in": distinct issues across every query (one in two queries counts once). */
 export function toTakeIn(intake: Intake): number {
   return new Set(
