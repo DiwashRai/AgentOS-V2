@@ -54,11 +54,6 @@ describe("All teams' groups", () => {
     ];
     const [web] = groupsOf(rows, ["web"], ADA, []).active;
     expect(web?.rows.map((t) => t.key)).toEqual(["NW-4", "NW-1", "NW-2", "NW-3"]);
-    expect(web?.tally.map((s) => [s.word, s.n])).toEqual([
-      ["need you", 1],
-      ["blocked", 1],
-      ["running", 2],
-    ]);
     expect(web?.people.map((p) => p.name)).toEqual(["Ada Park", "Bea Quinn"]);
   });
 

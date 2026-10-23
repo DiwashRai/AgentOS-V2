@@ -7,13 +7,12 @@ import {
   type GlyphModel,
   type Group,
   groupOf,
-  isMine,
   isMyMove,
   markOf,
   type MarkModel,
   stepText,
 } from "../../domain/board";
-import { age, matches, minutesSince, prefixOf, repoShort } from "../../domain/format";
+import { matches, prefixOf, repoShort } from "../../domain/format";
 
 export type Filter = Group | "all";
 
@@ -74,61 +73,11 @@ const ORDER: Record<Group, (a: TicketRow, b: TicketRow) => number> = {
   done: newestFirst,
 };
 
-/** A group head's right slot. */
-export type Summary =
-  | { kind: "text"; text: string; strong?: string }
-  | { kind: "note"; text: string }
-  | { kind: "shipped"; n: number }
-  | null;
-
-/** "web 2 · api 1": where the work is, for groups of 4 or more. */
-function byRepoText(items: readonly TicketRow[]): Summary {
-  if (items.length < 4) return null;
-  const n = new Map<string, number>();
-  for (const t of items)
-    n.set(
-      t.repo ? repoShort(t.repo) : "No repo",
-      (n.get(t.repo ? repoShort(t.repo) : "No repo") ?? 0) + 1,
-    );
-  const text = [...n.entries()]
-    .sort(([a, x], [b, y]) => y - x || a.localeCompare(b))
-    .map(([name, count]) => `${name} ${String(count)}`)
-    .join(" · ");
-  return { kind: "text", text };
-}
-
-function summaryOf(g: Group, items: readonly TicketRow[], me: Person | null, now: number): Summary {
-  switch (g) {
-    case "needs_you": {
-      const oldest = items[0];
-      return oldest ? { kind: "text", text: "Longest wait", strong: age(oldest.since, now) } : null;
-    }
-    case "blocked": {
-      const mine = items.filter((t) => isMine(t, me)).length;
-      return mine > 0 ? { kind: "text", text: "yours", strong: String(mine) } : null;
-    }
-    case "inbox":
-      return { kind: "note", text: "Add context, then dispatch" };
-    case "done": {
-      const n = items.filter(
-        (t) =>
-          t.attention.kind === "done" &&
-          t.attention.outcome === "completed" &&
-          minutesSince(t.since, now) < 7 * 1440,
-      ).length;
-      return n > 0 ? { kind: "shipped", n } : null;
-    }
-    default:
-      return byRepoText(items);
-  }
-}
-
 export interface CompactGroup {
   id: Group;
   title: string;
   mark: MarkModel["kind"];
   items: TicketRow[];
-  summary: Summary;
 }
 
 export type Section =
@@ -156,18 +105,13 @@ function emptyRow(g: Group, has: (g: Group) => boolean): Empty | null {
 export function sections(
   rows: readonly TicketRow[],
   me: Person | null,
-  now: number,
   showEmpty: boolean,
 ): Section[] {
   const has = (g: Group) => rows.some((t) => groupOf(t, me) === g);
   return GROUP_ORDER.flatMap((g): Section[] => {
     const items = rows.filter((t) => groupOf(t, me) === g).sort(ORDER[g]);
-    if (items.length > 0) {
-      const summary = summaryOf(g, items, me, now);
-      return [
-        { kind: "group", group: { id: g, title: GROUP_WORD[g], mark: MARK[g], items, summary } },
-      ];
-    }
+    if (items.length > 0)
+      return [{ kind: "group", group: { id: g, title: GROUP_WORD[g], mark: MARK[g], items } }];
     const empty = showEmpty ? emptyRow(g, has) : null;
     return empty ? [empty] : [];
   });

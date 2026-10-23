@@ -57,9 +57,3 @@ export function zones(rows: readonly TicketRow[], me: Person | null, now: number
 export function atWorkNote(z: Zones): string {
   return `${String(z.mine)} yours · ${String(Math.max(0, z.running + z.queued - z.mine))} across the team`;
 }
-
-/** Shipped this week: completed in the last 7 days. */
-export function shipped(done: readonly TicketRow[]): number {
-  return done.filter((t) => t.attention.kind === "done" && t.attention.outcome === "completed")
-    .length;
-}

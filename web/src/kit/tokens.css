@@ -341,8 +341,8 @@
 
 /* Theme-independent */
 :root {
-  /* type: Geist and Geist Mono (self-hosted, kit/fonts.css); weights 400, 500, 600 */
-  --font-sans: "Geist", "Inter", system-ui, sans-serif;
+  /* type: Inter and Geist Mono (self-hosted, kit/fonts.css); weights 400, 500, 600 */
+  --font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
   --font-mono: "Geist Mono", "JetBrains Mono", "DejaVu Sans Mono", ui-monospace, monospace;
   --fs-1: 11px; /* the floor: mono keys, units */
   --fs-2: 12px; /* meta */

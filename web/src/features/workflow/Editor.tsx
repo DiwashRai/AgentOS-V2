@@ -245,9 +245,9 @@ function loopsOf(draft: Draft, problems: Problems): LaneLoop[] {
   }));
 }
 
-/** Undo and Redo (quiet glyphs, a blocked one faded), then Discard and Save as a pair: Save the
- *  bar's one filled button (grey while there is nothing to save), which says how many problems
- *  there are. */
+/** Undo and Redo (quiet glyphs, a blocked one faded), then, once there is an edit, Discard and Save
+ *  as a pair: Save the bar's one filled button, which says how many problems there are. With no
+ *  edit neither is drawn, so a clean editor never shows a dead primary. */
 function Actions({ draft, problems }: { draft: Draft; problems: number }) {
   const save = problems > 0 ? `Save · ${plural(problems, "problem")}` : "Save";
   return (
@@ -264,23 +264,18 @@ function Actions({ draft, problems }: { draft: Draft; problems: number }) {
         title="Redo"
         {...(draft.canRedo ? { onClick: draft.redo } : { blocked: "Nothing to redo" })}
       />
-      <Button
-        {...(draft.dirty ? { onClick: draft.discard } : { blocked: "No changes to discard" })}
-      >
-        Discard
-      </Button>
-      <Button
-        variant="you"
-        {...(draft.dirty
-          ? {
-              onClick: draft.save,
-              title:
-                problems > 0 ? "Saves as it is; it won't run until the problems are fixed" : "",
-            }
-          : { blocked: "No changes to save" })}
-      >
-        {save}
-      </Button>
+      {draft.dirty ? (
+        <>
+          <Button onClick={draft.discard}>Discard</Button>
+          <Button
+            variant="you"
+            onClick={draft.save}
+            title={problems > 0 ? "Saves as it is; it won't run until the problems are fixed" : ""}
+          >
+            {save}
+          </Button>
+        </>
+      ) : null}
     </>
   );
 }

@@ -14,9 +14,6 @@ export interface HeadProps {
   count?: number | undefined;
   /** Before the name: a status glyph, or a project key. */
   icon?: ReactNode;
-  /** The group's state: its count says it (you: Needs you, in the accent; live, blocked, done a
-   *  step firmer in ink). The heading keeps one look and the name in ink. */
-  tone?: "neutral" | "you" | "live" | "blocked" | "done";
   /** Quiet, right after the count ("Longest wait first"). */
   note?: string | undefined;
   /** At the far end: a stat, links. */
@@ -34,21 +31,17 @@ interface TitleProps {
   name: string;
   count: number | undefined;
   icon: ReactNode;
-  tone: NonNullable<HeadProps["tone"]>;
   note: ReactNode;
 }
 
-/** The glyph or key, the name, the count, and a line's note. */
-function Title({ name, count, icon, tone, note }: TitleProps) {
+/** The glyph or key, the name, the count (in the one quiet ink, whatever the group: the glyph says
+ *  the state), and a line's note. */
+function Title({ name, count, icon, note }: TitleProps) {
   return (
     <>
       {icon ? <span className={s.icon}>{icon}</span> : null}
       <span className={s.name}>{name}</span>
-      {count !== undefined ? (
-        <Badge kind="count" tone={tone}>
-          {count}
-        </Badge>
-      ) : null}
+      {count !== undefined ? <Badge kind="count">{count}</Badge> : null}
       {note}
     </>
   );
@@ -75,15 +68,13 @@ function useSticky(level: NonNullable<HeadProps["level"]>): boolean {
 }
 
 export function Head(props: HeadProps) {
-  const { name, count, icon, tone = "neutral", note, summary, level = "group", fold } = props;
+  const { name, count, icon, note, summary, level = "group", fold } = props;
   // a line's note belongs to its name ("didn't answer"), inside the fold that reaches across it
   const noteEl = note ? <span className={s.note}>{note}</span> : null;
   const inFold = level === "line" && fold !== undefined;
   // a group head in a list that scrolls inside its surface stays at its top
   const sticky = useSticky(level);
-  const title = (
-    <Title name={name} count={count} icon={icon} tone={tone} note={inFold ? noteEl : null} />
-  );
+  const title = <Title name={name} count={count} icon={icon} note={inFold ? noteEl : null} />;
   return (
     <div
       className={cx(s.head, s[level], sticky && s.sticky)}

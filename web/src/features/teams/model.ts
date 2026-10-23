@@ -1,8 +1,7 @@
 // Pure selection for All teams: every ticket in flight (inbox and merged work live in each repo's
 // list), one group per repo in the Space's order. A group's rows run down the stages (Plan, Build,
 // Verify, Review), and inside a stage what needs you leads, then blocked, running, waiting and
-// queued. Its head carries who works there and its tally of states; a repo with nothing in flight
-// is quiet.
+// queued. Its head carries who works there; a repo with nothing in flight is quiet.
 import type { Attention, Person, Phase, Progress, TicketRow } from "../../api/types";
 import { type Group, groupOf, isMyMove, stepText } from "../../domain/board";
 import { firstName } from "../../domain/format";
@@ -29,15 +28,6 @@ const PHASE_AT: Record<Phase, number> = {
   done: 5,
 };
 
-/** A tally's states, in the order they call for a look; each with its glyph and word. */
-export const TALLY = [
-  { group: "needs_you", mark: "you", word: "need you" },
-  { group: "blocked", mark: "blk", word: "blocked" },
-  { group: "running", mark: "run", word: "running" },
-  { group: "waiting", mark: "wait", word: "waiting" },
-  { group: "queued", mark: "queued", word: "queued" },
-] as const;
-
 const URGENCY: Record<Group, number> = {
   needs_you: 0,
   blocked: 1,
@@ -48,19 +38,12 @@ const URGENCY: Record<Group, number> = {
   done: 6,
 };
 
-export interface Tally {
-  mark: (typeof TALLY)[number]["mark"];
-  word: string;
-  n: number;
-}
-
 export interface RepoGroup {
   repo: string;
   /** Who works there: everyone who owns one of its tickets, in flight or not. */
   people: Person[];
   /** Its tickets in flight that the search leaves, down the stages. */
   rows: TicketRow[];
-  tally: Tally[];
 }
 
 /** Each repo's group: its tickets in flight (the search's), in stage order, what needs you first. */
@@ -86,11 +69,6 @@ export function groupsOf(
       people: [...new Map(owners.map((p) => [p.id, p])).values()],
       rows: shown,
       flying: flying.length,
-      tally: TALLY.map((s) => ({
-        mark: s.mark,
-        word: s.word,
-        n: shown.filter((t) => groupOf(t, me) === s.group).length,
-      })).filter((s) => s.n > 0),
     };
   });
   return {

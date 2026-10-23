@@ -18,7 +18,8 @@ const WORD: Record<ActionId, string> = {
 };
 
 /** The variants an action takes: the strong two, the accent (Dispatch on the header), the rest; in a
- *  list's line the gate's primary is outlined and the rest wait for the row's hover or focus. */
+ *  list's line either strong one (a gate's Approve, Retry) is the same outline, one button language
+ *  down the list, and the rest wait for the row's hover or focus. */
 type ActionLook = "you" | "ink" | "outline" | "aside" | "accent" | "default";
 const VARIANT: Partial<Record<ActionId, "you" | "ink">> = { continue: "you", retry: "ink" };
 const RANK: Record<Role, number> = { pending: 0, viewer: 1, writer: 2, admin: 3 };
@@ -65,7 +66,7 @@ function variantOf(action: Action, header: boolean, line: boolean): ActionLook {
   if (header && action.id === "dispatch") return "accent";
   const look = VARIANT[action.id] ?? "default";
   if (!line) return look;
-  return look === "you" ? "outline" : look === "default" ? "aside" : look;
+  return look === "default" ? "aside" : "outline";
 }
 
 export function ActionButton({ action, size = "sm", header = false }: ActionButtonProps) {

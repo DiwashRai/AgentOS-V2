@@ -1,6 +1,6 @@
 // The one item editor (spec screen 2), for a library agent, skill or file and for a ticket's copy of
 // one in the ticket's full-window overlay: the bar names the item, its version and who last edited
-// it when, with Discard and Save (lit once there is an edit), and in the library the way to the
+// it when, with Discard and Save (shown once there is an edit), and in the library the way to the
 // item's siblings; the main column holds its name and description together, then the content; the
 // side rail holds the settings, what uses it and the latest versions. A save that someone else beat
 // shows both versions, each side's own changes marked, to keep one. W0 is static: Save keeps the
@@ -64,8 +64,8 @@ const MINUTE = 60_000;
 const ago = (a: string) => (a === "now" ? "just now" : `${a} ago`);
 const FIRST = "Keep yours or take theirs first";
 
-/** Discard and Save as a pair: Save the bar's one filled button (grey while there is nothing to
- *  save). */
+/** Discard and Save as a pair, once there is an edit (Save the bar's one filled button); with none,
+ *  neither is drawn, so a clean editor never shows a dead primary. */
 function Actions({ e }: { e: Editor }) {
   if (e.theirs)
     return (
@@ -83,14 +83,7 @@ function Actions({ e }: { e: Editor }) {
         Save
       </Button>
     </>
-  ) : (
-    <>
-      <Button blocked="No changes to discard">Discard</Button>
-      <Button variant="you" blocked="No changes to save">
-        Save
-      </Button>
-    </>
-  );
+  ) : null;
 }
 
 /** After the title: a conflict, or an edit not saved yet. */

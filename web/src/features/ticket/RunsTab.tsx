@@ -162,7 +162,9 @@ function RunLine({ r, runs, w, now }: RunProps) {
         {`\u2002${after}`}
       </Text>
     </Stack>,
-    <Chip key="time" lead="clock" label={time} title={`${time} budget`} />,
+    <Text key="time" variant="meta" tone="3" tabular title={`${time} budget`}>
+      {time}
+    </Text>,
     <Text key="age" variant="meta" tone="3" tabular title={`Started ${clock(started)}`}>
       {ago(started, now)}
     </Text>,
@@ -170,18 +172,27 @@ function RunLine({ r, runs, w, now }: RunProps) {
   ];
 }
 
-/** At a stage's right end: a check's verdict, else what it's doing while it has none; every state
- *  the same dotted chip in its hue, so the column reads as one. */
+/** At a stage's right end: a check's verdict, else what it's doing while it has none, in words in
+ *  its state's ink (no box: the glyph at the line's start already shows the state). */
 function Verdict({ s }: { s: StageRun }) {
   if (s.verdict)
     return (
-      <Chip
-        dot={s.verdict === "pass" ? "done" : "blocked"}
-        label={s.verdict === "pass" ? "Passed" : "Failed"}
-      />
+      <Text variant="meta" tone={s.verdict === "pass" ? "done" : "blocked"} weight={500}>
+        {s.verdict === "pass" ? "Passed" : "Failed"}
+      </Text>
     );
-  if (s.state === "running") return <Chip dot="live" label="Running" />;
-  if (s.state === "pending") return <Chip dot="neutral" label="Pending" />;
+  if (s.state === "running")
+    return (
+      <Text variant="meta" tone="live" weight={500}>
+        Running
+      </Text>
+    );
+  if (s.state === "pending")
+    return (
+      <Text variant="meta" tone="3">
+        Pending
+      </Text>
+    );
   return <Text variant="meta">{""}</Text>;
 }
 

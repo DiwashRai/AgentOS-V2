@@ -3,8 +3,8 @@
 // list as a ledger: the key; its state's glyph and the title; the stage it is at; its state in
 // words (a running agent's steps on a still meter); its owner; how long it has been so. The repos
 // are its groups, in the Space's order, each under a head that carries the repo, its path, who
-// works there, how many of its tickets are in flight and a tally of their states (what needs you
-// in the accent), with its list at the head's end; inside a group the rows run down the stages.
+// works there and how many of its tickets are in flight, with its list at the head's end; inside a
+// group the rows run down the stages.
 // A repo with nothing in flight is one quiet line at the foot. Click a row to peek.
 import { useSearchParams } from "react-router";
 
@@ -35,7 +35,7 @@ import { parseFilter, pills, stageWord } from "../compact/model";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
-import { groupsOf, type RepoGroup, STAGE, stageCounts, stateOf, type Tally } from "./model";
+import { groupsOf, type RepoGroup, STAGE, stageCounts, stateOf } from "./model";
 
 // The page's one grid, labelled once over the groups: the key, the title taking what the plain
 // columns leave, then the stage, the state (wide enough for a run's agent, steps and meter), the
@@ -49,16 +49,8 @@ const COLUMNS: readonly Column[] = [
   { label: "Age", width: "xs", end: true },
 ];
 
-const LEGEND = [
-  ["run", "Running"],
-  ["wait", "Waiting on someone"],
-  ["you", "Your move"],
-  ["blk", "Blocked"],
-  ["queued", "Queued"],
-] as const;
-
-/** The table's foot: how much is at each stage across the repos (where work piles up), where the
- *  rest of the work lives, and what each glyph says. */
+/** The table's foot: how much is at each stage across the repos (where work piles up), and where the
+ *  rest of the work lives. */
 function Legend({ stages }: { stages: readonly { name: string; n: number }[] }) {
   return (
     <>
@@ -77,15 +69,6 @@ function Legend({ stages }: { stages: readonly { name: string; n: number }[] }) 
         ))}
       </Text>
       <Text variant="meta">Inbox and merged work live in each repo&apos;s list.</Text>
-      <Stack grow />
-      {LEGEND.map(([kind, word]) => (
-        <Stack key={kind} dir="row" gap={3} align="center">
-          <Mark kind={kind} glyph name={false} />
-          <Text variant="meta" tone="2">
-            {word}
-          </Text>
-        </Stack>
-      ))}
     </>
   );
 }
@@ -185,26 +168,6 @@ function TicketLine({
   );
 }
 
-/** A repo's tally: each state its tickets are in, its glyph and how many; your move's in the
- *  accent. */
-function TallyLine({ tally }: { tally: readonly Tally[] }) {
-  return (
-    <Stack dir="row" gap={7} align="center">
-      {tally.map((s) => (
-        <Stack key={s.mark} dir="row" gap={3} align="center">
-          <Mark kind={s.mark} glyph small name={false} />
-          <Text variant="meta" tone={s.mark === "you" ? "you" : "2"} tabular>
-            <Text weight={600} tone={s.mark === "you" ? "you" : "1"}>
-              {String(s.n)}
-            </Text>
-            {` ${s.word}`}
-          </Text>
-        </Stack>
-      ))}
-    </Stack>
-  );
-}
-
 function OpenList({ repo }: { repo: string }) {
   return (
     <Button
@@ -221,8 +184,8 @@ function OpenList({ repo }: { repo: string }) {
 /** Who works there, by first name (read at a glance where a row of tiny faces isn't). */
 const teamOf = (people: readonly Person[]) => people.map((p) => firstName(p.name)).join(", ");
 
-/** A repo's group: its head (the repo, how many in flight, its path and people, its tally and its
- *  list), then a line per ticket. */
+/** A repo's group: its head (the repo, how many in flight, its path and people, its list), then a
+ *  line per ticket. */
 function RepoSection({
   g,
   me,
@@ -241,12 +204,7 @@ function RepoSection({
         name={repoShort(g.repo)}
         count={g.rows.length}
         note={[g.repo, teamOf(g.people)].filter(Boolean).join(" · ")}
-        summary={
-          <Stack dir="row" gap={9} align="center">
-            <TallyLine tally={g.tally} />
-            <OpenList repo={g.repo} />
-          </Stack>
-        }
+        summary={<OpenList repo={g.repo} />}
       />
       {g.rows.map((t) => (
         <TicketLine key={t.key} t={t} me={me} now={now} onOpen={onOpen} />

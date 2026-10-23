@@ -21,6 +21,17 @@
   border-radius: var(--r-4);
   box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
 }
+/* float: a panel open over the page (an options panel from a bar's button): the popover's surface,
+   its hairline and its soft shadow, the one card that lifts, because it floats */
+.float {
+  --ground: var(--pop);
+  --well: var(--nest);
+  background: var(--pop);
+  border-radius: var(--r-4);
+  box-shadow:
+    0 0 0 var(--line-1) var(--pop-edge),
+    var(--pop-shadow);
+}
 /* a sheet inside a sheet (a message, a change in an agent's panel) lies flat, a clear step lighter, as
    its reply box (the well) is: Linear's are about 8 levels over their panel */
 .sheet .sheet {

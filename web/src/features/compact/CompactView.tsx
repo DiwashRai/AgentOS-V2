@@ -19,10 +19,8 @@ import {
   Badge,
   Button,
   Checklist,
-  Chip,
   type Column,
   Head,
-  Icon,
   Mark,
   Notice,
   Page,
@@ -48,7 +46,6 @@ import {
   pills,
   searched,
   sections,
-  type Summary,
 } from "./model";
 import { KeyCell, LINE_END, lineEnd, TitleCell } from "./TicketLine";
 
@@ -64,33 +61,20 @@ const COLUMNS: readonly Column[] = [
   ...LINE_END,
 ];
 
-/** The Now tag: what a line waits on beyond its glyph, group and stage, as the row's one tag. */
+/** The Now: what a line waits on beyond its glyph, group and stage, in plain words (no box), its step
+ *  count quieter after them. */
 function NowTag({ mark, count }: { mark: MarkModel | null; count: string | null }) {
   if (!mark) return <Stack />;
   const words = chipWords(mark);
   return (
-    <Chip
-      tone="fill"
-      label={words}
-      title={[words, count].filter(Boolean).join(" · ")}
-      {...(count ? { after: { text: count } } : {})}
-    />
+    <Text variant="meta" tone="2" truncate title={[words, count].filter(Boolean).join(" · ")}>
+      {words}
+      {count ? <Text tone="3" tabular>{`\u2002${count}`}</Text> : null}
+    </Text>
   );
 }
 
 const PLAN_MAX = 6;
-
-/** A group's count takes its state's hue (its band stays grey): the ones that call for a look; the
- *  waiting ones stay ink. */
-const TONE: Record<Group, "neutral" | "you" | "live" | "blocked" | "done"> = {
-  needs_you: "you",
-  blocked: "blocked",
-  running: "live",
-  queued: "neutral",
-  waiting: "neutral",
-  inbox: "neutral",
-  done: "done",
-};
 
 function Expanded({ t, me, now }: { t: TicketRow; me: Person | null; now: number }) {
   const plan = parsePlan(usePlan(t.key).data ?? "");
@@ -193,53 +177,6 @@ function CompactRow({
       {lineEnd({ t, me, now, ...(g === "running" ? { age: "now" } : {}) })}
     </Row>
   );
-}
-
-function SummaryText({ summary }: { summary: Summary }) {
-  if (summary === null) return null;
-  switch (summary.kind) {
-    case "text":
-      return summary.strong ? (
-        <Text variant="meta" tone="2">
-          {summary.text === "yours" ? (
-            <Text weight={600} tone="1">
-              {summary.strong}
-            </Text>
-          ) : (
-            `${summary.text} `
-          )}
-          {summary.text === "yours" ? (
-            " yours"
-          ) : (
-            <Text weight={600} tone="1">
-              {summary.strong}
-            </Text>
-          )}
-        </Text>
-      ) : (
-        <Text variant="meta" tone="2">
-          {summary.text}
-        </Text>
-      );
-    case "note":
-      return (
-        <Stack dir="row" gap={3} align="center">
-          <Icon name="arrow" />
-          <Text variant="meta" tone="1" weight={500}>
-            {summary.text}
-          </Text>
-        </Stack>
-      );
-    case "shipped":
-      return (
-        <Stack dir="row" gap={3} align="center">
-          <Icon name="tick-sm" />
-          <Text variant="meta" tone="2">
-            <Text weight={600} tone="done">{`${String(summary.n)} shipped`}</Text> this week
-          </Text>
-        </Stack>
-      );
-  }
 }
 
 /** Esc collapses the open row (while no peek has it); Esc in a field is the field's own (the search
@@ -347,7 +284,7 @@ export function CompactView() {
           {board.error ? (
             <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
           ) : null}
-          {sections(listed, me, now, filter === "all" && query.length === 0).map((sec) => {
+          {sections(listed, me, filter === "all" && query.length === 0).map((sec) => {
             if (sec.kind === "empty")
               return (
                 <Notice key={`empty-${sec.id}`} kind="empty" lead={sec.lead}>
@@ -362,8 +299,6 @@ export function CompactView() {
                 name={g.title}
                 count={g.items.length}
                 icon={<Mark kind={g.mark} glyph name={false} />}
-                tone={TONE[g.id]}
-                summary={<SummaryText summary={g.summary} />}
                 fold={{
                   open: !collapsed,
                   toggle: () => {

@@ -8,7 +8,6 @@ import {
   Button,
   type Column,
   Head,
-  Icon,
   Mark,
   Meter,
   Notice,
@@ -27,7 +26,7 @@ import { ActionButton, rowActions } from "../shared/Actions";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
-import { atWorkNote, CAP, shipped, type Zones, zones } from "./model";
+import { atWorkNote, CAP, type Zones, zones } from "./model";
 
 // Linear's list, as Compact's: the key and the title on the left, what it waits on receding after
 // the title; then where Compact has its Now tag, a gate's buttons or a run's agent and steps,
@@ -162,7 +161,6 @@ function YourMove({ z, me, now, open }: ZoneProps) {
             name="Your move"
             count={z.yourMove.length}
             note="Longest wait first"
-            tone="you"
           />
           {z.yourMove.map((t) => (
             <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
@@ -185,7 +183,6 @@ function AtWork({ z, me, now, open }: ZoneProps) {
           <Head
             icon={<Mark kind="run" glyph name={false} />}
             name="Agents at work"
-            tone="live"
             count={z.agents.length}
             note={atWorkNote(z)}
           />
@@ -221,25 +218,6 @@ function Ready({ z, me, now, open }: ZoneProps) {
   );
 }
 
-/** Done's head end: how many shipped this week, and the way to all of them. */
-function Shipped({ n }: { n: number }) {
-  return (
-    <Stack dir="row" gap={7} align="center">
-      {n > 0 ? (
-        <Stack dir="row" gap={3} align="center">
-          <Icon name="tick-sm" />
-          <Text variant="meta" tone="2">
-            <Text weight={600} tone="done">{`${String(n)} shipped`}</Text> this week
-          </Text>
-        </Stack>
-      ) : null}
-      <Button variant="link" href="/compact?f=done">
-        All done tickets
-      </Button>
-    </Stack>
-  );
-}
-
 function Done({ z, me, now, open }: ZoneProps) {
   return (
     <Surface level="list" label="Done recently">
@@ -249,8 +227,11 @@ function Done({ z, me, now, open }: ZoneProps) {
           name="Done recently"
           count={z.done.length}
           note="Yours, last 7 days"
-          tone="done"
-          summary={<Shipped n={shipped(z.done)} />}
+          summary={
+            <Button variant="link" href="/compact?f=done">
+              All done tickets
+            </Button>
+          }
         />
         {z.done.slice(0, CAP.done).map((t) => (
           <Item key={t.key} t={t} me={me} now={now} onOpen={open} />

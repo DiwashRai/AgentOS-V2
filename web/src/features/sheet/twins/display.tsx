@@ -123,7 +123,7 @@ export function Twin() {
         <Stack cols={3}>
           <Stack />
           <Stack />
-          <Surface level="sheet" pad={7} parts label="Display options">
+          <Surface level="float" pad={7} parts label="Display options">
             <View />
             <Switch label="Show sub-issues" on />
             <ListOptions />

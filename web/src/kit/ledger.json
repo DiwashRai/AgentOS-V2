@@ -223,7 +223,7 @@
             "fill": "A firmer fill: a stage's phase, and a list line's one tag (Compact's Now: the agent and its step, who it waits on).",
             "edge": "A round pill of the same faint fill: a board card's state on its key's line (Linear's card pill), a step over the card in every theme.",
             "blocked": "The words in the blocked ink: a conflict.",
-            "neutral": "A tint, the theme's grey at half the strength: a resource of no kind of its own (a doc, a link).",
+            "neutral": "A tint, the theme's grey at half the strength: a resource of no kind of its own (a doc, a link), and a blank placeholder bar (the sub-issues twin's skeleton rows).",
             "indigo": "A tint, the workflow kind's hue washed into it with no edge, its glyph in the hue, as Linear marks a project's resources by kind: the project twin's launch plans.",
             "teal": "A tint, the agent kind's hue: the project twin's spec.",
             "amber": "A tint, the skill kind's hue: the project twin's approvals and sign-up lists."
@@ -463,16 +463,6 @@
         },
         "icon": {
           "why": "A status glyph or a project key before the name."
-        },
-        "tone": {
-          "why": "The group's state: its count says it beside the glyph (the accent for your move, a firmer ink for a state that calls for a look); the heading stays one look (a hue per head striped the list) and the name in ink.",
-          "values": {
-            "neutral": "The default.",
-            "you": "Needs you.",
-            "live": "Running, Agents at work.",
-            "blocked": "Blocked.",
-            "done": "Done recently."
-          }
         },
         "note": {
           "why": "Quiet, after the count (Longest wait first); on a line it is inside the fold, part of its name (didn't answer)."
@@ -913,7 +903,8 @@
           "why": "The view's zone, or a panel of tone resting on it.",
           "values": {
             "recess": "The view's zone, flush on the sheet (no tone, no line).",
-            "sheet": "A card on the page, a faint step of tone inside a hairline, no shadow (Linear's options panels, its comment cards, its agent panel and latest-update card).",
+            "sheet": "A card on the page, a faint step of tone inside a hairline, no shadow (Linear's comment cards, its agent panel and latest-update card).",
+            "float": "A panel open over the page, Linear's options panels (the display and sub-issues twins' Display): the popover's surface, hairline and soft shadow, since it floats.",
             "list": "A section of a view under its own head (a zone of My queue, an Intake query), named as a region: no card, flush with the list's edges, parted from the one before by room and one hairline on the column edge, so a busy screen reads as its sections."
           }
         },

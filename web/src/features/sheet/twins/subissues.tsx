@@ -20,7 +20,8 @@ import {
 
 const NONE = () => undefined;
 
-/** A placeholder bar as Linear's skeleton rows draw one: a blank tag `n` spaces long. */
+/** A placeholder bar as Linear's skeleton rows draw one: a blank grey-washed tag `n` spaces long (no edge,
+ *  so it never reads as an empty field). */
 const bar = (n: number) => " ".repeat(n);
 
 /** The rows as Linear shows them: each one's status glyph and its placeholder's length. */
@@ -88,7 +89,7 @@ function Rows() {
             <Row key={r.id}>
               <Stack dir="row" gap={4} align="center">
                 <Glyph glyph={r.glyph} />
-                <Chip tone="fill" label={bar(r.n)} />
+                <Chip tone="neutral" label={bar(r.n)} />
               </Stack>
             </Row>
           ))}
@@ -101,7 +102,7 @@ function Rows() {
 /** The open Display popover: the ordering, the completed issues, the display properties. */
 function Display() {
   return (
-    <Surface level="sheet" pad={8}>
+    <Surface level="float" pad={8}>
       <Stack gap={10}>
         <Stack gap={9}>
           <FormRow label="Ordering">
