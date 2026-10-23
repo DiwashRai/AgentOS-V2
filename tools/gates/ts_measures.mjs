@@ -40,12 +40,15 @@ function stringy(e) {
   return ts.isBinaryExpression(e) && (stringy(e.left) || stringy(e.right));
 }
 
-/** A type written with a string in it (`"div" | "span"`, `string`). */
+/** A type that is, or may be, a string: `string`, a string literal or template, or a union with one
+ *  among its alternatives (`"div" | "span"`). A function's or an object's type is not, whatever
+ *  strings its parameters or fields hold. */
 function stringType(node) {
   if (!node) return false;
-  if (node.kind === ts.SyntaxKind.StringKeyword) return true;
-  if (ts.isLiteralTypeNode(node) && ts.isStringLiteralLike(node.literal)) return true;
-  return ts.forEachChild(node, stringType) === true;
+  if (ts.isParenthesizedTypeNode(node)) return stringType(node.type);
+  if (ts.isUnionTypeNode(node)) return node.types.some(stringType);
+  if (node.kind === ts.SyntaxKind.StringKeyword || ts.isTemplateLiteralTypeNode(node)) return true;
+  return ts.isLiteralTypeNode(node) && ts.isStringLiteralLike(node.literal);
 }
 
 /** The names a file binds to a string, or to what may be one (`const Div = "div"`, `const Tag:

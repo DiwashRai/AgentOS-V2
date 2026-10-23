@@ -333,7 +333,11 @@ def test_ts_measures_counts_an_element_made_without_a_tag(tmp_path: Path) -> Non
         const Tag: "a" | "b" = Math.random() > 0.5 ? "a" : "b";
         export const E = () => <Tag />;
         const Mode = "edit";
+        const Label: (p: { name: string }) => ReactNode = ({ name }) => <Card>{name}</Card>;
+        export const F = () => <Label name="Ada" />;
+        const Either: ("a") | `b${string}` = "a";
+        export const G = () => <Either />;
         """,
     )
 
-    assert measured["raw_tags"] == [2, 4, 5, 6, 8, 10]
+    assert measured["raw_tags"] == [2, 4, 5, 6, 8, 10, 15]
