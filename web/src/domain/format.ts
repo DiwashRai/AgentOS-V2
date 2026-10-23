@@ -1,5 +1,6 @@
 // Pure display helpers over server fields. They may combine fields into text; they never derive a
 // state the server owns.
+import type { Author } from "../api/types";
 
 /** Whole minutes from `from` to `now` (never negative). */
 export function minutesSince(from: string, now: number): number {
@@ -17,6 +18,11 @@ export function age(from: string, now: number): string {
     return m ? `${String(h)}h ${String(m).padStart(2, "0")}m` : `${String(h)}h`;
   }
   return `${String(Math.floor(total / 1440))}d`;
+}
+
+/** The time of day, "10:48". */
+export function clock(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
 /** Elapsed run time as `m:ss`. */
@@ -55,4 +61,23 @@ export function repoShort(name: string): string {
 /** "Ada Park" → "Ada". */
 export function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? name;
+}
+
+/** "Bea Quinn", or "Run #42 on NW-17" for a version a ticket's run wrote. */
+export function authorName(a: Author): string {
+  return a.kind === "person" ? a.person.name : `Run #${String(a.run_id)} on ${a.ticket}`;
+}
+
+/** Who changed a workflow last and when, as the editor's bar and the ticket's tab say it: "Ada
+ *  Park · 2d ago", or "run #42 on NW-17 · 35m ago". */
+export function authorText(by: Author, at: string, now: number): string {
+  const who = by.kind === "person" ? by.person.name : `run #${String(by.run_id)} on ${by.ticket}`;
+  const when = age(at, now);
+  return `${who} · ${when === "now" ? "just now" : `${when} ago`}`;
+}
+
+/** A description's paragraphs: its lead (the first), and the rest. */
+export function paragraphs(text: string): { lead: string; rest: string[] } {
+  const [lead = "", ...rest] = text.split("\n\n");
+  return { lead, rest };
 }

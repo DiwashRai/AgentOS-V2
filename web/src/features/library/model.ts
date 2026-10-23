@@ -1,21 +1,13 @@
-// The library screens' pure helpers: who changed an item, its size, how an item's content reads
-// as lines (for the version conflict's two sides), and those two sides lined up row by row,
-// each line marked by whether its own side changed it.
-import type { Author, Block, ItemBody, Runtime } from "../../api/types";
+// The library screens' pure helpers: an item's size, how an item's content reads as lines (for
+// the version conflict's two sides), and those two sides lined up row by row, each line marked by
+// whether its own side changed it.
+import type { Block, ItemBody, Runtime } from "../../api/types";
+import { runtimeName } from "../../domain/workflow";
 import { anchors } from "./merge";
-
-/** "Bea Quinn", or "Run #42 on NW-17" for a version a ticket's run wrote. */
-export function authorName(a: Author): string {
-  return a.kind === "person" ? a.person.name : `Run #${String(a.run_id)} on ${a.ticket}`;
-}
 
 /** A size in bytes as people read it: 312 B, 1.4 KB. */
 export function sizeText(bytes: number): string {
   return bytes < 1024 ? `${String(bytes)} B` : `${(bytes / 1024).toFixed(1)} KB`;
-}
-
-export function runtimeName(runtimes: readonly Runtime[], id: string): string {
-  return runtimes.find((r) => r.id === id)?.name ?? id;
 }
 
 /** A block's first line of text, for the line a folded block shows. */

@@ -6,11 +6,12 @@
 // Edit opens the editor full window over the ticket (?edit=workflow); nothing is edited here.
 import { useNow, useRuns, useTicketWorkflow } from "../../api/queries";
 import type { Run, Ticket, TicketWorkflow } from "../../api/types";
+import { authorText } from "../../domain/format";
+import { type Library, refName } from "../../domain/workflow";
 import { Button, Card, Chip, Lane, Notice, Section, Stack, Text } from "../../kit";
 import { LoopFoot } from "../workflow/Editor";
-import { type Library, refName, useLibrary } from "../workflow/library";
+import { useLibrary } from "../workflow/library";
 import { type LastRun, StageFace, StageSummary } from "../workflow/StageCard";
-import { authorText } from "../workflow/who";
 import { copyTitle } from "./copy";
 import { ticketHref, WORKFLOW } from "./tabs";
 import { DriftChips } from "./WorkflowOverlay";

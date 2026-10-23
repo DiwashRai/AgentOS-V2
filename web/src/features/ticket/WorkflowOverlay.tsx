@@ -9,10 +9,10 @@ import { useState } from "react";
 
 import { useNow, useTicketWorkflow, useWorkflow } from "../../api/queries";
 import type { Ticket, TicketWorkflow, Workflow, WorkflowBody } from "../../api/types";
+import { authorText } from "../../domain/format";
 import { Button, Chip, Dialog, FormRow, Notice, Page, Text } from "../../kit";
 import { type Draft, useDraft } from "../workflow/draft";
 import { Editor } from "../workflow/Editor";
-import { authorText } from "../workflow/who";
 import { copyTitle, DriftChips as SharedDrift, saveAsk } from "./copy";
 
 interface OverlayProps {

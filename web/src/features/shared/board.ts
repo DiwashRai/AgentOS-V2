@@ -1,5 +1,6 @@
 // What every board screen reads: the tickets, who I am, and the clock.
 import { useNow, useSession, useSettings, useTickets } from "../../api/queries";
+import { clock } from "../../domain/format";
 
 export function useBoard() {
   const tickets = useTickets();
@@ -19,13 +20,12 @@ export function threadMessage(
   m: { id: number; author: { id: number; name: string }; body: string; created_at: string },
   me: { id: number } | null,
 ) {
-  const at = new Date(m.created_at);
   return {
     id: m.id,
     name: m.author.name,
     seed: String(m.author.id),
-    at: at.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
-    full: at.toLocaleString("en-GB"),
+    at: clock(m.created_at),
+    full: new Date(m.created_at).toLocaleString("en-GB"),
     body: m.body,
     mine: me !== null && m.author.id === me.id,
   };

@@ -4,10 +4,10 @@
 import { useAgents, useRuntimes } from "../../api/queries";
 import type { Agent } from "../../api/types";
 import { matches } from "../../domain/format";
+import { runtimeName } from "../../domain/workflow";
 import { type Column, Text } from "../../kit";
 import { useSearch } from "../shared/useSearch";
 import { AboutCell, LibraryList, LibraryRow, NameCell, USED, usedCells } from "./list";
-import { runtimeName } from "./model";
 
 const COLUMNS: readonly Column[] = [
   { label: "Agent", width: "lg" },

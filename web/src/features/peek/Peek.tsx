@@ -9,6 +9,7 @@ import { useSearchParams } from "react-router";
 import { useMessages, usePlan, useTicket } from "../../api/queries";
 import type { Person, Ticket } from "../../api/types";
 import { stageModel } from "../../domain/board";
+import { paragraphs } from "../../domain/format";
 import { parsePlan, type PlanItem } from "../../domain/plan";
 import {
   Avatar,
@@ -66,7 +67,7 @@ function Head({ t, me, now, plan }: BodyProps & { plan: readonly PlanItem[] }) {
           {t.title}
         </Text>
         <Text variant="body" as="p">
-          {t.description.split("\n\n")[0] ?? ""}
+          {paragraphs(t.description).lead}
         </Text>
       </Stack>
       <Properties

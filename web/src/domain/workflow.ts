@@ -1,15 +1,19 @@
-// The workflow editor's model, pure: the edits a workflow takes (reorder, a gate, a new stage,
-// an agent, a skill or a file on a stage or on every stage, a stage's settings, a loop's rounds),
-// and what's wrong with it (rules.md › Workflows: a loop needs a check and a maker, a gate only on
-// a loop's last stage; R28: a prompt names only ticket fields).
+// A workflow's rules, pure: the edits a workflow takes (reorder, a gate, a new stage, an agent, a
+// skill or a file on a stage or on every stage, a stage's settings, a loop's rounds), what's wrong
+// with it (rules.md › Workflows: a loop needs a check and a maker, a gate only on a loop's last
+// stage; R28: a prompt names only ticket fields), and what its ids name in the library.
 import type {
+  Agent,
   AgentStage,
   ContextRefs,
+  LibraryFile,
+  Runtime,
+  Skill,
   Stage,
   StagePhase,
   TemplateField,
   WorkflowBody,
-} from "../../api/types";
+} from "../api/types";
 
 export type RefKind = "skills" | "files";
 
@@ -177,4 +181,30 @@ export function problemsOf(b: WorkflowBody, fields: readonly TemplateField[]): P
     if (p && !stages.has(s.id)) stages.set(s.id, { field: "prompt", text: p });
   }
   return { stages, loops, count: stages.size + loops.size };
+}
+
+// ---------------------------------------------------------------- what its ids name
+
+/** What a workflow names from the library: the agents, skills and files (by id), the runtimes the
+ *  overrides pick from, and the ticket fields a prompt may name. */
+export interface Library {
+  agents: readonly Agent[];
+  skills: readonly Skill[];
+  files: readonly LibraryFile[];
+  runtimes: readonly Runtime[];
+  fields: readonly TemplateField[];
+}
+
+export const agentOf = (lib: Library, id: string): Agent | undefined =>
+  lib.agents.find((a) => a.id === id);
+
+/** A skill's name or a file's path, by id (the id itself if the library has no such item). */
+export function refName(lib: Library, kind: RefKind, id: string): string {
+  if (kind === "skills") return lib.skills.find((s) => s.id === id)?.name ?? id;
+  return lib.files.find((f) => f.id === id)?.path ?? id;
+}
+
+/** A runtime's name, by id (the id itself if there is no such runtime). */
+export function runtimeName(runtimes: readonly Runtime[], id: string): string {
+  return runtimes.find((r) => r.id === id)?.name ?? id;
 }

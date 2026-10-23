@@ -2,57 +2,19 @@
 // viewer), filtered by `?f=` and the search.
 import type { Person, TicketRow } from "../../api/types";
 import {
+  GROUP_MARK,
   GROUP_ORDER,
   GROUP_WORD,
-  type GlyphModel,
   type Group,
   groupOf,
   isMyMove,
-  markOf,
   type MarkModel,
-  stepText,
+  OUTCOME,
 } from "../../domain/board";
-import { matches, prefixOf, repoShort } from "../../domain/format";
-
-export type Filter = Group | "all";
-
-export function parseFilter(f: string | null): Filter {
-  return GROUP_ORDER.find((g) => g === f) ?? "all";
-}
+import { matches, prefixOf } from "../../domain/format";
 
 export function searched(rows: readonly TicketRow[], query: readonly string[]): TicketRow[] {
   return rows.filter((t) => matches([t.key, t.title, t.source?.ref ?? ""], query));
-}
-
-const MARK: Record<Group, MarkModel["kind"]> = {
-  needs_you: "you",
-  blocked: "blk",
-  running: "run",
-  queued: "queued",
-  waiting: "wait",
-  inbox: "idle",
-  done: "done",
-};
-
-export interface Pill {
-  id: Filter;
-  label: string;
-  count: number;
-  mark?: MarkModel["kind"];
-}
-
-/** Everything, then each group; Done only while it is the filter (My queue links to it). */
-export function pills(rows: readonly TicketRow[], me: Person | null, active: Filter): Pill[] {
-  const shown = GROUP_ORDER.filter((g) => g !== "done" || active === "done");
-  return [
-    { id: "all", label: "Everything", count: rows.length },
-    ...shown.map((g) => ({
-      id: g,
-      label: GROUP_WORD[g],
-      count: rows.filter((t) => groupOf(t, me) === g).length,
-      mark: MARK[g],
-    })),
-  ];
 }
 
 const sinceMs = (t: TicketRow) => Date.parse(t.since);
@@ -111,61 +73,12 @@ export function sections(
   return GROUP_ORDER.flatMap((g): Section[] => {
     const items = rows.filter((t) => groupOf(t, me) === g).sort(ORDER[g]);
     if (items.length > 0)
-      return [{ kind: "group", group: { id: g, title: GROUP_WORD[g], mark: MARK[g], items } }];
+      return [
+        { kind: "group", group: { id: g, title: GROUP_WORD[g], mark: GROUP_MARK[g], items } },
+      ];
     const empty = showEmpty ? emptyRow(g, has) : null;
     return empty ? [empty] : [];
   });
-}
-/** The Source column: "Jira · web", "web", or nothing. */
-export function sourceText(t: TicketRow): string {
-  return [t.source ? "Jira" : "", t.repo ? repoShort(t.repo) : ""].filter(Boolean).join(" · ");
-}
-
-/** What a line says it waits on: a chip only where it names more than the status glyph, the group
- *  and the stage do (the agent and its step count, who it waits on and for what), and the words
- *  after the title. Your move has none: its glyph, its group and its stage already say the ask. */
-export interface NowLine {
-  chip: MarkModel | null;
-  count: string | null;
-  after: string;
-}
-
-export function nowLine(t: TicketRow, me: Person | null): NowLine {
-  const a = t.attention;
-  switch (a.kind) {
-    case "running":
-      return {
-        chip: markOf(a, me),
-        count: a.progress ? stepText(a.progress) : null,
-        after: a.step,
-      };
-    case "waiting":
-      return { chip: isMyMove(a.on, me) ? null : markOf(a, me), count: null, after: t.now };
-    case "done":
-      return { chip: null, count: null, after: a.note ?? OUTCOME[a.outcome].word };
-    case "blocked":
-      return { chip: null, count: null, after: a.reason };
-    case "inbox":
-    case "queued":
-      return { chip: null, count: null, after: t.now };
-  }
-}
-
-const OUTCOME = {
-  completed: { abandoned: false, word: "Complete" },
-  abandoned: { abandoned: true, word: "Abandoned" },
-} as const;
-
-/** The Stage column's word ("Review 2/3", "Sign-off"), and the whole way for its hover. */
-export function stageWord(m: GlyphModel): { word: string; path: string } {
-  const round = m.round ? ` ${String(m.round.n)}/${String(m.round.of)}` : "";
-  const path = m.stages
-    .flatMap((st) => [
-      st.name + (st.state === "skipped" ? " (skipped)" : ""),
-      ...(st.gate ? [`◆ ${st.gate.label}`] : []),
-    ])
-    .join(" → ");
-  return { word: m.label + round, path };
 }
 
 /** The expansion's lead: "Your move", "Waiting on", "Now". */

@@ -9,6 +9,24 @@ import { type ReactNode, useState } from "react";
 import type { Stage, WorkflowBody } from "../../api/types";
 import { plural } from "../../domain/format";
 import {
+  addToStage,
+  agentOf,
+  insertStage,
+  type Library,
+  moveStage,
+  noGateAfter,
+  type Problems,
+  problemsOf,
+  type RefKind,
+  refName,
+  setAgent,
+  setRounds,
+  toggleGate,
+  updateStage,
+  withoutRef,
+  withRef,
+} from "../../domain/workflow";
+import {
   Button,
   Card,
   Chip,
@@ -26,23 +44,8 @@ import {
   Text,
 } from "../../kit";
 import type { Draft } from "./draft";
-import { agentOf, type Library, refName, useLibrary } from "./library";
+import { useLibrary } from "./library";
 import { LibraryPanel, type PanelKind } from "./LibraryPanel";
-import {
-  addToStage,
-  insertStage,
-  moveStage,
-  noGateAfter,
-  type Problems,
-  problemsOf,
-  type RefKind,
-  setAgent,
-  setRounds,
-  toggleGate,
-  updateStage,
-  withoutRef,
-  withRef,
-} from "./model";
 import { StageFields } from "./StageFields";
 import { type Fresh, StageFace, StageSummary } from "./StageCard";
 

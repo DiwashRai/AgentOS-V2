@@ -9,7 +9,7 @@ import { useParams } from "react-router";
 import { useItems, useMessages, usePeople, usePlan, useRuns, useTicket } from "../../api/queries";
 import type { Person, Ticket } from "../../api/types";
 import { stageModel } from "../../domain/board";
-import { firstName } from "../../domain/format";
+import { firstName, paragraphs } from "../../domain/format";
 import { parsePlan, type PlanItem } from "../../domain/plan";
 import {
   Chip,
@@ -65,7 +65,7 @@ interface HeaderProps {
 /** The head, as Linear's project page: the title and lead, the labelled property rows under them,
  *  then the run card (the stepper with what happens now at its foot). */
 function Header({ t, me, now, plan }: HeaderProps) {
-  const lead = t.description.split("\n\n")[0] ?? "";
+  const { lead } = paragraphs(t.description);
   return (
     <Stack gap={8}>
       <Stack gap={4}>
@@ -90,7 +90,7 @@ function Overview({
   plan: readonly PlanItem[];
   items: readonly string[];
 }) {
-  const rest = t.description.split("\n\n").slice(1);
+  const { rest } = paragraphs(t.description);
   return (
     <Stack gap={9}>
       {rest.map((p, i) => (

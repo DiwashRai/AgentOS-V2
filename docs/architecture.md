@@ -84,7 +84,7 @@ The web (`web/src`) is layered like the server: each layer imports only what its
 
 | Layer | Holds | May import | Draws |
 |---|---|---|---|
-| `domain/` | Pure rules and words over the API's types: a ticket's group and stage, plain English for ages and names, a plan's steps | `api/types` | Nothing: no React |
+| `domain/` | Pure rules and words over the API's types: a ticket's group, stage and line (`board`), plain English for ages, times and names (`format`), a workflow's edits and problems (`workflow`), a plan's steps (`plan`) | `api/types` | Nothing: no React |
 | `api/` | The one data module: the `DataSource` (fixtures until the API exists), the query hooks, the types | `domain` | Nothing |
 | `kit/` | Every element and all the CSS. Each component, prop and variant has a reason in `kit/ledger.json`, within its budget | React, Base UI | Elements |
 | `patterns/` | A composition of the kit over domain values that two or more screens draw (a person's face and name, a ticket's key cell), one file per family, no index | the kit's index, `domain`, `api/types`, other patterns, React for local state | Kit components only |

@@ -9,7 +9,7 @@ import { useState } from "react";
 
 import { useRuns, useTicketWorkflow } from "../../api/queries";
 import type { Run, RunState, StageRun, Ticket, TicketWorkflow } from "../../api/types";
-import { firstName } from "../../domain/format";
+import { clock, firstName } from "../../domain/format";
 import {
   Avatar,
   Badge,
@@ -79,9 +79,6 @@ function roundsOf(w: TicketWorkflow | undefined, stageId: string): number | null
 
 const stageName = (w: TicketWorkflow | undefined, id: string) =>
   w?.stages.find((s) => s.id === id)?.name ?? id;
-
-const clock = (iso: string) =>
-  new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
 /** Minutes the run has taken: to its end, or to now while it goes on. */
 function minutes(r: Run, now: number): number {

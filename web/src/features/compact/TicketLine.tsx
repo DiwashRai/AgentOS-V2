@@ -5,10 +5,16 @@
 // list as a ledger, not a pile of pills. Each screen sets what leads that end (its Now tag, a
 // row's buttons).
 import type { Person, Priority, TicketRow, TicketType } from "../../api/types";
-import { markOf, type MarkModel, STATE_WORD, stageModel } from "../../domain/board";
+import {
+  markOf,
+  type MarkModel,
+  sourceText,
+  STATE_WORD,
+  stageModel,
+  stageWord,
+} from "../../domain/board";
 import { age } from "../../domain/format";
 import { Age, Avatar, Badge, type Column, Icon, Mark, Stack, Text } from "../../kit";
-import { sourceText, stageWord } from "./model";
 
 /** High and low priority are said; normal is the bars' resting form, said by nothing. */
 const PRIORITY_SAY: Record<Exclude<Priority, "normal">, string> = {

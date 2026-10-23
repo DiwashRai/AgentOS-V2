@@ -4,11 +4,11 @@
 // version: yours, with each of their changes that doesn't touch yours carried over (the button says
 // how many of theirs it would drop). Take theirs drops your edit.
 import { useNow, useRuntimes } from "../../api/queries";
-import { age, plural } from "../../domain/format";
+import { age, authorName, plural } from "../../domain/format";
 import { Button, Compare, Notice, Stack } from "../../kit";
 import type { Draft, Stored } from "./draft";
 import { changedFrom, mergeDraft } from "./merge";
-import { authorName, draftLines, pairLines, type Side } from "./model";
+import { draftLines, pairLines, type Side } from "./model";
 
 const v = (n: number) => `v${String(n)}`;
 const count = (s: Side) => s.changed.filter(Boolean).length;

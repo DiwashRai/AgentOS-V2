@@ -8,9 +8,8 @@
 import { useState } from "react";
 
 import { matches, terms } from "../../domain/format";
+import { type Library, type RefKind, runtimeName } from "../../domain/workflow";
 import { Avatar, Drag, Field, Icon, Section, Stack, Tabs, Text } from "../../kit";
-import { type Library, runtimeName } from "./library";
-import type { RefKind } from "./model";
 
 export type PanelKind = "agent" | "skill" | "file";
 type TabId = "agents" | RefKind;
@@ -45,7 +44,7 @@ function entries(lib: Library, tab: TabId): Entry[] {
       kind: "agent",
       id: a.id,
       name: a.name,
-      about: `${runtimeName(lib, a.runtime)} · ${a.model} · ${a.effort}`,
+      about: `${runtimeName(lib.runtimes, a.runtime)} · ${a.model} · ${a.effort}`,
       face: true,
     }));
   if (tab === "skills")

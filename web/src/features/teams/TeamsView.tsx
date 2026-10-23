@@ -10,7 +10,15 @@ import { useSearchParams } from "react-router";
 
 import { useSettings } from "../../api/queries";
 import type { Person, TicketRow } from "../../api/types";
-import { groupOf, markOf, stageModel, STATE_WORD } from "../../domain/board";
+import {
+  groupOf,
+  markOf,
+  parseFilter,
+  pills,
+  stageModel,
+  stageWord,
+  STATE_WORD,
+} from "../../domain/board";
 import { age, firstName, plural, repoShort } from "../../domain/format";
 import {
   Age,
@@ -31,7 +39,6 @@ import {
   Table,
   Text,
 } from "../../kit";
-import { parseFilter, pills, stageWord } from "../compact/model";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";

@@ -5,10 +5,10 @@ import { useParams } from "react-router";
 
 import { useNow, useWorkflow } from "../../api/queries";
 import type { Workflow } from "../../api/types";
+import { authorText } from "../../domain/format";
 import { Chip, Notice, Page, Stack, Text } from "../../kit";
 import { useDraft } from "./draft";
 import { Editor } from "./Editor";
-import { authorText } from "./who";
 
 const LIST = { label: "Workflows", href: "/library/workflows" };
 

@@ -2,7 +2,7 @@
 // payload is the same for every viewer; this is where "waiting on Ada" becomes "needs you" for
 // Ada. It maps and groups; it never derives a state the server owns.
 import type { Attention, Person, RailStep, Round, StepState, TicketRow } from "../api/types";
-import { elapsed, firstName } from "./format";
+import { elapsed, firstName, repoShort } from "./format";
 
 export type Group = "needs_you" | "blocked" | "running" | "queued" | "waiting" | "inbox" | "done";
 
@@ -77,6 +77,44 @@ export const STATE_WORD: Record<MarkModel["kind"], string> = {
   queued: "Queued",
   idle: "Inbox",
 };
+
+/** Each group's status mark, on its pill and its heading. */
+export const GROUP_MARK: Record<Group, MarkModel["kind"]> = {
+  needs_you: "you",
+  blocked: "blk",
+  running: "run",
+  queued: "queued",
+  waiting: "wait",
+  inbox: "idle",
+  done: "done",
+};
+
+export type Filter = Group | "all";
+
+export function parseFilter(f: string | null): Filter {
+  return GROUP_ORDER.find((g) => g === f) ?? "all";
+}
+
+export interface Pill {
+  id: Filter;
+  label: string;
+  count: number;
+  mark?: MarkModel["kind"];
+}
+
+/** Everything, then each group; Done only while it is the filter (My queue links to it). */
+export function pills(rows: readonly TicketRow[], me: Person | null, active: Filter): Pill[] {
+  const shown = GROUP_ORDER.filter((g) => g !== "done" || active === "done");
+  return [
+    { id: "all", label: "Everything", count: rows.length },
+    ...shown.map((g) => ({
+      id: g,
+      label: GROUP_WORD[g],
+      count: rows.filter((t) => groupOf(t, me) === g).length,
+      mark: GROUP_MARK[g],
+    })),
+  ];
+}
 
 export function markOf(a: Attention, me: Person | null): MarkModel {
   switch (a.kind) {
@@ -208,6 +246,60 @@ export function stagesText(t: Pick<TicketRow, "rail">): string {
 /** "3/5" while step 3 of 5 runs (V1's meter text): the step in progress, not the steps done. */
 export function stepText(p: { done: number; total: number }): string {
   return `${String(Math.min(p.done + 1, p.total))}/${String(p.total)}`;
+}
+
+/** The Stage column's word ("Review 2/3", "Sign-off"), and the whole way for its hover. */
+export function stageWord(m: GlyphModel): { word: string; path: string } {
+  const round = m.round ? ` ${String(m.round.n)}/${String(m.round.of)}` : "";
+  const path = m.stages
+    .flatMap((st) => [
+      st.name + (st.state === "skipped" ? " (skipped)" : ""),
+      ...(st.gate ? [`◆ ${st.gate.label}`] : []),
+    ])
+    .join(" → ");
+  return { word: m.label + round, path };
+}
+
+// ------------------------------------------------------------------ a ticket's line
+
+/** The Source column: "Jira · web", "web", or nothing. */
+export function sourceText(t: TicketRow): string {
+  return [t.source ? "Jira" : "", t.repo ? repoShort(t.repo) : ""].filter(Boolean).join(" · ");
+}
+
+export const OUTCOME = {
+  completed: { abandoned: false, word: "Complete" },
+  abandoned: { abandoned: true, word: "Abandoned" },
+} as const;
+
+/** What a line says it waits on: a chip only where it names more than the status glyph, the group
+ *  and the stage do (the agent and its step count, who it waits on and for what), and the words
+ *  after the title. Your move has none: its glyph, its group and its stage already say the ask. */
+export interface NowLine {
+  chip: MarkModel | null;
+  count: string | null;
+  after: string;
+}
+
+export function nowLine(t: TicketRow, me: Person | null): NowLine {
+  const a = t.attention;
+  switch (a.kind) {
+    case "running":
+      return {
+        chip: markOf(a, me),
+        count: a.progress ? stepText(a.progress) : null,
+        after: a.step,
+      };
+    case "waiting":
+      return { chip: isMyMove(a.on, me) ? null : markOf(a, me), count: null, after: t.now };
+    case "done":
+      return { chip: null, count: null, after: a.note ?? OUTCOME[a.outcome].word };
+    case "blocked":
+      return { chip: null, count: null, after: a.reason };
+    case "inbox":
+    case "queued":
+      return { chip: null, count: null, after: t.now };
+  }
 }
 
 /** The live label over a run: "Builder · Run #42 · 6:00 · 2/5". */

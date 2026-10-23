@@ -7,6 +7,15 @@ import type { ReactNode } from "react";
 
 import type { AgentStage, Effort, ShellStage, Stage } from "../../api/types";
 import {
+  agentOf,
+  isCheck,
+  type Library,
+  PHASES,
+  type RefKind,
+  runtimeName,
+  type StageProblem,
+} from "../../domain/workflow";
+import {
   Field,
   FormRow,
   NumberField,
@@ -17,8 +26,6 @@ import {
   TextArea,
   Toggle,
 } from "../../kit";
-import { agentOf, type Library, runtimeName } from "./library";
-import { isCheck, PHASES, type RefKind, type StageProblem } from "./model";
 import { type Fresh, StageChips } from "./StageCard";
 
 const EFFORTS: readonly Effort[] = ["low", "medium", "high", "xhigh", "max"];
@@ -68,7 +75,9 @@ function Overrides({ s, lib, set }: AgentProps) {
   const over = (patch: Partial<AgentStage["overrides"]>) => {
     set({ ...s, overrides: { ...o, ...patch } });
   };
-  const own = a ? `the agent's: ${runtimeName(lib, a.runtime)} · ${a.model} · ${a.effort}` : "";
+  const own = a
+    ? `the agent's: ${runtimeName(lib.runtimes, a.runtime)} · ${a.model} · ${a.effort}`
+    : "";
   return (
     <FormRow label="Overrides" note={own}>
       <Select

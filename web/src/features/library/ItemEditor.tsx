@@ -9,12 +9,11 @@ import { type ReactNode, useEffect, useRef } from "react";
 
 import { useNow, useSession } from "../../api/queries";
 import type { ItemBody, UsedBy } from "../../api/types";
-import { age } from "../../domain/format";
+import { age, authorName } from "../../domain/format";
 import { Button, Chip, Field, Page, type PageProps, Stack, Text } from "../../kit";
 import { Conflict } from "./conflict";
 import { Content } from "./content";
 import type { Draft } from "./draft";
-import { authorName } from "./model";
 import { type Siblings, SiblingNav } from "./nav";
 import { type Fact, PropertyRows } from "./side";
 import { type Editor, useEditor, type Versioned } from "./useEditor";

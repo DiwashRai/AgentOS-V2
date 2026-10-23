@@ -7,9 +7,8 @@ import { useState } from "react";
 
 import { useNow, useRuntimes } from "../../api/queries";
 import type { AgentSettings, Effort, RuntimeId, UsedBy, Version } from "../../api/types";
-import { age, plural } from "../../domain/format";
+import { age, authorName, plural } from "../../domain/format";
 import { Avatar, Badge, Button, type Fact, Facts, Icon, Select, Stack, Text } from "../../kit";
-import { authorName } from "./model";
 
 export type { Fact };
 

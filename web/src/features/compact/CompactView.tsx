@@ -9,6 +9,9 @@ import {
   groupOf,
   type Group,
   type MarkModel,
+  nowLine,
+  parseFilter,
+  pills,
   runLine,
   stageModel,
   stagesText,
@@ -37,16 +40,7 @@ import { ActionButton, expandedActions } from "../shared/Actions";
 import { contextOf, threadMessage, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
-import {
-  chipWords,
-  footOf,
-  moveText,
-  nowLine,
-  parseFilter,
-  pills,
-  searched,
-  sections,
-} from "./model";
+import { chipWords, footOf, moveText, searched, sections } from "./model";
 import { KeyCell, LINE_END, lineEnd, TitleCell } from "./TicketLine";
 
 // Linear's list: the key and the title on the left, what it waits on receding after the title;

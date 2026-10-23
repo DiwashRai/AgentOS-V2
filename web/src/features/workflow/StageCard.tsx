@@ -7,9 +7,16 @@
 import type { ReactNode } from "react";
 
 import type { Stage } from "../../api/types";
+import {
+  agentOf,
+  isCheck,
+  type Library,
+  phaseWord,
+  type RefKind,
+  refName,
+  runtimeName,
+} from "../../domain/workflow";
 import { Avatar, Chip, Icon, Mark, type MarkKind, Override, Stack, Text } from "../../kit";
-import { agentOf, type Library, refName, runtimeName } from "./library";
-import { isCheck, phaseWord, type RefKind } from "./model";
 
 export function StageFace({ stage, lib }: { stage: Stage; lib: Library }) {
   if (stage.kind === "shell") return <Icon name="shell" label="Shell stage" />;
@@ -47,7 +54,9 @@ function Who({ stage, lib }: { stage: Stage; lib: Library }) {
   if (!a) return <Text tone="2">{stage.agent}</Text>;
   const o = stage.overrides;
   const parts = [
-    ...(o.runtime ? [[runtimeName(lib, o.runtime), runtimeName(lib, a.runtime)] as const] : []),
+    ...(o.runtime
+      ? [[runtimeName(lib.runtimes, o.runtime), runtimeName(lib.runtimes, a.runtime)] as const]
+      : []),
     [o.model, a.model] as const,
     [o.effort, a.effort] as const,
   ];

@@ -2,7 +2,7 @@
 import { useSearchParams } from "react-router";
 
 import type { Attention, Person, TicketRow } from "../../api/types";
-import { groupOf, stepText } from "../../domain/board";
+import { groupOf, nowLine, stepText } from "../../domain/board";
 import { age, matches } from "../../domain/format";
 import {
   Button,
@@ -20,7 +20,6 @@ import {
   Table,
   Text,
 } from "../../kit";
-import { nowLine } from "../compact/model";
 import { KeyCell, LINE_END, lineEnd, TitleCell } from "../compact/TicketLine";
 import { ActionButton, rowActions } from "../shared/Actions";
 import { contextOf, useBoard, useSpace } from "../shared/board";
