@@ -5,8 +5,8 @@ import { useParams } from "react-router";
 import { loadOf, useFile, useFiles } from "../../api/queries";
 import { Page, Text } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
-import { ItemEditor } from "./ItemEditor";
-import { sizeText } from "./model";
+import { ItemEditor } from "../shared/itemEditor/ItemEditor";
+import { sizeText } from "../shared/itemEditor/model";
 
 const href = (id: string) => `/library/files/${id}`;
 

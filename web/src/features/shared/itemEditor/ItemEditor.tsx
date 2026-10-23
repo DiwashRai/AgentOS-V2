@@ -7,10 +7,10 @@
 // edit here as the next version.
 import { type ReactNode, useEffect, useRef } from "react";
 
-import { useNow, useSession } from "../../api/queries";
-import type { ItemBody, UsedBy } from "../../api/types";
-import { ago, authorName } from "../../domain/format";
-import { Button, Chip, Field, Page, type PageProps, Stack, Text } from "../../kit";
+import { useNow, useSession } from "../../../api/queries";
+import type { ItemBody, UsedBy } from "../../../api/types";
+import { ago, authorName } from "../../../domain/format";
+import { Button, Chip, Field, Page, type PageProps, Stack, Text } from "../../../kit";
 import { Conflict } from "./conflict";
 import { Content } from "./content";
 import type { Draft } from "./draft";

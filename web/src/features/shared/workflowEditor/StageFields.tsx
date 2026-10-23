@@ -5,7 +5,7 @@
 // prompt. Every edit is one step of the draft.
 import type { ReactNode } from "react";
 
-import type { AgentStage, Effort, ShellStage, Stage } from "../../api/types";
+import type { AgentStage, Effort, ShellStage, Stage } from "../../../api/types";
 import {
   agentOf,
   isCheck,
@@ -14,7 +14,7 @@ import {
   type RefKind,
   runtimeName,
   type StageProblem,
-} from "../../domain/workflow";
+} from "../../../domain/workflow";
 import {
   Field,
   FormRow,
@@ -25,8 +25,8 @@ import {
   Stack,
   TextArea,
   Toggle,
-} from "../../kit";
-import { type Fresh, StageChips } from "../../patterns/stage";
+} from "../../../kit";
+import { type Fresh, StageChips } from "../../../patterns/stage";
 
 const EFFORTS: readonly Effort[] = ["low", "medium", "high", "xhigh", "max"];
 const REPAIRS = [0, 1, 2, 3] as const;

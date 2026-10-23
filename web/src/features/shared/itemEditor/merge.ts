@@ -2,7 +2,7 @@
 // base), line by line, and the two put together: yours, plus each of their changes that doesn't
 // touch one of yours. A change of theirs that does touch yours is dropped, and counted, so the
 // screen can say what Keep mine gives up.
-import type { AgentSettings, Block, ItemBody } from "../../api/types";
+import type { AgentSettings, Block, ItemBody } from "../../../api/types";
 import type { Draft } from "./draft";
 
 /** The longest common subsequence's lengths, from the end: `t[i][j]` for `a[i..]` and `b[j..]`. */

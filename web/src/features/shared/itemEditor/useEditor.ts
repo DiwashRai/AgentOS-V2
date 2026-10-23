@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 
-import type { Author, Person, Version } from "../../api/types";
+import type { Author, Person, Version } from "../../../api/types";
 import { type Draft, myEdit, sameDraft, type Stored, stillOf, theirEdit } from "./draft";
 import { mergeDraft } from "./merge";
 

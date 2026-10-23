@@ -6,8 +6,8 @@
 // Everything drags, and everything that drags also clicks, by the same rules.
 import { type ReactNode, useState } from "react";
 
-import type { Stage, WorkflowBody } from "../../api/types";
-import { plural } from "../../domain/format";
+import type { Stage, WorkflowBody } from "../../../api/types";
+import { plural } from "../../../domain/format";
 import {
   addToStage,
   agentOf,
@@ -25,7 +25,7 @@ import {
   updateStage,
   withoutRef,
   withRef,
-} from "../../domain/workflow";
+} from "../../../domain/workflow";
 import {
   Button,
   Card,
@@ -40,9 +40,9 @@ import {
   type PageProps,
   Stack,
   Text,
-} from "../../kit";
-import { type Fresh, LoopFoot, StageFace, StageSummary } from "../../patterns/stage";
-import { useLibrary } from "../shared/library";
+} from "../../../kit";
+import { type Fresh, LoopFoot, StageFace, StageSummary } from "../../../patterns/stage";
+import { useLibrary } from "../library";
 import type { Draft } from "./draft";
 import { LibraryPanel, type PanelKind } from "./LibraryPanel";
 import { StageFields } from "./StageFields";

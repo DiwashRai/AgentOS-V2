@@ -5,9 +5,9 @@
 // and Move down (shown while it is in use) and its handle, to drag it or step it with ↑ ↓.
 import { type ReactNode, useState } from "react";
 
-import type { Block, ItemBody } from "../../api/types";
-import { plural } from "../../domain/format";
-import { Button, Field, Sortable, Stack, Text, TextArea } from "../../kit";
+import type { Block, ItemBody } from "../../../api/types";
+import { plural } from "../../../domain/format";
+import { Button, Field, Sortable, Stack, Text, TextArea } from "../../../kit";
 import { firstLine } from "./model";
 
 interface BlockCardProps {

@@ -5,7 +5,7 @@ import { useParams } from "react-router";
 import { loadOf, useSkill, useSkills } from "../../api/queries";
 import { Page, Text } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
-import { ItemEditor } from "./ItemEditor";
+import { ItemEditor } from "../shared/itemEditor/ItemEditor";
 
 const href = (id: string) => `/library/skills/${id}`;
 

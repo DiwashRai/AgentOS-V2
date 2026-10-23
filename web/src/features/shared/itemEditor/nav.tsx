@@ -4,7 +4,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 
-import { Button, Menu, type MenuItem, Stack, Text } from "../../kit";
+import { Button, Menu, type MenuItem, Stack, Text } from "../../../kit";
 
 export interface Siblings {
   /** One of them (agent), for the buttons' names. */

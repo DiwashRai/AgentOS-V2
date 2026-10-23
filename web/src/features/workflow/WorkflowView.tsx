@@ -8,8 +8,8 @@ import type { Workflow } from "../../api/types";
 import { authorText } from "../../domain/format";
 import { Chip, Page, Stack, Text } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
-import { useDraft } from "./draft";
-import { Editor } from "./Editor";
+import { useDraft } from "../shared/workflowEditor/draft";
+import { Editor } from "../shared/workflowEditor/Editor";
 
 const LIST = { label: "Workflows", href: "/library/workflows" };
 

@@ -7,7 +7,7 @@ import { matches } from "../../domain/format";
 import { type Column, Text } from "../../kit";
 import { useSearch } from "../shared/useSearch";
 import { AboutCell, LibraryList, LibraryRow, NameCell, USED, usedCells } from "./list";
-import { sizeText } from "./model";
+import { sizeText } from "../shared/itemEditor/model";
 
 const COLUMNS: readonly Column[] = [
   { label: "Path", width: "3xl" },

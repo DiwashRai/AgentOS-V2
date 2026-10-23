@@ -1,8 +1,8 @@
 // The library screens' pure helpers: an item's size, how an item's content reads as lines (for
 // the version conflict's two sides), and those two sides lined up row by row, each line marked by
 // whether its own side changed it.
-import type { Block, ItemBody, Runtime } from "../../api/types";
-import { runtimeName } from "../../domain/workflow";
+import type { Block, ItemBody, Runtime } from "../../../api/types";
+import { runtimeName } from "../../../domain/workflow";
 import { anchors } from "./merge";
 
 /** A size in bytes as people read it: 312 B, 1.4 KB. */

@@ -7,9 +7,9 @@
 // where it is.
 import { useState } from "react";
 
-import { matches, terms } from "../../domain/format";
-import { type Library, type RefKind, runtimeName } from "../../domain/workflow";
-import { Avatar, Drag, Field, Icon, Section, Stack, Tabs, Text } from "../../kit";
+import { matches, terms } from "../../../domain/format";
+import { type Library, type RefKind, runtimeName } from "../../../domain/workflow";
+import { Avatar, Drag, Field, Icon, Section, Stack, Tabs, Text } from "../../../kit";
 
 export type PanelKind = "agent" | "skill" | "file";
 type TabId = "agents" | RefKind;

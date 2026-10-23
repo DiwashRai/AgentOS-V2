@@ -1,5 +1,5 @@
 // One of the ticket's context items in the full-window overlay over the ticket (?edit=<name>): the
-// library's one item editor (features/library/ItemEditor), framed as the ticket's copy the way its
+// library's one item editor (features/shared/itemEditor), framed as the ticket's copy the way its
 // workflow overlay is: "NW-17's copy of tests v2", its drift, and Take library version and Promote
 // beside Discard and Save while it has drifted. The agents' switch is the Context tab's own and
 // saves at once, so it sits in the bar, not among the properties Save governs. Used by says which
@@ -19,8 +19,8 @@ import {
 import type { Item, ItemBody, Origin, Ticket } from "../../api/types";
 import { Button, Dialog, Icon, Page, Stack, Text, Toggle } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
-import { type EditorActs, ItemEditor } from "../library/ItemEditor";
-import type { Fact } from "../library/side";
+import { type EditorActs, ItemEditor } from "../shared/itemEditor/ItemEditor";
+import type { Fact } from "../shared/itemEditor/side";
 import { copyTitle, DriftChips, saveAsk } from "./copy";
 import { contentTitle, KIND, labelOf, libraryHref, stagesOf } from "./items";
 import { ticketHref } from "./tabs";

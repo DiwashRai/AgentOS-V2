@@ -6,7 +6,7 @@ import { useParams } from "react-router";
 import { loadOf, useAgent, useAgents } from "../../api/queries";
 import { Page } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
-import { ItemEditor } from "./ItemEditor";
+import { ItemEditor } from "../shared/itemEditor/ItemEditor";
 
 const href = (id: string) => `/library/agents/${id}`;
 

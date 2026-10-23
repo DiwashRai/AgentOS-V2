@@ -1,7 +1,7 @@
 // An item editor's draft and what it was edited from, and the two states the spec draws that a
 // static build can't reach on its own, as stills (`?still=edited`, `?still=conflict`), as the kit
 // draws a drag in progress as a still: an edit, and a save refused because someone else saved first.
-import type { Author, ItemBody, Iso } from "../../api/types";
+import type { Author, ItemBody, Iso } from "../../../api/types";
 
 /** What an item editor edits: the content, and a library item's name (a file's path) and
  *  description; an empty string where the item has none. */

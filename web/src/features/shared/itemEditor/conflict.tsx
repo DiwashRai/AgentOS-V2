@@ -3,9 +3,9 @@
 // started from tinted (lines nobody changed stay plain). Keep mine saves at once as the next
 // version: yours, with each of their changes that doesn't touch yours carried over (the button says
 // how many of theirs it would drop). Take theirs drops your edit.
-import { useNow, useRuntimes } from "../../api/queries";
-import { ago, authorName, plural } from "../../domain/format";
-import { Button, Compare, Notice, Stack } from "../../kit";
+import { useNow, useRuntimes } from "../../../api/queries";
+import { ago, authorName, plural } from "../../../domain/format";
+import { Button, Compare, Notice, Stack } from "../../../kit";
 import type { Draft, Stored } from "./draft";
 import { changedFrom, mergeDraft } from "./merge";
 import { draftLines, pairLines, type Side } from "./model";

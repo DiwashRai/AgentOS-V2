@@ -12,8 +12,8 @@ import type { Ticket, TicketWorkflow, Workflow, WorkflowBody } from "../../api/t
 import { authorText } from "../../domain/format";
 import { Button, Chip, Dialog, FormRow, Page, Text } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
-import { type Draft, useDraft } from "../workflow/draft";
-import { Editor } from "../workflow/Editor";
+import { type Draft, useDraft } from "../shared/workflowEditor/draft";
+import { Editor } from "../shared/workflowEditor/Editor";
 import { copyTitle, DriftChips as SharedDrift, saveAsk } from "./copy";
 
 interface OverlayProps {

@@ -5,11 +5,11 @@
 // latest versions with who wrote each, a person or a ticket's run.
 import { useState } from "react";
 
-import { useNow, useRuntimes } from "../../api/queries";
-import type { AgentSettings, Effort, RuntimeId, UsedBy, Version } from "../../api/types";
-import { age, fromAuthor, plural } from "../../domain/format";
-import { Badge, Button, type Fact, Facts, Select, Stack, Text } from "../../kit";
-import { Who } from "../../patterns/who";
+import { useNow, useRuntimes } from "../../../api/queries";
+import type { AgentSettings, Effort, RuntimeId, UsedBy, Version } from "../../../api/types";
+import { age, fromAuthor, plural } from "../../../domain/format";
+import { Badge, Button, type Fact, Facts, Select, Stack, Text } from "../../../kit";
+import { Who } from "../../../patterns/who";
 
 export type { Fact };
 

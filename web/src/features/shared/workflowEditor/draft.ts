@@ -3,7 +3,7 @@
 // takes the working copy as the saved one.
 import { useState } from "react";
 
-import type { WorkflowBody } from "../../api/types";
+import type { WorkflowBody } from "../../../api/types";
 
 interface History {
   saved: WorkflowBody;
