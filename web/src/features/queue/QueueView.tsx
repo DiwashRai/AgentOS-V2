@@ -1,6 +1,4 @@
 // My queue (home): only what is mine. Click, Enter or Space on an item opens the peek (`?peek=`).
-import { useSearchParams } from "react-router";
-
 import type { Person, TicketRow } from "../../api/types";
 import { atWork, groupOf } from "../../domain/board";
 import { matches } from "../../domain/format";
@@ -24,6 +22,7 @@ import { KeyCell, LINE_END, lineEnd, TicketTitle } from "../../patterns/ticketLi
 import { ActionButton, rowActions } from "../shared/Actions";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
+import { useParam, usePeek } from "../shared/useParam";
 import { useSearch } from "../shared/useSearch";
 import { atWorkNote, CAP, type Zones, zones } from "./model";
 
@@ -223,8 +222,9 @@ function ZoneList({ only, ...props }: ZoneProps & { only: Zone }) {
 export function QueueView() {
   const board = useBoard();
   const { rows, me, now } = board;
-  const [params, setParams] = useSearchParams();
-  const zone = zoneOf(params.get("z"));
+  const [asked, setZone] = useParam("z");
+  const zone = zoneOf(asked);
+  const peek = usePeek();
   const space = useSpace();
   const { query, search } = useSearch();
   const z = zones(
@@ -232,13 +232,6 @@ export function QueueView() {
     me,
     now,
   );
-  const open: Open = (key) => {
-    setParams((p) => {
-      const out = new URLSearchParams(p);
-      out.set("peek", key);
-      return out;
-    });
-  };
   return (
     <Page
       title="My queue"
@@ -251,12 +244,7 @@ export function QueueView() {
           items={zoneChips(z)}
           value={zone}
           onChange={(id) => {
-            setParams((p) => {
-              const out = new URLSearchParams(p);
-              if (id === "all") out.delete("z");
-              else out.set("z", id);
-              return out;
-            });
+            setZone(id === "all" ? null : id);
           }}
         />
       }
@@ -265,7 +253,7 @@ export function QueueView() {
         {board.load ? (
           <LoadNotice load={board.load} noun="tickets" />
         ) : (
-          <ZoneList z={z} me={me} now={now} open={open} only={zone} />
+          <ZoneList z={z} me={me} now={now} open={peek.open} only={zone} />
         )}
       </Surface>
     </Page>

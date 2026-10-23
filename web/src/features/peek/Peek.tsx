@@ -4,7 +4,6 @@
 // gate actions; those live on the row and the ticket. The run's Cancel sits on the run's own line,
 // as on the ticket page.
 import { useState } from "react";
-import { useSearchParams } from "react-router";
 
 import { loadOf, useMessages, usePlan, useTicket } from "../../api/queries";
 import type { Person, Ticket } from "../../api/types";
@@ -15,6 +14,7 @@ import { PlanSection, TalkSection, TicketHead } from "../../patterns/ticketHead"
 import { CancelButton } from "../shared/Actions";
 import { threadMessage, useBoard } from "../shared/board";
 import { TicketMenu } from "../shared/TicketMenu";
+import { usePeek } from "../shared/useParam";
 
 interface BodyProps {
   t: Ticket;
@@ -92,18 +92,8 @@ function Reply({ ticketKey }: { ticketKey: string }) {
 }
 
 export function Peek() {
-  const [params, setParams] = useSearchParams();
-  // an empty ?peek= is no peek
-  const asked = params.get("peek");
-  const key = asked === "" ? null : asked;
+  const { key, close } = usePeek();
   const { me, now } = useBoard();
-  const close = () => {
-    setParams((p) => {
-      const out = new URLSearchParams(p);
-      out.delete("peek");
-      return out;
-    });
-  };
   return (
     <Dialog
       label={key ? `Peek at ${key}` : "Peek"}

@@ -1,7 +1,6 @@
 // Compact: every ticket, one line each, grouped by what it waits on. `?f=` keeps one group, `?q=`
 // searches, and `?open=KEY` expands one row in place: the move, the plan and the last message.
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router";
 
 import { useMessages, usePlan } from "../../api/queries";
 import type { Person, TicketRow } from "../../api/types";
@@ -41,6 +40,7 @@ import { KeyCell, LINE_END, lineEnd, TicketTitle } from "../../patterns/ticketLi
 import { ActionButton, expandedActions } from "../shared/Actions";
 import { contextOf, threadMessage, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
+import { useParam, usePeek } from "../shared/useParam";
 import { useSearch } from "../shared/useSearch";
 import { chipWords, footOf, moveText, searched, sections } from "./model";
 
@@ -76,7 +76,7 @@ function Expanded({ t, me, now }: { t: TicketRow; me: Person | null; now: number
   const last = useMessages(t.key).data?.items.at(-1);
   const move = moveText(t, me);
   const a = t.attention;
-  const [, setParams] = useSearchParams();
+  const peek = usePeek();
   return (
     <Stack gap={6}>
       <Stepper model={stageModel(t, me)} compact />
@@ -96,11 +96,7 @@ function Expanded({ t, me, now }: { t: TicketRow; me: Person | null; now: number
             <Button
               size="sm"
               onClick={() => {
-                setParams((p) => {
-                  const out = new URLSearchParams(p);
-                  out.set("peek", t.key);
-                  return out;
-                });
+                peek.open(t.key);
               }}
             >
               Peek
@@ -196,27 +192,20 @@ export function CompactView() {
   const board = useBoard();
   const space = useSpace();
   const { me, now } = board;
-  const [params, setParams] = useSearchParams();
   const { query, search } = useSearch();
-  const filter = parseFilter(params.get("f"));
-  const open = params.get("open");
+  const [f, setF] = useParam("f");
+  const filter = parseFilter(f);
+  const [open, setOpen] = useParam("open");
   const [flipped, setFlipped] = useState<ReadonlySet<Group>>(new Set());
-  const repo = params.get("repo");
-  useCollapseOnEsc(open !== null && params.get("peek") === null, () => {
-    setParam("open", null);
+  const [repo] = useParam("repo");
+  const peek = usePeek();
+  useCollapseOnEsc(open !== null && peek.key === null, () => {
+    setOpen(null);
   });
   const listed = searched(board.rows, query).filter(
     (t) => (filter === "all" || groupOf(t, me) === filter) && (repo === null || t.repo === repo),
   );
   const foot = footOf(listed);
-  const setParam = (key: string, value: string | null) => {
-    setParams((p) => {
-      const out = new URLSearchParams(p);
-      if (value === null) out.delete(key);
-      else out.set(key, value);
-      return out;
-    });
-  };
   return (
     <Page
       title="Compact"
@@ -228,7 +217,7 @@ export function CompactView() {
           items={pills(board.rows, me, filter)}
           value={filter}
           onChange={(id) => {
-            setParam("f", id === "all" ? null : id);
+            setF(id === "all" ? null : id);
           }}
         />
       }
@@ -311,7 +300,7 @@ export function CompactView() {
                       now={now}
                       open={open === t.key}
                       onToggle={() => {
-                        setParam("open", open === t.key ? null : t.key);
+                        setOpen(open === t.key ? null : t.key);
                       }}
                     />
                   ))),

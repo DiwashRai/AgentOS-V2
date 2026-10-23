@@ -2,7 +2,6 @@
 // Every row lights up on hover; the key opens Jira; the button takes it in. W0 is
 // static, so Take in does nothing yet.
 import { useState } from "react";
-import { useSearchParams } from "react-router";
 
 import { loadOf, useIntake, useNow, useSession } from "../../api/queries";
 import type { IntakeIssue, IntakeQuery } from "../../api/types";
@@ -30,6 +29,7 @@ import { LoadNotice } from "../../patterns/load";
 import { Who } from "../../patterns/who";
 import { useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
+import { useParam } from "../shared/useParam";
 import { useSearch } from "../shared/useSearch";
 import {
   emptyText,
@@ -239,8 +239,8 @@ function queryChips(queries: readonly IntakeQuery[], total: number): Segment[] {
 
 export function IntakeView() {
   const intake = loadOf(useIntake());
-  const [params, setParams] = useSearchParams();
-  const only = params.get("q");
+  // the bar's chip: `?only=` lists one query (the search box has `?q=`)
+  const [only, setOnly] = useParam("only");
   const space = useSpace();
   const jiraUrl = useSession().data?.jira_url ?? null;
   const { query, search } = useSearch();
@@ -259,12 +259,7 @@ export function IntakeView() {
                 items={queryChips(data.queries, toTakeIn(data))}
                 value={only ?? "all"}
                 onChange={(id) => {
-                  setParams((p) => {
-                    const out = new URLSearchParams(p);
-                    if (id === "all") out.delete("q");
-                    else out.set("q", id);
-                    return out;
-                  });
+                  setOnly(id === "all" ? null : id);
                 }}
               />
             ),

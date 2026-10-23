@@ -7,8 +7,6 @@
 // many of its tickets are in flight, with its list at the head's end; inside a group the rows run
 // down the stages.
 // A repo with nothing in flight is one quiet line at the foot. Click a row to peek.
-import { useSearchParams } from "react-router";
-
 import { useSettings } from "../../api/queries";
 import type { Person, TicketRow } from "../../api/types";
 import { atWork, groupOf, parseFilter, pills, stageModel, stageWord } from "../../domain/board";
@@ -33,6 +31,7 @@ import { KeyCell, TicketTitle } from "../../patterns/ticketLine";
 import { Who } from "../../patterns/who";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
+import { useParam, usePeek } from "../shared/useParam";
 import { useSearch } from "../shared/useSearch";
 import { groupsOf, type RepoGroup, STAGE, stageCounts, stateOf } from "./model";
 
@@ -193,16 +192,10 @@ export function TeamsView() {
   const repos = useSettings().data?.repos.value ?? [];
   const space = useSpace();
   const { query, search } = useSearch("Jump to a repo or ticket");
-  const [params, setParams] = useSearchParams();
   // the bar's chips, as Compact's and with its `?f=`: one pressed lists that group's tickets alone
-  const filter = parseFilter(params.get("f"));
-  const open = (key: string) => {
-    setParams((p) => {
-      const out = new URLSearchParams(p);
-      out.set("peek", key);
-      return out;
-    });
-  };
+  const [f, setF] = useParam("f");
+  const filter = parseFilter(f);
+  const peek = usePeek();
   const { active, quiet } = groupsOf(
     rows.filter((t) => filter === "all" || groupOf(t, me) === filter),
     repos.map((r) => r.name),
@@ -220,12 +213,7 @@ export function TeamsView() {
           items={pills(rows, me, filter)}
           value={filter}
           onChange={(id) => {
-            setParams((p) => {
-              const out = new URLSearchParams(p);
-              if (id === "all") out.delete("f");
-              else out.set("f", id);
-              return out;
-            });
+            setF(id === "all" ? null : id);
           }}
         />
       }
@@ -234,7 +222,7 @@ export function TeamsView() {
       <Table columns={COLUMNS} edge foot={<Legend stages={stageCounts(active)} />}>
         {board.load ? <LoadNotice load={board.load} noun="tickets" /> : null}
         {active.map((g) => (
-          <RepoSection key={g.repo} g={g} me={me} now={now} onOpen={open} />
+          <RepoSection key={g.repo} g={g} me={me} now={now} onOpen={peek.open} />
         ))}
         {filter === "all" && quiet.length > 0 ? <QuietSection quiet={quiet} /> : null}
       </Table>
