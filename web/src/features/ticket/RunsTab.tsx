@@ -9,7 +9,7 @@ import { useState } from "react";
 
 import { loadOf, useRuns, useTicketWorkflow } from "../../api/queries";
 import type { Run, RunState, StageRun, Ticket, TicketWorkflow } from "../../api/types";
-import { clock, firstName } from "../../domain/format";
+import { clock, firstName, fromPerson } from "../../domain/format";
 import {
   Avatar,
   Badge,
@@ -25,6 +25,7 @@ import {
   Text,
 } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
+import { Who } from "../../patterns/who";
 import { useBoard } from "../shared/board";
 
 // Compact's line: the key, then the glyph and what the run is doing, then one quiet cluster at the
@@ -250,14 +251,9 @@ function RunDetail({ r, runs, w, now }: RunProps) {
   return (
     <Stack gap={6}>
       <Stack dir="row" gap={3} align="center">
-        {r.by ? (
-          <Avatar size="sm" name={r.by.name} seed={String(r.by.id)} beside />
-        ) : (
-          <Avatar size="sm" />
-        )}
+        <Who who={fromPerson(r.by)} place="starter" />
         <Text tone="3">
-          <Text tone="1">{r.by?.name ?? "Nobody"}</Text>
-          {` ${r.started_at ? `started it at ${clock(r.started_at)}` : "queued it"} · ${ROUTE[r.route]} · ${end}`}
+          {`${r.started_at ? `started it at ${clock(r.started_at)}` : "queued it"} · ${ROUTE[r.route]} · ${end}`}
         </Text>
       </Stack>
       <Table columns={STAGE_COLUMNS} head={false} scroll={false}>

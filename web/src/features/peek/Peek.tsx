@@ -9,21 +9,11 @@ import { useSearchParams } from "react-router";
 import { loadOf, useMessages, usePlan, useTicket } from "../../api/queries";
 import type { Person, Ticket } from "../../api/types";
 import { stageModel } from "../../domain/board";
-import { paragraphs } from "../../domain/format";
+import { fromPerson, paragraphs } from "../../domain/format";
 import { parsePlan, type PlanItem } from "../../domain/plan";
-import {
-  Avatar,
-  Button,
-  Composer,
-  Dialog,
-  Icon,
-  Section,
-  Stack,
-  Stepper,
-  Text,
-  Thread,
-} from "../../kit";
+import { Button, Composer, Dialog, Icon, Section, Stack, Stepper, Text, Thread } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
+import { Who } from "../../patterns/who";
 import { threadMessage, useBoard } from "../shared/board";
 import { TicketMenu } from "../shared/TicketMenu";
 import { Now } from "../ticket/now";
@@ -73,16 +63,7 @@ function Head({ t, me, now, plan }: BodyProps & { plan: readonly PlanItem[] }) {
       <Properties
         t={t}
         now={now}
-        owner={{
-          value: t.owner ? (
-            <>
-              <Avatar name={t.owner.name} seed={String(t.owner.id)} beside />
-              {t.owner.name}
-            </>
-          ) : (
-            "Nobody"
-          ),
-        }}
+        owner={{ value: <Who who={fromPerson(t.owner)} place="fact" /> }}
       />
       <Stepper model={stageModel(t, me)} now={<Now t={t} me={me} now={now} plan={plan} />} />
     </Stack>

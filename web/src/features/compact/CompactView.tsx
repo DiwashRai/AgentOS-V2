@@ -87,7 +87,7 @@ function Expanded({ t, me, now }: { t: TicketRow; me: Person | null; now: number
               {move.label}
             </Text>
             <Text variant="label">{move.lead}</Text>
-            <Text tone="3">{`Owner ${t.owner?.name ?? "nobody"} · ${stagesText(t)}`}</Text>
+            <Text tone="3">{`${t.owner ? `Owner ${t.owner.name}` : "Unassigned"} · ${stagesText(t)}`}</Text>
           </Stack>
           <Stack dir="row" gap={3} wrap>
             {expandedActions(t.actions).map((action) => (

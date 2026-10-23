@@ -6,9 +6,9 @@ import { useSearchParams } from "react-router";
 
 import { loadOf, useIntake, useNow, useSession } from "../../api/queries";
 import type { IntakeIssue, IntakeQuery } from "../../api/types";
+import { fromAssignee } from "../../domain/format";
 import {
   Age,
-  Avatar,
   Badge,
   Button,
   type Column,
@@ -27,6 +27,7 @@ import {
   Text,
 } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
+import { Who } from "../../patterns/who";
 import { useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
@@ -50,8 +51,8 @@ import {
 // project key, name, count) that stays at the top while its run scrolls past, parted from the one
 // before by room and a hairline. An issue is one line on fixed columns, so its facts read down
 // the list: the Jira key (a link to it), the title firm, its priority's bars and
-// its Jira status in the app's glyphs with the status's words (the rest in its tooltip), who has it (a face and a name,
-// Unassigned a dashed ring), the age ("1h ago", in its largest unit; to the minute in its
+// its Jira status in the app's glyphs with the status's words (the rest in its tooltip), who has it (a face and a first
+// name, Unassigned a dashed ring), the age ("1h ago", in its largest unit; to the minute in its
 // tooltip). Under the pointer or with focus, Take in takes the age's place. A query that didn't
 // answer says so on a panel of the blocked hue. When the queries were checked closes the list.
 const COLUMNS: readonly Column[] = [
@@ -87,12 +88,7 @@ function IssueRow({ issue, now }: { issue: IntakeIssue; now: number }) {
           {issue.status}
         </Text>
       </Stack>
-      <Stack dir="row" gap={4} align="center">
-        {issue.assignee ? <Avatar name={issue.assignee} beside /> : <Avatar dashed />}
-        <Text tone={issue.assignee ? "2" : "3"} truncate>
-          {issue.assignee ?? "Unassigned"}
-        </Text>
-      </Stack>
+      <Who who={fromAssignee(issue.assignee)} place="cell" />
       <Swap
         hover={
           <Button size="xs" title={`Take in ${issue.key}`}>

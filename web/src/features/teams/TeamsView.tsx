@@ -19,10 +19,9 @@ import {
   stageWord,
   STATE_WORD,
 } from "../../domain/board";
-import { age, firstName, plural, repoShort } from "../../domain/format";
+import { age, firstName, fromPerson, plural, repoShort } from "../../domain/format";
 import {
   Age,
-  Avatar,
   Badge,
   Button,
   type Column,
@@ -39,6 +38,7 @@ import {
   Text,
 } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
+import { Who } from "../../patterns/who";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
@@ -122,18 +122,6 @@ function StateCell({ t, me }: { t: TicketRow; me: Person | null }) {
   );
 }
 
-/** Who owns it: their face and first name; nobody, a dashed ring. */
-function OwnerCell({ owner }: { owner: Person | null }) {
-  return (
-    <Stack dir="row" gap={4} align="center">
-      {owner ? <Avatar name={owner.name} seed={String(owner.id)} beside /> : <Avatar dashed />}
-      <Text tone={owner ? "2" : "3"} truncate>
-        {owner ? firstName(owner.name) : "Nobody"}
-      </Text>
-    </Stack>
-  );
-}
-
 function TicketLine({
   t,
   me,
@@ -161,7 +149,7 @@ function TicketLine({
         {STAGE[t.phase] ?? stage.word}
       </Text>
       <StateCell t={t} me={me} />
-      <OwnerCell owner={t.owner} />
+      <Who who={fromPerson(t.owner)} place="cell" />
       <Text variant="meta" tone="3">
         <Age text={age(t.since, now)} />
       </Text>

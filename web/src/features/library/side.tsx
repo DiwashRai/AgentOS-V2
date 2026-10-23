@@ -7,8 +7,9 @@ import { useState } from "react";
 
 import { useNow, useRuntimes } from "../../api/queries";
 import type { AgentSettings, Effort, RuntimeId, UsedBy, Version } from "../../api/types";
-import { age, authorName, plural } from "../../domain/format";
-import { Avatar, Badge, Button, type Fact, Facts, Icon, Select, Stack, Text } from "../../kit";
+import { age, fromAuthor, plural } from "../../domain/format";
+import { Badge, Button, type Fact, Facts, Select, Stack, Text } from "../../kit";
+import { Who } from "../../patterns/who";
 
 export type { Fact };
 
@@ -142,12 +143,7 @@ const versionFact =
     value: (
       <>
         <Text tone="3" tabular>{`v${String(v.version)}`}</Text>
-        {v.by.kind === "person" ? (
-          <Avatar name={v.by.person.name} seed={String(v.by.person.id)} beside />
-        ) : (
-          <Icon name="agents" />
-        )}
-        {authorName(v.by)}
+        <Who who={fromAuthor(v.by)} place="fact" />
       </>
     ),
     note: `· ${age(v.at, now)}`,

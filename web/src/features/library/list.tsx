@@ -9,10 +9,9 @@ import { useNavigate } from "react-router";
 
 import { useNow } from "../../api/queries";
 import type { Author, Iso, UsedBy } from "../../api/types";
-import { age, firstName, plural } from "../../domain/format";
+import { age, fromAuthor, plural } from "../../domain/format";
 import {
   Age,
-  Avatar,
   Badge,
   Button,
   type Column,
@@ -26,6 +25,7 @@ import {
   Table,
   Text,
 } from "../../kit";
+import { Who } from "../../patterns/who";
 import { contextOf, useSpace } from "../shared/board";
 
 interface LibraryListProps {
@@ -198,15 +198,9 @@ export function AboutCell({ text }: { text: string }) {
 /** Who changed it last and how long ago: their face and first name, or the run that did. */
 export function ChangedCell({ by, at }: { by: Author; at: Iso }) {
   const now = useNow(60_000);
-  const who = by.kind === "person" ? firstName(by.person.name) : `Run #${String(by.run_id)}`;
   return (
     <Stack dir="row" gap={3} align="center">
-      {by.kind === "person" ? (
-        <Avatar size="md" name={by.person.name} seed={String(by.person.id)} />
-      ) : null}
-      <Text tone="2" truncate>
-        {who}
-      </Text>
+      <Who who={fromAuthor(by)} place="cell" />
       <Text variant="meta" tone="3">
         <Age text={age(at, now)} />
       </Text>

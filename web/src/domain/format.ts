@@ -1,6 +1,6 @@
 // Pure display helpers over server fields. They may combine fields into text; they never derive a
 // state the server owns.
-import type { Author } from "../api/types";
+import type { Author, Person } from "../api/types";
 
 /** Whole minutes from `from` to `now` (never negative). */
 export function minutesSince(from: string, now: number): number {
@@ -63,10 +63,36 @@ export function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? name;
 }
 
-/** "Bea Quinn", or "Run #42 on NW-17" for a version a ticket's run wrote. */
-export function authorName(a: Author): string {
-  return a.kind === "person" ? a.person.name : `Run #${String(a.run_id)} on ${a.ticket}`;
+/** Who someone is, as a face and a name say it (patterns/who.tsx): a person (the seed keeps their
+ *  face's hue), a ticket's run, or nobody (Unassigned). */
+export type Someone =
+  | { kind: "person"; name: string; seed: string }
+  | { kind: "run"; id: number; ticket: string }
+  | { kind: "nobody" };
+
+/** An owner, a run's starter: a person or nobody. */
+export const fromPerson = (p: Person | null): Someone =>
+  p ? { kind: "person", name: p.name, seed: String(p.id) } : { kind: "nobody" };
+
+/** Who wrote a version: a person or a ticket's run. */
+export const fromAuthor = (a: Author): Someone =>
+  a.kind === "person" ? fromPerson(a.person) : { kind: "run", id: a.run_id, ticket: a.ticket };
+
+/** A Jira assignee: a name with no id here, so the name is its seed. */
+export const fromAssignee = (name: string | null): Someone =>
+  name === null ? { kind: "nobody" } : { kind: "person", name, seed: name };
+
+/** Their name, the first in a list's cell ("Ada", "Run #42") and in full elsewhere ("Ada Park",
+ *  "Run #42 on NW-17"); nobody is Unassigned. */
+export function nameOf(s: Someone, full: boolean): string {
+  if (s.kind === "nobody") return "Unassigned";
+  if (s.kind === "run")
+    return full ? `Run #${String(s.id)} on ${s.ticket}` : `Run #${String(s.id)}`;
+  return full ? s.name : firstName(s.name);
 }
+
+/** "Bea Quinn", or "Run #42 on NW-17" for a version a ticket's run wrote. */
+export const authorName = (a: Author): string => nameOf(fromAuthor(a), true);
 
 /** Who changed a workflow last and when, as the editor's bar and the ticket's tab say it: "Ada
  *  Park · 2d ago", or "run #42 on NW-17 · 35m ago". */
