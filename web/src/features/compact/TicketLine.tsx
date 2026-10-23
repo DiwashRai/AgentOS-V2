@@ -82,7 +82,11 @@ export function TitleCell({
         <Text weight={500} tone={settled ? "2" : "1"}>
           {t.title}
         </Text>
-        {after ? `\u2002${after}` : null}
+        {after ? (
+          <Text variant="meta" tone="3">
+            {`\u2002${after}`}
+          </Text>
+        ) : null}
       </Text>
     </Stack>
   );

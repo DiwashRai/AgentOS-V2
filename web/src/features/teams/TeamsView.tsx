@@ -177,8 +177,8 @@ function OpenList({ repo }: { repo: string }) {
 /** Who works there, by first name (read at a glance where a row of tiny faces isn't). */
 const teamOf = (people: readonly Person[]) => people.map((p) => firstName(p.name)).join(", ");
 
-/** A repo's group: its head (the repo, how many in flight, its path and people, its list), then a
- *  line per ticket. */
+/** A repo's group: its head (the repo, how many in flight, its path and people), then a line per
+ *  ticket. */
 function RepoSection({
   g,
   me,
@@ -197,7 +197,6 @@ function RepoSection({
         name={repoShort(g.repo)}
         count={g.rows.length}
         note={[g.repo, teamOf(g.people)].filter(Boolean).join(" · ")}
-        summary={<OpenList repo={g.repo} />}
       />
       {g.rows.map((t) => (
         <TicketLine key={t.key} t={t} me={me} now={now} onOpen={onOpen} />

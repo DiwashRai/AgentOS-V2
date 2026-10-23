@@ -40,8 +40,8 @@ const COLUMNS: readonly Column[] = [
 // check's verdict or what it is doing.
 const STAGE_COLUMNS: readonly Column[] = [
   { label: "Stage", width: "lg" },
+  { label: "Verdict", width: "md" },
   { label: "Round", width: "fill" },
-  { label: "Verdict", width: "md", end: true },
 ];
 
 const RUN_MARK: Record<RunState, { kind: MarkKind; word: string }> = {
@@ -207,6 +207,7 @@ function StageLine({ s, w }: { s: StageRun; w: TicketWorkflow | undefined }) {
           {s.name}
         </Text>
       </Stack>
+      <Verdict s={s} />
       {of === null ? (
         <Text variant="meta">{""}</Text>
       ) : (
@@ -217,7 +218,6 @@ function StageLine({ s, w }: { s: StageRun; w: TicketWorkflow | undefined }) {
           </Text>
         </Stack>
       )}
-      <Verdict s={s} />
     </Row>
   );
 }
