@@ -35,11 +35,17 @@ const FILES = {
     ``,
   ].join("\n"),
   "patterns/plan.tsx": [
+    `import { forwardRef, memo } from "react";`,
     `import { Checklist } from "../kit";`,
     `export function Plan({ place }: { place: "roomy" | "snug" }) { return <Checklist look={place} />; }`,
     `export function Steps(props: { where: "roomy" | "snug" }) { return <Checklist look={props.where} />; }`,
     `const LOOK = { page: "roomy", peek: "snug" } as const;`,
     `export function Mapped({ place }: { place: "page" | "peek" }) { return <Checklist look={LOOK[place]} />; }`,
+    `type Look = "roomy" | "snug";`,
+    `export const Memo = memo(function Memo({ place }: { place: Look }) { return <Checklist look={place} />; });`,
+    `export const Fwd = forwardRef(({ place }: { place: Look }, ref) => <Checklist look={place} />);`,
+    `export function Rest({ items, ...rest }: { items: string; look: Look }) { return <Checklist {...rest} />; }`,
+    `export function Whole(props: { look: Look }) { return <Checklist {...props} />; }`,
     ``,
   ].join("\n"),
   "patterns/disguise.tsx": [
@@ -145,8 +151,15 @@ describe("a pattern's props, through its types", () => {
     ]);
   });
 
-  it("calls a prop handed unchanged to a kit variant a styling knob", () => {
+  it("calls a prop handed unchanged to a kit variant a styling knob, through a wrapper or a spread", () => {
     const problems = knobProblems(web.knobs).map((p) => p.split(":")[0]);
-    expect(problems).toEqual(["patterns/plan.tsx Plan.place", "patterns/plan.tsx Steps.where"]);
+    expect(problems).toEqual([
+      "patterns/plan.tsx Plan.place",
+      "patterns/plan.tsx Steps.where",
+      "patterns/plan.tsx Memo.place",
+      "patterns/plan.tsx Fwd.place",
+      "patterns/plan.tsx Rest.look",
+      "patterns/plan.tsx Whole.look",
+    ]);
   });
 });

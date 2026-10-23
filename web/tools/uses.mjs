@@ -4,8 +4,9 @@
 // reaches from main.tsx (a screen's export nothing imports runs nowhere). A screen is credited
 // with each kit component and variant the units it reaches draw, and with each pattern and shared
 // export they are. Read with the compiler over the web (./reach.mjs opens it); kit.mjs checks the counts. In a
-// pattern, a top-level function's prop handed unchanged to a kit variant (`look={place}`) is
-// noted: it is a styling knob, whatever its name.
+// pattern, a top-level function's prop (React's memo and forwardRef aside) handed unchanged to a
+// kit variant (`look={place}`, or the props or their rest spread onto a kit tag) is noted: it is a
+// styling knob, whatever its name.
 import { join } from "node:path";
 
 import { isKnob, readKit, readPatterns, setBy } from "./props.mjs";
@@ -76,24 +77,37 @@ function topOf(w, sf, path) {
   return t;
 }
 
-/** The top-level function a node is in, by name, and whether `param` is one of its parameters. */
+/** React's component wrappers: a function handed to one is still the component (`memo(function
+ *  Who(…) {…})`, `forwardRef((props, ref) => …)`). */
+const WRAPPERS = new Set(["memo", "forwardRef"]);
+const wraps = (ts, n) =>
+  ts.isCallExpression(n) &&
+  ((ts.isIdentifier(n.expression) && WRAPPERS.has(n.expression.text)) ||
+    (ts.isPropertyAccessExpression(n.expression) && WRAPPERS.has(n.expression.name.text)));
+/** Where a function expression ends up, through React's wrappers: its top-level const, or the
+ *  module's default. */
+const holderOf = (ts, fn) => {
+  let v = fn.parent;
+  while (wraps(ts, v)) v = v.parent;
+  return v;
+};
+
+/** The top-level function (a component, React's wrappers aside) a node is in. */
 function topFunction(ts, node) {
   for (let n = node; n; n = n.parent) {
     if (!ts.isFunctionLike(n)) continue;
     if (ts.isFunctionDeclaration(n) && ts.isSourceFile(n.parent)) return n;
-    const v = n.parent;
-    if (
-      (ts.isArrowFunction(n) || ts.isFunctionExpression(n)) &&
-      ts.isVariableDeclaration(v) &&
-      ts.isSourceFile(v.parent.parent.parent)
-    )
-      return n;
+    if (!ts.isArrowFunction(n) && !ts.isFunctionExpression(n)) continue;
+    const v = holderOf(ts, n);
+    if (ts.isVariableDeclaration(v) && ts.isSourceFile(v.parent.parent.parent)) return n;
+    if (ts.isExportAssignment(v)) return n;
   }
   return null;
 }
-const nameOf = (ts, fn) =>
-  fn.name?.getText() ??
-  (ts.isVariableDeclaration(fn.parent) ? fn.parent.name.getText() : "default");
+const nameOf = (ts, fn) => {
+  const v = holderOf(ts, fn);
+  return ts.isVariableDeclaration(v) ? v.name.getText() : (fn.name?.getText() ?? "default");
+};
 
 /** The top-level function's prop an expression hands on unchanged, by name (`place`,
  *  `props.place`, `place ?? "page"`, a local const of it), or null. */
@@ -143,11 +157,28 @@ function drawn(w, kit, node, u, knobs) {
     const p = fn && isKnob(kit, tag, prop) ? propPassed(w, expr, fn) : null;
     if (p !== null) knobs.push({ fn: nameOf(ts, fn), prop: p, to: `${tag}.${prop}` });
   };
-  for (const attr of node.attributes.properties) {
-    if (ts.isJsxSpreadAttribute(attr) && ts.isObjectLiteralExpression(attr.expression))
-      for (const p of attr.expression.properties)
+  // a spread: an object literal's fields one by one (either side of a choice); the props
+  // themselves, or their rest (`{...props}`, `{...rest}`), each field of theirs the tag takes as
+  // a variant
+  const spread = (expr) => {
+    let e = expr;
+    while (ts.isParenthesizedExpression(e)) e = e.expression;
+    if (ts.isConditionalExpression(e)) {
+      spread(e.whenTrue);
+      spread(e.whenFalse);
+    } else if (ts.isObjectLiteralExpression(e)) {
+      for (const p of e.properties)
         if (ts.isPropertyAssignment(p) || ts.isShorthandPropertyAssignment(p))
           passed(p.name.getText(), ts.isPropertyAssignment(p) ? p.initializer : p.name);
+        else if (ts.isSpreadAssignment(p)) spread(p.expression);
+    } else if (fn && propPassed(w, e, fn) !== null) {
+      for (const field of w.checker.getTypeAtLocation(e).getProperties())
+        if (isKnob(kit, tag, field.name))
+          knobs.push({ fn: nameOf(ts, fn), prop: field.name, to: `${tag}.${field.name}` });
+    }
+  };
+  for (const attr of node.attributes.properties) {
+    if (ts.isJsxSpreadAttribute(attr)) spread(attr.expression);
     if (!ts.isJsxAttribute(attr) || !attr.initializer) continue;
     const name = attr.name.getText();
     for (const v of setBy(w, attr)) u.draws.add(`${tag}.${name}=${v}`);
