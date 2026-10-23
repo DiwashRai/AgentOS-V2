@@ -54,12 +54,13 @@ import { KeyCell, LINE_END, lineEnd, TitleCell } from "./TicketLine";
 
 // Linear's list: the key and the title on the left, what it waits on receding after the title;
 // then the row's one tag (its Now: the agent and its step, who it waits on), hugging the plain
-// properties at the far end, so the title line takes every width they leave. The cells say what
-// they are: no column head.
+// properties at the far end, so the title line takes every width they leave. One row of quiet
+// column labels over the board names the plain columns, so they read down it as a ledger (the
+// tag and the face say what they are).
 const COLUMNS: readonly Column[] = [
-  { label: "Ref", width: "sm" },
+  { label: "Key", width: "sm" },
   { label: "Ticket", width: "fill", min: "2xl" },
-  { label: "Now", width: "xl", hug: true, end: true },
+  { label: "", width: "xl", hug: true, end: true },
   ...LINE_END,
 ];
 
@@ -98,10 +99,10 @@ function Expanded({ t, me, now }: { t: TicketRow; me: Person | null; now: number
   const a = t.attention;
   const [, setParams] = useSearchParams();
   return (
-    <Stack gap={8}>
+    <Stack gap={6}>
       <Stepper model={stageModel(t, me)} compact />
       <Stack dir="row" gap={10}>
-        <Stack grow gap={8}>
+        <Stack grow gap={6}>
           <Stack gap={2}>
             <Text variant="meta" weight={500}>
               {move.label}
@@ -305,7 +306,6 @@ export function CompactView() {
       <Surface fill>
         <Table
           columns={COLUMNS}
-          head={false}
           foot={
             <>
               {[

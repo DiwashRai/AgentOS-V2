@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useNow, useRuntimes } from "../../api/queries";
 import type { AgentSettings, Effort, RuntimeId, UsedBy, Version } from "../../api/types";
 import { age, plural } from "../../domain/format";
-import { Avatar, Button, type Fact, Facts, Icon, Select, Stack, Text } from "../../kit";
+import { Avatar, Badge, Button, type Fact, Facts, Icon, Select, Stack, Text } from "../../kit";
 import { authorName } from "./model";
 
 export type { Fact };
@@ -92,12 +92,13 @@ function Tickets({ keys }: { keys: readonly string[] }) {
   );
 }
 
+/** The keys as a list writes them (quiet, tabular), so they don't vie with the workflows' names. */
 function Keys({ shown }: { shown: readonly string[] }) {
   return (
     <>
       {shown.map((key) => (
         <Button key={key} variant="link" href={`/t/${key}`}>
-          {key}
+          <Badge kind="key">{key}</Badge>
         </Button>
       ))}
     </>

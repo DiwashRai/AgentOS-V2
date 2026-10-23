@@ -21,8 +21,7 @@
   column-gap: var(--sp-5);
   align-items: center;
   height: var(--h-list-head);
-  padding: 0 var(--list-pad) 0 var(--list-inset);
-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+  padding: 0 var(--list-inset);
   font-size: var(--fs-2);
   font-weight: 500;
   color: var(--ink-3);
@@ -41,50 +40,63 @@
 .scroll > .list {
   flex: 1;
   overflow: hidden auto;
-  /* rows run edge to edge (their focus ring sits inside); room under the last row when scrolled to
-     the end, so it doesn't sit on the surface's foot */
-  padding: 0 0 var(--sp-10);
-  /* rows passing under the foot fade out rather than being sliced by it */
-  mask-image: linear-gradient(var(--ink-1) calc(100% - var(--sp-10)), transparent);
+  /* room under the last row when scrolled to the end, so it doesn't sit on the surface's foot */
+  padding: 0 0 var(--sp-8);
+  /* a row cut by the list's end softens over its last few pixels rather than being sliced */
+  mask-image: linear-gradient(var(--ink-1) calc(100% - var(--sp-5)), transparent);
 }
-/* the foot keeps the list's scrollbar gutter, so its far end lines up with the rows' */
+/* a grouped list that scrolls in its own surface (Compact) runs a step denser: its lines, its
+   heads and the room above them, so the whole board stands over its foot */
+.scroll:not(.edge) {
+  --h-line: var(--h-line-dense);
+  --h-group: var(--h-group-dense);
+  --group-gap: var(--group-gap-dense);
+  --fs-group: var(--fs-5);
+}
+/* a list on a surface keeps room at its sides for a focus ring; at its right the scrollbar's own
+   gutter is that room, so the rows' column edge (and the head's, over them) stays the surface's */
+.scroll:not(.edge) > .list {
+  margin-inline: calc(var(--list-bleed) * -1);
+  padding-left: var(--list-bleed);
+}
+.scroll:not(.edge) > .head {
+  margin-inline: calc(var(--list-bleed) * -1);
+  padding-left: calc(var(--list-bleed) + var(--list-inset));
+}
+/* the foot: its words on the rows' edges, under the list; it keeps the list's scrollbar gutter, so
+   its far end lines up with the rows'. Under a list that scrolls it is held at the sheet's foot, a
+   strip of tone (no rule) the rows fade out over */
 .foot {
   flex: none;
   display: flex;
   align-items: center;
   gap: var(--sp-8);
-  min-height: var(--h-control-lg);
-  padding: var(--sp-5) var(--list-pad);
+  min-height: var(--h-control);
+  padding: 0 var(--list-inset);
   overflow: hidden;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  border-top: var(--line-1) solid var(--list-rule);
   font-size: var(--fs-2);
   color: var(--ink-3);
   white-space: nowrap;
 }
-/* bleed: through the surface's padding to its edges; first or last in it, to its top or foot */
-.bleed {
-  margin-inline: calc(var(--pad) * -1);
-}
-.bleed:first-child {
-  margin-top: calc(var(--pad) * -1);
-}
-.bleed:last-child {
-  margin-bottom: calc(var(--pad) * -1);
-}
-/* edge: out through the sheet's gutter, no surface; each row's first cell under the bar's title, the
-   head a group's grey band (Linear's) with its labels a step up, the foot flush with the page's
-   foot, or right under the last row when the list doesn't fill the page */
-.edge {
-  --list-pad: var(--gutter);
-  --list-inset: var(--gutter);
-}
-/* its rules run to the sheet's edge: no gutter kept for a scrollbar a short list never shows */
-.edge > * {
+.scroll > .foot {
+  margin: 0 var(--list-pad) var(--sp-4);
+  padding: 0 var(--list-in);
+  border-radius: var(--r-3);
+  background: var(--tone-1);
   scrollbar-gutter: auto;
 }
-.edge > .head {
-  background: var(--list-band);
-  color: var(--ink-2);
+/* edge: out through the sheet's gutter, no surface; its column edge the bar's title's, the head its
+   quiet labels over the rows' words with no band and no rule, the rows ruled apart under their
+   words, the foot flush with the sheet's foot, or right under the last row when the list doesn't
+   fill the page */
+.edge {
+  --list-pad: var(--gutter);
+  --list-inset: calc(var(--gutter) + var(--list-in));
+  --row-rule: var(--list-rule);
+}
+/* no gutter kept for a scrollbar a short list never shows */
+.edge > * {
+  scrollbar-gutter: auto;
 }

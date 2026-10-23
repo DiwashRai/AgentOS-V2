@@ -16,8 +16,9 @@ interface Said {
 }
 
 /** One of four quiet lines, each with only what it draws. status: a quiet loading or error line;
- *  empty: the quiet row of an empty zone; problem: what went wrong, a line of the list on a blocked
- *  edge, at a reading measure; more: the strip under a capped list ("Show 3 more"). */
+ *  empty: the quiet row of an empty zone; problem: what went wrong, on a blocked edge (under a
+ *  query's head, a panel of the blocked wash), at a reading measure; more: the strip under a
+ *  capped list ("Show 3 more"). */
 export type NoticeProps = Said &
   (
     | {
@@ -32,8 +33,8 @@ export type NoticeProps = Said &
       }
     | {
         kind: "problem";
-        /** item: a line of the triage list (Intake); the blocked dot on a halo sits in the rows'
-         *  faces' column, the words where their titles start. */
+        /** item: a query's whole answer (Intake's): a panel of the blocked hue's wash on the
+         *  column edge, the blocked dot on a halo before its words. */
         align?: "item";
         /** The problem's second line: what can be done about it. */
         fix?: NoticeFix;
@@ -42,7 +43,8 @@ export type NoticeProps = Said &
       }
     | {
         kind: "empty";
-        /** item: as a problem's, the empty ring in the faces' column. */
+        /** item: a line under a head, the empty ring where the rows' words start (by default it
+         *  stands for a group, its ring on the column edge as a head's glyph). */
         align?: "item";
         error?: never;
         fix?: never;
@@ -52,7 +54,7 @@ export type NoticeProps = Said &
         kind: "more";
         /** The button that shows the rest ("Show all 11"), its title saying how many in all. */
         more?: { label: string; title: string; run: () => void };
-        /** item: the +N on a disc in the faces' column, the button where the titles start. */
+        /** item: the +N on a disc where the rows' words start, the button after it. */
         align?: "item";
         error?: never;
         fix?: never;

@@ -22,7 +22,7 @@ export interface ChipAfter {
 export type ChipProps = {
   /** Its words (tests, AGENTS.md, Implement, northwind/web). */
   label: string;
-  /** line: a faint fill, no outline (the default; in a list's row, a pill on a hairline); fill: a firmer fill (a stage's phase); edge: a round pill on a hairline, no fill (a board card's state, Linear's
+  /** line: a faint fill, no outline (the default; in a list's row, the same fill as a pill); fill: a firmer fill (a stage's phase); edge: a round pill of the same fill (a board card's state, Linear's
    *  card pill); blocked: the words in the blocked ink (a conflict). */
   tone?: "line" | "fill" | "edge" | "blocked";
   /** The full text on hover, when it says more than the words. */

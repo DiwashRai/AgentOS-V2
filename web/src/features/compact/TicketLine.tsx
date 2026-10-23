@@ -29,12 +29,13 @@ const TYPE_WORD: Record<TicketType, string> = {
 };
 
 /** The right end every line shares, on fixed columns so each ends on one edge in every row and
- *  group: the stage, the source, the age, the face. What they leave goes to the title. */
+ *  group: the stage, the source, the age, the face (unlabelled: a face says what it is). What
+ *  they leave goes to the title. */
 export const LINE_END: readonly Column[] = [
   { label: "Stage", width: "sm" },
   { label: "Source", width: "sm" },
   { label: "Age", width: "xs", end: true },
-  { label: "Owner", width: "face", end: true },
+  { label: "", width: "face", end: true },
 ];
 
 /** The priority bars, then the key (its type on hover: a row's one glyph is its status). */
@@ -53,19 +54,22 @@ export function KeyCell({ t }: { t: TicketRow }) {
 }
 
 /** The status glyph, the title, and after it the quiet words of what it waits on: one line, cut
- *  at its end, so the words give way before the title does. */
+ *  at its end, so the words give way before the title does. A settled line (done, closed) recedes
+ *  a step: its title in the second ink. */
 export function TitleCell({ t, me, after }: { t: TicketRow; me: Person | null; after: string }) {
   const a = t.attention;
+  const kind = markOf(a, me).kind;
+  const settled = kind === "done" || kind === "abandoned";
   return (
     <Stack dir="row" gap={4} align="center">
       <Mark
-        kind={markOf(a, me).kind}
+        kind={kind}
         glyph
-        name={said(markOf(a, me).kind)}
+        name={said(kind)}
         progress={a.kind === "running" ? a.progress : null}
       />
       <Text tone="3" truncate title={after ? `${t.title} · ${after}` : t.title}>
-        <Text weight={500} tone="1">
+        <Text weight={500} tone={settled ? "2" : "1"}>
           {t.title}
         </Text>
         {after ? `\u2002${after}` : null}

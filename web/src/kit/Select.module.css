@@ -1,6 +1,7 @@
 /* The trigger: a borderless property chip (face, name, chevron) in the type of its neighbours in
-   a properties row (it takes the row's size, weight and ink), 28px with the chip's padding; hover
-   lights it like a Linear property button, open fills it a step firmer */
+   a properties row (it takes the row's size, weight and ink), 28px with the chip's padding. It
+   rests on a quiet fill, so a value you can change reads apart from the read-only ones beside it;
+   hover lights it a step, open fills it a step firmer */
 .trigger {
   display: inline-flex;
   align-items: center;
@@ -11,7 +12,7 @@
   padding: 0 var(--sp-4);
   border: 0;
   border-radius: var(--r-2);
-  background: none;
+  background: var(--chip-rest);
   color: inherit;
   font-family: inherit;
   font-size: inherit;
@@ -21,10 +22,10 @@
   transition: background-color var(--dur-fast) ease;
 }
 .trigger:hover {
-  background: var(--chip-hover);
+  background: var(--chip-on);
 }
 .trigger[data-popup-open] {
-  background: var(--chip-on);
+  background: var(--fill-3);
 }
 .text {
   min-width: 0;

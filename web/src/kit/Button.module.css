@@ -1,6 +1,6 @@
-/* Linear's controls: a quiet filled button on a hairline edge; hover lifts the fill a step and firms
-   the edge; the weight never changes by state. `you` is the gate primary, `accent` only Dispatch run
-   on a ticket. */
+/* Flat controls: a button is a fill, never an edge. At rest a soft fill of ink over whatever it sits
+   on, under the pointer a step firmer; the weight never changes by state. `you` is the primary, the
+   accent's one solid fill with white on it; `accent` the logo's ink, only Dispatch run. */
 .btn {
   flex: none;
   display: inline-flex;
@@ -10,9 +10,8 @@
   height: var(--h-control);
   padding: 0 var(--sp-6);
   border-radius: var(--r-2);
-  border: var(--line-1) solid var(--ctl-edge);
+  border: var(--line-1) solid transparent;
   background: var(--ctl);
-  box-shadow: var(--ctl-shadow);
   color: var(--ink-1);
   font-size: var(--fs-3);
   font-weight: 500;
@@ -21,7 +20,6 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    border-color var(--dur-fast) ease,
     background-color var(--dur-fast) ease,
     color var(--dur-fast) ease;
 }
@@ -31,7 +29,6 @@
 }
 .btn:hover {
   background: var(--ctl-lift);
-  border-color: var(--ctl-edge-hover);
 }
 .btn:hover .glyph {
   color: var(--ink-1);
@@ -70,16 +67,14 @@
 .btn[aria-disabled="true"] .glyph {
   color: inherit;
 }
-/* ink: a primary that isn't a gate, the default's fill on a firmer edge in a firmer weight (the
-   solid one is accent's alone) */
+/* ink: a primary that isn't a gate, the default's fill in a firmer weight (the solid one is the
+   accent's alone) */
 .ink {
-  border-color: var(--ctl-edge-hover);
   font-weight: 600;
 }
 .you,
 .you:hover {
   background: var(--you);
-  border-color: var(--you);
   color: var(--you-ink);
 }
 .you:hover {
@@ -87,26 +82,20 @@
 }
 .accent {
   background: var(--accent);
-  border-color: var(--accent);
   color: var(--accent-ink);
-  box-shadow: var(--shadow-accent);
 }
 .accent:hover {
   background: var(--accent-hover);
-  border-color: var(--accent-hover);
 }
 .quiet,
 .link {
   background: transparent;
-  border-color: transparent;
-  box-shadow: none;
 }
 .quiet {
   color: var(--ink-2);
 }
 .quiet:hover {
   background: var(--ctl-hover);
-  border-color: transparent;
   color: var(--ink-1);
 }
 .link,
@@ -121,14 +110,13 @@
 .link:hover {
   color: var(--ink-1);
 }
-/* blocked (R11): an empty dashed outline in muted ink that hover leaves alone; a quiet one is its
-   faded glyph alone (no box), and the gate primary a flat grey fill with its words in muted ink
-   (readable, plainly not lit) */
+/* blocked (R11): an empty dashed outline in muted ink that hover leaves alone, the one line a button
+   draws; a quiet one is its faded glyph alone (no box), and the primary a soft wash of the accent
+   with its words in the accent's ink (still the bar's primary, plainly not lit) */
 .btn[aria-disabled="true"],
 .btn[aria-disabled="true"]:hover {
   background: transparent;
   border: var(--line-1) dashed var(--ctl-edge-hover);
-  box-shadow: none;
   color: var(--ink-3);
   cursor: not-allowed;
 }
@@ -138,6 +126,7 @@
   opacity: var(--blocked-fade);
 }
 .btn.you[aria-disabled="true"] {
-  background: var(--seg);
+  background: var(--you-soft);
+  color: var(--you-text);
   opacity: 1;
 }

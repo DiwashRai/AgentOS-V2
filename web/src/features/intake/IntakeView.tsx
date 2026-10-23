@@ -41,20 +41,23 @@ import {
 } from "./model";
 
 // One triage inbox, as Linear's Inbox: no cards. The list runs out to the sheet's edges under the
-// bar, each saved query a run of it under a grey band (chevron, project key, name, count) that
-// stays at the top while its run scrolls past and parts it from the run before. An issue is a
-// tight two-line row led by who has it (a face, Unassigned a dashed ring): the title firm; under
-// it the Jira key (a link to it), the assignee and one fact (a priority worth saying, led by its
-// bars, else the Jira status; the rest in its tooltip); across from both the age ("1h ago", in its
-// largest unit; to the minute in its tooltip). Under the pointer or with focus, Take in takes the
-// age's place. When the queries were checked closes the list, right under its last run. No
-// column head: the cells say what they are.
+// bar and one row of column labels, each saved query a section of it under its heading (chevron,
+// project key, name, count) that stays at the top while its run scrolls past, parted from the one
+// before by room and a hairline. An issue is one line on fixed columns, so its facts read down
+// the list: the Jira key (a link to it), the title firm, one fact (a priority worth saying, led by
+// its bars, else the Jira status; the rest in its tooltip), who has it (a face and a name,
+// Unassigned a dashed ring), the age ("1h ago", in its largest unit; to the minute in its
+// tooltip). Under the pointer or with focus, Take in takes the age's place. A query that didn't
+// answer says so on a panel of the blocked hue. When the queries were checked closes the list.
 const COLUMNS: readonly Column[] = [
-  { label: "Issue", width: "fill" },
-  { label: "Age", width: "lg", end: true, hug: true },
+  { label: "Key", width: "sm" },
+  { label: "Issue", width: "fill", min: "2xl" },
+  { label: "Priority · status", width: "lg" },
+  { label: "Assignee", width: "lg" },
+  { label: "Age", width: "sm", end: true },
 ];
 
-/** Muted words a step under the title (13px regular), the row's second line. */
+/** Muted words, a quiet cell or the head's end. */
 function Quiet({ children, title }: { children: string; title?: string }) {
   return (
     <Text variant="ui" tone="3" truncate {...(title ? { title } : {})}>
@@ -63,40 +66,27 @@ function Quiet({ children, title }: { children: string; title?: string }) {
   );
 }
 
-/** The second line: the Jira key (a link to it), who has it, and one fact. */
-function Meta({ issue }: { issue: IntakeIssue }) {
+function IssueRow({ issue, now }: { issue: IntakeIssue; now: number }) {
   const fact = metaFact(issue);
   return (
-    <Stack dir="row" gap={3} align="center">
+    <Row>
       <Button variant="link" href={issue.url} title={`Open ${issue.key} in Jira`}>
         <Badge kind="key">{issue.key}</Badge>
       </Button>
-      <Quiet>·</Quiet>
-      <Quiet>{issue.assignee ?? "Unassigned"}</Quiet>
-      <Quiet>·</Quiet>
-      <Stack dir="row" gap={2} align="center">
+      <Text variant="label" truncate title={issue.title}>
+        {issue.title}
+      </Text>
+      <Stack dir="row" gap={3} align="center">
         {fact.priority ? <Icon name={fact.priority} /> : null}
-        <Quiet title={issueFacts(issue)}>{fact.text}</Quiet>
+        <Text tone="2" truncate title={issueFacts(issue)}>
+          {fact.text}
+        </Text>
       </Stack>
-    </Stack>
-  );
-}
-
-function IssueRow({ issue, now }: { issue: IntakeIssue; now: number }) {
-  return (
-    <Row kind="triage">
-      <Stack dir="row" gap={4} align="center" grow>
-        {issue.assignee ? (
-          <Avatar size="talk" name={issue.assignee} beside />
-        ) : (
-          <Avatar size="talk" dashed />
-        )}
-        <Stack gap={1} grow>
-          <Text variant="label" truncate title={issue.title}>
-            {issue.title}
-          </Text>
-          <Meta issue={issue} />
-        </Stack>
+      <Stack dir="row" gap={4} align="center">
+        {issue.assignee ? <Avatar name={issue.assignee} beside /> : <Avatar dashed />}
+        <Text tone={issue.assignee ? "2" : "3"} truncate>
+          {issue.assignee ?? "Unassigned"}
+        </Text>
       </Stack>
       <Swap
         hover={
@@ -154,7 +144,7 @@ interface LabelProps {
   toggle: () => void;
 }
 
-/** A query's head: a quiet ruled line, no fill, held at the list's top while its run scrolls. The
+/** A query's head: a heading line, no rule and no fill, held at the list's top while its run scrolls. The
  *  chevron hung in the gutter, the muted project key, the name (bold), the count muted; a click
  *  anywhere on it but its end (or Enter on it) folds the run to its head. */
 function GroupLabel({ q, count, jiraUrl, collapsed, toggle }: LabelProps) {
@@ -259,13 +249,7 @@ export function IntakeView() {
         : {})}
       search={search}
     >
-      <Table
-        columns={COLUMNS}
-        head={false}
-        edge
-        scroll={false}
-        {...(data ? { foot: footNote(data, now) } : {})}
-      >
+      <Table columns={COLUMNS} edge scroll={false} {...(data ? { foot: footNote(data, now) } : {})}>
         {data ? (
           data.queries.map((q) => (
             <Group key={q.name} q={q} query={query} jiraUrl={jiraUrl} now={now} />

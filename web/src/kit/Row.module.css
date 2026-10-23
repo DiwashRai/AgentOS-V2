@@ -8,32 +8,49 @@
     transform var(--dur-fast) var(--ease-out);
 }
 
-/* lists: a line and an item are flat rows edge to edge, the wash (hover, open) running the full
-   width. A line is dense and unruled (Linear's list: the rhythm and the group bands part the rows);
-   a roomier item sits on its hairline. No card, no shadow, nothing moves */
+/* lists: a line, an item and a triage row are flat: the rhythm and the room above each group part
+   the rows. Their wash (hover, open) is a rounded patch on the list's column edge, the words
+   --list-in inside it, so an open row's panel stands where a tile does. No card, nothing moves */
 .line,
 .item,
 .triage {
   border-radius: 0;
-  background: transparent;
-  transition: background-color var(--dur-fast) ease;
 }
-.item {
-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
-}
-.row:is(.line, .item, .triage):is(:hover, :has(:focus-visible)) {
-  background: var(--list-hover);
-}
-/* triage: its hairline runs between the list's gutters, under the words, not to the sheet's edge */
-.triage::after {
+.row:is(.line, .item, .triage)::before {
   content: "";
   position: absolute;
-  inset: auto var(--list-pad) 0 var(--list-inset);
-  height: var(--line-1);
-  background: var(--list-rule);
+  inset: 0 var(--list-pad);
+  border-radius: var(--r-3);
+  transition: background-color var(--dur-fast) ease;
 }
-.row:is(.line, .item).open {
+/* a list out at the sheet's edges (Table edge) rules its rows apart with a faint hairline under
+   their words, so a wide row reads as one line; a lit patch hides the ones at its edges */
+.row:is(.line, .item, .triage) + .row:is(.line, .item, .triage)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: var(--list-inset);
+  height: var(--line-1);
+  background: var(--row-rule, transparent);
+}
+.row:is(:hover, .open)::after,
+.row:is(:hover, .open) + .row::after {
+  opacity: 0;
+}
+.row:is(.line, .item, .triage):is(:hover, :has(:focus-visible))::before {
+  background: var(--list-hover);
+}
+.row:is(.line, .item).open::before {
   background: var(--list-open);
+}
+/* selected rows one after another join into one patch */
+.row.open:has(+ .open)::before {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.row.open + .open::before {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .rack:is(:hover, :has(:focus-visible)) > .inner {
@@ -53,8 +70,12 @@
   outline: var(--line-2) solid var(--focus);
   outline-offset: var(--focus-out);
 }
-/* a list row runs to the list's edges: its ring goes inside */
-.row:is(.line, .item):has(.hit:focus-visible) {
+/* a list row's ring goes round its patch */
+.row:is(.line, .item, .triage):has(.hit:focus-visible) {
+  outline: 0;
+}
+.row:is(.line, .item, .triage):has(.hit:focus-visible)::before {
+  outline: var(--line-2) solid var(--focus);
   outline-offset: var(--focus-in);
 }
 /* a pointer opens it anywhere but on its own controls */
@@ -81,15 +102,15 @@
 .line > .inner {
   column-gap: var(--sp-5);
   min-height: var(--h-line);
-  padding: 0 var(--list-pad) 0 var(--list-inset);
+  padding: 0 var(--list-inset);
 }
 .item > .inner {
   min-height: var(--h-list-item);
-  padding: var(--sp-7) var(--list-pad) var(--sp-7) var(--list-inset);
+  padding: var(--sp-7) var(--list-inset);
 }
 .triage > .inner {
   min-height: var(--h-triage);
-  padding: var(--sp-3) var(--list-pad) var(--sp-3) var(--list-inset);
+  padding: var(--sp-3) var(--list-inset);
 }
 .rack > .inner {
   column-gap: var(--sp-4);
@@ -113,12 +134,14 @@
 .rest {
   grid-column-end: -1;
 }
+/* the open row's expansion: inside its panel, on the row's words */
 .more {
-  margin: 0 var(--list-pad) 0 var(--list-inset);
-  padding: var(--sp-7) 0 var(--sp-8);
-  border-top: var(--line-1) solid var(--list-rule);
+  position: relative;
+  margin: 0 var(--list-inset);
+  padding: var(--sp-4) 0 var(--sp-6);
 }
 .alert {
+  position: relative;
   margin: 0;
   padding: 0 var(--sp-7) var(--sp-4);
   text-align: right;
@@ -127,7 +150,7 @@
   overflow-wrap: anywhere;
 }
 .row:is(.line, .item) > .alert {
-  padding: 0 var(--list-pad) var(--sp-4);
+  padding: 0 var(--list-inset) var(--sp-4);
 }
 
 /* a row outside a table: its cells one under another */
@@ -143,17 +166,17 @@
   min-height: calc(var(--h-row) + var(--line-2));
 }
 
-/* band: a board's swimlane (Linear's board grouped by team), out to the sheet's edges. Its first
-   cell is its head, a list's group band edge to edge, its glyph over the cards' keys; under it each stage's cell holds its items
-   as cards on the bare sheet, a hairline before every stage but the first, so the stages read as
-   columns down the board and an empty one is blank sheet. columns: the board's column head, the
-   stage names on the same grid and hairlines, held at the board's top on a rule. */
+/* band: a board's swimlane, out to the sheet's edges. Its first cell is its head, a heading line
+   across the board with room above it (no band); under it each stage's cell is a column of its
+   items' cards straight on the sheet, tiles of tone (no lane, no line), the stages parted by room,
+   so an empty one is bare sheet. columns: the board's column head, the stage names on the same
+   grid over the cards' own text, held at the board's top. */
 .band {
   border-radius: 0;
 }
 .band > .inner {
   align-items: stretch;
-  column-gap: 0;
+  column-gap: var(--sp-6);
   padding: 0 var(--list-pad);
   border-radius: 0;
 }
@@ -162,38 +185,23 @@
   align-items: stretch;
   justify-content: flex-start;
   gap: var(--sp-4);
-  padding: var(--sp-6) var(--sp-5) var(--sp-9);
-  box-shadow: inset var(--line-1) 0 0 var(--list-rule);
 }
 .band:not(.columns) .cell:first-child {
   grid-column: 1 / -1;
   justify-content: center;
   min-height: var(--h-group);
-  margin: 0 calc(var(--list-pad) * -1);
-  padding: 0 var(--list-pad) 0 calc(var(--list-pad) + var(--line-1) + var(--sp-6));
-  background: var(--list-band);
-  box-shadow: none;
-}
-.band:not(.columns) .cell:nth-child(2),
-.band.columns .cell:first-child {
-  padding-left: 0;
-  box-shadow: none;
+  margin-top: var(--group-gap);
 }
 .band.columns {
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
   background: var(--ground);
-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
 }
-/* the stage names sit over the cards' own text, inset as the cards' keys are */
 .band.columns > .inner {
   min-height: var(--h-list-head);
 }
 .band.columns .cell {
   justify-content: center;
-  padding: 0 calc(var(--sp-5) + var(--line-1) + var(--sp-6));
-}
-.band.columns .cell:first-child {
-  padding-left: calc(var(--line-1) + var(--sp-6));
+  padding: 0 var(--sp-6);
 }

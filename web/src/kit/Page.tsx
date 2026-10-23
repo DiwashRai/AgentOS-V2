@@ -27,15 +27,16 @@ export interface PageProps {
   title: string | readonly [{ label: string; href: string }, string];
   /** After the title, quiet: the Space, a scope. */
   context?: string | undefined;
-  /** The number carries the weight, a zero recedes; "|" draws a separator. */
+  /** The number carries the weight, a zero recedes, a state's glyph leads it; "|" draws a
+   *  separator dot. */
   counters?: readonly (Counter | "|")[];
   /** The view's own controls after the counters (filter pills, a crumb). */
   middle?: ReactNode | undefined;
   search?: Search;
   /** The bar's buttons at its right end (New ticket; a ticket's actions). */
   action?: ReactNode;
-  /** column: a full-height reading column beside the body, ruled off by one hairline (the
-   *  ticket's Talk, the workflow editor's library); doc: none, what would sit there (an item
+  /** column: a full-height reading column beside the body, a rounded panel of tone with no line
+   *  (the ticket's Talk, the workflow editor's library); doc: none, what would sit there (an item
    *  editor's properties) is in the body, one centred document, as Linear's project page. */
   side?: { look?: "column"; content: ReactNode } | { look: "doc"; content?: never };
   children: ReactNode;

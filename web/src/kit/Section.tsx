@@ -2,7 +2,7 @@
 // a line under it (what the part is for, or a subline of chips), something at the head's end
 // (faces, an Edit), then its body. It is a <section> named by its heading (and described by its
 // line), so assistive tech can list and jump to it. In a side panel (the peek) each Section is one
-// of the panel's parts, padded and ruled off from the next; a Section inside a part, or anything
+// of the panel's parts, padded and parted from the next by room; a Section inside a part, or anything
 // opened from one, is not a part itself.
 import { createContext, type ReactNode, useContext, useId } from "react";
 

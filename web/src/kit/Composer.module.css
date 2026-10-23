@@ -1,5 +1,6 @@
-/* the composer: Linear's reply box, one line of text with Send at its right end, growing as you
-   type; in a full-height column it sits at the foot and stays there while the thread scrolls */
+/* the composer: a reply box of tone, no edge, one line of text with Send at its right end, growing
+   as you type; in a full-height column it sits at the foot and stays there while the thread
+   scrolls. On a rail of tone it is a well of the sheet's own (--well) */
 .compose {
   position: sticky;
   bottom: 0;
@@ -8,10 +9,9 @@
   gap: var(--sp-4);
   margin-top: auto;
   padding-right: var(--sp-3);
-  border: var(--line-1) solid var(--tk-card-edge);
   border-radius: var(--r-4);
-  background: var(--tk-card);
-  transition: border-color var(--dur-fast);
+  background: var(--well, var(--tone-2));
+  transition: background-color var(--dur-fast);
 }
 /* the text's label fills the box but Send, its padding the box's, so a click anywhere round the text
    focuses it */
@@ -23,11 +23,7 @@
   padding: var(--sp-3) 0 var(--sp-3) var(--sp-6);
   cursor: text;
 }
-.compose:hover {
-  border-color: var(--rule-strong);
-}
 .compose:has(textarea:focus-visible) {
-  border-color: var(--rule-strong);
   outline: var(--line-2) solid var(--focus);
   outline-offset: var(--focus-out);
 }

@@ -1,11 +1,10 @@
-/* Underline tabs on one hairline across the column: plain words, the current one in the strong ink
-   on a 2px ink rule that sits on the hairline, so a tab never reads as a button beside the real
-   ones; a count trails each in the quiet ink */
+/* Underline tabs with no rule across the column: plain words, the current one in the strong ink over
+   a short bar of the accent (this one), so a tab never reads as a button beside the real ones; a
+   count trails each in the quiet ink */
 .list {
   display: flex;
   align-items: stretch;
   gap: var(--sp-9);
-  border-bottom: var(--line-1) solid var(--tk-card-edge);
 }
 .tab {
   display: inline-flex;
@@ -35,7 +34,7 @@
 }
 .tab[data-active] {
   color: var(--ink-1);
-  border-bottom-color: var(--ink-1);
+  border-bottom-color: var(--you);
 }
 .count {
   font-size: var(--fs-3);

@@ -1,6 +1,6 @@
-/* Filter chips as Linear's view tabs: a row of separate small rounded chips a little apart, bare
-   words in secondary ink but for the pressed one, filled a firm step on a lit hairline in primary
-   ink (so the bar holds one box, not a row of them); hover lights a chip's fill.
+/* Filter chips as view tabs: a row of separate small rounded chips a little apart, bare words in
+   secondary ink but for the pressed one, the selected one, on the accent's soft wash in the
+   accent's ink (no edge; so the bar holds one fill, not a row of boxes); hover lights a chip's fill.
    Each state glyph keeps its state's colour, so the filter reads as the list's groups do; counts
    recede. The row takes the bar's free room and never wraps or clips: what doesn't fit goes into
    the last chip's popover. */
@@ -48,10 +48,8 @@
   color: var(--ink-1);
 }
 .pill:is([aria-pressed="true"], [data-current="true"]) {
-  background: var(--chip-on);
-  border-color: var(--chip-on-edge);
-  box-shadow: var(--ctl-shadow);
-  color: var(--ink-1);
+  background: var(--you-soft);
+  color: var(--you-text);
 }
 .pill em {
   font-style: normal;
@@ -60,7 +58,8 @@
   font-variant-numeric: tabular-nums;
 }
 .pill:is([aria-pressed="true"], [data-current="true"]) em {
-  color: var(--ink-2);
+  color: var(--you-text);
+  opacity: 0.8;
 }
 .pill em[data-zero="true"] {
   opacity: 0.6;

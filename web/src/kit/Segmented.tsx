@@ -1,5 +1,5 @@
 // Filter chips, Linear's view chips: one row of equal chips (one height and radius), bare words
-// but for the pressed one, filled on a hairline. When the bar can't hold them all, the ones that
+// but for the pressed one, filled a firm step with no edge. When the bar can't hold them all, the ones that
 // don't fit go into a last chip ("+N" and a chevron) that opens the kit's popover (Base UI's
 // combobox, as the other pickers: its filter field, then the rows); while the pressed one is
 // among them, that chip is the pressed one (filled, its name and the chevron). The popover holds

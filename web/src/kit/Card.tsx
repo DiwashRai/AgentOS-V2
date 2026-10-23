@@ -4,8 +4,8 @@
 //   summary beside it; the summary selects it, and selected it opens in place to its settings (no
 //   dialog). A disabled stage is dimmed; a problem with it is said at its foot.
 // - agent: an agent at work (My queue): its lines one under another, filling the card's height so
-//   cards in a row line up, on a tile on a hairline, running or queued alike (its glyph says which).
-// - ticket: a ticket on a board (All teams): two tight lines on a hairline card, each its width.
+//   cards in a row line up; running, a tile of tone; queued, no tone and a dashed outline.
+// - ticket: a ticket on a board (All teams): two tight lines on a card lifted off its lane by tone.
 // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
 // ring round the card, and a click anywhere on it for a pointer. What the lines say is the
 // screen's.
@@ -41,7 +41,8 @@ export type CardProps = Common &
         look: "agent";
         /** A click (or Enter) opens what the card is of (a peek). */
         onOpen: () => void;
-        off?: never;
+        /** Queued, waiting for a runner: no tone, a dashed outline (nothing at work here yet). */
+        off?: boolean;
         face?: never;
         open?: never;
         problem?: never;
@@ -76,7 +77,8 @@ const flag = (on: boolean) => on || undefined;
 /** What a card draws, by its case: a stage's face, settings and problem, and its button's words. */
 function caseOf(props: CardProps) {
   if (props.look === "agent" || props.look === "ticket") {
-    return { face: undefined, open: undefined, off: false, problem: undefined, say: props.label };
+    const off = props.look === "agent" && props.off === true;
+    return { face: undefined, open: undefined, off, problem: undefined, say: props.label };
   }
   const opened = props.open !== undefined;
   return {

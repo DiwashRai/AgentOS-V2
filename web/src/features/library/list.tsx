@@ -1,6 +1,6 @@
 // What the four library lists share, as Linear's issue list: the bar (the list's name, the Space's
-// Library, search, New), then a table out to the sheet's edges with no surface of its own: a banded
-// column head, one-line rows on hairlines (a bare glyph and the name, what it is in a column of its
+// Library, search, New), then a table out to the sheet's edges with no surface of its own: quiet
+// column labels, unruled one-line rows (a bare glyph and the name, what it is in a column of its
 // own, the facts packed at the right) that open the item's editor on a click or Enter, ↑ ↓ (or j k)
 // moving a selection that Enter opens, and a foot with those keys and the count pinned to the
 // pane's bottom, the rows scrolling above it. A search that matches nothing says so.

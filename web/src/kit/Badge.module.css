@@ -17,7 +17,9 @@
   font-size: var(--fs-2);
 }
 
-/* count: a bare quiet number after the name, as Linear counts a group */
+/* count: a bare quiet number after the name; the state's hue is its head's glyph, so only your
+   move's count takes a colour (the accent: act here); a state that calls for a look (running,
+   blocked, done) says so a step firmer in ink */
 .count {
   display: inline-grid;
   place-items: center;
@@ -31,18 +33,13 @@
 }
 .count[data-tone="you"] {
   color: var(--you-text);
+  font-weight: 500;
 }
-.count[data-tone="live"] {
-  color: var(--live-text);
-}
-.count[data-tone="blocked"] {
-  color: var(--blocked);
-}
-.count[data-tone="done"] {
-  color: var(--done-text);
+.count:is([data-tone="live"], [data-tone="blocked"], [data-tone="done"]) {
+  color: var(--ink-2);
 }
 
-/* keycap: a flat key on a hairline */
+/* keycap: a flat key, a fill */
 .kbd {
   display: inline-grid;
   place-items: center;
@@ -52,7 +49,6 @@
   border-radius: var(--r-1);
   background: var(--field);
   color: var(--ink-2);
-  border: var(--line-1) solid var(--list-chip-edge);
   font-family: var(--font-mono);
   font-size: var(--fs-1);
   font-weight: 600;

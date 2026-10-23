@@ -1,37 +1,34 @@
-/* Card: one object on its own surface, white on a firm hairline with a soft drop (in the dark a
-   slight step above the sheet on a lit hairline). A stage is flat on the lane, its summary washed
-   on hover like a row; selected, it is ringed in your move's accent, its settings ruled off under
-   the summary. An agent's and a ticket's looks follow below. */
+/* Card: one object as a step of tone on the sheet, no edge and no shadow; under the pointer it takes
+   a step more. A stage lies on the lane, its summary washed on hover like a row; selected, the
+   accent rings it, its settings under the summary on the sheet's own white. An agent's and a
+   ticket's looks follow below. */
 .card {
+  --ground: var(--teams-card);
   position: relative;
   min-width: 0;
-  border: var(--line-1) solid var(--teams-card-edge);
   border-radius: var(--r-4);
   background: var(--teams-card);
-  box-shadow: var(--teams-card-shadow);
   transition:
-    border-color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
     box-shadow var(--dur-fast) ease;
 }
-.card[data-edit]:hover {
-  border-color: var(--teams-card-hover-edge);
+.card[data-edit]:not([data-look="stage"]):hover {
+  --ground: var(--tile-hover);
+  background: var(--tile-hover);
 }
-/* a stage: a flat card on the lane, over its axis, its face on the card's own ground; a disabled
-   one keeps the card on a dashed edge */
-.card[data-look="stage"] {
-  --ground: var(--teams-card);
-  box-shadow: none;
-}
+/* a disabled stage: no tone, a dashed outline alone (the card's only line), dimmed */
 .card[data-look="stage"][data-off]:not([data-open]) {
-  border-style: dashed;
-  border-color: var(--ctl-edge-hover);
+  --ground: var(--page);
+  background: none;
+}
+/* (the focus ring takes the outline's place while it has the focus) */
+.card[data-look="stage"][data-off]:not([data-open], :has(.hit:focus-visible)) {
+  outline: var(--line-1) dashed var(--ctl-edge-hover);
+  outline-offset: calc(var(--line-1) * -1);
 }
 .card[data-open],
 .card[data-open]:hover {
-  border-color: var(--you);
-  box-shadow:
-    0 0 0 var(--line-3) var(--card-open-ring),
-    var(--teams-card-shadow);
+  box-shadow: inset 0 0 0 var(--line-mark) var(--you);
 }
 
 /* the summary: the face on the lane's axis, the words beside it; with no face, the words alone */
@@ -41,13 +38,13 @@
   grid-template-columns: minmax(0, 1fr);
   column-gap: var(--sp-5);
   padding: var(--sp-5) var(--sp-6);
-  border-radius: calc(var(--r-4) - var(--line-1));
+  border-radius: var(--r-4);
 }
 .summary[data-face] {
   grid-template-columns: var(--h-chip) minmax(0, 1fr);
 }
-.card[data-edit] .summary:hover {
-  background: var(--list-hover);
+.card[data-look="stage"][data-edit]:not([data-open]) .summary:hover {
+  background: var(--fill-1);
 }
 .card[data-look="stage"][data-off] .summary > :not(.hit) {
   opacity: var(--lane-off);
@@ -70,7 +67,7 @@
 .card[data-edit] .summary {
   cursor: pointer;
 }
-/* on the page's ground, so the lane's axis stops at the face (a shell's glyph too) */
+/* on the card's own ground, so the lane's axis stops at the face (a shell's glyph too) */
 .face {
   display: grid;
   place-items: center;
@@ -83,13 +80,12 @@
   min-width: 0;
 }
 
-/* what's wrong: a line at the summary's foot, a faint wash of the blocked hue under it */
+/* what's wrong: a line at the summary's foot on a faint wash of the blocked hue */
 .problem {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-6) var(--sp-3) calc(var(--sp-6) + var(--h-chip) + var(--sp-5));
-  border-top: var(--line-1) solid var(--teams-card-edge);
   background: var(--card-problem);
   color: var(--blocked);
   font-size: var(--fs-2);
@@ -104,17 +100,16 @@
   transform: rotate(45deg);
   background: currentColor;
 }
-.card[data-problem]:not([data-open]) {
-  border-color: var(--card-problem-edge);
-}
-.card[data-problem]:not([data-open]) > .problem:last-child {
-  border-radius: 0 0 calc(var(--r-4) - var(--line-1)) calc(var(--r-4) - var(--line-1));
+.problem:last-child {
+  border-radius: 0 0 var(--r-4) var(--r-4);
 }
 
-/* opened: the settings under a hairline, lined up with the summary's words */
+/* opened: the settings under the summary, inset in the sheet's own white, lined up with its words */
 .body {
+  margin: 0 var(--sp-2) var(--sp-2);
   padding: var(--sp-7) var(--sp-6) var(--sp-8);
-  border-top: var(--line-1) solid var(--teams-card-edge);
+  border-radius: var(--r-3);
+  background: var(--page);
 }
 
 /* ticket: a ticket on a board, its two lines under one another, each the card's width */
@@ -123,7 +118,7 @@
 }
 .card[data-look="ticket"] .summary {
   padding: var(--sp-5) var(--sp-6) var(--sp-6);
-  border-radius: calc(var(--r-3) - var(--line-1));
+  border-radius: var(--r-3);
 }
 .card[data-look="ticket"] .main {
   display: flex;
@@ -131,26 +126,25 @@
   gap: var(--sp-3);
 }
 
-/* agent: an agent's tile, the surface on a hairline (one treatment, running or queued: the glyph
-   says which), as tall as its neighbours, its lines one under another down to its foot */
+/* agent: an agent's tile, as tall as its neighbours, its lines one under another down to its foot.
+   Running, a tile of tone; queued, nothing at work yet: no tone, a dashed outline (the kit's "not
+   here now"), the tone only under the pointer */
 .card[data-look="agent"] {
   align-self: stretch;
-  border-color: var(--tile-edge);
-  border-radius: var(--r-3);
+  border-radius: var(--r-4);
   background: var(--tile);
-  box-shadow: var(--tile-lift);
 }
-.card[data-look="agent"][data-edit]:hover,
-.card[data-look="agent"]:has(.hit:focus-visible) {
-  border-color: var(--tile-hover-edge);
-  background: var(--tile-hover);
+.card[data-look="agent"][data-off]:not(:hover) {
+  --ground: var(--page);
+  background: none;
+}
+.card[data-look="agent"][data-off]:not(:has(.hit:focus-visible)) {
+  outline: var(--line-1) dashed var(--ctl-edge-hover);
+  outline-offset: calc(var(--line-1) * -1);
 }
 .card[data-look="agent"] .summary {
   height: 100%;
   padding: var(--sp-7) var(--sp-8) var(--sp-8);
-}
-.card[data-look="agent"][data-edit] .summary:hover {
-  background: none;
 }
 .card[data-look="agent"] .main {
   display: flex;

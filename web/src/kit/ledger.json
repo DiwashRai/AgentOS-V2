@@ -103,13 +103,13 @@
           "why": "The full text or what a click does, on hover."
         },
         "tone": {
-          "why": "A count takes its head's hue.",
+          "why": "A count says its head's state: your move's in the accent, a state that calls for a look a step firmer in ink, the hue left to the head's glyph.",
           "values": {
             "neutral": "The default.",
             "you": "Needs-you heads.",
-            "live": "Running heads (Compact's Running, My queue's Agents at work).",
-            "blocked": "Blocked heads.",
-            "done": "Done heads."
+            "live": "Running heads (Compact's Running, My queue's Agents at work): a step firmer in ink.",
+            "blocked": "Blocked heads: a step firmer in ink.",
+            "done": "Done heads: a step firmer in ink."
           }
         }
       }
@@ -123,11 +123,11 @@
         "variant": {
           "why": "V1's gate primacy: at most one strong button per group.",
           "values": {
-            "default": "A filled button on a hairline edge.",
-            "ink": "A primary that isn't a gate (Retry): the default's fill on a firmer edge in a firmer weight, so it sits with its neighbours.",
-            "you": "The gate primary (Approve), and an editor's Save: the bar's one filled button; blocked, a flat grey fill with its words in muted ink, readable and plainly not lit; the same solid fill in a list's row, so the ask reads as the row's one action.",
+            "default": "A soft fill with no edge, a step firmer under the pointer.",
+            "ink": "A primary that isn't a gate (Retry): the default's fill in a firmer weight, so it sits with its neighbours.",
+            "you": "The gate primary (Approve), and an editor's Save: the bar's one filled button; blocked, a soft wash of the accent with its words in the accent's ink, still the bar's primary and plainly not lit; the same solid fill in a list's row, so the ask reads as the row's one action.",
             "accent": "Only Dispatch run, only on a ticket.",
-            "quiet": "A borderless button (+N, icon buttons in a bar, a lane's +); blocked, its faded words or glyph alone.",
+            "quiet": "A button with no fill at rest (+N, icon buttons in a bar, a lane's +); blocked, its faded words or glyph alone.",
             "link": "A bare text action in secondary ink, primary on hover (Show all, Open ticket)."
           }
         },
@@ -175,7 +175,7 @@
           "why": "A click (or Enter) anywhere but its own controls: selects a stage (none: read only), or opens a peek at the agent's or ticket's ticket."
         },
         "off": {
-          "why": "A disabled stage is dimmed, still in its place; an agent's tile takes none (its glyph says queued)."
+          "why": "A disabled stage is dimmed, still in its place; a queued agent's card loses its tone for a dashed outline, so running and queued read apart at a glance."
         },
         "problem": {
           "why": "A stage's inline validation (a gate inside a loop, a prompt naming an unknown field), at its foot in the blocked ink."
@@ -183,15 +183,15 @@
         "look": {
           "why": "Stages, agents at work and board tickets are cards in three places.",
           "values": {
-            "stage": "A workflow stage on the lane: a flat card over the axis (its edge parts it from the next, inside a loop's band too; a disabled one on a dashed edge), its face on the axis, ringed as it opens in place to its settings (the default).",
-            "agent": "An agent at work (My queue): a faint slab set into the sheet, running or queued alike, its lines down to the card's foot, its steps a still Meter across the foot.",
-            "ticket": "A ticket on a board (All teams): two tight lines on a hairline card, its key with its state's pill at the line's end, then its title (Linear's board card)."
+            "stage": "A workflow stage on the lane: a card of tone over the axis (its tone parts it from the next, inside a loop's bracket too; a disabled one no tone, a dashed outline alone), its face on the axis, ringed in the accent as it opens in place to its settings (the default).",
+            "agent": "An agent at work (My queue): a tile of tone while it runs, a dashed outline with no tone while it is queued (nothing at work there yet), its lines down to the card's foot, its steps a still Meter across the foot.",
+            "ticket": "A ticket on a board (All teams): two tight lines on a tile of tone straight on the sheet (no lane under it), its key with its state's pill at the line's end, then its title (Linear's board card)."
           }
         }
       }
     },
     "Chip": {
-      "why": "The kit's one tag, a flat fill with no outline, or in a list's row Linear's label pill on a hairline: a stage, a repo, a skill on a stage, a property, an agent's state (Badge's tag and prop pills and Mark's chip folded into it).",
+      "why": "The kit's one tag, a flat fill with no outline, or in a list's row a label pill: a stage, a repo, a skill on a stage, a property, an agent's state (Badge's tag and prop pills and Mark's chip folded into it).",
       "props": {
         "label": {
           "why": "Its words (tests, AGENTS.md, Implement, northwind/web)."
@@ -218,9 +218,9 @@
         "tone": {
           "why": "Most chips are muted words on a faint fill; a few stand out.",
           "values": {
-            "line": "A faint fill, no outline: the default; in a list's row, a pill on a hairline.",
+            "line": "A faint fill, no outline: the default; in a list's row, the same fill as a pill.",
             "fill": "A firmer fill: a stage's phase, and a list line's one tag (Compact's Now: the agent and its step, who it waits on).",
-            "edge": "A round pill on a hairline, no fill: a board card's state on its key's line (Linear's card pill), so it reads on the card in every theme.",
+            "edge": "A round pill of the same faint fill: a board card's state on its key's line (Linear's card pill), a step over the card in every theme.",
             "blocked": "The words in the blocked ink: a conflict."
           }
         },
@@ -291,8 +291,8 @@
         "look": {
           "why": "The peek reads beside the list; editing always gets the whole window (the owner's rule).",
           "values": {
-            "side": "The peek: a sheet floated at the right edge on the full look's scrim, so the one thing lifted is the one to read; its sections one document between its bar and foot, fading out under both (the default).",
-            "full": "A full-window editor over the page (a ticket's workflow or item): the app's sheet lifted over the window on a scrim, a Page in it, so the editor is framed as on its own screen, the close at its bar's end where the peek's is."
+            "side": "The peek: a sheet set at the right edge on the full look's scrim (no shadow: the dimming lifts it), so the one thing lit is the one to read; its sections one document between its bar and foot, fading out under both (the default).",
+            "full": "A full-window editor over the page (a ticket's workflow or item): the app's sheet over the window on a scrim, a Page in it, so the editor is framed as on its own screen, the close at its bar's end where the peek's is."
           }
         },
         "ask": {
@@ -356,7 +356,7 @@
       }
     },
     "Field": {
-      "why": "A one-line text field (a stage's name, a shell command): Linear's input, a quiet fill on the controls' hairline.",
+      "why": "A one-line text field (a stage's name, a shell command): a quiet fill with no edge, the ring on focus.",
       "props": {
         "label": {
           "why": "Its accessible name (a FormRow says it on screen)."
@@ -404,7 +404,7 @@
       }
     },
     "Frame": {
-      "why": "The app's frame: the labelled sidebar in three groups (the views; the headed sections; Settings and the theme at the foot) under its head (the Space's switcher, then search, which takes you to the view's search field, and new ticket, inert until W4 as the page's own button is, as Linear's two icon buttons), and the main column flush beside it on the page, ruled off by one hairline (a view's recess lies flush on it: one plane, no card in a sheet). It holds the app's one tooltip (every title the kit takes is drawn as Linear's tooltip, Base UI's) and its toasts (useToast: a short word that something was done, Base UI's); a Dialog holds its own of each, in the top layer with it.",
+      "why": "The app's frame: the labelled sidebar in three groups (the views; the headed sections; Settings and the theme at the foot) under its head (the Space's switcher, then search, which takes you to the view's search field, and new ticket, inert until W4 as the page's own button is, as Linear's two icon buttons), and the main column beside it, the sheet set into the ground with a rounded corner, a step of tone and no line (a view's recess lies flush on it: one plane, no card in a sheet). It holds the app's one tooltip (every title the kit takes is drawn as Linear's tooltip, Base UI's) and its toasts (useToast: a short word that something was done, Base UI's); a Dialog holds its own of each, in the top layer with it.",
       "single": "There is one frame: the app's layout draws it around every screen.",
       "props": {
         "space": {
@@ -460,7 +460,7 @@
           "why": "A status glyph or a project key before the name."
         },
         "tone": {
-          "why": "The group's state: its count is written in that hue beside the glyph; the band stays one neutral grey (a band per hue striped the list) and the name in ink.",
+          "why": "The group's state: its count says it beside the glyph (the accent for your move, a firmer ink for a state that calls for a look); the heading stays one look (a hue per head striped the list) and the name in ink.",
           "values": {
             "neutral": "The default.",
             "you": "Needs you.",
@@ -473,14 +473,14 @@
           "why": "Quiet, after the count (Longest wait first); on a line it is inside the fold, part of its name (didn't answer)."
         },
         "summary": {
-          "why": "The right slot after the hairline: a stat, links, a JQL."
+          "why": "The right slot at the head's far end: a stat, links, a JQL."
         },
         "level": {
           "why": "Three heads over a list's runs.",
           "values": {
-            "zone": "A band run through its surface's padding, edge to edge (My queue's Agents at work, over its cards).",
-            "group": "A list's band edge to edge (Linear's group head): Compact's fold, My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
-            "line": "A query's head (Intake's queries): Linear's group band, a grey fill edge to edge that parts one run from the next, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first in the faces' column, so its key starts where the titles do; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
+            "zone": "A heading run through its surface's padding to the list's edge, room above it, no band (My queue's Agents at work, over its cards).",
+            "group": "A list's heading, parted from the group before by room, no band: Compact's fold (its chevron after the count), My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
+            "line": "A query's head (Intake's queries): a heading parted from the run before by room, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first on the list's column edge; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
           }
         },
         "fold": {
@@ -571,7 +571,7 @@
           "values": {
             "status": "Loading, or a failed read.",
             "empty": "The quiet row of an empty zone (All quiet — nothing new matches this query).",
-            "problem": "What went wrong under a head (Intake's failing query): a line marked blocked (an edge; in an item list, a dot), at a reading measure.",
+            "problem": "What went wrong under a head (Intake's failing query): a line marked blocked (an edge; under a query's head, a panel of the blocked wash with a dot), at a reading measure.",
             "more": "+N more, or Show N more, under a capped list."
           }
         },
@@ -585,9 +585,9 @@
           "why": "A status line that reports a failure."
         },
         "align": {
-          "why": "Where its words sit: a problem, an empty or a +N line on the triage list's columns (Intake's).",
+          "why": "Where it sits: standing for a group (the default, its glyph on the column edge as a head's), or a line under a query's head (Intake's).",
           "values": {
-            "item": "Intake's triage rows: a row's height, its glyph in the faces' column (an empty ring, a problem's blocked dot on a halo, the +N on a grey disc) so its words start where the titles do."
+            "item": "A line under a query's head (Intake's): an empty ring or the +N on a grey disc where the rows' words start; a problem as a panel of the blocked hue's wash on the column edge, its blocked dot on a halo before its words, so a query that didn't answer stands apart."
           }
         },
         "fix": {
@@ -661,7 +661,7 @@
           "why": "The bar's buttons at its right end (New ticket; the ticket's actions)."
         },
         "side": {
-          "why": "A full-height column beside the body, as Linear's issue sidebar: a tinted rail ruled off by one hairline, run out to the sheet's edge; or, its look doc, none, and the body one centred document.",
+          "why": "A full-height column beside the body, as Linear's issue sidebar: a rounded panel a step of tone off the sheet, no line, on the bar's right edge and inset from the sheet's foot, so the sheet keeps its corners; or, its look doc, none, and the body one centred document.",
           "items": {
             "look": {
               "why": "Whether the column is there.",
@@ -678,7 +678,7 @@
       }
     },
     "Row": {
-      "why": "One item of a list: its cells on the table's columns; a flat row on a hairline (Linear's list), a card or a swimlane.",
+      "why": "One item of a list: its cells on the table's columns; a flat row (Linear's list) on the list's column edge with its words inset, a card or a swimlane.",
       "props": {
         "children": {
           "why": "The cells."
@@ -686,19 +686,19 @@
         "kind": {
           "why": "The shapes the app's lists take.",
           "values": {
-            "line": "A list's row (Compact, My queue, the library's four lists): one dense line edge to edge with no rule (Linear's list: its rhythm and the group bands part the rows), its first cell under the group head's glyph; hover and open wash its full width.",
-            "item": "A two-line row (a ticket's context): roomy, on a hairline, washed on hover.",
-            "triage": "Intake's triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; its hairline runs between the gutters, under the words.",
+            "line": "A list's row (Compact, My queue, Intake, the library's four lists): one dense line, its rhythm and the room above each heading parting the rows (a faint hairline under its words in a list out at the sheet's edges); its words inset from the column edge the group head's glyph hangs on; hover and open wash a rounded patch on that edge, so an open row's panel stands where a tile does.",
+            "item": "A two-line row (a ticket's context): roomy, unruled, washed on hover.",
+            "triage": "A triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; washed on hover.",
             "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
-            "band": "A board's swimlane (All teams), out to the sheet's edges: its head, a group band across the board (the repo, its team, what is in flight), then a cell per stage holding ticket Cards on the bare sheet, a hairline between stages, so an empty stage is blank.",
-            "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid and hairlines, held at the board's top."
+            "band": "A board's swimlane (All teams), out to the sheet's edges: its head, a heading across the board (the repo, its team, what is in flight), then a cell per stage, a column of ticket Cards straight on the sheet, the stages parted by room, so an empty stage is bare sheet.",
+            "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid, held at the board's top."
           }
         },
         "action": {
           "why": "It opens something (a peek, its expansion): a button under the cells, named by its label."
         },
         "open": {
-          "why": "It is the open one (selected)."
+          "why": "It is the open one (selected): it and its expansion one panel of tone, no colour."
         },
         "more": {
           "why": "Its expansion."
@@ -709,7 +709,7 @@
       }
     },
     "Segmented": {
-      "why": "Filter chips, one row on the bar that never clips: Linear's view tabs, separate small rounded chips, bare words but for the pressed one, filled on a lit hairline; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
+      "why": "Filter chips, one row on the bar that never clips: Linear's view tabs, separate small rounded chips, bare words but for the pressed one, the selected one on the accent's soft wash in its ink with no edge; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
       "single": "Compact's filter, and a stage's Maker | Check in the workflow editor (one of two, said on screen, where a switch's off would need decoding); Settings › Mappings' Try it and the settings nav use it in W8 and W9.",
       "props": {
         "label": {
@@ -752,7 +752,7 @@
         "look": {
           "why": "A picker reads as a property among properties, or as a row of the sidebar.",
           "values": {
-            "chip": "A properties row's chip (the ticket's owner, an item editor's runtime, model and effort): the default.",
+            "chip": "A properties row's chip (the ticket's owner, an item editor's runtime, model and effort) resting on a quiet fill, so what you can change reads apart from the read-only values beside it: the default.",
             "side": "A sidebar row (the theme at the sidebar's foot): its glyph, the word, the current choice, opening upward."
           }
         },
@@ -907,17 +907,17 @@
       }
     },
     "Surface": {
-      "why": "The one recessed zone per view, and the sheets that rest on it.",
+      "why": "The one zone per view, flush on the sheet, and the panels of tone that rest on it.",
       "props": {
         "children": {
           "why": "What it holds."
         },
         "level": {
-          "why": "Sunken zone or raised panel.",
+          "why": "The view's zone, or a panel of tone resting on it.",
           "values": {
-            "recess": "The view's sunken zone.",
-            "sheet": "A hairline card, as Linear's latest-update card.",
-            "list": "A run of a list under its own head (an Intake query), named as a region: no card, flush with the list's edges, parted from the next run by that run's band, its last line on no hairline."
+            "recess": "The view's zone, flush on the sheet (no tone, no line).",
+            "sheet": "A panel held over the page, a step of tone on the popover's hairline and soft shadow (Linear's options panels, its agent panel and latest-update card).",
+            "list": "A section of a view under its own head (a zone of My queue, an Intake query), named as a region: no card, flush with the list's edges, parted from the one before by room and one hairline on the column edge, so a busy screen reads as its sections."
           }
         },
         "fill": {
@@ -961,24 +961,21 @@
           "why": "Draw the column head (lists whose cells say what they are don't)."
         },
         "scroll": {
-          "why": "Fill the surface and scroll inside it (the rows fading under its foot), or sit in a longer page."
+          "why": "Fill the surface and scroll inside it, a step denser (its lines, heads and the room above them) so a whole board of groups stands over its foot; or sit in a longer page."
         },
         "foot": {
-          "why": "The bar under the list: key hints, a summary."
+          "why": "The bar under the list: key hints, a summary; under a list that scrolls, a strip of tone held at the sheet's foot."
         },
         "children": {
           "why": "The groups and rows."
         },
-        "bleed": {
-          "why": "Run through the padding of the surface it sits in, edge to edge, flush at its top and foot (My queue's lists, whose surface pads the agents' cards)."
-        },
         "edge": {
-          "why": "Out to the main sheet's edges with no surface of its own, as Linear's lists run: the column labels on a group's grey band, each row's first cell under the bar's title (the library's four lists, Intake's queries without a head, and All teams' board, its legend in the foot)."
+          "why": "Out to the main sheet's edges with no surface of its own, as Linear's lists run: the column labels quiet over the rows, no band, each row's first cell under the bar's title (the library's four lists, Intake's queries without a head, and All teams' board, its legend in the foot)."
         }
       }
     },
     "Tabs": {
-      "why": "Underline tabs on one hairline (plain words, the current one in ink on a 2px rule), so a tab never reads as a button beside the real ones: Base UI's roving focus and arrow keys, our look.",
+      "why": "Underline tabs with no rule across them (plain words, the current one in ink over a 2px bar of the accent), so a tab never reads as a button beside the real ones: Base UI's roving focus and arrow keys, our look.",
       "single": "The ticket page's sections today; Settings' areas use them in W8.",
       "props": {
         "label": {
@@ -1069,7 +1066,7 @@
           "why": "Its least height in lines (a prompt's few, an editor's many)."
         },
         "head": {
-          "why": "An item editor's content is a section of its document, as Linear writes a description under its properties: a hairline over a head strip (its title and length; a block's fold and name), the text under it as tall as its lines, read at rest as a document (paragraphs, lists, `code` chips, front matter and a fenced block in mono) over its hidden source, which a click edits in place, the hairline lit while it has the focus; popped out, it is the plain box at a readable measure."
+          "why": "An item editor's content is a section of its document, as Linear writes a description under its properties: a head strip parted from the one before by room (its title and length; a block's fold and name), the text under it as tall as its lines, read at rest as a document (paragraphs, lists, `code` chips, front matter and a fenced block in mono) over its hidden source, which a click edits in place, a short bar of the accent at its head while it has the focus; popped out, it is the plain box at a readable measure."
         },
         "tools": {
           "why": "A block's controls at its head's end (its moves, then its handle): the moves show while the block is in use, so a head at rest is its name and its handle."
@@ -1109,7 +1106,7 @@
       }
     },
     "Composer": {
-      "why": "The reply box under a conversation (the ticket's Talk, the peek's foot): one line growing as you type, Send at its end, pinned at a full-height column's foot.",
+      "why": "The reply box under a conversation (the ticket's Talk, the peek's foot): one line growing as you type, Send at its end, pinned at a full-height column's foot; on that column's panel of tone, a well of the sheet's own.",
       "props": {
         "label": {
           "why": "Its accessible name and placeholder (\"Say something to Bea and Cy\")."

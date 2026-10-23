@@ -1,7 +1,8 @@
 // The app's frame: the labelled sidebar in three groups under its head (the Space's switcher, which
 // opens on who is signed in, then search and new ticket at the row's end, as Linear's): the views,
 // the headed sections, and Settings with the theme menu (a row naming the current theme) at the
-// foot, ruled off by one hairline; and the main column, flush beside it on the page. It holds the app's tooltip and its toasts.
+// foot, on the ground; and the main column beside it, the sheet set into the ground. It holds the
+// app's tooltip and its toasts.
 import { Popover } from "@base-ui/react/popover";
 import { type ReactNode, useState } from "react";
 import { Link, matchPath, useLocation } from "react-router";
@@ -148,7 +149,7 @@ function Section({ sec, path }: { sec: NavSection; path: string }) {
   );
 }
 
-/** Each theme's swatch is a miniature of the frame (the sidebar's ground ruled off from the page,
+/** Each theme's swatch is a miniature of the frame (the ground, the sheet set into it,
  *  on it a line of ink and one of your move) and carries that theme, so it reads its tokens. */
 function Swatches({ theme }: { theme: ThemeId }) {
   return (

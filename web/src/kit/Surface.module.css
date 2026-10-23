@@ -3,31 +3,46 @@
   min-width: 0;
   padding: var(--pad);
 }
+/* a recess is flush on the sheet: the view's one zone, no tone of its own */
 .recess {
   --ground: var(--recess);
   background: var(--recess);
-  box-shadow: var(--shadow-recess);
   border-radius: var(--r-5);
 }
-/* a sheet is Linear's card: one hairline, a near-flat fill, no lift */
+/* a sheet is a panel held over the page (an options panel, an agent's side panel): a step of tone
+   on the popover's hairline and soft shadow, the kit's one lifted look */
 .sheet {
-  --ground: var(--tk-card);
-  background: var(--tk-card);
-  box-shadow: 0 0 0 var(--line-1) var(--tk-card-edge);
+  --ground: var(--tone-2);
+  background: var(--tone-2);
   border-radius: var(--r-4);
+  box-shadow:
+    0 0 0 var(--line-1) var(--pop-edge),
+    var(--pop-shadow);
 }
-/* a run of a list under its own head (an Intake query): no card, flush with the list's edges; the
-   next run's band parts it, so its last line takes no hairline */
-.list > :last-child {
-  box-shadow: none;
+/* a section of a view under its own head (a zone of My queue, an Intake query): no card, flush
+   with the list's edges; one after another parts by more room than a group and one hairline on
+   the column edge, so a busy screen reads as its sections */
+.list {
+  position: relative;
 }
-.list > :last-child::after {
-  content: none;
+.list + .list {
+  margin-top: var(--section-gap);
+  padding-top: var(--section-gap);
+}
+.list + .list::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: var(--list-pad);
+  height: var(--line-1);
+  background: var(--rule);
 }
 .fill {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* clipped, but by a little room at the sides, where a row's wash reaches past the words */
+  overflow: clip;
+  overflow-clip-margin: var(--list-bleed);
 }

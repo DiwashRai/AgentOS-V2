@@ -1,7 +1,7 @@
-/* Notices in the quiet language: no spinners, no toasts. In a list they are lines of it, edge to
-   edge. By default their words start where a group head's name does (an empty ring hangs in the
-   inset, as the head's chevron does); align="item" starts them where a two-line item's title
-   does, with only a problem's dot hung beside them. */
+/* Notices in the quiet language: no spinners, no toasts. In a list they are lines of it. By
+   default one stands for a group (an empty zone): its ring on the list's column edge, where a
+   group head's glyph hangs; align="item" makes it a line under a head: its glyph where a row's
+   words start, and a problem a panel of the blocked hue's wash on the column edge. */
 
 .status {
   display: flex;
@@ -9,7 +9,7 @@
   align-items: baseline;
   gap: var(--sp-3);
   margin: 0;
-  padding: var(--sp-6) var(--list-pad) var(--sp-6) calc(var(--list-pad) + var(--sp-4));
+  padding: var(--sp-6) var(--list-inset);
   font-size: var(--fs-3);
   line-height: 1.4;
   color: var(--ink-3);
@@ -18,15 +18,14 @@
   color: var(--blocked);
 }
 
-/* the quiet row of an empty zone: a row's height and hairline; the lead a step firmer (never as
+/* the quiet row of an empty zone: a row's height, no rule; the lead a step firmer (never as
    firm as a row's title), a dash, the rest muted */
 .empty {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
   min-height: var(--h-row);
-  padding: 0 var(--list-pad) 0 calc(var(--list-pad) - var(--notice-mark));
-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+  padding: 0 var(--list-inset) 0 var(--list-pad);
   color: var(--ink-3);
   font-size: var(--fs-3);
   white-space: nowrap;
@@ -36,6 +35,7 @@
   flex: none;
   width: var(--notice-mark);
   height: var(--notice-mark);
+  margin-inline: var(--line-1);
   border-radius: 50%;
   border: var(--line-mark) dashed var(--ink-3);
 }
@@ -55,8 +55,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  padding: var(--sp-7) var(--list-pad) var(--sp-7) calc(var(--list-pad) + var(--sp-4));
-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+  padding: var(--sp-7) var(--list-inset);
   font-size: var(--fs-3);
   line-height: 1.5;
   color: var(--ink-2);
@@ -64,7 +63,7 @@
 .problem::before {
   content: "";
   position: absolute;
-  left: 0;
+  left: var(--list-pad);
   top: var(--sp-6);
   bottom: var(--sp-6);
   width: var(--line-2);
@@ -95,8 +94,7 @@
   align-items: center;
   gap: var(--sp-5);
   min-height: var(--h-row-flat);
-  padding: 0 var(--list-pad) 0 var(--list-inset);
-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+  padding: 0 var(--list-inset);
   font-size: var(--fs-2);
   color: var(--ink-3);
 }
@@ -112,37 +110,43 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* a line of the triage list (Intake), a row's height, its glyph in the faces' column so its words
-   start where the titles do: an empty ring; a problem's blocked dot on a halo, in place of the
-   edge; the +N of a capped run on a grey disc, its Show button after it */
+/* a line under a query's head (Intake), a row's height, its glyph where the rows' words start: an
+   empty ring; the +N of a capped run on a grey disc, its Show button after it. A problem is the
+   query's whole answer, so it is a panel: the blocked hue's faint wash on the column edge, its
+   words inset as a row's, a blocked dot on a halo hung before them on its first line */
 .empty[data-align="item"],
-.problem[data-align="item"],
 .more[data-align="item"] {
   gap: var(--sp-4);
-  min-height: var(--h-triage);
+  min-height: var(--h-line);
   padding-left: var(--list-inset);
 }
 .empty[data-align="item"] > i {
   margin-inline: calc((var(--triage-face) - var(--notice-mark)) / 2);
 }
 .problem[data-align="item"] {
-  justify-content: center;
   gap: 0;
-  padding-block: var(--sp-5);
-  padding-left: calc(var(--list-inset) + var(--triage-face) + var(--sp-4));
+  margin: var(--sp-2) var(--list-pad) 0;
+  padding: var(--sp-6) var(--list-in) var(--sp-6)
+    calc(var(--list-in) + var(--triage-face) + var(--sp-3));
+  border-radius: var(--r-4);
+  background: var(--card-problem);
 }
 .problem[data-align="item"]::before {
-  left: var(--list-inset);
-  top: 50%;
+  left: var(--list-in);
+  top: var(--sp-6);
   width: var(--triage-face);
-  height: var(--triage-face);
-  border-radius: 50%;
+  height: var(--h-chip);
+  border-radius: 0;
   background: radial-gradient(
     circle,
     var(--blocked) calc(var(--notice-dot) / 2),
-    var(--notice-halo) calc(var(--notice-dot) / 2 + var(--line-1))
+    var(--notice-halo) calc(var(--notice-dot) / 2 + var(--line-1)),
+    var(--notice-halo) calc(var(--notice-dot) + var(--line-2)),
+    transparent calc(var(--notice-dot) + var(--line-3))
   );
-  transform: translateY(-50%);
+}
+.problem[data-align="item"] > p:first-of-type {
+  color: var(--ink-1);
 }
 .more[data-align="item"] {
   min-height: var(--h-control-lg);

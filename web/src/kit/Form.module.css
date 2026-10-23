@@ -1,21 +1,21 @@
-/* The form controls (Field, TextArea, NumberField, Toggle, Checkbox, Radio, FormRow): Linear's
-   inputs, a fill a hair off the page on the controls' hairline, firmer on hover, the focus ring on
-   focus; text in ink at the rows' size. */
+/* The form controls (Field, TextArea, NumberField, Toggle, Checkbox, Radio, FormRow): flat inputs,
+   a fill with no edge, a step firmer on hover, the focus ring on focus; text in ink at the rows'
+   size. */
 .box {
   min-width: 0;
-  border: var(--line-1) solid var(--ctl-edge);
+  border: var(--line-1) solid transparent;
   border-radius: var(--r-2);
   background: var(--input);
   color: var(--ink-1);
   font-size: var(--fs-3);
   letter-spacing: var(--track-snug);
-  transition: border-color var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease;
 }
 .box:hover {
-  border-color: var(--ctl-edge-hover);
+  background: var(--fill-3);
 }
 .box:focus-within {
-  border-color: var(--ctl-edge-hover);
+  background: var(--input);
   outline: var(--line-2) solid var(--focus);
   outline-offset: var(--focus-tight);
 }
@@ -43,18 +43,17 @@
   min-width: var(--col-lg);
   height: var(--h-control);
   padding: 0 var(--sp-3) 0 var(--sp-5);
-  border: var(--line-1) solid var(--rule);
   border-radius: var(--r-3);
-  background: var(--raised);
+  background: var(--field);
   color: var(--ink-3);
   font-size: var(--fs-3);
-  transition: border-color var(--dur-fast);
+  transition: background-color var(--dur-fast);
 }
 .search:hover {
-  border-color: var(--rule-strong);
+  background: var(--fill-3);
 }
 .search:focus-within {
-  border-color: var(--rule-strong);
+  background: var(--field);
   outline: var(--line-2) solid var(--focus);
   outline-offset: var(--focus-out);
 }
@@ -104,15 +103,15 @@
 }
 /* a document's own words (Field's looks): no box, the text flush with the column (its padding
    pulled back into the gutter), a faint wash on hover, the ring alone on focus */
-.ghost {
+.ghost,
+.ghost:focus-within {
   width: calc(100% + var(--sp-3) * 2);
   margin-inline: calc(var(--sp-3) * -1);
   padding: var(--sp-1) var(--sp-3);
-  border-color: transparent;
   background: none;
 }
-.ghost:is(:hover, :focus-within) {
-  border-color: transparent;
+.ghost:hover:not(.field) {
+  background: none;
 }
 .field.ghost:hover:not(:focus) {
   background: var(--ctl-hover);
@@ -132,18 +131,22 @@
   font-weight: 600;
 }
 
-/* a sheet (an item editor's content): a section of the document, not a box. A hairline over its
-   head strip, the text under it on the column's own edge (a folding block's under its name, past
-   the fold) as tall as its lines; while the text has the focus the hairline is your move's accent */
+/* a sheet (an item editor's content): a section of the document, not a box. Its head strip (a
+   heading's weight) parts it from the one before by room alone, the text under it on the column's
+   own edge (a folding block's under its name, past the fold) as tall as its lines; while the text
+   has the focus a short bar of the accent marks it at the head's start */
 .sheet {
-  border-top: var(--line-1) solid var(--rule);
-  transition:
-    border-color var(--dur-fast) ease,
-    box-shadow var(--dur-fast) ease;
+  position: relative;
 }
-.sheet:has(.leaf:focus) {
-  border-top-color: var(--you);
-  box-shadow: 0 calc(var(--line-1) * -1) 0 var(--you);
+.sheet:has(.leaf:focus)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--sp-9);
+  height: var(--line-2);
+  border-radius: var(--line-2);
+  background: var(--you);
 }
 .sheetHead {
   display: flex;
@@ -153,7 +156,7 @@
 }
 .leaf,
 .leaf:is(:hover, :focus-within) {
-  padding: 0 0 var(--sp-9);
+  padding: 0 0 var(--sp-8);
   border: 0;
   border-radius: 0;
   background: none;
@@ -166,13 +169,20 @@
 /* at rest, a sheet's markdown is read as a document over its hidden source, in the body face:
    `code` a faint chip, a fence a tinted block of mono; a click lands in the source and edits it */
 .read {
+  position: relative;
   display: grid;
 }
 .read > * {
   grid-row: 1;
   grid-column: 1;
 }
+/* at rest the read text alone sets the height (the mono source wraps longer), so every sheet ends
+   the same room under its last line; the source lies over it, to be clicked into */
 .read:not(:focus-within) > .area {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  min-height: 0;
   color: transparent;
 }
 .read:focus-within > .prose {
@@ -315,7 +325,6 @@
   height: calc(var(--h-switch) - var(--switch-inset) * 2);
   border-radius: var(--r-pill);
   background: var(--switch-knob);
-  box-shadow: var(--ctl-shadow);
   transition: transform var(--dur-fast) var(--ease-out);
 }
 .switch[aria-checked="true"] {
@@ -357,14 +366,10 @@
   height: var(--h-box);
   /* on the words' first line */
   margin-top: var(--sp-1);
-  border: var(--line-1) solid var(--ctl-edge-hover);
-  background: var(--ctl);
-  box-shadow: var(--ctl-shadow);
+  background: var(--rule-strong);
   color: var(--switch-knob);
   outline: none;
-  transition:
-    background-color var(--dur-fast) ease,
-    border-color var(--dur-fast) ease;
+  transition: background-color var(--dur-fast) ease;
 }
 .check {
   border-radius: var(--r-1);
@@ -373,14 +378,13 @@
   border-radius: var(--r-pill);
 }
 .choice:hover :is(.check, .radio):not([data-checked]) {
-  border-color: var(--ink-3);
+  background: var(--switch-off);
 }
 :is(.check, .radio):focus-visible {
   outline: var(--line-2) solid var(--focus);
   outline-offset: var(--focus-tight);
 }
 :is(.check, .radio)[data-checked] {
-  border-color: var(--you);
   background: var(--you);
 }
 .mark {

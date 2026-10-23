@@ -52,13 +52,11 @@
   color: var(--ink-3);
 }
 
-/* large: the ticket's and the peek's plan as Linear lists sub-issues: one hairline under the head,
-   then rows at body size on the page's own ground; a section head is a quiet label with room above
-   it; done items recede a step. The peek's rows are a little shorter */
+/* large: the ticket's and the peek's plan as Linear lists sub-issues: rows at body size straight on
+   the sheet under the head, no rule; a section head is a quiet label with room above it; done items
+   recede a step. The peek's rows are a little shorter */
 .large {
   margin-top: calc(var(--sp-3) * -1);
-  padding-top: var(--sp-4);
-  border-top: var(--line-1) solid var(--tk-card-edge);
 }
 .large .section {
   min-height: var(--h-control-sm);

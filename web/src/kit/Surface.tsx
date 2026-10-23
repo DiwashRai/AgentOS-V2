@@ -5,8 +5,9 @@ import { cx, type Space, space, vars } from "./vars";
 
 export interface SurfaceProps {
   children: ReactNode;
-  /** recess: the one sunken zone per view; sheet: a raised panel resting on it; list: a run of a
-   *  list under its own head (an Intake query), no card, parted from the next by room. */
+  /** recess: the one zone per view, flush on the sheet; sheet: a panel of tone held over it (a
+   *  hairline, a soft shadow); list: a section of a view under its own head (a zone of My queue,
+   *  an Intake query), no card, parted from the one before by room and a hairline. */
   level?: "recess" | "sheet" | "list";
   /** Fill the page's height; only the content inside scrolls. */
   fill?: boolean;

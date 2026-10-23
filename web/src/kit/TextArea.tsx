@@ -1,6 +1,6 @@
 // Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of
 // AGENTS.md): at least `lines` tall and growing with its text; an item editor's is a section of
-// its document, a ruled head strip over its text read as a document (headings, lists, `code`, front
+// its document, a head strip (no rule) over its text read as a document (headings, lists, `code`, front
 // matter, a fenced block) over its hidden source, which a click edits in place. Every area
 // can pop out to the whole window, for long text: the same value, edited at a readable measure,
 // and Done or Esc brings it back (inside an overlay too: it opens over it).

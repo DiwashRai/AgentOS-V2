@@ -1,5 +1,5 @@
 /* A section: its head (the heading in Text's heading role, quiet words after it on its
-   baseline, its end item at the far edge, a quiet line under it), then the body. In a side panel,
+   baseline, its end item at the far edge, no line under it), then the body. In a side panel,
    one of the panel's parts: padded to the panel's gutter and set apart by room, not a rule, so
    the panel reads as one document between its bar and its foot (Linear's doc page). */
 .section {

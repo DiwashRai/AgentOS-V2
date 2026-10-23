@@ -1,5 +1,6 @@
-/* side: the peek, a sheet floated at the window's right edge, inset as the full look is, the list
-   under it dimmed by the same scrim, so the one thing lifted is the one thing to read */
+/* side: the peek, a sheet set at the window's right edge, inset as the sheet itself is, the list
+   under it dimmed by the scrim (no shadow: the dimming is the lift), so the one thing lit is the
+   one thing to read */
 .side {
   position: fixed;
   inset: var(--sp-4) var(--sp-4) var(--sp-4) auto;
@@ -12,7 +13,6 @@
   border-radius: var(--r-4);
   background: var(--tk-side);
   color: var(--ink-2);
-  box-shadow: var(--shadow-float);
   overflow: hidden;
 }
 .side:focus-visible,
@@ -82,8 +82,8 @@
 }
 
 /* full: the app's main sheet lifted over the whole window, for editing: the same inset and corner
-   as the sheet it covers, on the scrim. Its bar runs edge to edge (the close, a rule, then the
-   view's top bar), one hairline under all of it; the view (a Page) fills the rest. */
+   as the sheet it covers, on the scrim. Its bar runs edge to edge (the view's top bar, then the
+   close); the view (a Page) fills the rest. */
 .full {
   position: fixed;
   inset: var(--sp-4);
@@ -97,7 +97,6 @@
   border-radius: var(--r-4);
   background: var(--page);
   color: var(--ink-2);
-  box-shadow: var(--shadow-float);
   overflow: hidden;
 }
 .full[open] {
@@ -118,13 +117,6 @@
   position: relative;
   display: flex;
   height: 100%;
-}
-/* the bar's hairline, under the close as well as the view's top bar */
-.frame::before {
-  content: "";
-  position: absolute;
-  inset: var(--h-top) 0 auto;
-  border-top: var(--line-1) solid var(--tk-card-edge);
 }
 /* the close: at the bar's end, where the peek's is, in the room the view's bar leaves for it */
 .close {
@@ -161,10 +153,8 @@
   gap: var(--sp-6);
   width: min(var(--w-ask), calc(100vw - var(--sp-9) * 2));
   padding: var(--sp-8) var(--sp-9);
-  border: var(--line-1) solid var(--pop-edge);
   border-radius: var(--r-5);
   background: var(--pop);
-  box-shadow: var(--shadow-pop);
   color: var(--ink-1);
 }
 /* the question's words: its heading, the note under it; then its actions, at the end */

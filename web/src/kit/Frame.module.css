@@ -1,27 +1,28 @@
-/* the frame: Linear's own, two planes and one hairline. The sidebar is a full-height column on its
-   ground, ruled off by a single hairline; the main column runs flush beside it on the page, to the
-   window's edges, a sized flex column so a screen that fills it (flex: 1) scrolls to its foot. The
-   page is the one plane a view lies on: a view's recess sits flush on it (no card inside a sheet),
-   so a list's bands and rows lie straight on the page, as Linear's do */
+/* the frame: two planes and no line. The ground runs under everything; the sidebar sits on it, and
+   the main column is the sheet, set into the ground by a small margin with a rounded corner (a step
+   of tone, no edge, no shadow), a sized flex column so a screen that fills it (flex: 1) scrolls to
+   its foot. The sheet is the one plane a view lies on: a list's rows lie straight on it */
 .app {
   display: grid;
   grid-template-columns: var(--w-side) minmax(0, 1fr);
   min-height: 100dvh;
-  background: var(--page);
+  background: var(--side);
 }
 .main {
   --recess: var(--page);
-  --shadow-recess: none;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 100dvh;
+  height: calc(100dvh - var(--inset) * 2);
+  margin: var(--inset) var(--inset) var(--inset) 0;
   padding: 0 var(--gutter);
+  border-radius: var(--r-5);
+  background: var(--page);
   overflow-y: auto;
 }
 
-/* the sidebar: Linear's labelled list on its ground; 13px medium labels on 28px rows, 16px icons
-   under the label's ink, the current view a filled pill */
+/* the sidebar: a labelled list straight on the ground; 13px medium labels on 28px rows, 16px icons
+   under the label's ink, the current view lit to the sheet's own tone, its glyph in the accent */
 .side {
   position: sticky;
   top: 0;
@@ -30,17 +31,16 @@
   flex-direction: column;
   gap: var(--side-gap);
   min-width: 0;
-  padding: 0 var(--sp-5) var(--sp-5);
+  /* its head level with the sheet's top bar, which the inset sets down */
+  padding: var(--inset) var(--sp-5) var(--sp-5);
   overflow-y: auto;
   scrollbar-width: none;
-  border-right: var(--line-1) solid var(--side-edge);
-  background: var(--side);
   color: var(--side-ink);
 }
 
 /* the head, level with the top bar: the Space's switcher (its tile, its name, a chevron), the
    signed-in person's face beside it and, at the row's end, Linear's two icon buttons, search bare
-   and new ticket ringed */
+   and new ticket a round fill */
 .head {
   flex: none;
   display: flex;
@@ -111,10 +111,10 @@
   background: var(--side-hover);
   color: var(--side-on-ink);
 }
-/* new ticket: Linear's compose, a round button on a hairline ring, filled only under the pointer */
+/* new ticket: the compose button, a round fill a step over the ground */
 .create {
   border-radius: 50%;
-  box-shadow: inset 0 0 0 var(--line-1) var(--side-tool-ring);
+  background: var(--fill-2);
   color: var(--side-ink);
 }
 .space {
@@ -232,7 +232,7 @@
   color: var(--side-on-ink);
 }
 .item[aria-current] svg {
-  color: var(--side-on-ink);
+  color: var(--you);
 }
 .item:focus-visible {
   outline-offset: var(--focus-in);
@@ -271,9 +271,8 @@
   margin-top: calc(var(--side-gap) * -1);
 }
 
-/* themes · the theme menu's swatch: the frame in miniature (the sidebar's ground ruled off from
-   the page, on the page a line of ink and one of your move), ringed so a light one reads on a
-   light menu */
+/* themes · the theme menu's swatch: the frame in miniature (the ground, the sheet set into it, on
+   the sheet a line of ink and one of the accent), ringed so a light one reads on a light menu */
 .swatches {
   display: inline-flex;
   flex-direction: column;
@@ -285,8 +284,8 @@
   border-radius: var(--r-1);
   background: var(--page);
   box-shadow:
-    inset calc(var(--w-swatch-side) - var(--line-1)) 0 0 var(--side),
-    inset var(--w-swatch-side) 0 0 var(--side-edge),
+    inset var(--w-swatch-side) 0 0 var(--side),
+    inset 0 0 0 var(--line-2) var(--side),
     0 0 0 var(--line-1) var(--ring-ink);
 }
 .swInk,

@@ -1,4 +1,4 @@
-/* Chip: the kit's one tag. A flat tag of faint ink, no outline (borders are for controls), regular
+/* Chip: the kit's one tag. A flat tag of faint ink, no outline (nothing in the kit is), regular
    muted words cut at their end, led by a muted glyph or a state's dot; something quieter after the
    words; a remove at its end that lights on hover, the tag's padding tucked in round it */
 .chip {
@@ -21,19 +21,13 @@
 .chip[data-lead] {
   padding-left: var(--sp-3);
 }
-/* in a list's row: Linear's label chip, a pill on a hairline with no fill */
-:where([data-row]) .chip[data-tone="line"] {
-  border: var(--line-1) solid var(--list-chip-edge);
-  border-radius: var(--r-pill);
-  background: none;
-}
-.chip[data-tone="fill"] {
-  background: var(--chip-on);
-}
+/* a label (in a list's row) and a pill (a card's state): the same fill, as a pill */
+:where([data-row]) .chip[data-tone="line"],
 .chip[data-tone="edge"] {
   border-radius: var(--r-pill);
-  background: none;
-  box-shadow: inset 0 0 0 var(--line-1) var(--chip-on-edge);
+}
+.chip[data-tone="fill"] {
+  background: var(--fill-3);
 }
 .chip[data-tone="blocked"] {
   color: var(--blocked);

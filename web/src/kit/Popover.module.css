@@ -1,7 +1,8 @@
 /* The kit's one popover (Select, Segmented's overflow, the menus and the account sheet draw it):
-   Linear's lifted layer, a clear step over what it covers, on a lit hairline inside a dark ring and
-   a deep drop, its corners a touch tighter than a card's. Its words are Linear's menu size (13px
-   on 32px rows inset 4px from the sheet's edge, 6px round), denser than the page it opens over;
+   the one layer that floats over the sheet, so the one with a line round it and the one shadow:
+   its own tone on a single hairline, lifted by a soft shadow, its corners a card's. Its words are
+   Linear's menu size (13px on 32px rows inset 4px from the sheet's edge, 6px round), denser than
+   the page it opens over;
    only the one active row (pointer or keys) fills, so at most one is ever lit. Every list of
    choices opens on its filter field, ruled off from the rows. A row reads as Linear's: its
    picture, its name, its muted aside (a count, a descriptor) right after the name, and the check
@@ -16,7 +17,7 @@
   background: var(--pop);
   border: var(--line-1) solid var(--pop-edge);
   border-radius: var(--r-4);
-  box-shadow: var(--shadow-pop);
+  box-shadow: var(--pop-shadow);
   color: var(--ink-1);
   outline: none;
 }
@@ -31,7 +32,8 @@
   letter-spacing: var(--track-snug);
   color: var(--pop-aside);
 }
-/* the filter: a real field, full bleed and ruled off from the rows, its words on theirs */
+/* the filter: a real field, full bleed on a step of tone over the rows (no rule), its words on
+   theirs */
 .find {
   display: flex;
   align-items: center;
@@ -40,9 +42,8 @@
   margin: calc(var(--sp-2) * -1) calc(var(--sp-2) * -1) var(--sp-2);
   padding: 0 var(--sp-6);
   border: 0;
-  border-bottom: var(--line-1) solid var(--pop-rule);
-  border-radius: var(--r-4) var(--r-4) 0 0;
-  background: none;
+  border-radius: calc(var(--r-4) - var(--line-1)) calc(var(--r-4) - var(--line-1)) 0 0;
+  background: var(--fill-1);
   font-size: var(--fs-3);
   color: var(--ink-1);
   font-family: inherit;

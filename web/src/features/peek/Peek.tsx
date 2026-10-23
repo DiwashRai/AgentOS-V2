@@ -47,7 +47,7 @@ function Bar({ ticketKey, onClose }: { ticketKey: string; onClose: () => void })
         {t?.source ? `${ticketKey} · Jira ${t.source.ref}` : ticketKey}
       </Text>
       <Stack grow />
-      {/* the three in one look: the controls' own, each on its hairline */}
+      {/* the three in one look: the controls' own, each its own fill */}
       <Button size="sm" icon="out" href={`/t/${ticketKey}`}>
         Open ticket
       </Button>

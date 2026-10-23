@@ -1,13 +1,12 @@
-/* Compare: two versions on one grid, a column each, ruled apart by a hairline; the heads on the
-   card's band, the lines in monospace under them, each side's changed lines on a tint with an edge
-   at their left (yours your move's accent, theirs a firm grey), a gap a faint fill */
+/* Compare: two versions on one grid, a column each, parted by a step of tone (theirs the deeper);
+   the heads on a band, the lines in monospace under them, each side's changed lines on a tint with
+   an edge at their left (yours the accent, theirs a firm grey), a gap a faint fill */
 .compare {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   min-width: 0;
-  border: var(--line-1) solid var(--tk-card-edge);
   border-radius: var(--r-4);
-  background: var(--input);
+  background: var(--tone-1);
   overflow: hidden;
 }
 /* a row is the grid's, not a box: its cells are the grid's items */
@@ -15,7 +14,7 @@
   display: contents;
 }
 [data-side="theirs"] {
-  box-shadow: inset var(--line-1) 0 0 var(--tk-card-edge);
+  background-color: var(--fill-1);
 }
 .head {
   display: flex;
@@ -24,7 +23,6 @@
   min-width: 0;
   min-height: var(--h-control-lg);
   padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-6);
-  border-bottom: var(--line-1) solid var(--tk-card-edge);
   background: var(--list-band);
   font-size: var(--fs-3);
   white-space: nowrap;

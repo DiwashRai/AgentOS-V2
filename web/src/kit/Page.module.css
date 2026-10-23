@@ -20,7 +20,7 @@
   margin: 0;
   font-size: var(--fs-6);
   font-weight: 600;
-  letter-spacing: var(--track-snug);
+  letter-spacing: calc(var(--track-snug) * 2);
   color: var(--ink-1);
   white-space: nowrap;
 }
@@ -32,6 +32,11 @@
   white-space: nowrap;
   font-size: var(--fs-3);
   color: var(--ink-3);
+}
+/* the quiet words after a view's title, and its filter chips, sit on its baseline, not its middle */
+.title:not(.step) ~ :not(.grow, .search, .actions) {
+  position: relative;
+  top: var(--sp-2);
 }
 .grow {
   flex: 1;
@@ -77,17 +82,21 @@
   align-items: center;
   gap: var(--sp-4);
 }
+/* it scrolls, so it clips: it keeps the room at its sides where a row's wash reaches past the words */
 .body {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  margin-inline: calc(var(--list-bleed) * -1);
+  padding-inline: var(--list-bleed);
   overflow-y: auto;
   scrollbar-width: thin;
 }
 /* a body that is an edge Table (the library's lists) runs out through the sheet's gutter */
 .body:has(> [data-edge="true"]) {
   margin-inline: calc(var(--gutter) * -1);
+  padding-inline: 0;
 }
 
 /* counters: the number carries the weight; a zero recedes; a non-zero "need you" takes the accent's
@@ -133,36 +142,39 @@
 .you > b {
   color: var(--you-text);
 }
+/* the separator: a small dot, so the two groups of counters part evenly */
 .sep {
-  width: var(--line-1);
-  height: var(--sp-7);
-  background: var(--rule);
+  flex: none;
+  width: var(--line-3);
+  height: var(--line-3);
+  border-radius: 50%;
+  background: var(--ink-3);
+  opacity: 0.6;
 }
 
-/* the bar's search: 268 wide, giving way first when the bar is short */
+/* the bar's search: 240 wide, giving way first when the bar is short */
 .search {
-  flex: 0 1 var(--w-menu);
-  width: var(--w-menu);
+  flex: 0 1 var(--w-search);
+  width: var(--w-search);
   min-width: var(--col-lg);
 }
 
-/* a body with a full-height column beside it, run out to the sheet's right edge: each scrolls on
+/* a body with a full-height column beside it, the column's right edge the bar's: each scrolls on
    its own */
 .split {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 30vw, var(--w-talk-max));
-  margin-right: calc(var(--gutter) * -1);
-  border-top: var(--line-1) solid var(--tk-card-edge);
+  grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 28vw, var(--w-talk-max));
 }
 /* the body: one calm reading column, room under its last line when scrolled to the end */
 .split > .body {
-  padding: var(--sp-10) var(--sp-10) calc(var(--sp-10) * 2) 0;
+  margin-right: 0;
+  padding: var(--sp-10) var(--sp-9) calc(var(--sp-10) * 2) var(--list-bleed);
 }
 /* a document: the reading column centred under the bar, room above and under it */
 .doc {
-  padding: calc(var(--sp-10) + var(--sp-7)) 0 calc(var(--sp-10) * 2);
+  padding-block: calc(var(--sp-10) + var(--sp-7)) calc(var(--sp-10) * 2);
 }
 /* the measure carries the body's column on: at least the body's height, so an editor's growing
    content (a filled text area) takes the rest of the window */
@@ -174,15 +186,18 @@
   max-width: var(--w-ticket);
   margin-inline: auto;
 }
-/* the column beside: Linear's issue sidebar, a tinted rail ruled off by one hairline and run out to
-   the sheet's edge, full height, so what it holds can pin its foot (Talk's reply box) to the
-   window's bottom */
+/* the column beside: a panel a step of tone off the sheet (no line), on the bar's right edge and
+   set up off the sheet's foot by the frame's own inset, so the sheet keeps its rounded corners and
+   the rail reads as its own surface; full height, so what it holds can pin its foot (Talk's reply
+   box) to the window's bottom */
 .side {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  margin-bottom: var(--inset);
   padding: var(--sp-9) var(--sp-9) var(--sp-8);
-  border-left: var(--line-1) solid var(--tk-card-edge);
+  border-radius: var(--r-4);
+  --well: var(--page);
   background: var(--tk-well);
   overflow-y: auto;
   scrollbar-width: thin;

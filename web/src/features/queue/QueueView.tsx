@@ -182,6 +182,7 @@ function AgentCard({ t, me, now, onOpen }: ItemProps) {
     <Card
       look="agent"
       label={`Peek at ${t.key}: ${t.title}`}
+      off={a.kind === "queued"}
       onOpen={() => {
         onOpen(t.key);
       }}
@@ -206,34 +207,37 @@ interface ZoneListProps {
 
 function ZoneList({ z, me, now, open }: ZoneListProps) {
   const n = shipped(z.done);
+  // each zone a section: no band and no card; one after another parts by room and a hairline, the
+  // cards on the column edge the heads hang on
   return (
     <Stack>
-      {z.yourMove.length === 0 ? (
-        <Notice kind="empty" lead="All clear">
-          nothing is your move
-        </Notice>
-      ) : (
-        <Table columns={ITEM} head={false} scroll={false} bleed>
-          <Head
-            icon={<Mark kind="you" glyph name={false} />}
-            name="Your move"
-            count={z.yourMove.length}
-            note="Longest wait first"
-            tone="you"
-          />
-          {z.yourMove.map((t) => (
-            <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
-          ))}
-        </Table>
-      )}
-      {/* the cards' zone keeps room under it before the next band */}
-      <Stack gap={8}>
+      <Surface level="list" label="Your move">
+        {z.yourMove.length === 0 ? (
+          <Notice kind="empty" lead="All clear">
+            nothing is your move
+          </Notice>
+        ) : (
+          <Table columns={ITEM} head={false} scroll={false}>
+            <Head
+              icon={<Mark kind="you" glyph name={false} />}
+              name="Your move"
+              count={z.yourMove.length}
+              note="Longest wait first"
+              tone="you"
+            />
+            {z.yourMove.map((t) => (
+              <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
+            ))}
+          </Table>
+        )}
+      </Surface>
+      <Surface level="list" label="Agents at work">
         {z.agents.length === 0 ? (
           <Notice kind="empty" lead="All quiet">
             nothing running, nothing queued
           </Notice>
         ) : (
-          <Stack gap={6}>
+          <Stack gap={4}>
             <Head
               level="zone"
               icon={<Mark kind="run" glyph name={false} />}
@@ -254,52 +258,55 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
             ) : null}
           </Stack>
         )}
-        <Stack />
-      </Stack>
+      </Surface>
       {z.ready.length > 0 ? (
-        <Table columns={ITEM} head={false} scroll={false} bleed>
-          <Head
-            icon={<Mark kind="idle" glyph name={false} />}
-            name="Ready to start"
-            count={z.ready.length}
-            note="Oldest first"
-          />
-          {z.ready.map((t) => (
-            <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
-          ))}
-        </Table>
+        <Surface level="list" label="Ready to start">
+          <Table columns={ITEM} head={false} scroll={false}>
+            <Head
+              icon={<Mark kind="idle" glyph name={false} />}
+              name="Ready to start"
+              count={z.ready.length}
+              note="Oldest first"
+            />
+            {z.ready.map((t) => (
+              <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
+            ))}
+          </Table>
+        </Surface>
       ) : null}
       {z.done.length > 0 ? (
-        <Table columns={ITEM} head={false} scroll={false} bleed>
-          <Head
-            icon={<Mark kind="done" glyph name={false} />}
-            name="Done recently"
-            count={z.done.length}
-            note="Yours, last 7 days"
-            tone="done"
-            summary={
-              <Stack dir="row" gap={7} align="center">
-                {n > 0 ? (
-                  <Stack dir="row" gap={3} align="center">
-                    <Icon name="tick-sm" />
-                    <Text variant="meta" tone="2">
-                      <Text weight={600} tone="done">{`${String(n)} shipped`}</Text> this week
-                    </Text>
-                  </Stack>
-                ) : null}
-                <Button variant="link" href="/compact?f=done">
-                  All done tickets
-                </Button>
-              </Stack>
-            }
-          />
-          {z.done.slice(0, CAP.done).map((t) => (
-            <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
-          ))}
-          {z.done.length > CAP.done ? (
-            <Notice kind="more" lead={`+${String(z.done.length - CAP.done)} more`} />
-          ) : null}
-        </Table>
+        <Surface level="list" label="Done recently">
+          <Table columns={ITEM} head={false} scroll={false}>
+            <Head
+              icon={<Mark kind="done" glyph name={false} />}
+              name="Done recently"
+              count={z.done.length}
+              note="Yours, last 7 days"
+              tone="done"
+              summary={
+                <Stack dir="row" gap={7} align="center">
+                  {n > 0 ? (
+                    <Stack dir="row" gap={3} align="center">
+                      <Icon name="tick-sm" />
+                      <Text variant="meta" tone="2">
+                        <Text weight={600} tone="done">{`${String(n)} shipped`}</Text> this week
+                      </Text>
+                    </Stack>
+                  ) : null}
+                  <Button variant="link" href="/compact?f=done">
+                    All done tickets
+                  </Button>
+                </Stack>
+              }
+            />
+            {z.done.slice(0, CAP.done).map((t) => (
+              <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
+            ))}
+            {z.done.length > CAP.done ? (
+              <Notice kind="more" lead={`+${String(z.done.length - CAP.done)} more`} />
+            ) : null}
+          </Table>
+        </Surface>
       ) : null}
     </Stack>
   );
@@ -333,11 +340,11 @@ export function QueueView() {
         { n: z.yourMove.length, label: "your move", mark: "you" },
         { n: z.mine, label: "runs yours" },
         "|",
-        { n: z.running, label: "running" },
-        { n: z.queued, label: "queued" },
+        { n: z.running, label: "running", mark: "run" },
+        { n: z.queued, label: "queued", mark: "queued" },
       ]}
     >
-      <Surface pad={8}>
+      <Surface>
         {board.error ? (
           <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
         ) : board.pending ? (

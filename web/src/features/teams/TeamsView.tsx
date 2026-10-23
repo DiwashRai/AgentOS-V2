@@ -1,6 +1,6 @@
 // All teams (new in V2): every repo by stage, as Linear's board grouped by team. The stages are the
 // board's columns, Plan · Build · Verify · Review; each repo is a swimlane across them, its head one
-// line (the repo, who works there, how much is in flight, a way to its list) over a lane per stage
+// line (the repo, who works there, how much is in flight, a way to its list) over a column per stage
 // holding its tickets' cards (an empty stage across the board folds narrow; a repo with nothing in
 // flight is its head alone). Inbox and done work live in each repo's list. Click an item to peek.
 import { useState } from "react";

@@ -1,7 +1,7 @@
 /* ---------- steps: one equal column per stage with a fixed gap, so no two names can touch; each
    name sits left-aligned under its own 2px bar (skipped a dashed one); a gate's diamond sits in
    the gap where its stage ends, its name a caption under the stage's. With a now row the stages
-   and what happens now share one run card, the now row ruled off under the stages ---------- */
+   and what happens now share one run card, the now row a step deeper under the stages ---------- */
 .flow {
   --gap: var(--sp-7);
   display: grid;
@@ -113,7 +113,7 @@
 }
 /* in the run card a ring of the card's ground keeps the diamond off the bars either side */
 .card .knot {
-  outline: var(--line-2) solid var(--page);
+  outline: var(--line-2) solid var(--tk-card);
 }
 .knot[data-state="passed"] {
   background: var(--progress);
@@ -183,27 +183,26 @@
   font-size: var(--fs-2);
 }
 
-/* the run card: the stages and what happens now in one card, as Linear's latest update: the page's
-   own ground on a hairline, a larger radius */
+/* the run card: the stages and what happens now in one card, a step of tone with no line, a larger
+   radius */
 .card {
-  padding: var(--sp-7) var(--sp-8) 0;
-  border: var(--line-1) solid var(--tk-card-edge);
+  padding: var(--sp-8) var(--sp-8) 0;
   border-radius: var(--r-5);
+  background: var(--tk-card);
 }
 .card .bar {
   margin-top: var(--sp-2);
 }
-/* the now row: the card's foot, a tinted band under the stages edge to edge, ruled off, so the
-   live run reads as the card's status bar; the run's meter on it long enough to read, its steps to
-   come on a firmer track */
+/* the now row: the card's foot, a band a step deeper under the stages edge to edge, so the live run
+   reads as the card's status bar; the run's meter on it long enough to read, its steps to come on a
+   firmer track */
 .now {
   grid-column: 1 / -1;
   min-width: 0;
   margin: var(--sp-7) calc(var(--sp-8) * -1) 0;
   padding: var(--sp-6) var(--sp-8);
-  border-top: var(--line-1) solid var(--tk-card-edge);
   border-radius: 0 0 var(--r-5) var(--r-5);
-  background: var(--tk-well);
+  background: var(--fill-1);
   --w-meter: var(--w-tk-meter);
   --track: var(--rule-strong);
 }
