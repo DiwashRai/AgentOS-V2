@@ -237,16 +237,15 @@ const placeOf = (p) => {
 };
 
 /** Each screen's drawing, through everything it imports: what its modules draw and what the
- *  modules they reach draw, transitively (shared modules, patterns, and, until no screen imports
- *  another, the other screen's modules). The app follows only shared modules and patterns, since
- *  it imports every screen to route them. `kit` maps each component and variant to its screens;
- *  `patterns` each pattern export ("patterns/who.tsx#Who") to the screens that import it. */
+ *  modules they reach draw, transitively (its own, shared modules and patterns; it imports no other
+ *  screen). The app follows the same, not the screens it imports to route them. `kit` maps each
+ *  component and variant to its screens; `patterns` each pattern export ("patterns/who.tsx#Who")
+ *  to the screens that import it. */
 function screenUses(kit) {
   const scanned = new Map(
     [...sources(FEATURES), ...sources(PATTERNS), ...sources(APP)].map((p) => [p, scan(p, kit)]),
   );
-  const follows = (screen, place) =>
-    screen === "app" ? ["app", "shared", "patterns"].includes(place) : place !== "app";
+  const follows = (screen, place) => [screen, "shared", "patterns"].includes(place);
   const reached = (screen) => {
     const seen = new Set();
     const go = (p) => {

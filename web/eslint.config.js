@@ -1,3 +1,6 @@
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
+
 import js from "@eslint/js";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import reactHooks from "eslint-plugin-react-hooks";
@@ -87,6 +90,26 @@ const DRAWS = {
 };
 // Everything that draws through the kit: patterns, screens and the app.
 const SCREENS = new Set(["src/patterns/**", "src/features/**", "src/app/**"]);
+const importsOf = (folder, patterns) =>
+  SCREENS.has(folder)
+    ? { paths: DRAWS.paths, patterns: [...patterns, ...DRAWS.patterns] }
+    : { patterns };
+
+// A screen imports no other screen, and features/shared imports no screen: what two screens share
+// goes down a layer. From a file `depth` folders under features/, an import that climbs that far
+// is in features/, where the one folder it may enter is shared. A block for each depth the folder
+// has (it replaces the features block there), so a deeper folder is never missed.
+const FEATURE_DEPTHS = new Set(
+  readdirSync(join(import.meta.dirname, "src/features"), { recursive: true })
+    .filter((p) => /\.tsx?$/.test(p))
+    .map((p) => p.split(/[\\/]/).length - 1),
+);
+const APART =
+  "A screen imports no other screen, nor features/shared a screen: share it a layer down.";
+const apart = (depth) => [
+  { regex: `^(\\.\\./){${String(depth)}}(?!shared/)[^.]`, message: APART },
+  { group: ["**/features/**"], message: APART },
+];
 
 export default tseslint.config(
   { ignores: ["dist"] },
@@ -107,12 +130,14 @@ export default tseslint.config(
   },
   ...Object.entries(LAYERS).map(([folder, patterns]) => ({
     files: [`${folder}/*.{ts,tsx}`],
+    rules: { "no-restricted-imports": ["error", importsOf(folder, patterns)] },
+  })),
+  ...[...FEATURE_DEPTHS].map((depth) => ({
+    files: [`src/features/${"*/".repeat(depth)}*.{ts,tsx}`],
     rules: {
       "no-restricted-imports": [
         "error",
-        SCREENS.has(folder)
-          ? { paths: DRAWS.paths, patterns: [...patterns, ...DRAWS.patterns] }
-          : { patterns },
+        importsOf("src/features/**", [...LAYERS["src/features/**"], ...apart(depth)]),
       ],
     },
   })),

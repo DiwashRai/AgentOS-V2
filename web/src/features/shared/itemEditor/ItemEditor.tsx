@@ -10,12 +10,12 @@ import { type ReactNode, useEffect, useRef } from "react";
 import { useNow, useSession } from "../../../api/queries";
 import type { ItemBody, UsedBy } from "../../../api/types";
 import { ago, authorName } from "../../../domain/format";
-import { Button, Chip, Field, Page, type PageProps, Stack, Text } from "../../../kit";
+import { Button, Chip, type Fact, Field, Page, type PageProps, Stack, Text } from "../../../kit";
 import { Conflict } from "./conflict";
 import { Content } from "./content";
 import type { Draft } from "./draft";
 import { type Siblings, SiblingNav } from "./nav";
-import { type Fact, PropertyRows } from "./side";
+import { PropertyRows } from "./side";
 import { type Editor, useEditor, type Versioned } from "./useEditor";
 
 export interface EditorItem extends Versioned {

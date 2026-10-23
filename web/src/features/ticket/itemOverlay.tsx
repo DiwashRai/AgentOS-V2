@@ -17,10 +17,9 @@ import {
   useTicketWorkflow,
 } from "../../api/queries";
 import type { Item, ItemBody, Origin, Ticket } from "../../api/types";
-import { Button, Dialog, Icon, Page, Stack, Text, Toggle } from "../../kit";
+import { Button, Dialog, type Fact, Icon, Page, Stack, Text, Toggle } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
 import { type EditorActs, ItemEditor } from "../shared/itemEditor/ItemEditor";
-import type { Fact } from "../shared/itemEditor/side";
 import { copyTitle, DriftChips, saveAsk } from "./copy";
 import { contentTitle, KIND, labelOf, libraryHref, stagesOf } from "./items";
 import { ticketHref } from "./tabs";

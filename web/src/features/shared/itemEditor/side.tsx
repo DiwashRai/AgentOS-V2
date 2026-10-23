@@ -11,8 +11,6 @@ import { age, fromAuthor, plural } from "../../../domain/format";
 import { Badge, Button, type Fact, Facts, Select, Stack, Text } from "../../../kit";
 import { Who } from "../../../patterns/who";
 
-export type { Fact };
-
 const EFFORTS: readonly Effort[] = ["low", "medium", "high", "xhigh", "max"];
 
 /** How many tickets "Used by" names before the rest fold into +N. */
