@@ -6,7 +6,7 @@
 // third of the view (Linear's popover is that wide, flush with the button's end).
 import type { ReactNode } from "react";
 
-import { Button, Frame, Icon, Page, Select, Stack, Surface, Text, Toggle } from "../../../kit";
+import { Button, FormRow, Frame, Page, Select, Stack, Surface, Text, Toggle } from "../../../kit";
 
 const keep = () => undefined;
 
@@ -38,29 +38,18 @@ function Switch({ label, on }: { label: string; on: boolean }) {
 
 interface PickerProps {
   label: string;
-  icon: "compact" | "sort";
   value: string;
   extra?: ReactNode;
 }
 
-/** A picker on a line: its glyph and words at the start, the picker (and its extra) at the end. */
-function Picker({ label, icon, value, extra }: PickerProps) {
+/** A picker on a form row: its words, then the picker (and its extra) from one shared left edge, the
+ *  pickers down the panel one width (Linear's draw a glyph before the words; a form row has none). */
+function Picker({ label, value, extra }: PickerProps) {
   return (
-    <Stack dir="row" justify="between" align="center">
-      <Stack dir="row" gap={4} align="center">
-        <Icon name={icon} quiet />
-        <Text tone="3">{label}</Text>
-      </Stack>
-      <Stack dir="row" gap={4} align="center">
-        <Select
-          label={label}
-          value={value}
-          options={[{ id: value, label: value }]}
-          onChange={keep}
-        />
-        {extra}
-      </Stack>
-    </Stack>
+    <FormRow label={label}>
+      <Select label={label} value={value} options={[{ id: value, label: value }]} onChange={keep} />
+      {extra}
+    </FormRow>
   );
 }
 
@@ -80,10 +69,10 @@ function View() {
           </Stack>
         </Stack>
         <Stack gap={3}>
-          <Picker label="Grouping" icon="compact" value="Status" />
+          <Picker label="Grouping" value="Status" />
           <Picker
             label="Ordering"
-            icon="sort"
+
             value="Priority"
             extra={<Button size="sm" icon="order" title="Ordering direction" />}
           />

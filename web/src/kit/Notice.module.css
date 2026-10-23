@@ -158,6 +158,5 @@
   width: var(--triage-face);
   height: var(--triage-face);
   border-radius: 50%;
-  box-shadow: inset 0 0 0 var(--line-1) var(--rule-strong);
   font-size: var(--fs-1);
 }

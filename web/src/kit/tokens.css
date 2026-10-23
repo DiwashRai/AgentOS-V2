@@ -231,7 +231,7 @@
   --list-reach: calc(var(--gutter) * -1);
   /* their corners: square where they reach the sheet's edges, round where they stop short of them */
   --list-radius: 0;
-  --problem-edge: color-mix(in srgb, var(--blocked) 35%, transparent);
+  --problem-edge: color-mix(in srgb, var(--blocked) 22%, transparent);
   --pop-edge: var(--edge);
   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
   /* surfaces on the sheet: a board's card one tone, a step more under the pointer; the run card
@@ -336,6 +336,8 @@
   --chip-tint: 12%;
   /* the open row's band firmer, as Linear's dark selection (about 16% of its indigo) */
   --list-open: color-mix(in srgb, var(--you) 14%, transparent);
+  /* the popover's edge firmer, so a menu stands off the dark sheet it covers */
+  --pop-edge: color-mix(in srgb, var(--hair) 24%, transparent);
   /* a card's edge as Linear's: about 26 levels over the sheet, the card itself about 6 */
   --card-edge: color-mix(in srgb, var(--hair) 13%, var(--page));
 }

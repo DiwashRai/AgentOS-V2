@@ -172,18 +172,18 @@ function RunLine({ r, runs, w, now }: RunProps) {
   ];
 }
 
-/** At a stage's right end: a check's verdict, else what it's doing while it has none, in words in
- *  its state's ink (no box: the glyph at the line's start already shows the state). */
+/** Beside a stage's name: a check's verdict, else what it's doing while it has none, in plain words
+ *  (the glyph at the line's start already shows the state in its hue, so the words take none). */
 function Verdict({ s }: { s: StageRun }) {
   if (s.verdict)
     return (
-      <Text variant="meta" tone={s.verdict === "pass" ? "done" : "blocked"} weight={500}>
+      <Text variant="meta" tone="2">
         {s.verdict === "pass" ? "Passed" : "Failed"}
       </Text>
     );
   if (s.state === "running")
     return (
-      <Text variant="meta" tone="live" weight={500}>
+      <Text variant="meta" tone="2">
         Running
       </Text>
     );

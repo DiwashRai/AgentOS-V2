@@ -53,8 +53,8 @@ export function KeyCell({ t }: { t: TicketRow }) {
   );
 }
 
-/** The status glyph, the title, and after it the quiet words of what it waits on: one line, cut
- *  at its end, so the words give way before the title does. A settled line (done, closed) recedes
+/** The status glyph and the title alone, what it waits on in its tooltip (the row's Now and stage
+ *  already say it): one line, cut at its end. A settled line (done, closed) recedes
  *  a step: its title in the second ink; so does one the screen says to (My queue's queued runs). */
 export function TitleCell({
   t,
@@ -78,15 +78,13 @@ export function TitleCell({
         name={said(kind)}
         progress={a.kind === "running" ? a.progress : null}
       />
-      <Text tone="3" truncate title={after ? `${t.title} · ${after}` : t.title}>
-        <Text weight={500} tone={settled ? "2" : "1"}>
-          {t.title}
-        </Text>
-        {after ? (
-          <Text variant="meta" tone="3">
-            {`\u2002${after}`}
-          </Text>
-        ) : null}
+      <Text
+        weight={500}
+        tone={settled ? "2" : "1"}
+        truncate
+        title={after ? `${t.title} · ${after}` : t.title}
+      >
+        {t.title}
       </Text>
     </Stack>
   );

@@ -20,7 +20,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0 var(--sp-6);
+  gap: 0 var(--sp-5);
   min-width: 0;
   margin: 0 0 0 calc(var(--sp-4) * -1);
 }
@@ -35,6 +35,12 @@
   transition: background var(--dur-fast);
   --priority-on: var(--ink-3);
   --type-glyph: var(--ink-3);
+}
+/* a picker among the values reads as one of them: plain words at rest, its chip and edge only under
+   the pointer or while open (Linear's property rows) */
+.fact[data-picker] [role="combobox"]:not(:hover, [data-popup-open]) {
+  background: none;
+  box-shadow: none;
 }
 .fact:not([data-picker]):hover {
   background: var(--tk-hover);

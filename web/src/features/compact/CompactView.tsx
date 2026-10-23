@@ -57,7 +57,7 @@ import { KeyCell, LINE_END, lineEnd, TitleCell } from "./TicketLine";
 const COLUMNS: readonly Column[] = [
   { label: "Key", width: "sm" },
   { label: "Ticket", width: "fill", min: "2xl" },
-  { label: "Now", width: "xl", hug: true, end: true },
+  { label: "", width: "xl", hug: true, end: true },
   ...LINE_END,
 ];
 
