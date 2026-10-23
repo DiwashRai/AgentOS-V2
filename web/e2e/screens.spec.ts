@@ -10,8 +10,12 @@ const STATES = [
   { name: "intake", path: "/intake" },
   { name: "ticket", path: "/t/NW-17" },
   { name: "ticket-missing", path: "/t/NW-404" },
+  { name: "ticket-runs", path: "/t/NW-17?tab=runs" },
+  { name: "ticket-context", path: "/t/NW-17?tab=context" },
+  { name: "ticket-workflow", path: "/t/NW-17?tab=workflow" },
   { name: "compact-repo", path: "/compact?repo=northwind/web" },
   { name: "all-teams", path: "/teams" },
+  { name: "agents", path: "/library/agents" },
   // the editors: an item's text fills the window (TextArea fill through Page's measure); the
   // workflow's lane beside its library
   { name: "skill-editor", path: "/library/skills/ticket" },
