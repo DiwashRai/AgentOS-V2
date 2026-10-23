@@ -21,7 +21,7 @@ import { parsePlan, type PlanItem } from "../../domain/plan";
 import { Chip, Composer, Page, Section, Select, Stack, Tabs, Text, Thread } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
 import { PlanSection, TalkSection, TicketHead } from "../../patterns/ticketHead";
-import { ActionButton, CancelButton, headerActions } from "../shared/Actions";
+import { ActionButton, actionsAt, CancelButton } from "../shared/Actions";
 import { threadMessage, useBoard } from "../shared/board";
 import { TicketMenu } from "../shared/TicketMenu";
 import { useSearch } from "../shared/useSearch";
@@ -153,9 +153,10 @@ export function TicketView() {
       {...(t
         ? {
             action: [
-              ...headerActions(t.actions.filter((a) => a.id !== "cancel")).map((a) => (
-                <ActionButton key={a.id} action={a} place="header" />
-              )),
+              ...actionsAt(
+                t.actions.filter((a) => a.id !== "cancel"),
+                "header",
+              ).map((a) => <ActionButton key={a.id} action={a} place="header" />),
               <TicketMenu key="more" t={t} size="md" />,
             ],
             // keyed by the ticket: a draft is one ticket's, and doesn't follow you to the next

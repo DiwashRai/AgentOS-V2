@@ -3,10 +3,10 @@
 import { useParams } from "react-router";
 
 import { loadOf, useFile, useFiles } from "../../api/queries";
+import { sizeText } from "../../domain/format";
 import { Page, Text } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
 import { ItemEditor } from "../shared/itemEditor/ItemEditor";
-import { sizeText } from "../shared/itemEditor/model";
 
 const href = (id: string) => `/library/files/${id}`;
 

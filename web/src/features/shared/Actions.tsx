@@ -29,20 +29,22 @@ const strongLast = (shown: readonly Action[]) => [
   ...shown.filter((a) => VARIANT[a.id]),
 ];
 
-/** An expanded row's buttons: what the ticket offers, Cancel included, the strong one last. */
-export function expandedActions(actions: readonly Action[]): Action[] {
-  return strongLast(actions.filter((a) => a.id !== "reopen" && a.id !== "dispatch"));
-}
+/** What a place leaves out of what the ticket offers: a list's line Cancel too. */
+const LEFT_OUT: Record<"line" | "panel", readonly ActionId[]> = {
+  line: ["cancel", "reopen", "dispatch"],
+  panel: ["reopen", "dispatch"],
+};
 
-/** A row's buttons: what the ticket offers, the strong one last. */
-export function rowActions(actions: readonly Action[]): Action[] {
-  return strongLast(
-    actions.filter((a) => a.id !== "cancel" && a.id !== "reopen" && a.id !== "dispatch"),
-  );
-}
-
-/** The header's buttons: everything the ticket offers, the strong one last. */
-export function headerActions(actions: readonly Action[]): Action[] {
+/** The buttons a place shows, the strong one last: the header everything (Dispatch with the strong
+ *  ones), a panel (an expanded row) all but Reopen and Dispatch, a list's line Cancel aside too. */
+export function actionsAt(
+  actions: readonly Action[],
+  place?: ActionButtonProps["place"],
+): Action[] {
+  if (place !== "header") {
+    const left = LEFT_OUT[place ?? "panel"];
+    return strongLast(actions.filter((a) => !left.includes(a.id)));
+  }
   const strong = (a: Action) => a.id === "dispatch" || VARIANT[a.id] !== undefined;
   return [...actions.filter((a) => !strong(a)), ...actions.filter(strong)];
 }

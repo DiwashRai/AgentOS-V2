@@ -1,14 +1,9 @@
-// The library screens' pure helpers: an item's size, how an item's content reads as lines (for
+// The item editor's pure helpers: a folded block's line, how an item's content reads as lines (for
 // the version conflict's two sides), and those two sides lined up row by row, each line marked by
 // whether its own side changed it.
 import type { Block, ItemBody, Runtime } from "../../../api/types";
 import { runtimeName } from "../../../domain/workflow";
 import { anchors } from "./merge";
-
-/** A size in bytes as people read it: 312 B, 1.4 KB. */
-export function sizeText(bytes: number): string {
-  return bytes < 1024 ? `${String(bytes)} B` : `${(bytes / 1024).toFixed(1)} KB`;
-}
 
 /** A block's first line of text, for the line a folded block shows. */
 export function firstLine(b: Block): string {

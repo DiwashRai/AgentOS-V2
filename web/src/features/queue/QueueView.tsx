@@ -19,7 +19,7 @@ import {
 import { LoadNotice } from "../../patterns/load";
 import { RunNow } from "../../patterns/runNow";
 import { KeyCell, LINE_END, lineEnd, TicketTitle } from "../../patterns/ticketLine";
-import { ActionButton, rowActions } from "../shared/Actions";
+import { ActionButton, actionsAt } from "../shared/Actions";
 import { contextOf, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useParam, usePeek } from "../shared/useParam";
@@ -66,7 +66,7 @@ interface ItemProps {
 /** The item's buttons: a gate's on a Needs-you item, Retry alone on a blocked one. */
 function Buttons({ t, me }: { t: TicketRow; me: Person | null }) {
   const blocked = t.attention.kind === "blocked";
-  const shown = blocked || groupOf(t, me) === "needs_you" ? rowActions(t.actions) : [];
+  const shown = blocked || groupOf(t, me) === "needs_you" ? actionsAt(t.actions, "line") : [];
   return (
     <Stack dir="row" gap={3} justify="end">
       {shown

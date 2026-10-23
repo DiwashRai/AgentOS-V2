@@ -39,7 +39,7 @@ import { KeyHints } from "../../patterns/hints";
 import { LoadNotice } from "../../patterns/load";
 import { Tally } from "../../patterns/tally";
 import { KeyCell, LINE_END, lineEnd, TicketTitle } from "../../patterns/ticketLine";
-import { ActionButton, expandedActions } from "../shared/Actions";
+import { ActionButton, actionsAt } from "../shared/Actions";
 import { contextOf, threadMessage, useBoard, useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useParam, usePeek } from "../shared/useParam";
@@ -99,7 +99,7 @@ function Expanded({ t, me, now }: { t: TicketRow; me: Person | null; now: number
             <Text tone="3">{`${t.owner ? `Owner ${t.owner.name}` : "Unassigned"} · ${stagesText(t)}`}</Text>
           </Stack>
           <Stack dir="row" gap={3} wrap>
-            {expandedActions(t.actions).map((action) => (
+            {actionsAt(t.actions).map((action) => (
               <ActionButton key={action.id} action={action} />
             ))}
             <Button

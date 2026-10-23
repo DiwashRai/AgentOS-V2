@@ -3,11 +3,10 @@
 // that added it). A row opens the file's editor (AGENTS.md as its named blocks).
 import { useFiles } from "../../api/queries";
 import type { LibraryFile } from "../../api/types";
-import { matches } from "../../domain/format";
+import { matches, sizeText } from "../../domain/format";
 import { type Column, Text } from "../../kit";
 import { useSearch } from "../shared/useSearch";
 import { AboutCell, LibraryList, LibraryRow, NameCell, USED, usedCells } from "./list";
-import { sizeText } from "../shared/itemEditor/model";
 
 const COLUMNS: readonly Column[] = [
   { label: "Path", width: "3xl" },

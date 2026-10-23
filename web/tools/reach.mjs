@@ -29,7 +29,7 @@ const relOf = (w, file) => posix(relative(w.src, file));
 
 /** Where an import leads: a module under src/ (as the compiler resolves it, or, for a file it
  *  doesn't read, such as a stylesheet, the file itself), a package by name, or nothing. */
-function resolveSpec(w, spec, from) {
+export function resolveSpec(w, spec, from) {
   const found = ts.resolveModuleName(spec, from, w.options, ts.sys).resolvedModule;
   if (found && !found.isExternalLibraryImport)
     return { to: relOf(w, resolve(found.resolvedFileName)), pkg: null };

@@ -42,6 +42,11 @@ export function plural(n: number, one: string, many = `${one}s`): string {
   return `${String(n)} ${n === 1 ? one : many}`;
 }
 
+/** A size in bytes as people read it: 312 B, 1.4 KB. */
+export function sizeText(bytes: number): string {
+  return bytes < 1024 ? `${String(bytes)} B` : `${(bytes / 1024).toFixed(1)} KB`;
+}
+
 /** The search box's terms: lowercased, split on whitespace; none matches everything. */
 export function terms(q: string): readonly string[] {
   return q.toLowerCase().split(/\s+/).filter(Boolean);

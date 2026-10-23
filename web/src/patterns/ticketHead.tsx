@@ -14,6 +14,7 @@ import {
   Avatar,
   Button,
   Checklist,
+  type ChecklistProps,
   type Fact,
   Facts,
   Mark,
@@ -168,6 +169,13 @@ export function TicketHead({ t, me, now, plan, stop, place, owner }: TicketHeadP
   );
 }
 
+/** Where the ticket is seen chooses the plan's rows: the page's at body size, the peek's shorter so
+ *  its conversation fits beside it. */
+const PLAN_LOOK = { page: "page", peek: "peek" } as const satisfies Record<
+  Place,
+  ChecklistProps["look"]
+>;
+
 /** The ticket's plan (TASKS.md): how much of it is done after its name (Linear's sub-issues: a pie
  *  as far as it is, then the count), then its items, or a quiet line while there is none. */
 export function PlanSection({ plan, place }: { plan: readonly PlanItem[]; place: Place }) {
@@ -187,7 +195,7 @@ export function PlanSection({ plan, place }: { plan: readonly PlanItem[]; place:
   return (
     <Section title="Plan" {...(plan.length > 0 ? { aside } : {})}>
       {plan.length > 0 ? (
-        <Checklist items={plan} look={place} />
+        <Checklist items={plan} look={PLAN_LOOK[place]} />
       ) : (
         <Text tone="3">No plan yet.</Text>
       )}
