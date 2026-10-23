@@ -1,9 +1,9 @@
 /* The form controls (Field, TextArea, NumberField, Toggle, Checkbox, Radio, FormRow): flat inputs,
-   a fill with no edge, a step firmer on hover, the focus ring on focus; text in ink at the rows'
+   a fill (on Paper white on a hairline), a step firmer on hover, the focus ring on focus; text in ink at the rows'
    size. */
 .box {
   min-width: 0;
-  border: var(--line-1) solid transparent;
+  border: var(--line-1) solid var(--ctl-rest-edge);
   border-radius: var(--r-2);
   background: var(--input);
   color: var(--ink-1);
@@ -45,6 +45,7 @@
   padding: 0 var(--sp-3) 0 var(--sp-5);
   border-radius: var(--r-3);
   background: var(--field);
+  box-shadow: inset 0 0 0 var(--line-1) var(--ctl-rest-edge);
   color: var(--ink-3);
   font-size: var(--fs-3);
   transition: background-color var(--dur-fast);
@@ -108,6 +109,7 @@
   width: calc(100% + var(--sp-3) * 2);
   margin-inline: calc(var(--sp-3) * -1);
   padding: var(--sp-1) var(--sp-3);
+  border-color: transparent;
   background: none;
 }
 .ghost:hover:not(.field) {

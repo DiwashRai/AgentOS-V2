@@ -1,4 +1,4 @@
-/* Chip: the kit's one tag. A flat tag of faint ink, no outline (nothing in the kit is), regular
+/* Chip: the kit's one tag. A flat tag of faint ink (on Paper white on a faint hairline), regular
    muted words cut at their end, led by a muted glyph or a state's dot; something quieter after the
    words; a remove at its end that lights on hover, the tag's padding tucked in round it */
 .chip {
@@ -12,6 +12,7 @@
   padding: 0 var(--sp-4);
   border-radius: var(--r-2);
   background: var(--list-chip-fill);
+  box-shadow: inset 0 0 0 var(--line-1) var(--tag-edge);
   color: var(--ink-2);
   font-size: var(--fs-2);
   font-weight: 400;
@@ -27,7 +28,8 @@
   border-radius: var(--r-pill);
 }
 .chip[data-tone="fill"] {
-  background: var(--fill-3);
+  background: var(--chip-firm);
+  box-shadow: inset 0 0 0 var(--line-1) var(--chip-firm-edge);
 }
 .chip[data-tone="blocked"] {
   color: var(--blocked);

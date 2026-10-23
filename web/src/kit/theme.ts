@@ -1,16 +1,12 @@
 // Themes: `data-theme` on <html>. index.html applies the saved one before first paint with the
 // same key and values, so keep the two in sync. Each id has a block in tokens.css.
-export type ThemeId = "light" | "mist" | "dark" | "midnight" | "harbour" | "plum";
+export type ThemeId = "light" | "dark";
 
 const KEY = "agentos-theme";
 
 export const THEMES: readonly { id: ThemeId; name: string; mode: string }[] = [
   { id: "light", name: "Paper", mode: "Light · white" },
-  { id: "mist", name: "Mist", mode: "Light · cool grey" },
-  { id: "dark", name: "Carbon", mode: "Dark · warm graphite" },
-  { id: "midnight", name: "Midnight", mode: "Dark · near-black" },
-  { id: "harbour", name: "Harbour", mode: "Dark · lifted navy" },
-  { id: "plum", name: "Plum", mode: "Dark · aubergine" },
+  { id: "dark", name: "Carbon", mode: "Dark · pitch black" },
 ];
 
 /** A theme id from outside (the menu's choice, the attribute); anything unknown is the default. */

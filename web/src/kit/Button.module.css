@@ -1,5 +1,5 @@
-/* Flat controls: a button is a fill, never an edge. At rest a soft fill of ink over whatever it sits
-   on, under the pointer a step firmer; the weight never changes by state. `you` is the primary, the
+/* Flat controls: on Carbon a button is a fill, on Paper white on a hairline (Linear's light). At rest
+   over whatever it sits on, under the pointer a fill a step firmer; the weight never changes by state. `you` is the primary, the
    accent's one solid fill with white on it; `accent` the logo's ink, only Dispatch run. */
 .btn {
   flex: none;
@@ -10,7 +10,7 @@
   height: var(--h-control);
   padding: 0 var(--sp-6);
   border-radius: var(--r-2);
-  border: var(--line-1) solid transparent;
+  border: var(--line-1) solid var(--ctl-rest-edge);
   background: var(--ctl);
   color: var(--ink-1);
   font-size: var(--fs-3);
@@ -90,6 +90,10 @@
 .quiet,
 .link {
   background: transparent;
+}
+/* a filled or quiet button draws no rest edge */
+.btn:is(.you, .accent, .quiet) {
+  border-color: transparent;
 }
 .quiet {
   color: var(--ink-2);

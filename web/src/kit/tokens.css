@@ -12,25 +12,23 @@
    sheet (a popover: its hairline and its soft shadow).
    Hue rules: --you is the theme's one accent and it means "act here" or "this one": your move, a
    primary button, the current tab, the current view's glyph, a check, a switch, focus (indigo on
-   Paper, Mist and Carbon, royal blue on Midnight, teal on Harbour, orchid on Plum, each with white
-   on it). The state hues (orange running, red blocked, green done) live in glyphs and meters; their
+   Paper and Carbon, with white on it). The state hues (orange running, red blocked, green done) live in glyphs and meters; their
    words stay in ink. The --id-* hues are people's faces. Text pairs keep >= 4.5:1.
-   Themes (kit/theme.ts lists them, index.html allows them): two light, four dark, all on the same
-   names. Each light theme takes the Paper block and each dark one the Carbon block, which mix every
-   other colour from a few steps (the sheet --page, the ground --side), the inks and, in the dark,
-   the theme's own wash (--wash for fills, --hair for lines); a theme further down sets those and
-   its accent and so gets its own hue top to bottom. A new colour token is a color-mix of those, or
-   white or black at low alpha, never a raw neutral. */
+   Themes (kit/theme.ts lists them, index.html allows them): Paper (light) and Carbon (dark), on the
+   same names. Each block mixes every other colour from a few steps (the sheet --page, what is raised
+   on it --raised, the ground --side), the inks and its wash (--wash for fills, --hair for lines). A
+   new colour token is a color-mix of those, or white or black at low alpha, never a raw neutral. */
 
-/* Paper · light · default: a white sheet set into a pale cool ground, one indigo; its tones and
-   fills a cool slate, faint, so a card is told by its hairline more than its shade. */
+/* Paper · light · default: Linear's light: a sheet a hair off white in a pale cool ground, one indigo.
+   What sits on the sheet (a card, a control, a field, a tag) is white on a hairline, a shade lighter
+   than the sheet, never darker; grey is left to a group's band, a hover and a pressed control, each a
+   faint cool slate. */
 :root:not([data-theme]),
-[data-theme="light"],
-[data-theme="mist"] {
+[data-theme="light"] {
   color-scheme: light;
   /* themes · the steps: the sheet (and what sits flush on it), the ground under it */
-  --page: #ffffff;
-  --recess: #ffffff;
+  --page: #fcfcfd;
+  --recess: #fcfcfd;
   --surface: #ffffff;
   --raised: #ffffff;
   --side: color-mix(in srgb, var(--wash) 3.5%, var(--page));
@@ -43,11 +41,11 @@
   /* the wash the tones and fills are mixed from (--wash) and the lines' (--hair): a cool slate */
   --wash: #2a3b6e;
   --hair: #2a3b6e;
-  /* flat: the tones on the sheet (a card, the Talk column) and the fills over anything (a hover, a
-     control at rest, a control pressed), each a small step */
-  --tone-1: color-mix(in srgb, var(--wash) 1%, var(--page));
-  --tone-2: color-mix(in srgb, var(--wash) 1.6%, var(--page));
-  --tone-3: color-mix(in srgb, var(--wash) 2.8%, var(--page));
+  /* flat: the tones on the sheet (a card, the Talk column), white over it, a card under the pointer a
+     faint step into it; the fills over anything (a hover, a pressed control), each a small step */
+  --tone-1: var(--raised);
+  --tone-2: var(--raised);
+  --tone-3: color-mix(in srgb, var(--wash) 2.4%, var(--raised));
   --fill-1: color-mix(in srgb, var(--wash) 3%, transparent);
   --fill-2: color-mix(in srgb, var(--wash) 4.8%, transparent);
   --fill-3: color-mix(in srgb, var(--wash) 8%, transparent);
@@ -87,7 +85,7 @@
   /* sidebar: on the ground, its labels near the ink; the current view lit to the sheet's own white */
   --side-ink: color-mix(in srgb, var(--ink-1) 86%, var(--side));
   --side-hover: var(--fill-1);
-  --side-on: var(--page);
+  --side-on: var(--raised);
   --side-on-ink: var(--ink-1);
   /* ticket: the ticket page and the peek */
   --tk-ink: var(--ink-1); /* body-size text: a property, a plan item, a message */
@@ -95,7 +93,7 @@
   --tk-scrim: color-mix(in srgb, var(--ink-1) 28%, transparent);
   /* the popover: the sheet's white on its one hairline, lifted by a soft shadow (the one layer that
      floats, so the one shadow) */
-  --pop: var(--page);
+  --pop: var(--raised);
   --pop-hover: var(--fill-2);
   --pop-rule: var(--fill-2);
   --pop-shadow:
@@ -103,12 +101,8 @@
     0 2px 6px color-mix(in srgb, #000000 6%, transparent);
 }
 
-/* Carbon · dark · default: a cool near-black sheet a step over a blacker ground, Linear's indigo.
-   Midnight, Harbour and Plum take this block and set its steps, washes, inks and accent. */
-[data-theme="dark"],
-[data-theme="midnight"],
-[data-theme="plum"],
-[data-theme="harbour"] {
+/* Carbon · dark: a pitch sheet a step over a blacker ground, Linear's indigo. */
+[data-theme="dark"] {
   color-scheme: dark;
   /* themes · the steps: a pitch sheet (CIE L* about 5, Linear's), the ground a little under it */
   --page: #0f1012;
@@ -177,80 +171,6 @@
     0 2px 8px color-mix(in srgb, #000000 30%, transparent);
 }
 
-/* themes · Mist · light: Linear's Ash. A cool blue-grey ground under the white sheet; inks lean
-   slate; the accent a deeper, bluer indigo. */
-[data-theme="mist"] {
-  --side: #e9ecf2;
-  --ink-1: #1a1f2e;
-  --ink-2: #474e61;
-  --ink-3: #545c6f;
-  --ink-hover: #2a3042;
-  --focus: #4352ad;
-  --you: #4352ad;
-  --you-text: #3c4a9e;
-  --live-text: #a8390b;
-  --done-text: #116a33;
-  --blocked: #b42323;
-}
-
-/* themes · Midnight · dark: a cool blue-black, the deepest theme: a near-black sheet over a black
-   ground, washed with a cold steel; inks run whiter. The accent a royal blue. */
-[data-theme="midnight"] {
-  --page: #0e1014;
-  --recess: #0e1014;
-  --surface: #171a20;
-  --raised: #1d2028;
-  --side: color-mix(in srgb, #000000 42%, var(--page));
-  --ink-1: #eef1f7;
-  --ink-2: #b2b8c5;
-  --ink-3: #9da4b3;
-  --ink-hover: #d6dbe5;
-  --wash: #c8d4ec;
-  --hair: #c8d4ec;
-  --you: #2563eb;
-  --you-text: #9db9ff;
-  --focus: #5b8cff;
-}
-
-/* themes · Harbour · dark: a lifted navy, the lightest dark theme (sheet L* about 17), washed with a
-   sky blue. The accent a deep harbour teal. */
-[data-theme="harbour"] {
-  --page: #1c2b3e;
-  --recess: #1c2b3e;
-  --surface: #2a394d;
-  --raised: #304054;
-  --side: color-mix(in srgb, #000000 26%, var(--page));
-  --ink-1: #e2ebf7;
-  --ink-2: #b9c6d6;
-  --ink-3: #adbacb;
-  --ink-hover: #ccd7e6;
-  --wash: #b7d8fb;
-  --hair: #b7d8fb;
-  --blocked: #ffa0a0;
-  --you: #0e7c7b;
-  --you-text: #7fd8d1;
-  --focus: #3fbfb5;
-}
-
-/* themes · Plum · dark: aubergine velvet, a deep red-violet sheet over a darker ground, washed with
-   orchid; inks lean pink. The accent an orchid, well clear of running's orange. */
-[data-theme="plum"] {
-  --page: #241023;
-  --recess: #241023;
-  --surface: #301c2e;
-  --raised: #382336;
-  --side: color-mix(in srgb, #000000 32%, var(--page));
-  --ink-1: #fbe8f9;
-  --ink-2: #dac6d7;
-  --ink-3: #cbb3c7;
-  --ink-hover: #ebd9e7;
-  --wash: #f2c7ed;
-  --hair: #f2c7ed;
-  --you: #9333c0;
-  --you-text: #e3b0f5;
-  --focus: #d08cf0;
-}
-
 /* Derived per theme: mixed from a theme's own steps, so a subtree with its own theme (the swatches,
    the kit sheet) mixes its own. Each names the role it plays and maps it onto the tones. */
 :root:not([data-theme]),
@@ -281,6 +201,14 @@
   --chip-hover: var(--fill-1);
   --chip-on: var(--fill-2);
   --chip-rest: var(--fill-1); /* a property you can change, at rest (a picker's chip) */
+  /* the rest edges: a button's, a field's and a tag's (none on Carbon, where the fill shows it), a
+     picker chip's faint line */
+  --ctl-rest-edge: transparent;
+  --tag-edge: transparent;
+  --select-edge: var(--fill-2);
+  /* a firmer tag (a list row's Now) and its edge */
+  --chip-firm: var(--fill-3);
+  --chip-firm-edge: transparent;
   --pop-edge: var(--edge);
   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
   /* surfaces on the sheet: a board's card one tone, a step more under the pointer; the run card
@@ -334,6 +262,22 @@
   --priority-none: color-mix(in srgb, var(--ink-1) 34%, transparent);
   --type-square: var(--fill-2);
   --type-glyph: var(--ink-2);
+}
+
+/* Paper's controls and tags, over the derived ones: white at rest on a hairline, as Linear's light
+   buttons, fields and labels are, so nothing at rest is a grey slab; a hover still fills a step */
+:root:not([data-theme]),
+[data-theme="light"] {
+  --ctl: var(--raised);
+  --input: var(--raised);
+  --field: var(--raised);
+  --chip-rest: var(--raised);
+  --list-chip-fill: var(--raised);
+  --ctl-rest-edge: var(--rule-strong);
+  --select-edge: var(--rule-strong);
+  --tag-edge: var(--rule);
+  --chip-firm: var(--raised);
+  --chip-firm-edge: var(--rule-strong);
 }
 
 /* Theme-independent */
