@@ -136,9 +136,12 @@ export interface LastRun {
 interface SummaryProps {
   stage: Stage;
   lib: Library;
-  /** all: the editor's closed card; compact: the ticket's tab, no prompt line; head: an opened
-   *  card, whose settings under it show the prompt and the chips. */
-  show?: "all" | "compact" | "head";
+  /** Where the stage is seen: the workflow editor's lane, or the ticket's Workflow tab, which
+   *  leaves out the prompt's line. */
+  on: "editor" | "ticket";
+  /** The stage open for editing in the editor: its settings under it show the prompt and the
+   *  chips, so the card has neither. */
+  editing?: boolean;
   /** The stage's last run (the ticket's tab): a glyph before the name, its words after it. */
   run?: LastRun | null;
   fresh?: Fresh | null;
@@ -182,8 +185,8 @@ function HeadLine({ stage, run, grip }: { stage: Stage; run: LastRun | null; gri
   );
 }
 
-export function StageSummary({ stage, lib, show = "all", run, fresh, grip }: SummaryProps) {
-  const prompt = stage.kind === "agent" && show === "all" ? stage.prompt : "";
+export function StageSummary({ stage, lib, on, editing = false, run, fresh, grip }: SummaryProps) {
+  const prompt = stage.kind === "agent" && on === "editor" && !editing ? stage.prompt : "";
   return (
     <Stack gap={3}>
       <HeadLine stage={stage} run={run ?? null} grip={grip} />
@@ -193,7 +196,7 @@ export function StageSummary({ stage, lib, show = "all", run, fresh, grip }: Sum
           {firstLine(prompt)}
         </Text>
       ) : null}
-      {show === "head" ? null : <StageChips stage={stage} lib={lib} fresh={fresh ?? null} />}
+      {editing ? null : <StageChips stage={stage} lib={lib} fresh={fresh ?? null} />}
     </Stack>
   );
 }

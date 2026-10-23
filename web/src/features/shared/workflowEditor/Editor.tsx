@@ -178,7 +178,8 @@ function stagesOf({ draft, lib, problems, selected, select, fresh, land }: LaneP
             <StageSummary
               stage={s}
               lib={lib}
-              show={selected === s.id ? "head" : "all"}
+              on="editor"
+              editing={selected === s.id}
               fresh={here}
               grip={grip}
             />

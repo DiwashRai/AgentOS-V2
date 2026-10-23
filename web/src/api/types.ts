@@ -387,6 +387,7 @@ export interface Run {
   id: number;
   state: RunState;
   route: "runner" | "mailbox" | "client";
+  /** Who started it; null when no person did (AgentOS itself, as V1's null creator meant). */
   by: Person | null;
   /** The stage it was dispatched from (by stage id). */
   from_stage: string;

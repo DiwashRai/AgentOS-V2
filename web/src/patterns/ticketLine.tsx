@@ -4,6 +4,8 @@
 // fixed columns (the stage, the source), the age and the owner's face, so they read down the list
 // as a ledger, not a pile of pills. Each screen sets what leads that end (its Now tag, a row's
 // buttons).
+import type { ReactElement } from "react";
+
 import type { Person, Priority, TicketRow, TicketType } from "../api/types";
 import {
   markOf,
@@ -39,13 +41,15 @@ const TYPE_WORD: Record<TicketType, string> = {
 
 /** The right end every line shares, on fixed columns so each ends on one edge in every row and
  *  group: the stage, the source, the age, the face (unlabelled: a face says what it is). What
- *  they leave goes to the title. */
-export const LINE_END: readonly Column[] = [
-  { label: "Stage", width: "sm" },
-  { label: "Source", width: "sm" },
-  { label: "Age", width: "xs", end: true },
-  { label: "", width: "face", end: true },
+ *  they leave goes to the title. Each column names its cell, so `lineEnd` draws one per column. */
+type EndCell = "stage" | "source" | "age" | "owner";
+const END: readonly (readonly [EndCell, Column])[] = [
+  ["stage", { label: "Stage", width: "sm" }],
+  ["source", { label: "Source", width: "sm" }],
+  ["age", { label: "Age", width: "xs", end: true }],
+  ["owner", { label: "", width: "face", end: true }],
 ];
+export const LINE_END: readonly Column[] = END.map(([, column]) => column);
 
 /** The priority bars, then the key (its type on hover: a row's one glyph is its status). */
 export function KeyCell({ t }: { t: TicketRow }) {
@@ -96,14 +100,19 @@ export function TicketTitle({ t, me }: { t: TicketRow; me: Person | null }) {
 export function lineEnd({ t, me, now }: { t: TicketRow; me: Person | null; now: number }) {
   const stage = stageWord(stageModel(t, me));
   const source = sourceText(t);
-  return [
-    <Text key="stage" variant="meta" tone="2" truncate title={stage.path}>
-      {stage.word}
-    </Text>,
-    <Text key="source" variant="meta" tone="3" truncate title={source}>
-      {source}
-    </Text>,
-    <TicketAge key="age" t={t} now={now} />,
-    <Who key="owner" who={fromPerson(t.owner)} place="face" />,
-  ];
+  const cells: Record<EndCell, ReactElement> = {
+    stage: (
+      <Text key="stage" variant="meta" tone="2" truncate title={stage.path}>
+        {stage.word}
+      </Text>
+    ),
+    source: (
+      <Text key="source" variant="meta" tone="3" truncate title={source}>
+        {source}
+      </Text>
+    ),
+    age: <TicketAge key="age" t={t} now={now} />,
+    owner: <Who key="owner" who={fromPerson(t.owner)} place="face" />,
+  };
+  return END.map(([cell]) => cells[cell]);
 }

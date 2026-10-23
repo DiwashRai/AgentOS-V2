@@ -53,17 +53,24 @@ const COLUMNS: readonly Column[] = [
 function Legend({ stages }: { stages: readonly { name: string; n: number }[] }) {
   return (
     <>
-      <Text variant="meta" tone="2" tabular>
-        <Tally n={stages.reduce((n, st) => n + st.n, 0)} one="in flight" many="in flight" />
+      <Stack dir="row" gap={3} align="center">
+        <Tally
+          n={stages.reduce((n, st) => n + st.n, 0)}
+          one="ticket in flight"
+          many="tickets in flight"
+        />
         {stages.map((st) => (
-          <Text key={st.name} tone={st.n > 0 ? "2" : "3"}>
-            {` · ${st.name} `}
-            <Text weight={600} tone={st.n > 0 ? "1" : "3"}>
-              {String(st.n)}
+          <Stack key={st.name} dir="row" gap={3} align="center">
+            <Text variant="meta">·</Text>
+            <Text variant="meta" tone={st.n > 0 ? "2" : "3"} tabular>
+              {`${st.name} `}
+              <Text weight={600} tone={st.n > 0 ? "1" : "3"}>
+                {String(st.n)}
+              </Text>
             </Text>
-          </Text>
+          </Stack>
         ))}
-      </Text>
+      </Stack>
       <Text variant="meta">Inbox and merged work live in each repo&apos;s list.</Text>
     </>
   );

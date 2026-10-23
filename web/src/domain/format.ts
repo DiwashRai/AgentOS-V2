@@ -53,9 +53,14 @@ export function elapsed(from: string, now: number): string {
   return `${String(Math.floor(s / 60))}:${String(s % 60).padStart(2, "0")}`;
 }
 
+/** The noun a count takes: "query" for 1, "queries" for any other. */
+export function nounFor(n: number, one: string, many = `${one}s`): string {
+  return n === 1 ? one : many;
+}
+
 /** "1 query", "2 queries". */
 export function plural(n: number, one: string, many = `${one}s`): string {
-  return `${String(n)} ${n === 1 ? one : many}`;
+  return `${String(n)} ${nounFor(n, one, many)}`;
 }
 
 /** A size in bytes as people read it: 312 B, 1.4 KB. */

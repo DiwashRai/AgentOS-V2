@@ -56,7 +56,7 @@ function Stages({ w, runs, lib }: { w: TicketWorkflow; runs: readonly Run[]; lib
             <StageSummary
               stage={s}
               lib={lib}
-              show="compact"
+              on="ticket"
               run={s.enabled ? lastRun(runs, s.id, roundsOf(w, i)) : null}
             />
           </Card>
