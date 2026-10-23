@@ -1,0 +1,233 @@
+// A workflow's stages top to bottom, as Cards on a lane whose axis runs through their faces.
+// Between two cards a joint: the gate after the stage as a diamond on the axis (the ticket
+// stepper's), and, while editing, the + that inserts a stage there. A loop is a bracket round its
+// stages, a faint band with its foot (up to N rounds) under its last card. Editing, the cards
+// stand on the column's own edge, the bracket at their right, and the stages reorder on a
+// Sortable (a handle in each card's head, a drop line, ↑ ↓) that also takes drops between cards;
+// the diamond is a toggle, and it and the + show as their card is hovered. Read only, it is the
+// same lane with none of that.
+import type { ReactNode } from "react";
+
+import { Button } from "./Button";
+import type { DragPayload } from "./dnd";
+import s from "./Lane.module.css";
+import u from "./unseen.module.css";
+import { Sortable } from "./Sortable";
+import { Tip } from "./tip";
+
+export interface LaneStage {
+  id: string;
+  /** Its name: what its handle, its gate and its + say ("Move Plan", "Add a gate after Plan"). */
+  label: string;
+  /** The stage's Card (inside a Drop while editing), given its handle to place in its head (none
+   *  read only). */
+  content: (grip: ReactNode) => ReactNode;
+  /** The gate after it, by name, or none. */
+  gate: string | null;
+  /** Why no gate can go after it, when none can (the workflow's rule, said by the screen): its
+   *  empty diamond is inert and says so. */
+  noGate?: string;
+}
+
+export interface LaneLoop {
+  /** The first and the last stage it repeats, by id. */
+  first: string;
+  last: string;
+  /** Its foot under the last card: its rounds (a number field while editing), what's wrong. */
+  foot: ReactNode;
+}
+
+export interface LaneEdit {
+  /** A stage dragged (or moved by ↑ ↓) from one index to another. */
+  onMove: (from: number, to: number) => void;
+  /** The diamond after the stage at this index: the gate on or off. */
+  onGate: (i: number) => void;
+  /** The + after the stage at `at - 1`: a new stage at slot `at`. */
+  onInsert: (at: number) => void;
+  /** Kinds dropped on the lane between cards (an agent: a new stage with it). */
+  accept: readonly string[];
+  onDrop: (payload: DragPayload, at: number) => void;
+  /** The drop line drawn at this slot: a still of a drag. */
+  preview?: number;
+}
+
+export interface LaneProps {
+  /** The list's accessible name. */
+  label: string;
+  stages: readonly LaneStage[];
+  loops: readonly LaneLoop[];
+  /** The editing affordances; none draws the lane read only. */
+  edit?: LaneEdit;
+}
+
+type Pos = "first" | "mid" | "last" | "only";
+
+/** The place of stage `k` in a loop from `a` to `b`. */
+function posIn(k: number, a: number, b: number): Pos {
+  if (a === b) return "only";
+  if (k === a) return "first";
+  return k === b ? "last" : "mid";
+}
+
+/** Each stage's place in a loop, if it is in one, and the foot under a loop's last stage. */
+function places(stages: readonly LaneStage[], loops: readonly LaneLoop[]) {
+  const pos = new Map<number, Pos>();
+  const feet = new Map<number, ReactNode>();
+  const at = (id: string) => stages.findIndex((st) => st.id === id);
+  for (const loop of loops) {
+    const [a, b] = [at(loop.first), at(loop.last)];
+    if (a < 0 || b < a) continue;
+    for (let k = a; k <= b; k++) pos.set(k, posIn(k, a, b));
+    feet.set(b, loop.foot);
+  }
+  return { pos, feet };
+}
+
+interface JointProps {
+  st: LaneStage;
+  i: number;
+  last: boolean;
+  edit: LaneEdit | undefined;
+}
+
+/** The gate's diamond on the axis: a toggle while editing, a mark when read only. Where no gate can
+ *  go (`noGate`) an empty slot is inert and says why; one that got there by a reorder stays a
+ *  toggle, so it can be taken off. */
+function Diamond({ st, i, edit }: Omit<JointProps, "last">) {
+  // read only, the gate's name is written beside it: the diamond is drawing alone
+  if (!edit) return <span className={s.gate} data-on aria-hidden="true" />;
+  const on = st.gate !== null;
+  if (st.noGate !== undefined && !on)
+    return (
+      <Tip text={st.noGate} said>
+        <span className={s.gate} data-inert role="img" aria-label={st.noGate} />
+      </Tip>
+    );
+  const say = on
+    ? `Gate after ${st.label}: ${st.gate ?? ""}. Click to remove it`
+    : `Add a gate after ${st.label}`;
+  return (
+    <Tip text={say} said>
+      <button
+        type="button"
+        className={s.gate}
+        data-on={on || undefined}
+        aria-pressed={on}
+        aria-label={say}
+        onClick={() => {
+          edit.onGate(i);
+        }}
+      />
+    </Tip>
+  );
+}
+
+/** The + after a stage: a new stage there; after the last, it says so in words. */
+function Insert({ st, i, last, edit }: JointProps & { edit: LaneEdit }) {
+  const add = () => {
+    edit.onInsert(i + 1);
+  };
+  const say = `${last ? "Add" : "Insert"} a stage after ${st.label}`;
+  return last ? (
+    <Button variant="quiet" size="xs" icon="plus" title={say} onClick={add}>
+      Add stage
+    </Button>
+  ) : (
+    <Button variant="quiet" size="xs" icon="plus" title={say} onClick={add} />
+  );
+}
+
+/** A gate's name on the axis: read only, it says it is a gate; editing, the diamond's toggle says
+ *  it all, so the name is drawing alone. */
+function GateName({ name, editing }: { name: string; editing: boolean }) {
+  if (editing)
+    return (
+      <span className={s.name} aria-hidden="true">
+        {name}
+      </span>
+    );
+  return (
+    <span className={s.name}>
+      <span className={u.unseen}>Gate: </span>
+      {name}
+    </span>
+  );
+}
+
+/** Between a card and the next: the axis, the gate's diamond and name, and the + while editing. */
+function Joint({ st, i, last, edit }: JointProps) {
+  const gated = st.gate !== null;
+  if (!edit && !gated && last) return null;
+  return (
+    <div className={s.joint} data-end={last || undefined}>
+      {edit || gated ? <Diamond st={st} i={i} edit={edit} /> : null}
+      {st.gate === null ? null : <GateName name={st.gate} editing={edit !== undefined} />}
+      {edit ? <Insert st={st} i={i} last={last} edit={edit} /> : null}
+    </div>
+  );
+}
+
+interface RowProps extends JointProps {
+  pos: Pos | undefined;
+  foot: ReactNode;
+  grip: ReactNode;
+}
+
+/** A card and the joint after it; in a loop, its piece of the band (the joint too, unless the
+ *  loop ends here, where the loop's foot goes instead). */
+function Row({ st, i, last, edit, pos, foot, grip }: RowProps) {
+  const inside = pos === "first" || pos === "mid";
+  const joint = <Joint st={st} i={i} last={last} edit={edit} />;
+  return (
+    <div className={s.row} data-first={i === 0 || undefined} data-last={last || undefined}>
+      <div className={s.block} data-loop={pos}>
+        {pos ? <span className={s.band} data-pos={pos} aria-hidden="true" /> : null}
+        <div className={s.card}>{st.content(grip)}</div>
+        {foot ? <div className={s.foot}>{foot}</div> : null}
+        {inside ? joint : null}
+      </div>
+      {inside ? null : joint}
+    </div>
+  );
+}
+
+export function Lane({ label, stages, loops, edit }: LaneProps) {
+  const { pos, feet } = places(stages, loops);
+  const rows = stages.map((st, i) => ({
+    id: st.id,
+    label: st.label,
+    content: (grip: ReactNode) => (
+      <Row
+        st={st}
+        i={i}
+        last={i === stages.length - 1}
+        edit={edit}
+        pos={pos.get(i)}
+        foot={feet.get(i)}
+        grip={grip}
+      />
+    ),
+  }));
+  return (
+    <div className={s.lane} data-edit={edit !== undefined || undefined}>
+      {edit ? (
+        <Sortable
+          label={label}
+          items={rows}
+          onMove={edit.onMove}
+          accept={edit.accept}
+          onDrop={edit.onDrop}
+          {...(edit.preview !== undefined ? { preview: edit.preview } : {})}
+        />
+      ) : (
+        <div role="list" aria-label={label}>
+          {rows.map((r) => (
+            <div key={r.id} role="listitem">
+              {r.content(null)}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

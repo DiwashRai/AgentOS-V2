@@ -1,0 +1,64 @@
+.av {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: var(--fs-face);
+  font-weight: 600;
+  letter-spacing: var(--track-snug);
+  line-height: 1;
+  color: var(--id-on);
+  background: var(--id);
+}
+/* small, a face is one neutral disc (initials say who) */
+.sm {
+  width: var(--h-face-sm);
+  height: var(--h-face-sm);
+  color: var(--face-ink);
+  background: var(--face);
+  font-size: var(--fs-face-sm);
+}
+/* in rows and pickers: one slate disc for everyone with white initials, so a list's colour is left
+   to its states */
+.md {
+  width: var(--h-face);
+  height: var(--h-face);
+  background: var(--face-row);
+  font-size: var(--fs-face);
+}
+.talk {
+  width: var(--sp-9);
+  height: var(--sp-9);
+  font-size: var(--fs-1);
+}
+.lg {
+  width: var(--h-avatar-lg);
+  height: var(--h-avatar-lg);
+  font-size: var(--fs-2);
+}
+.slot {
+  background: none;
+}
+/* Unassigned: a dashed circle, at the strength of a quiet glyph */
+.dashed {
+  border: var(--line-mark) dashed var(--face-dashed);
+}
+.violet {
+  --id: var(--id-violet);
+}
+.blue {
+  --id: var(--id-blue);
+}
+.rose {
+  --id: var(--id-rose);
+}
+.teal {
+  --id: var(--id-teal);
+}
+.slate {
+  --id: var(--id-slate);
+}
+.faces {
+  display: inline-flex;
+  gap: var(--sp-1);
+}

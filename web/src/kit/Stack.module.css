@@ -1,0 +1,46 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+}
+.stack[data-dir="row"] {
+  flex-direction: row;
+}
+.stack[data-align="start"] {
+  align-items: flex-start;
+}
+.stack[data-align="center"] {
+  align-items: center;
+}
+.stack[data-align="baseline"] {
+  align-items: baseline;
+}
+.stack[data-align="end"] {
+  align-items: flex-end;
+}
+.stack[data-justify="end"] {
+  justify-content: flex-end;
+}
+.stack[data-justify="between"] {
+  justify-content: space-between;
+}
+.wrap {
+  flex-wrap: wrap;
+}
+.grow {
+  flex: 1 1 0;
+}
+.cols {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  align-items: start;
+}
+.cols[data-cols="2"] {
+  /* two columns, each at least half the width (so never three), falling to one when a column
+     would be narrower than a form column */
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, max(var(--w-form-col), calc((100% - var(--gap)) / 2))), 1fr)
+  );
+}

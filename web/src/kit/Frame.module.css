@@ -1,0 +1,305 @@
+/* the frame: two planes and one line. The ground runs under everything; the sidebar sits on it, and
+   the main column is the sheet, set into the ground by a small margin with a rounded corner (a step
+   of tone, its rim the one line, no shadow), a sized flex column so a screen that fills it (flex: 1)
+   scrolls to its foot. The sheet is the one plane a view lies on: a list's rows lie straight on it */
+.app {
+  display: grid;
+  grid-template-columns: var(--w-side) minmax(0, 1fr);
+  min-height: 100dvh;
+  background: var(--side);
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: calc(100dvh - var(--inset) * 2);
+  margin: var(--inset) var(--inset) var(--inset) 0;
+  padding: 0 var(--gutter);
+  border-radius: var(--r-5);
+  background: var(--page);
+  outline: var(--sheet-rim-w) solid var(--sheet-rim);
+  overflow-y: auto;
+}
+
+/* the sidebar: a labelled list straight on the ground; 13px medium labels on 28px rows, 16px icons
+   under the label's ink, the current view lit to the sheet's own tone, its glyph in the accent */
+.side {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--side-gap);
+  min-width: 0;
+  /* its head level with the sheet's top bar, which the inset sets down */
+  padding: var(--inset) var(--sp-5) var(--sp-5);
+  overflow-y: auto;
+  scrollbar-width: none;
+  color: var(--side-ink);
+}
+
+/* the head, level with the top bar: the Space's switcher (its tile, its name, a chevron), the
+   signed-in person's face beside it and, at the row's end, Linear's two icon buttons, search bare
+   and new ticket a round fill */
+.head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: var(--h-top);
+  margin-bottom: var(--side-head-pull);
+}
+.switcher {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+  height: var(--h-side-item);
+  padding: 0 var(--sp-2) 0 var(--sp-3);
+  border: 0;
+  border-radius: var(--r-2);
+  background: none;
+  font: inherit;
+  color: var(--side-on-ink);
+  transition: background-color var(--dur-fast);
+}
+.switcher:hover,
+.switcher[data-popup-open] {
+  background: var(--side-hover);
+}
+.switcher svg {
+  flex: none;
+  margin-left: calc(var(--sp-2) * -1);
+  color: var(--side-title);
+}
+/* who is signed in: their face on their own hue, a ring of the ground's hover round it on hover */
+.me {
+  flex: none;
+  display: grid;
+  place-items: center;
+  margin-right: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  transition: box-shadow var(--dur-fast);
+}
+.me:hover,
+.me[data-popup-open] {
+  box-shadow: 0 0 0 var(--line-2) var(--side-on);
+}
+.tool {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--side-tool);
+  height: var(--side-tool);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-2);
+  background: none;
+  color: var(--side-icon);
+  transition:
+    background-color var(--dur-fast),
+    color var(--dur-fast);
+}
+.tool svg {
+  width: var(--sp-8);
+  height: var(--sp-8);
+}
+.tool:hover {
+  background: var(--side-hover);
+  color: var(--side-on-ink);
+}
+/* new ticket: the compose button, a round fill a step over the ground */
+/* compose: a circle on a hairline (Linear's), no disc of grey */
+.create {
+  border-radius: 50%;
+  background: none;
+  box-shadow: inset 0 0 0 var(--line-1) var(--rule-strong);
+  color: var(--side-ink);
+}
+.space {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--side-tile);
+  height: var(--side-tile);
+  border-radius: var(--r-1);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--fs-1);
+  font-weight: 600;
+  line-height: 1;
+}
+.spaceName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-3);
+  font-weight: 600;
+  letter-spacing: var(--track-snug);
+}
+/* the switcher's sheet: the Space's label, then who is signed in, their face on their own hue */
+.account {
+  min-width: var(--side-account-w);
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-2) var(--sp-4) var(--sp-4);
+}
+.whoText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.whoName {
+  font-size: var(--fs-3);
+  font-weight: 500;
+  letter-spacing: var(--track-snug);
+}
+.whoNote {
+  font-size: var(--fs-2);
+  color: var(--pop-aside);
+}
+
+/* a group of rows: 1px between them; the groups stand apart by --side-gap, so the views, a
+   section and the foot read as three */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--line-1);
+}
+
+/* a section's heading: Linear's muted 12px label with its caret; its text sits low, so it hugs its
+   entries and the open space falls above it. It folds the section away */
+.title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  align-self: flex-start;
+  height: var(--h-side-title);
+  padding: var(--side-title-open) var(--sp-4) 0;
+  border: 0;
+  border-radius: var(--r-2);
+  background: none;
+  font: inherit;
+  font-size: var(--fs-2);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--side-title);
+  transition: color var(--dur-fast);
+}
+.title:hover {
+  color: var(--side-ink);
+}
+.title svg {
+  transition: transform var(--dur-fast);
+}
+.title[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  min-width: 0;
+  height: var(--h-side-item);
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-2);
+  font-size: var(--fs-3);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--side-ink);
+  transition:
+    background-color var(--dur-fast),
+    color var(--dur-fast);
+}
+.item svg {
+  flex: none;
+  width: var(--sp-8);
+  height: var(--sp-8);
+  color: var(--kind, var(--side-icon));
+  transition: color var(--dur-fast);
+}
+.item:hover {
+  background: var(--side-hover);
+}
+.item[aria-current] {
+  background: var(--side-on);
+  color: var(--side-on-ink);
+}
+.item[aria-current] svg {
+  color: var(--kind, var(--you));
+}
+.item:focus-visible {
+  outline-offset: var(--focus-in);
+}
+/* an entry with no screen yet: the views' ink and weight, but no hover and no pointer */
+.stub {
+  cursor: default;
+}
+.stub:hover {
+  background: none;
+}
+.label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* a count: Linear's bare number at the row's end, tabular and muted, no box round it; on the
+   current row it takes the label's ink */
+.count {
+  flex: none;
+  font-size: var(--fs-2);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--side-title);
+  /* its own layer, so Chrome smooths it in grey: a lone "1" stem fringes blue or orange under
+     subpixel smoothing and reads as a coloured count */
+  will-change: transform;
+}
+.item[aria-current] .count {
+  color: var(--side-on-ink);
+}
+.spacer {
+  flex: 1;
+  margin-top: calc(var(--side-gap) * -1);
+}
+
+/* themes · the theme menu's swatch: the frame in miniature (the ground, the sheet set into it, on
+   the sheet a line of ink and one of the accent), ringed so a light one reads on a light menu */
+.swatches {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--line-3);
+  width: var(--w-swatch);
+  height: var(--h-swatch);
+  padding: 0 var(--sp-2) 0 calc(var(--w-swatch-side) + var(--sp-2));
+  border-radius: var(--r-1);
+  background: var(--page);
+  box-shadow:
+    inset var(--w-swatch-side) 0 0 var(--side),
+    inset 0 0 0 var(--line-2) var(--side),
+    0 0 0 var(--line-1) var(--ring-ink);
+}
+.swInk,
+.swYou {
+  display: block;
+  height: var(--line-2);
+  border-radius: var(--line-1);
+}
+.swInk {
+  background: var(--ink-2);
+}
+.swYou {
+  width: 60%;
+  background: var(--you);
+}

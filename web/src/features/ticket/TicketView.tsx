@@ -1,0 +1,200 @@
+// The ticket page (/t/:key), as Linear's project page: the bar (My queue › the key, the crumb the way
+// back; search; the ticket's actions), then one calm column (the title and lead, its labelled
+// property rows, the workflow's stepper with what happens now at its foot, the tabs) and beside it
+// the rail, Talk alone, its reply box at the window's foot. The tab is in the URL (?tab=), and so
+// is a full-window editor over the page (?edit=: tabs.ts, overlays.tsx).
+import { type ReactNode, useState } from "react";
+import { useParams } from "react-router";
+
+import { useItems, useMessages, usePeople, usePlan, useRuns, useTicket } from "../../api/queries";
+import type { Person, Ticket } from "../../api/types";
+import { stageModel } from "../../domain/board";
+import { firstName } from "../../domain/format";
+import { parsePlan, type PlanItem } from "../../domain/plan";
+import {
+  Chip,
+  Composer,
+  Notice,
+  Page,
+  Section,
+  Select,
+  Stack,
+  Stepper,
+  Tabs,
+  Text,
+  Thread,
+} from "../../kit";
+import { ActionButton, headerActions } from "../shared/Actions";
+import { threadMessage, useBoard } from "../shared/board";
+import { TicketMenu } from "../shared/TicketMenu";
+import { useSearch } from "../shared/useSearch";
+import { ContextTab } from "./ContextTab";
+import { Now } from "./now";
+import { PlanSection } from "./plan";
+import { TicketOverlays } from "./overlays";
+import { Properties } from "./properties";
+import { RunsTab } from "./RunsTab";
+import { type TabId, useTicketUrl } from "./tabs";
+import { TalkSection } from "./talk";
+import { WorkflowTab } from "./WorkflowTab";
+
+/** The owner, as a picker in its chip. */
+function Owner({ t }: { t: Ticket }) {
+  const people = usePeople().data ?? [];
+  const [owner, setOwner] = useState(t.owner ? String(t.owner.id) : "");
+  return (
+    <Select
+      label="Owner"
+      value={owner}
+      options={[
+        { id: "", label: "Unassigned" },
+        ...people.map((p) => ({ id: String(p.id), label: p.name, face: true })),
+      ]}
+      onChange={setOwner}
+    />
+  );
+}
+
+interface HeaderProps {
+  t: Ticket;
+  me: Person | null;
+  now: number;
+  plan: readonly PlanItem[];
+}
+
+/** The head, as Linear's project page: the title and lead, the labelled property rows under them,
+ *  then the run card (the stepper with what happens now at its foot). */
+function Header({ t, me, now, plan }: HeaderProps) {
+  const lead = t.description.split("\n\n")[0] ?? "";
+  return (
+    <Stack gap={8}>
+      <Stack gap={4}>
+        <Text variant="display" as="h1">
+          {t.title}
+        </Text>
+        <Text variant="body" as="p">
+          {lead}
+        </Text>
+      </Stack>
+      <Properties t={t} now={now} owner={{ picker: <Owner t={t} /> }} />
+      <Stepper model={stageModel(t, me)} now={<Now t={t} me={me} now={now} plan={plan} />} />
+    </Stack>
+  );
+}
+function Overview({
+  t,
+  plan,
+  items,
+}: {
+  t: Ticket;
+  plan: readonly PlanItem[];
+  items: readonly string[];
+}) {
+  const rest = t.description.split("\n\n").slice(1);
+  return (
+    <Stack gap={9}>
+      {rest.map((p, i) => (
+        <Text key={i} variant="body" as="p">
+          {p}
+        </Text>
+      ))}
+      <PlanSection plan={plan} look="page" />
+      <Section title="The agent reads">
+        <Stack dir="row" gap={3} wrap>
+          {items.map((name) => (
+            <Chip key={name} label={name} />
+          ))}
+        </Stack>
+      </Section>
+    </Stack>
+  );
+}
+
+/** The rail beside the page: Talk alone, the whole column a conversation (who is in it, the thread,
+ *  and the reply box at its foot). */
+function Rail({ t, me }: { t: Ticket; me: Person | null }) {
+  const messages = useMessages(t.key).data?.items ?? [];
+  const people = [...new Map(messages.map((m) => [m.author.id, m.author])).values()];
+  const others = people.filter((p) => p.id !== me?.id).map((p) => firstName(p.name));
+  const [draft, setDraft] = useState("");
+  return (
+    <Stack gap={9} grow>
+      <TalkSection people={people}>
+        <Thread messages={messages.map((m) => threadMessage(m, me))} />
+      </TalkSection>
+      <Composer
+        label={others.length > 0 ? `Say something to ${others.join(" and ")}` : "Say something"}
+        value={draft}
+        onChange={setDraft}
+        // W0 is static: sending arrives with the API, so the draft stays
+        onSend={() => undefined}
+      />
+    </Stack>
+  );
+}
+
+function Body({ t, me, now }: { t: Ticket; me: Person | null; now: number }) {
+  const plan = parsePlan(usePlan(t.key).data ?? "");
+  const runs = useRuns(t.key).data?.items ?? [];
+  const items = useItems(t.key).data?.items ?? [];
+  const { tab, setTab } = useTicketUrl();
+  const panels: Record<TabId, ReactNode> = {
+    overview: <Overview t={t} plan={plan} items={items.map((i) => i.name)} />,
+    runs: <RunsTab t={t} />,
+    context: <ContextTab t={t} />,
+    workflow: <WorkflowTab t={t} />,
+  };
+  return (
+    <Stack gap={8}>
+      <Header t={t} me={me} now={now} plan={plan} />
+      <Tabs
+        label="Ticket sections"
+        value={tab}
+        onChange={setTab}
+        items={[
+          { id: "overview", label: "Overview" },
+          { id: "runs", label: "Runs", count: runs.length },
+          { id: "context", label: "Context", count: items.length },
+          { id: "workflow", label: "Workflow" },
+        ]}
+      >
+        {panels[tab]}
+      </Tabs>
+      <TicketOverlays t={t} />
+    </Stack>
+  );
+}
+
+export function TicketView() {
+  const { key = "" } = useParams();
+  const ticket = useTicket(key);
+  const { me, now } = useBoard();
+  const { search } = useSearch();
+  const t = ticket.data;
+  return (
+    <Page
+      title={[{ label: "My queue", href: "/" }, key]}
+      search={search}
+      {...(t
+        ? {
+            action: [
+              ...headerActions(t.actions.filter((a) => a.id !== "cancel")).map((a) => (
+                <ActionButton key={a.id} action={a} place="header" />
+              )),
+              <TicketMenu key="more" t={t} size="md" />,
+            ],
+            // keyed by the ticket: a draft is one ticket's, and doesn't follow you to the next
+            side: { content: <Rail key={t.key} t={t} me={me} /> },
+          }
+        : {})}
+    >
+      {t ? (
+        <Body t={t} me={me} now={now} />
+      ) : (
+        <Notice kind="status" error={ticket.isError}>
+          {ticket.isError ? `Ticket not found · ${key}` : `Loading ${key}`}
+        </Notice>
+      )}
+    </Page>
+  );
+}

@@ -1,0 +1,181 @@
+/* side: the peek, a sheet set at the window's right edge, inset as the sheet itself is, the list
+   under it dimmed by the scrim (no shadow: the dimming is the lift), so the one thing lit is the
+   one thing to read */
+.side {
+  position: fixed;
+  inset: var(--sp-4) var(--sp-4) var(--sp-4) auto;
+  width: min(var(--w-peek), calc(100vw - var(--sp-10)));
+  height: auto;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-4);
+  background: var(--tk-side);
+  color: var(--ink-2);
+  overflow: hidden;
+}
+.side:focus-visible,
+.full:focus-visible {
+  outline: none;
+}
+.side::backdrop,
+.full::backdrop {
+  background: var(--tk-scrim);
+}
+.side[open] {
+  display: flex;
+  flex-direction: column;
+  animation: slide var(--dur-fast) var(--ease-out);
+}
+@keyframes slide {
+  from {
+    opacity: 0;
+    transform: translateX(var(--sp-9));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* the bar: the panel's chrome, pinned over the sections the way the foot is under them (the key,
+   then its buttons at the end); no rule: the sections fade out under it and under the foot */
+.bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: var(--h-top);
+  padding: 0 var(--sp-6) 0 var(--sp-9);
+}
+/* the Sections scroll inside the panel as one document (each draws its own padding), faded at
+   both ends, so a line half under the bar or the reply box says there is more */
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  /* a mask reads only alpha: the ink stands for opaque */
+  mask-image: linear-gradient(
+    transparent,
+    var(--ink-1) var(--sp-6),
+    var(--ink-1) calc(100% - var(--sp-10)),
+    transparent
+  );
+}
+/* where the panel's toasts dock: a line between the sections and the foot, the toasts rising from
+   it over the sections' end, inside the panel and clear of the reply box */
+.dock {
+  position: relative;
+  flex: none;
+  height: 0;
+  z-index: var(--z-pop);
+}
+/* the foot: pinned under the sections, which fade away under it */
+.foot {
+  flex: none;
+  padding: var(--sp-2) var(--sp-8) var(--sp-8);
+}
+.foot:empty {
+  display: none;
+}
+
+/* full: the app's main sheet lifted over the whole window, for editing: the same inset and corner
+   as the sheet it covers, on the scrim. Its bar runs edge to edge (the view's top bar, then the
+   close); the view (a Page) fills the rest. */
+.full {
+  position: fixed;
+  inset: var(--sp-4);
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-4);
+  background: var(--page);
+  color: var(--ink-2);
+  overflow: hidden;
+}
+.full[open] {
+  display: block;
+  animation: rise var(--dur-fast) var(--ease-out);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--sp-4));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.frame {
+  position: relative;
+  display: flex;
+  height: 100%;
+}
+/* the close: at the bar's end, where the peek's is, in the room the view's bar leaves for it */
+.close {
+  position: absolute;
+  top: 0;
+  right: var(--gutter);
+  display: flex;
+  align-items: center;
+  height: var(--h-top);
+}
+/* the gutter inside the scroller, as the sheet's own, so a rail beside the body runs out through it */
+.view {
+  --top-end: calc(var(--h-control) + var(--sp-4));
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding-inline: var(--gutter);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+/* the question over it: the view dimmed under a scrim, a small sheet in the middle */
+.scrim {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--tk-scrim);
+}
+.ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  width: min(var(--w-ask), calc(100vw - var(--sp-9) * 2));
+  padding: var(--sp-8) var(--sp-9);
+  border-radius: var(--r-5);
+  background: var(--pop);
+  color: var(--ink-1);
+}
+/* the question's words: its heading, the note under it; then its actions, at the end */
+.said {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.question {
+  margin: 0;
+  font-size: var(--fs-5);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink-1);
+}
+.note {
+  margin: 0;
+  color: var(--ink-2);
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-4);
+}

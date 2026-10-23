@@ -1,0 +1,7 @@
+/* Inter (variable, Linear's face: it sets 500 lighter than Geist does, so a row's title leads without
+   reading bold) and Geist Mono 400/500/600, self-hosted from npm: no Google Fonts request, since this
+   also runs on networks that block it. Each file declares its subsets with a unicode-range. */
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource/geist-mono/400.css";
+@import "@fontsource/geist-mono/500.css";
+@import "@fontsource/geist-mono/600.css";

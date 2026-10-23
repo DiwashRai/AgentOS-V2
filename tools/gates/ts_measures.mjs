@@ -1,6 +1,6 @@
 // TypeScript measurements for tools/gates/gates.py, with the TypeScript compiler API.
 //
-// Usage: node ts_measures.mjs <web dir> <file>...   (files relative to the web dir)
+// Usage: node ts_measures.mjs <web dir> <file>...   (files relative to the web dir, or absolute)
 // Prints one JSON object: {"<file>": {code_lines, suppressions, raw_tags, functions}}.
 //   code_lines    lines with code (not blank, not only comments)
 //   suppressions  [[line, marker]] for eslint-disable*, @ts-ignore, @ts-expect-error comments
@@ -8,7 +8,7 @@
 //   functions     [{name, start: [line, col], end: [line, col]}], 1-based, to name ESLint findings
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
 
 const [webDir, ...files] = process.argv.slice(2);
 const ts = createRequire(resolve(webDir, "package.json"))("typescript");
@@ -28,7 +28,7 @@ function functionName(node) {
 }
 
 function measure(path) {
-  const text = readFileSync(join(webDir, path), "utf8");
+  const text = readFileSync(resolve(webDir, path), "utf8");
   const kind = path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const sf = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, kind);
   const at = (pos) => {

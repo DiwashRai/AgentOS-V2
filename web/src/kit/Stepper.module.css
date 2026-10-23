@@ -1,0 +1,209 @@
+/* ---------- steps: one equal column per stage with a fixed gap, so no two names can touch; each
+   name sits left-aligned under its own 2px bar (skipped a dashed one); a gate's diamond sits in
+   the gap where its stage ends, its name a caption under the stage's. With a now row the stages
+   and what happens now share one run card, the now row a step deeper under the stages ---------- */
+.flow {
+  --gap: var(--sp-7);
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  column-gap: var(--gap);
+  min-width: 0;
+}
+
+.steps {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.bar {
+  position: relative;
+  display: block;
+  height: var(--line-3);
+  margin: var(--sp-4) 0 var(--sp-5);
+  border-radius: var(--line-3);
+  background: var(--track);
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-3);
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-2);
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+.step[data-state="done"] .bar {
+  background: var(--progress);
+}
+.step[data-state="done"] .name {
+  color: var(--ink-2);
+}
+.step[data-state="current"] .bar {
+  background: var(--ink-1);
+}
+.step[data-state="current"] .name,
+.step[data-state="failed"] .name {
+  color: var(--ink-1);
+  font-weight: 500;
+}
+.live .step[data-state="current"] .bar {
+  background: var(--live);
+}
+/* a caption says its state in the state's ink: Live orange (Blocked red, Complete green: below) */
+.live .step[data-state="current"] .sub {
+  color: var(--live-text);
+  font-weight: 500;
+}
+/* skipped: the bar drawn as dashes, as thick as the others so it reads as a stage, not a gap */
+.step[data-state="skipped"] .bar {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--tk-skip) 0 var(--sp-2),
+    transparent var(--sp-2) calc(var(--sp-2) + var(--sp-1) + var(--line-1))
+  );
+}
+
+.step[data-state="failed"] .bar {
+  background: var(--blocked);
+}
+.step[data-state="failed"] .sub {
+  color: var(--blocked);
+}
+.final .bar {
+  background: var(--progress);
+}
+.final .name,
+.final .sub {
+  color: var(--done-text);
+  font-weight: 500;
+}
+
+/* a gate: the diamond centred in the gap after its stage's bar, threading the two bars together */
+.knot {
+  position: absolute;
+  top: calc(var(--line-3) / 2 - var(--sp-4) / 2);
+  right: calc(var(--gap) / -2 - var(--sp-4) / 2);
+  width: var(--sp-4);
+  height: var(--sp-4);
+  border-radius: var(--line-1);
+  transform: rotate(45deg);
+  background: var(--track);
+  box-shadow: inset 0 0 0 var(--line-mark) var(--rule-strong);
+}
+/* in the run card a ring of the card's ground keeps the diamond off the bars either side */
+.card .knot {
+  outline: var(--line-2) solid var(--tk-card);
+}
+.knot[data-state="passed"] {
+  background: var(--progress);
+  box-shadow: none;
+}
+.knot[data-state="waiting"] {
+  box-shadow: inset 0 0 0 var(--line-2) var(--you);
+}
+.knot[data-state="you"] {
+  background: var(--you);
+  box-shadow: 0 0 0 var(--line-2) var(--ring-you);
+}
+.gatecap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--sp-3);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: var(--fs-2);
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+.gatecap > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gatecap::before {
+  content: "";
+  flex: none;
+  align-self: center;
+  width: var(--sp-2);
+  height: var(--sp-2);
+  margin-inline: var(--line-1) var(--line-1);
+  border-radius: var(--line-1);
+  transform: rotate(45deg);
+  background: var(--rule-strong);
+}
+/* who it waits for, on its own line under the gate's name */
+.gatecap > b {
+  flex-basis: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+.gatecap[data-state="passed"],
+.gatecap[data-state="waiting"] {
+  color: var(--ink-2);
+}
+.gatecap[data-state="passed"]::before {
+  background: var(--progress);
+}
+.gatecap[data-state="waiting"]::before,
+.gatecap[data-state="you"]::before {
+  background: var(--you);
+}
+.gatecap[data-state="you"] {
+  color: var(--you-text);
+  font-weight: 500;
+}
+
+/* compact (an expanded row): smaller words */
+.compact .name,
+.compact .sub,
+.compact .gatecap {
+  font-size: var(--fs-2);
+}
+
+/* the run card: the stages and what happens now in one card, a small step of tone inside a hairline,
+   a larger radius */
+.card {
+  padding: var(--sp-8) var(--sp-8) 0;
+  border-radius: var(--r-5);
+  background: var(--tk-card);
+  box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
+}
+.card .bar {
+  margin-top: var(--sp-2);
+}
+/* the now row: the card's foot, parted from the stages by a hairline edge to edge (the card's own
+   tone, no band), so the live run reads as the card's status bar; the run's meter on it long enough to read, its steps to come on a
+   firmer track */
+.now {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: var(--sp-6) calc(var(--sp-8) * -1) 0;
+  padding: var(--sp-6) var(--sp-8);
+  border-radius: 0 0 var(--r-5) var(--r-5);
+  box-shadow: inset 0 var(--line-1) 0 var(--card-edge);
+  --w-meter: var(--w-tk-meter);
+  --track: var(--rule-strong);
+}

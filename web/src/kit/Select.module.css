@@ -1,0 +1,134 @@
+/* The trigger: a property chip (face, name, chevron) in the type of its neighbours (it takes their
+   size, weight and ink), 28px with the chip's padding. It rests on a quiet fill inside a faint
+   hairline, so a value you can change reads apart from the read-only ones beside it; hover lights
+   it a step, open fills it a step firmer.
+   What it sits in may say how it sits there, through these, read nowhere else:
+   --select-fill, --select-line: its rest (a properties row: none, plain words among the values);
+   --select-grow, --select-max: its width (a form row: the control's room, one width down a form);
+   --select-pull: a first one's start, so its words stand on the plain values' edge. */
+.trigger {
+  box-shadow: inset 0 0 0 var(--line-1) var(--select-line, var(--select-edge));
+  display: inline-flex;
+  flex: var(--select-grow, 0 1 auto);
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+  max-width: var(--select-max, 100%);
+  height: var(--h-control-sm);
+  padding: 0 var(--sp-4);
+  border: 0;
+  border-radius: var(--r-2);
+  background: var(--select-fill, var(--chip-rest));
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: var(--track-snug);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease;
+}
+.trigger:first-child {
+  margin-left: var(--select-pull, 0);
+}
+.trigger:hover {
+  background: var(--chip-on);
+  box-shadow: inset 0 0 0 var(--line-1) var(--select-edge);
+}
+.trigger[data-popup-open] {
+  background: var(--fill-3);
+  box-shadow: inset 0 0 0 var(--line-1) var(--select-edge);
+}
+.text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* at the trigger's end, however wide it grows */
+.chev {
+  display: inline-flex;
+  margin-left: auto;
+  color: var(--ink-3);
+  transition: color var(--dur-fast) ease;
+}
+.chev svg {
+  width: var(--sp-6);
+  height: var(--sp-6);
+}
+.trigger:hover .chev,
+.trigger[data-popup-open] .chev {
+  color: var(--ink-1);
+}
+/* the picker's sheet: wide enough for a full name beside its face, the faces a size up from a
+   row's so the initials read */
+.sheet {
+  --h-face: var(--h-chip);
+  --fs-face: var(--fs-1);
+  min-width: var(--w-pop-filter);
+}
+/* side: a sidebar row (its glyph, the word, the current choice muted, the chevron), as tall as the
+   sidebar's items; it fills like one while open */
+.side {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  width: 100%;
+  height: var(--h-side-item);
+  padding: 0 var(--sp-3) 0 var(--sp-4);
+  border: 0;
+  border-radius: var(--r-3);
+  background: none;
+  color: var(--side-ink);
+  font-size: var(--fs-4);
+  font-weight: 500;
+  letter-spacing: var(--track-snug);
+  transition:
+    background-color var(--dur-fast),
+    color var(--dur-fast);
+}
+.side:hover {
+  background: var(--side-hover);
+  color: var(--side-on-ink);
+}
+.side[data-popup-open] {
+  background: var(--side-on);
+  color: var(--side-on-ink);
+}
+.side > .glyph {
+  display: inline-flex;
+  flex: none;
+  color: var(--side-icon, var(--side-ink));
+}
+.side > .text {
+  flex: 1;
+  text-align: left;
+}
+.now {
+  flex: none;
+  font-size: var(--fs-3);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--ink-3);
+}
+/* it points the way the list opens: up, from the sidebar's foot */
+.up {
+  margin-left: calc(var(--sp-3) * -1);
+}
+.up svg {
+  width: var(--sp-5);
+  height: var(--sp-5);
+  rotate: 180deg;
+}
+/* at least as wide as the row it opens from */
+.sideSheet {
+  width: max(var(--anchor-width), var(--w-pop));
+}
+/* the theme names in their own weight, as Linear's sidebar menus set them */
+.sideSheet .text {
+  font-weight: 500;
+}
+/* an option's own picture leads it (a theme's swatch) */
+.aside {
+  display: inline-flex;
+  flex: none;
+}

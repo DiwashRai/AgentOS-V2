@@ -1,0 +1,96 @@
+/* The toasts: a column at the bottom left of the main column (clear of the sidebar's foot and the
+   Talk column's reply box), the newest at the foot, each the kit's popover sheet as wide as a
+   menu: its words, and a quiet close at its end. One rises in and fades out; a swipe to the left
+   takes it away. A full dialog's region sits in the same place (its fixed box is the window); a
+   side panel's docks inside the panel, over its foot. */
+.region {
+  position: fixed;
+  left: calc(var(--w-side) + var(--sp-9));
+  bottom: var(--sp-9);
+  z-index: var(--z-pop);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  width: var(--w-menu);
+  outline: none;
+}
+/* in a side panel: on the panel's own edge, risen from its foot */
+.docked {
+  position: absolute;
+  left: var(--sp-9);
+  bottom: var(--sp-4);
+}
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+  padding: var(--sp-5) var(--sp-4) var(--sp-5) var(--sp-6);
+  transform: translateX(var(--toast-swipe-movement-x));
+  transition:
+    opacity var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
+}
+.toast[data-starting-style] {
+  opacity: 0;
+  transform: translateY(var(--sp-4));
+}
+.toast[data-ending-style] {
+  opacity: 0;
+}
+.toast[data-limited] {
+  display: none;
+}
+.toast:focus-visible {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-out);
+}
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.title {
+  margin: 0;
+  font-size: var(--fs-tk);
+  font-weight: 500;
+  letter-spacing: var(--track-snug);
+  color: var(--ink-1);
+}
+.note {
+  margin: 0;
+  font-size: var(--fs-3);
+  color: var(--pop-aside);
+}
+.note:empty {
+  display: none;
+}
+.close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--h-chip);
+  height: var(--h-chip);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-1);
+  background: none;
+  color: var(--ink-3);
+}
+.close:hover {
+  background: var(--pop-hover);
+  color: var(--ink-1);
+}
+.close:focus-visible {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-tight);
+}
+.close svg {
+  width: var(--sp-7);
+  height: var(--sp-7);
+}

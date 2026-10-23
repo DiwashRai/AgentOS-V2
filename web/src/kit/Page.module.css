@@ -1,0 +1,155 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+.top {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  height: var(--h-top);
+  min-width: 0;
+  /* room at its end for what sits over it there (a full dialog's close) */
+  padding-right: var(--top-end, 0);
+}
+.title {
+  flex: none;
+  margin: 0;
+  font-size: var(--fs-6);
+  font-weight: 500;
+  letter-spacing: calc(var(--track-snug) * 2);
+  color: var(--ink-1);
+  white-space: nowrap;
+}
+.context {
+  flex: 0 0.01 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-3);
+  color: var(--ink-3);
+}
+/* the quiet words after a view's title, and its filter chips, sit on its baseline, not its middle */
+.title:not(.step) ~ :not(.grow, .search, .actions) {
+  position: relative;
+  top: var(--sp-2);
+}
+.grow {
+  flex: 1;
+}
+/* a crumb: Linear's breadcrumb, the Space then the title as its last step */
+.crumb {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-right: calc(var(--sp-4) * -1);
+  font-size: var(--fs-4);
+  font-weight: 500;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.crumb > a {
+  margin-inline: calc(var(--sp-3) * -1);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-2);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background var(--dur-fast),
+    color var(--dur-fast);
+}
+.crumb > a:hover {
+  background: var(--tk-hover);
+  color: var(--ink-1);
+}
+.crumb > a:focus-visible {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-tight);
+}
+.title.step {
+  font-size: var(--fs-4);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+/* it scrolls, so it clips: it keeps the room at its sides, out to the sheet's edges, where a row's
+   wash and a group's band reach past the words */
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-inline: calc(var(--gutter) * -1);
+  padding-inline: var(--gutter);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+/* a body that is an edge Table (the library's lists) runs out through the sheet's gutter */
+.body:has(> [data-edge="true"]) {
+  margin-inline: calc(var(--gutter) * -1);
+  padding-inline: 0;
+}
+
+/* the bar's search: 240 wide, giving way first when the bar is short */
+.search {
+  flex: 0 1 var(--w-search);
+  width: var(--w-search);
+  min-width: var(--col-lg);
+}
+
+/* a body with a full-height column beside it, the column's right edge the bar's: each scrolls on
+   its own */
+.split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 28vw, var(--w-talk-max));
+}
+/* the body: one calm reading column, close under the bar, room under its last line when scrolled to
+   the end */
+.split > .body {
+  /* a list in it (a ticket's runs) stands on the column's edge as the run card does, its words
+     inset as the card's are */
+  --list-pad: 0;
+  --list-inset: var(--list-in);
+  --list-reach: 0;
+  --list-radius: var(--r-3);
+  margin-right: 0;
+  padding: var(--sp-8) var(--sp-9) calc(var(--sp-10) * 2) var(--gutter);
+}
+/* a document: the reading column centred under the bar, room above and under it */
+.doc {
+  padding-block: calc(var(--sp-10) + var(--sp-7)) calc(var(--sp-10) * 2);
+}
+/* the measure carries the body's column on: at least the body's height, so an editor's growing
+   content (a filled text area) takes the rest of the window */
+.measure {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--w-ticket);
+  margin-inline: auto;
+}
+/* the column beside: no panel, the sheet itself, parted from the body by one hairline from the bar
+   to the sheet's foot, its words ending on the bar's right edge; full height, so what it holds can
+   pin its foot (Talk's reply box) to the window's bottom */
+.side {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-8) 0 var(--sp-8) var(--sp-9);
+  border-left: var(--line-1) solid var(--rule);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}

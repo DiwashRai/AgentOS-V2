@@ -1,0 +1,131 @@
+/* Card: one object as a small step of tone on the sheet inside a hairline, no shadow; under the
+   pointer it takes a step more. A stage lies on the lane, its summary washed on hover like a row; selected, the
+   accent rings it, its settings under the summary on the sheet's own white. A ticket's look
+   follows below. */
+.card {
+  --ground: var(--teams-card);
+  position: relative;
+  min-width: 0;
+  border-radius: var(--r-4);
+  background: var(--teams-card);
+  box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
+  transition:
+    background-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
+}
+.card[data-edit]:not([data-look="stage"]):hover {
+  --ground: var(--tile-hover);
+  background: var(--tile-hover);
+}
+/* a disabled stage: the sheet's own ground, opaque like every card, so the lane's line stops at its
+   edge and never runs through it; no tone and no hairline, a dashed outline alone (the card's only
+   line, in a skipped stage's dashes), dimmed */
+.card[data-look="stage"][data-off]:not([data-open]) {
+  --ground: var(--page);
+  background: var(--page);
+  box-shadow: none;
+}
+/* (the focus ring takes the outline's place while it has the focus) */
+.card[data-look="stage"][data-off]:not([data-open], :has(.hit:focus-visible)) {
+  outline: var(--line-1) dashed var(--tk-skip);
+  outline-offset: calc(var(--line-1) * -1);
+}
+.card[data-open],
+.card[data-open]:hover {
+  box-shadow: inset 0 0 0 var(--line-mark) var(--you);
+}
+
+/* the summary: the face on the lane's axis, the words beside it; with no face, the words alone */
+.summary {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-6);
+  border-radius: var(--r-4);
+}
+.summary[data-face] {
+  grid-template-columns: var(--h-chip) minmax(0, 1fr);
+}
+.card[data-look="stage"][data-edit]:not([data-open]) .summary:hover {
+  background: var(--fill-1);
+}
+.card[data-look="stage"][data-off] .summary > :not(.hit) {
+  opacity: var(--lane-off);
+}
+/* the card's own button: unseen, the summary's whole box (so focusing it brings the whole card into
+   view), and out of the pointer's way (a pointer opens the card from anywhere on its summary, and
+   its lines keep their tooltips); the ring goes round the card */
+.hit {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.card:has(.hit:focus-visible) {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-out);
+}
+.card[data-edit] .summary {
+  cursor: pointer;
+}
+/* on the card's own ground, so the lane's axis stops at the face (a shell's glyph too) */
+.face {
+  display: grid;
+  place-items: center;
+  height: var(--h-chip);
+  border-radius: var(--r-pill);
+  background: var(--ground);
+  color: var(--ink-2);
+}
+.main {
+  min-width: 0;
+}
+
+/* what's wrong: a line at the summary's foot on a faint wash of the blocked hue */
+.problem {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-6) var(--sp-3) calc(var(--sp-6) + var(--h-chip) + var(--sp-5));
+  background: var(--card-problem);
+  color: var(--blocked);
+  font-size: var(--fs-2);
+  font-weight: 500;
+}
+.problem::before {
+  content: "";
+  flex: none;
+  width: var(--sp-3);
+  height: var(--sp-3);
+  border-radius: var(--line-1);
+  transform: rotate(45deg);
+  background: currentColor;
+}
+.problem:last-child {
+  border-radius: 0 0 var(--r-4) var(--r-4);
+}
+
+/* opened: the settings under the summary, inset in the sheet's own white, lined up with its words */
+.body {
+  margin: 0 var(--sp-2) var(--sp-2);
+  padding: var(--sp-7) var(--sp-6) var(--sp-8);
+  border-radius: var(--r-3);
+  background: var(--page);
+}
+
+/* ticket: a ticket on a board, its two lines under one another, each the card's width */
+.card[data-look="ticket"] {
+  border-radius: var(--r-3);
+}
+.card[data-look="ticket"] .summary {
+  padding: var(--sp-5) var(--sp-6) var(--sp-6);
+  border-radius: var(--r-3);
+}
+.card[data-look="ticket"] .main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}

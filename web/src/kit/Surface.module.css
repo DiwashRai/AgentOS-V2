@@ -1,0 +1,74 @@
+/* --ground: the surface's own fill, for what paints an opaque copy of it (a sticky head); --well:
+   what a box sunk into it fills with (a reply box) */
+.surface {
+  min-width: 0;
+  padding: var(--pad);
+}
+/* a recess is flush on the sheet: the view's one zone, no tone of its own */
+.recess {
+  --ground: var(--page);
+  background: var(--page);
+  border-radius: var(--r-5);
+}
+/* a sheet is a card on the page (an options panel, an agent's side panel, a comment): a faint step
+   of tone inside a card's hairline and no shadow, as Linear lays its cards flat; only what floats
+   (a popover, a dialog) casts one */
+.sheet {
+  --ground: var(--tone-2);
+  --well: var(--nest);
+  --thread-rule: var(--card-edge);
+  background: var(--tone-2);
+  border-radius: var(--r-4);
+  box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
+}
+/* float: a panel open over the page (an options panel from a bar's button): the popover's surface,
+   its hairline and its soft shadow, the one card that lifts, because it floats */
+.float {
+  --ground: var(--pop);
+  --well: var(--nest);
+  background: var(--pop);
+  border-radius: var(--r-4);
+  box-shadow:
+    0 0 0 var(--line-1) var(--pop-edge),
+    var(--pop-shadow);
+}
+/* a sheet inside a sheet (a message, a change in an agent's panel) lies flat, a clear step lighter, as
+   its reply box (the well) is: Linear's are about 8 levels over their panel */
+.sheet .sheet {
+  --ground: var(--nest);
+  background: var(--nest);
+  box-shadow: none;
+}
+/* a section of a view under its own head (a zone of My queue, an Intake query): no card, flush
+   with the list's edges; one after another parts by more room than a group, its head's band
+   starting it, so a busy screen reads as its sections */
+.list {
+  position: relative;
+}
+.list + .list {
+  margin-top: var(--section-gap);
+}
+/* parts: a hairline between each part and the next, run edge to edge, the padding's room on both
+   sides of it (a floating layer's rule, so it reads on any tone) */
+.parts > * + * {
+  position: relative;
+  margin-top: var(--pad);
+  padding-top: var(--pad);
+}
+.parts > * + *::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: calc(var(--pad) * -1);
+  height: var(--line-1);
+  background: var(--pop-rule);
+}
+.fill {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  /* clipped, but by a little room at the sides, where a row's wash reaches past the words */
+  overflow: clip;
+  overflow-clip-margin: var(--gutter);
+}

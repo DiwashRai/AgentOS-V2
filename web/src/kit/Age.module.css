@@ -1,0 +1,9 @@
+.age {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.unit {
+  margin-left: var(--line-1);
+  font-size: var(--fs-1);
+  font-weight: 500;
+}

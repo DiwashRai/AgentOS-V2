@@ -1,0 +1,163 @@
+.row {
+  position: relative;
+  min-width: 0;
+  border-radius: var(--r-3);
+  transition:
+    background-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
+}
+
+/* lists: a line and an item are flat: the rhythm and the room above each group part
+   the rows. Their words stand on the list's column edge; what lies under them (a hover's wash, the
+   open card, the hairline between rows) is square and runs --list-reach past them, the same reach
+   as their group's band, so a list's heads and rows always meet the same edges. Nothing moves */
+.line,
+.item {
+  border-radius: 0;
+}
+.row:is(.line, .item)::before {
+  content: "";
+  position: absolute;
+  inset: 0 var(--list-reach);
+  border-radius: var(--list-radius);
+  transition: background-color var(--dur-fast) ease;
+}
+/* a list out at the sheet's edges (Table edge) rules its rows apart with a faint hairline across its
+   reach, so a wide row reads as one line; a lit row hides the ones at its edges */
+.row:is(.line, .item) + .row:is(.line, .item)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: var(--list-reach);
+  height: var(--line-1);
+  background: var(--row-rule, transparent);
+}
+.row:is(:hover, .open)::after,
+.row:is(:hover, .open) + .row::after {
+  opacity: 0;
+}
+.row:is(.line, .item):is(:hover, :has(:focus-visible))::before {
+  background: var(--list-hover);
+}
+/* open (a row expanded, a row selected): one soft band of the accent's tint, no edge, so rows open one
+   after another read as one band (Linear's selection) */
+.row:is(.line, .item).open::before {
+  background: var(--list-open);
+}
+/* an expanded row (its expansion under it) is no band but a part of the list on two hairlines, so a
+   large panel never reads as a slab of the accent */
+.row:is(.line, .item).open:has(.more)::before {
+  background: none;
+  box-shadow:
+    inset 0 var(--line-1) 0 var(--card-edge),
+    inset 0 calc(var(--line-1) * -1) 0 var(--card-edge);
+}
+
+.rack:is(:hover, :has(:focus-visible)) > .inner {
+  background: var(--list-hover);
+}
+/* the row's own button: unseen, the row's whole box (so focusing it brings the row into view), out
+   of the pointer's way; the ring goes round the row */
+.hit {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.row:has(.hit:focus-visible) {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-out);
+}
+/* a list row's ring goes round its patch */
+.row:is(.line, .item):has(.hit:focus-visible) {
+  outline: 0;
+}
+.row:is(.line, .item):has(.hit:focus-visible)::before {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-in);
+}
+/* a pointer opens it anywhere but on its own controls */
+.opens {
+  cursor: pointer;
+}
+
+.inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--cols);
+  column-gap: var(--sp-7);
+  align-items: center;
+  border-radius: var(--r-3);
+}
+.line > .inner,
+.item > .inner {
+  column-gap: var(--sp-6);
+  border-radius: 0;
+}
+/* a list row's first cell starts on the column edge, under its group head's glyph; its cells sit a
+   step closer, as Linear packs a row's end */
+.line > .inner {
+  column-gap: var(--sp-5);
+  min-height: var(--h-line);
+  padding: 0 var(--list-end, var(--list-inset)) 0 var(--list-inset);
+}
+.item > .inner {
+  min-height: var(--h-list-item);
+  padding: var(--sp-7) var(--list-end, var(--list-inset)) var(--sp-7) var(--list-inset);
+}
+.rack > .inner {
+  column-gap: var(--sp-4);
+  height: var(--h-avatar-lg);
+  margin: 0 calc(var(--sp-3) * -1);
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-1);
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.cell[data-end="true"] {
+  justify-content: flex-end;
+}
+.cell[data-keep="true"] {
+  min-width: auto;
+}
+.rest {
+  grid-column-end: -1;
+}
+/* the open row's expansion: inside its panel, on the row's words */
+.more {
+  position: relative;
+  margin: 0 var(--list-inset);
+  padding: var(--sp-4) 0 var(--sp-6);
+}
+.alert {
+  position: relative;
+  margin: 0;
+  padding: 0 var(--sp-7) var(--sp-4);
+  text-align: right;
+  font-size: var(--fs-2);
+  color: var(--blocked);
+  overflow-wrap: anywhere;
+}
+.row:is(.line, .item) > .alert {
+  padding: 0 var(--list-inset) var(--sp-4);
+}
+
+/* a row outside a table: its cells one under another */
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+}
+.rack > .stack {
+  gap: var(--line-3);
+  height: auto;
+  min-height: calc(var(--h-row) + var(--line-2));
+}

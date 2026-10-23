@@ -1,0 +1,57 @@
+/* A section: its head (the heading in Text's heading role, quiet words after it on its
+   baseline, its end item at the far edge, no line under it), then the body. In a side panel,
+   one of the panel's parts: padded to the panel's gutter and set apart by room, not a rule, so
+   the panel reads as one document between its bar and its foot (Linear's doc page). */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+.part {
+  flex: none;
+  padding: var(--sp-9) var(--sp-9) var(--sp-6);
+}
+.part:last-child {
+  padding-bottom: var(--sp-10);
+}
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+  /* a little more room under the head than between the body's own parts, so it reads as a head */
+  margin-bottom: var(--sp-3);
+}
+/* the end item centred on the line; the heading and its quiet words share a baseline */
+.line {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+.title,
+.aside {
+  align-self: baseline;
+}
+.aside {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-size: var(--fs-3);
+  line-height: 1.35;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.end {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-left: auto;
+}
+.note {
+  margin: 0;
+  font-size: var(--fs-3);
+  line-height: 1.35;
+  color: var(--ink-3);
+}

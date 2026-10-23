@@ -1,0 +1,141 @@
+/* Chip: the kit's one tag. A flat tag on a hairline (white inside it on Paper), regular muted words
+   cut at their end, led by a muted glyph or a state's dot; something quieter after the words; a
+   remove at its end that lights on hover, the tag's padding tucked in round it */
+.chip {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  max-width: 100%;
+  height: var(--h-list-chip);
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-2);
+  background: var(--list-chip-fill);
+  box-shadow: inset 0 0 0 var(--line-1) var(--tag-edge);
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+}
+.chip[data-lead] {
+  padding-left: var(--sp-3);
+}
+/* a label (in a list's row) and a pill (a card's state): the same tag, round */
+:where([data-row]) .chip[data-tone="line"],
+.chip[data-tone="pill"] {
+  border-radius: var(--r-pill);
+}
+/* a tint: a hue washed into the tag, no edge, the glyph in the hue and the words in full ink (a
+   resource's kind); neutral is the same wash of the theme's grey, its glyph muted */
+.chip:is([data-tone="neutral"], [data-tone="indigo"], [data-tone="teal"], [data-tone="amber"]) {
+  background: var(--tint);
+  box-shadow: none;
+  color: var(--ink-1);
+}
+.chip[data-tone="neutral"] {
+  --tint: var(--chip-tint-neutral);
+}
+.chip[data-tone="indigo"] {
+  --tint: var(--chip-tint-indigo);
+}
+.chip[data-tone="teal"] {
+  --tint: var(--chip-tint-teal);
+}
+.chip[data-tone="amber"] {
+  --tint: var(--chip-tint-amber);
+}
+.chip[data-tone="neutral"] .lead {
+  color: var(--prop-mark);
+}
+.chip[data-tone="indigo"] .lead {
+  color: var(--kind-workflow);
+}
+.chip[data-tone="teal"] .lead {
+  color: var(--kind-agent);
+}
+.chip[data-tone="amber"] .lead {
+  color: var(--kind-skill);
+}
+.chip[data-tone="blocked"] {
+  color: var(--blocked);
+  font-weight: 500;
+}
+.lead {
+  display: inline-flex;
+  flex: none;
+  color: var(--prop-mark);
+}
+.dot {
+  flex: none;
+  width: var(--prop-dot);
+  height: var(--prop-dot);
+  border-radius: 50%;
+  background: var(--prop-mark);
+}
+.dot[data-dot="live"] {
+  background: var(--live);
+}
+.dot[data-dot="you"] {
+  background: var(--you);
+}
+.dot[data-dot="blocked"] {
+  background: var(--blocked);
+}
+.dot[data-dot="done"] {
+  background: var(--done);
+}
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* after the words: a quieter count */
+.count {
+  flex: none;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.chip[data-removable] {
+  padding-right: var(--sp-1);
+}
+/* just added: a ring in your move's accent that fades out */
+.chip[data-flash] {
+  animation: flash var(--dur-flash) var(--ease-out);
+}
+@keyframes flash {
+  0%,
+  40% {
+    background: var(--card-open-ring);
+    box-shadow: inset 0 0 0 var(--line-1) var(--you);
+  }
+}
+.remove {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--h-chip-sm);
+  height: var(--h-chip-sm);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+.remove:hover {
+  background: var(--ctl-hover);
+  color: var(--ink-1);
+}
+.remove:focus-visible {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-tight);
+}
+.remove svg {
+  width: var(--sp-5);
+  height: var(--sp-5);
+}

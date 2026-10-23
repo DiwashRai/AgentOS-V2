@@ -1,0 +1,104 @@
+/* The kit's one popover (Select, Segmented's overflow, the menus and the account sheet draw it):
+   the one layer that floats over the sheet, so the one with a line round it and the one shadow:
+   its own tone on a single hairline, lifted by a soft shadow, its corners a card's. Its words are
+   Linear's menu size (13px on 32px rows inset 4px from the sheet's edge, 6px round), denser than
+   the page it opens over;
+   only the one active row (pointer or keys) fills, so at most one is ever lit. Every list of
+   choices opens on its filter field, ruled off from the rows. A row reads as Linear's: its
+   picture, its name, its muted aside (a count, a descriptor) right after the name, and the check
+   at the far end on the current one alone. */
+/* the positioner a popup sits in: above the page, its sticky heads included */
+.layer {
+  z-index: var(--z-pop);
+}
+.sheet {
+  min-width: var(--col-2xl);
+  padding: var(--sp-2);
+  background: var(--pop);
+  border: var(--line-1) solid var(--pop-edge);
+  border-radius: var(--r-4);
+  box-shadow: var(--pop-shadow);
+  color: var(--ink-1);
+  outline: none;
+}
+/* a sheet's section label (the Space's account sheet): small, muted, on the rows' text edge */
+.head {
+  display: flex;
+  align-items: center;
+  height: var(--h-pop-head);
+  padding: 0 var(--sp-4);
+  font-size: var(--fs-2);
+  font-weight: 500;
+  letter-spacing: var(--track-snug);
+  color: var(--pop-aside);
+}
+/* the filter: a real field, full bleed on the popover's own tone, a hairline under it, its words on
+   the rows' */
+.find {
+  display: flex;
+  align-items: center;
+  width: calc(100% + var(--sp-2) * 2);
+  height: var(--h-pop-find);
+  margin: calc(var(--sp-2) * -1) calc(var(--sp-2) * -1) var(--sp-2);
+  padding: 0 var(--sp-6);
+  border: 0;
+  border-bottom: var(--line-1) solid var(--pop-rule);
+  border-radius: calc(var(--r-4) - var(--line-1)) calc(var(--r-4) - var(--line-1)) 0 0;
+  background: none;
+  font-size: var(--fs-3);
+  color: var(--ink-1);
+  font-family: inherit;
+  outline: none;
+  caret-color: var(--focus);
+}
+.find::placeholder {
+  color: var(--pop-aside);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  height: var(--h-pop-item);
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-2);
+  font-size: var(--fs-3);
+  font-weight: 500;
+  color: var(--tk-ink);
+  letter-spacing: var(--track-snug);
+  white-space: nowrap;
+  outline: none;
+  cursor: default;
+}
+.row[data-highlighted] {
+  background: var(--pop-hover);
+  color: var(--ink-1);
+}
+/* the muted aside, set right after the name */
+.aside {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+  color: var(--pop-aside);
+  font-variant-numeric: tabular-nums;
+}
+/* the current one's check, at the row's far end, in your move's ink */
+.check {
+  display: inline-flex;
+  flex: none;
+  margin-left: auto;
+  padding-left: var(--sp-4);
+  color: var(--you-text);
+}
+.check svg {
+  width: var(--sp-7);
+  height: var(--sp-7);
+}
+.empty:not(:empty) {
+  display: flex;
+  align-items: center;
+  height: var(--h-pop-item);
+  padding: 0 var(--sp-4);
+  font-size: var(--fs-3);
+  color: var(--pop-aside);
+}

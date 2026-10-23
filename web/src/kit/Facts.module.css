@@ -1,0 +1,83 @@
+/* Linear's properties row: a quiet head, then the values at body size and regular weight, each a
+   muted icon and its words, as borderless chips that light on hover; each label is the chip's
+   tooltip and its screen-reader term */
+.facts {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+.head {
+  flex: none;
+  width: var(--w-fact-label);
+  line-height: var(--h-fact);
+  font-size: var(--fs-4);
+  color: var(--tk-label);
+  white-space: nowrap;
+}
+.chips {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--sp-5);
+  min-width: 0;
+  margin: 0 0 0 calc(var(--sp-4) * -1);
+}
+.head + .chips {
+  margin-left: 0;
+}
+.fact {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  border-radius: var(--r-2);
+  transition: background var(--dur-fast);
+  --priority-on: var(--ink-3);
+  --type-glyph: var(--ink-3);
+}
+/* a picker among the values reads as one of them: plain words at rest, its chip and edge only under
+   the pointer or while open (Select reads these) */
+.fact[data-picker] {
+  --select-fill: none;
+  --select-line: transparent;
+}
+.fact:not([data-picker]):hover {
+  background: var(--tk-hover);
+}
+/* both forms at the row's type: a picker's chip takes the row's size, weight and ink */
+.fact > dd {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+  min-height: var(--h-fact);
+  margin: 0;
+  color: var(--tk-ink);
+  font-size: var(--fs-tk);
+  font-weight: 400;
+  white-space: nowrap;
+}
+.value {
+  padding: 0 var(--sp-4);
+}
+/* a link for a value (where a copy came from) at the row's size and ink, the chip its hover */
+.value a {
+  font-size: inherit;
+  color: inherit;
+}
+/* the value's muted glyph */
+.glyph {
+  display: inline-flex;
+  flex: none;
+  color: var(--ink-3);
+}
+/* a picker brings its own padding and hover; a note after it keeps the chip's end padding */
+.picker > .note {
+  padding-right: var(--sp-4);
+}
+/* the note: quieter than the value but readable, ink-3 in every theme (not the head's fainter ink) */
+.note {
+  margin-left: calc(var(--sp-2) * -1);
+  color: var(--ink-3);
+}

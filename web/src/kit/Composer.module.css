@@ -1,0 +1,53 @@
+/* the composer: a reply box of tone inside a hairline, one line of text with Send at its right end, growing
+   as you type; in a full-height column it sits at the foot and stays there while the thread
+   scrolls. On a held panel of tone (a Surface sheet) it is a well of the sheet's own (--well) */
+.compose {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-4);
+  margin-top: auto;
+  padding-right: var(--sp-3);
+  border-radius: var(--r-4);
+  background: var(--well, var(--tone-2));
+  box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
+  transition: background-color var(--dur-fast);
+}
+/* the text's label fills the box but Send, its padding the box's, so a click anywhere round the text
+   focuses it */
+.text {
+  flex: 1;
+  align-self: stretch;
+  display: flex;
+  min-width: 0;
+  padding: var(--sp-3) 0 var(--sp-3) var(--sp-6);
+  cursor: text;
+}
+.compose:has(textarea:focus-visible) {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-out);
+}
+.text > textarea {
+  flex: 1;
+  align-self: center;
+  min-width: 0;
+  min-height: var(--h-compose);
+  field-sizing: content;
+  resize: none;
+  border: 0;
+  padding: var(--sp-2) 0;
+  background: transparent;
+  outline: none;
+  font-size: var(--fs-tk);
+  line-height: 1.55;
+  color: var(--ink-1);
+}
+.text > textarea::placeholder {
+  color: var(--ink-3);
+}
+/* Send, at the foot of the box as the text grows, the box's padding under it */
+.send {
+  flex: none;
+  padding-bottom: var(--sp-3);
+}

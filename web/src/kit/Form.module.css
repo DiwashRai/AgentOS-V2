@@ -1,0 +1,461 @@
+/* The form controls (Field, TextArea, NumberField, Toggle, Checkbox, Radio, FormRow): flat inputs,
+   a fill (on Paper white on a hairline), a step firmer on hover, the focus ring on focus; text in ink at the rows'
+   size. */
+.box {
+  min-width: 0;
+  border: var(--line-1) solid var(--ctl-rest-edge);
+  border-radius: var(--r-2);
+  background: var(--input);
+  color: var(--ink-1);
+  font-size: var(--fs-3);
+  letter-spacing: var(--track-snug);
+  transition: background-color var(--dur-fast) ease;
+}
+.box:hover {
+  border-color: var(--ctl-edge-hover);
+  background: var(--input-hover);
+}
+.box:focus-within {
+  background: var(--input);
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-tight);
+}
+/* a control whose row has a problem: its edge in the problem's colour, as the words under it */
+.box:is([aria-invalid="true"], :has([aria-invalid="true"])) {
+  border-color: var(--blocked);
+}
+.box::placeholder,
+.box ::placeholder {
+  color: var(--ink-3);
+}
+
+/* Field: one line, as wide as its slot */
+.field {
+  width: 100%;
+  height: var(--h-field);
+  padding: 0 var(--sp-5);
+}
+/* search: the kit's one search box, the glyph, the text and a "/" keycap; as wide as its slot */
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: var(--col-lg);
+  height: var(--h-control);
+  padding: 0 var(--sp-3) 0 var(--sp-5);
+  border-radius: var(--r-3);
+  background: var(--field);
+  box-shadow: inset 0 0 0 var(--line-1) var(--ctl-rest-edge);
+  color: var(--ink-3);
+  font-size: var(--fs-3);
+  transition: background-color var(--dur-fast);
+}
+.search:hover {
+  background: var(--input-hover);
+  box-shadow: inset 0 0 0 var(--line-1) var(--ctl-edge-hover);
+}
+.search:focus-within {
+  background: var(--field);
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-out);
+}
+.findInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  color: var(--ink-1);
+  font-size: var(--fs-3);
+  appearance: none;
+}
+.findInput::placeholder {
+  color: var(--ink-3);
+}
+.findInput::-webkit-search-cancel-button {
+  appearance: none;
+}
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2);
+  letter-spacing: 0;
+}
+/* TextArea: monospace markdown, at least `--lines` tall, growing with its text; or filling its
+   column and scrolling inside */
+.area {
+  display: block;
+  width: 100%;
+  min-height: calc(var(--code-line) * var(--lines) + var(--sp-5) * 2);
+  padding: var(--sp-5) var(--sp-6);
+  field-sizing: content;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: var(--fs-3);
+  line-height: var(--code-line);
+  letter-spacing: 0;
+  tab-size: 2;
+  scrollbar-width: thin;
+}
+.fill {
+  flex: 1;
+  height: 100%;
+  field-sizing: fixed;
+  resize: none;
+}
+/* a document's own words (Field's looks): no box, the text flush with the column (its padding
+   pulled back into the gutter), a faint wash on hover, the ring alone on focus */
+.ghost,
+.ghost:focus-within {
+  width: calc(100% + var(--sp-3) * 2);
+  margin-inline: calc(var(--sp-3) * -1);
+  padding: var(--sp-1) var(--sp-3);
+  border-color: transparent;
+  background: none;
+}
+.ghost:hover:not(.field) {
+  background: none;
+}
+.field.ghost:hover:not(:focus) {
+  background: var(--ctl-hover);
+}
+.title {
+  height: auto;
+  font-size: var(--fs-ticket);
+  font-weight: 500;
+  line-height: 1.25;
+}
+.lead {
+  font-size: var(--fs-ticket-lead);
+  color: var(--ink-2);
+}
+.heading {
+  font-size: var(--fs-5);
+  font-weight: 600;
+}
+
+/* a sheet (an item editor's content): one editable object, as Linear draws a document's block: a
+   hairline round a shade barely off the page, its head strip (a heading's weight) over its text (a
+   folding block's under its name, past the fold); as tall as its text and no taller, so a short
+   one never leaves an empty box down the page. Its line firms under the pointer; while the text has the focus the
+   line takes the focus colour */
+.sheet {
+  position: relative;
+  padding: 0 var(--sp-8);
+  border-radius: var(--r-4);
+  background: var(--sheet);
+  box-shadow: inset 0 0 0 var(--line-1) var(--sheet-edge);
+  transition: box-shadow var(--dur-fast) ease;
+}
+.sheet:hover {
+  box-shadow: inset 0 0 0 var(--line-1) var(--sheet-edge-hover);
+}
+.sheet:has(.leaf:focus) {
+  box-shadow: inset 0 0 0 var(--line-1) var(--focus);
+}
+.sheet > .read {
+  flex: 1;
+  align-content: start;
+}
+.sheetHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: calc(var(--h-field) + var(--sp-6));
+}
+.leaf,
+.leaf:is(:hover, :focus-within) {
+  padding: 0 0 var(--sp-8);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  outline: none;
+  resize: none;
+}
+.leaf.under {
+  padding-left: calc(var(--h-chip) + var(--sp-4));
+}
+/* at rest, a sheet's markdown is read as a document over its hidden source, in the body face:
+   `code` a faint chip, a fence a tinted block of mono; a click lands in the source and edits it */
+.read {
+  position: relative;
+  display: grid;
+}
+.read > * {
+  grid-row: 1;
+  grid-column: 1;
+}
+/* at rest the read text alone sets the height (the mono source wraps longer), so every sheet ends
+   the same room under its last line; the source lies over it, to be clicked into */
+.read:not(:focus-within) > .area {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  min-height: 0;
+  color: transparent;
+}
+.read:focus-within > .prose {
+  visibility: hidden;
+}
+.prose {
+  font-size: var(--fs-tk);
+  line-height: 1.6;
+  pointer-events: none;
+}
+.prose > * {
+  margin: 0 0 var(--sp-4);
+}
+.prose ul {
+  padding-left: var(--sp-9);
+}
+.prose :is(code, pre) {
+  padding: var(--line-1) var(--sp-2);
+  border-radius: var(--r-1);
+  background: var(--chip-hover);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2);
+}
+.prose pre {
+  padding: var(--sp-5) var(--sp-6);
+}
+/* the pop-out: a quiet button in the area's top right corner, shown on hover and focus */
+.areaWrap {
+  position: relative;
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+/* a sheet is as tall as its text (the area alone fills its column) */
+.areaWrap.sheet {
+  flex: none;
+}
+/* a sheet's controls: the last (a block's handle) always; the rest while the sheet is in use */
+.tools {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.sheet:not(:hover, :focus-within) .tools > :not(:last-child) {
+  display: none;
+}
+/* clear of the area's scrollbar */
+.pop {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-6);
+  opacity: 0;
+  transition: opacity var(--dur-fast) ease;
+}
+.areaWrap:is(:hover, :focus-within) > .pop {
+  opacity: 1;
+}
+/* popped out: the whole window under the bar, at a readable measure */
+.popped {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+  padding-bottom: var(--sp-9);
+}
+/* the popped area over its own copies of the row's note and problem, at a readable measure */
+.poppedCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: 100%;
+  max-width: var(--w-editor);
+  min-height: 0;
+}
+
+/* NumberField: − the digits and their unit + in one box, the digits at a fixed width */
+.number {
+  display: inline-flex;
+  align-items: center;
+  height: var(--h-field);
+  padding: 0 var(--sp-1);
+}
+.number > input {
+  width: var(--w-number);
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  appearance: textfield;
+}
+.number > input::-webkit-inner-spin-button,
+.number > input::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+.unit {
+  padding: 0 var(--sp-3) 0 var(--sp-2);
+  color: var(--ink-3);
+}
+.step {
+  display: inline-grid;
+  place-items: center;
+  width: var(--sp-9);
+  height: var(--sp-9);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-1);
+  background: none;
+  color: var(--ink-3);
+}
+.step:hover:not(:disabled) {
+  background: var(--ctl-hover);
+  color: var(--ink-1);
+}
+.step:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Toggle: Linear's switch, a pill track with a white knob, your move's accent when on */
+.switch {
+  flex: none;
+  position: relative;
+  width: var(--w-switch);
+  height: var(--h-switch);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--switch-off);
+  box-shadow: inset 0 0 0 var(--line-1) var(--switch-edge);
+  transition: background-color var(--dur-fast) ease;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: var(--switch-inset);
+  left: var(--switch-inset);
+  width: calc(var(--h-switch) - var(--switch-inset) * 2);
+  height: calc(var(--h-switch) - var(--switch-inset) * 2);
+  border-radius: var(--r-pill);
+  background: var(--switch-knob);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.switch[aria-checked="true"] {
+  background: var(--you);
+  box-shadow: none;
+}
+.switch[aria-checked="true"]::after {
+  transform: translateX(calc(var(--w-switch) - var(--h-switch)));
+}
+
+/* Checkbox and Radio: a box or a ring on the words' first line, the words and a quiet line under
+   them one target; filled in your move's accent when on (a white tick, a white dot) */
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  font-size: var(--fs-3);
+  letter-spacing: var(--track-snug);
+  color: var(--ink-1);
+  cursor: default;
+}
+.words {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.check,
+.radio {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--h-box);
+  height: var(--h-box);
+  /* on the words' first line */
+  margin-top: var(--sp-1);
+  background: var(--rule-strong);
+  color: var(--switch-knob);
+  outline: none;
+  transition: background-color var(--dur-fast) ease;
+}
+.check {
+  border-radius: var(--r-1);
+}
+.radio {
+  border-radius: var(--r-pill);
+}
+.choice:hover :is(.check, .radio):not([data-checked]) {
+  background: var(--switch-off);
+}
+:is(.check, .radio):focus-visible {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-tight);
+}
+:is(.check, .radio)[data-checked] {
+  background: var(--you);
+}
+.mark {
+  display: inline-flex;
+}
+.mark svg {
+  width: var(--h-box);
+  height: var(--h-box);
+}
+.pip {
+  width: var(--h-pip);
+  height: var(--h-pip);
+  border-radius: var(--r-pill);
+  background: currentColor;
+}
+
+/* FormRow: the label in its column, the control (and a quiet note) beside it, a problem under the
+   control in the blocked ink */
+.row {
+  display: grid;
+  grid-template-columns: var(--w-form-label) minmax(0, 1fr);
+  column-gap: var(--sp-6);
+  row-gap: var(--sp-2);
+  align-items: center;
+  min-width: 0;
+}
+.label {
+  align-self: start;
+  display: flex;
+  align-items: center;
+  min-height: var(--h-field);
+  color: var(--tk-label);
+  font-size: var(--fs-3);
+  letter-spacing: var(--track-snug);
+}
+.control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+  min-height: var(--h-field);
+  /* a form row's picker (Select reads these) takes the control's room, up to a popover's width, so
+     the selects down a form (a display popover's) share one width and one right edge; a first one
+     lines its words up with the plain values, its padding in the gap */
+  --select-grow: 1 1 auto;
+  --select-max: var(--w-pop);
+  --select-pull: calc(var(--sp-4) * -1);
+}
+.note {
+  color: var(--ink-3);
+  font-size: var(--fs-2);
+}
+.problem {
+  grid-column: 2;
+  color: var(--blocked);
+  font-size: var(--fs-2);
+}

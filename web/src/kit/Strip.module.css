@@ -1,0 +1,73 @@
+/* Strip: the stages on one grid at the stepper's scale, a segment each in its phase's hue, all one
+   length (so the strip is as long as its workflow), a gate a
+   solid diamond in its own column, a loop a bracket under its stages on the grid's second row;
+   the words after it quiet, as a row's description */
+.strip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-5);
+  min-width: 0;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.track {
+  flex: none;
+  display: grid;
+  grid-template-columns: var(--cols);
+  grid-template-rows: auto var(--strip-loop);
+  align-items: center;
+  column-gap: var(--sp-1);
+  row-gap: var(--sp-2);
+  /* the bracket's row under the segments: centre the segments on the row's text */
+  padding-top: calc(var(--strip-loop) + var(--sp-2));
+}
+.track > i {
+  display: block;
+  height: var(--strip-seg);
+  border-radius: var(--r-pill);
+}
+.track > i[data-phase="plan"] {
+  background: var(--phase-plan);
+}
+.track > i[data-phase="build"] {
+  background: var(--phase-build);
+}
+.track > i[data-phase="verify"] {
+  background: var(--phase-verify);
+}
+.track > i[data-phase="review"] {
+  background: var(--phase-review);
+}
+/* off: still in its place, dashed in a grey that reads in every theme */
+.track > i[data-off] {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--strip-off) 0 var(--sp-2),
+    transparent var(--sp-2) calc(var(--sp-2) + var(--sp-1))
+  );
+}
+.track > u {
+  display: block;
+  width: var(--strip-dia);
+  height: var(--strip-dia);
+  margin: 0 var(--sp-1);
+  border-radius: var(--line-1);
+  background: var(--ink-2);
+  transform: rotate(45deg);
+}
+.loop {
+  grid-row: 2;
+  grid-column: var(--from) / var(--to);
+  align-self: stretch;
+  border: var(--line-2) solid var(--strip-loop-ink);
+  border-top: 0;
+  border-radius: 0 0 var(--line-2) var(--line-2);
+}
+.strip > b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--fs-3);
+  font-weight: 400;
+  color: var(--ink-3);
+}

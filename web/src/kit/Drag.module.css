@@ -1,0 +1,118 @@
+/* Drag and drop (Drag, Drop, Sortable): a palette's rows; a target ringed in your move's
+   accent with what a drop does on its ring; a list's handle in its row's head and the drop line
+   between rows. The thing being dragged stays where it was at half strength. */
+/* a palette's row: Linear's list row, bare until hovered */
+.drag {
+  display: block;
+  min-width: 0;
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: var(--r-3);
+  color: var(--ink-1);
+  cursor: grab;
+  transition: background-color var(--dur-fast) ease;
+}
+.drag:hover {
+  background: var(--list-hover);
+}
+.drag:active {
+  cursor: grabbing;
+}
+.drag[data-dragging],
+.slot[data-dragging] {
+  opacity: 0.4;
+}
+
+.drop {
+  position: relative;
+  min-width: 0;
+  border-radius: var(--r-4);
+}
+.drop[data-over] {
+  outline: var(--line-2) solid var(--you);
+  outline-offset: var(--focus-out);
+}
+.drop[data-over]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--drop-fill);
+  pointer-events: none;
+}
+/* what a drop does, as a tag on the ring's top edge */
+.hint {
+  position: absolute;
+  top: 0;
+  right: var(--sp-6);
+  z-index: var(--z-raise);
+  padding: var(--sp-1) var(--sp-4);
+  border-radius: var(--r-pill);
+  background: var(--you);
+  color: var(--you-ink);
+  font-size: var(--fs-2);
+  font-weight: 500;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* a sortable list: its rows on one left edge, each row's handle in its own head */
+.sortable {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+}
+.slot {
+  position: relative;
+  min-width: 0;
+}
+/* the handle: a quiet glyph at its row's head, unseen at rest (one device fewer on a busy card) and
+   full strength while its row is hovered or the handle holds the focus */
+.grip {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--w-grip);
+  height: var(--sp-9);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-1);
+  background: none;
+  color: var(--ink-3);
+  opacity: 0;
+  cursor: grab;
+  transition:
+    opacity var(--dur-fast) ease,
+    background-color var(--dur-fast) ease;
+}
+.slot:hover .grip,
+.grip:focus-visible {
+  opacity: 1;
+}
+.grip:hover {
+  background: var(--ctl-hover);
+  color: var(--ink-1);
+}
+.grip:active {
+  cursor: grabbing;
+}
+/* the drop line, in the middle of the gap before (or after) its row */
+.slot[data-drop]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: var(--z-raise);
+  height: var(--line-2);
+  border-radius: var(--r-pill);
+  background: var(--drop-line);
+  pointer-events: none;
+}
+.slot[data-drop="before"]::before {
+  top: calc(var(--line-1) * -1 - var(--gap) / 2);
+}
+.slot[data-drop="after"]::before {
+  bottom: calc(var(--line-1) * -1 - var(--gap) / 2);
+}

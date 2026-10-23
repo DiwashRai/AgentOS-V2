@@ -1,0 +1,162 @@
+/* Notices in the quiet language: no spinners, no toasts. In a list they are lines of it. By
+   default one stands for a group (an empty zone): its ring on the list's column edge, where a
+   group head's glyph hangs; align="item" makes it a line under a head: its glyph where a row's
+   words start, and a problem a panel of the blocked hue's wash on the column edge. */
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: var(--sp-6) var(--list-inset);
+  font-size: var(--fs-3);
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+.status[data-error="true"] {
+  color: var(--blocked);
+}
+
+/* the quiet row of an empty zone: a row's height, no rule; the lead a step firmer (never as
+   firm as a row's title), a dash, the rest muted */
+.empty {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-height: var(--h-row);
+  padding: 0 var(--list-inset);
+  color: var(--ink-3);
+  font-size: var(--fs-3);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.empty > i {
+  flex: none;
+  width: var(--notice-mark);
+  height: var(--notice-mark);
+  margin-inline: var(--line-1);
+  border-radius: 50%;
+  border: var(--line-mark) dashed var(--ink-3);
+}
+.empty > b {
+  flex: none;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.dash {
+  color: var(--ink-3);
+}
+
+/* a failure under its head: a line of the list on a short blocked edge (a row's status tick),
+   what went wrong at a reading measure */
+.problem {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-7) var(--list-inset);
+  font-size: var(--fs-3);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.problem::before {
+  content: "";
+  position: absolute;
+  left: var(--list-pad);
+  top: var(--sp-6);
+  bottom: var(--sp-6);
+  width: var(--line-2);
+  border-radius: 0 var(--line-2) var(--line-2) 0;
+  background: var(--blocked);
+}
+.problem > b {
+  color: var(--ink-1);
+  font-weight: 500;
+}
+.problem > p {
+  max-inline-size: var(--notice-measure);
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.problem > .fix {
+  color: var(--ink-3);
+}
+/* the fix's link (Settings › Intake) is a word of its sentence: its size, not a control's */
+.fix > :is(a, button) {
+  font-size: inherit;
+}
+
+/* the line under a capped list: "+3 more", a note, Show all */
+.more {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  min-height: var(--h-row-flat);
+  padding: 0 var(--list-inset);
+  font-size: var(--fs-2);
+  color: var(--ink-3);
+}
+/* the button that opens the rest: its glyph, not its padding, lines up with the rows' words */
+.more > button {
+  margin-left: calc(var(--sp-4) * -1);
+}
+.more > b {
+  flex: none;
+  font-size: var(--fs-3);
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* a line under a query's head (Intake), a row's height, its glyph where the rows' words start: an
+   empty ring; the +N of a capped run on a grey disc, its Show button after it. A problem is the
+   query's whole answer, so it is a panel: the blocked hue's faint wash standing on the column
+   edge as a tile does, its words inset, a blocked dot on a halo hung before them on its first
+   line */
+.empty[data-align="item"],
+.more[data-align="item"] {
+  gap: var(--sp-4);
+  min-height: var(--h-line);
+  padding-left: var(--list-inset);
+}
+.empty[data-align="item"] > i {
+  margin-inline: calc((var(--triage-face) - var(--notice-mark)) / 2);
+}
+.problem[data-align="item"] {
+  gap: 0;
+  margin: var(--sp-2) var(--list-inset) 0;
+  padding: var(--sp-6) var(--list-in) var(--sp-6)
+    calc(var(--list-in) + var(--triage-face) + var(--sp-3));
+  border-radius: var(--r-4);
+  box-shadow: inset 0 0 0 var(--line-1) var(--problem-edge);
+}
+.problem[data-align="item"]::before {
+  left: var(--list-in);
+  top: var(--sp-6);
+  width: var(--triage-face);
+  height: var(--h-chip);
+  border-radius: 0;
+  background: radial-gradient(
+    circle,
+    var(--blocked) calc(var(--notice-dot) / 2),
+    var(--notice-halo) calc(var(--notice-dot) / 2 + var(--line-1)),
+    var(--notice-halo) calc(var(--notice-dot) + var(--line-2)),
+    transparent calc(var(--notice-dot) + var(--line-3))
+  );
+}
+.problem[data-align="item"] > p:first-of-type {
+  color: var(--ink-1);
+}
+.more[data-align="item"] {
+  min-height: var(--h-control-lg);
+}
+.more[data-align="item"] > b {
+  display: grid;
+  place-items: center;
+  width: var(--triage-face);
+  height: var(--triage-face);
+  border-radius: 50%;
+  font-size: var(--fs-1);
+}

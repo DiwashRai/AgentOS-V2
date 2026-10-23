@@ -6,6 +6,12 @@ __pycache__/
 build/
 dist/
 
+# The web's packages, build and test output
+node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/
+
 # Tool caches
 .pytest_cache/
 .mypy_cache/

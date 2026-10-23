@@ -1,0 +1,7 @@
+{
+  "ref": "13-docs-02-projects.png",
+  "crop": [96, 96, 2784, 1799],
+  "scale": 3.2,
+  "theme": "dark",
+  "click": [{ "role": "combobox", "name": "Teams" }]
+}

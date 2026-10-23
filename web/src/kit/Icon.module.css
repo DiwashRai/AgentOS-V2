@@ -1,0 +1,80 @@
+.icon {
+  display: inline-flex;
+  flex: none;
+  line-height: 0;
+}
+.icon > svg {
+  display: block;
+}
+/* a library thing's glyph wears its kind's hue wherever it names one (the sidebar, a property, a
+   ticket's context), as Linear's projects and pull requests carry theirs; a quiet one stays grey */
+.workflow,
+.workflows {
+  --kind: var(--kind-workflow);
+}
+.agents {
+  --kind: var(--kind-agent);
+}
+.skills {
+  --kind: var(--kind-skill);
+}
+.files {
+  --kind: var(--kind-file);
+}
+/* the hue as the glyph's colour; the sidebar, which inks its glyphs itself, reads --kind */
+.icon:is(.workflow, .workflows, .agents, .skills, .files) {
+  color: var(--kind);
+}
+.icon.quiet {
+  color: var(--kind, var(--ink-3));
+}
+.line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--line-mark);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.line .solid {
+  fill: currentColor;
+  stroke: none;
+}
+/* the caret: filled, its corners rounded by its own stroke */
+.line .caret {
+  fill: currentColor;
+}
+/* priority's signal bars, Linear's grey: the lit ones in the quiet ink, the rest unlit */
+.high,
+.low {
+  fill: var(--priority-on);
+}
+.low .off {
+  fill: var(--priority-off);
+}
+.normal {
+  fill: var(--priority-none);
+}
+.tick circle {
+  fill: var(--done);
+}
+.tick path {
+  fill: none;
+  stroke: var(--done-ink);
+  stroke-width: var(--line-mark);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* a ticket's type: its glyph on a faint square, both grey; the glyph alone tells the types apart */
+.type rect {
+  fill: var(--type-square);
+}
+.type .fill {
+  fill: var(--type-glyph);
+}
+.type .glyph {
+  fill: none;
+  stroke: var(--type-glyph);
+  stroke-width: var(--line-mark);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

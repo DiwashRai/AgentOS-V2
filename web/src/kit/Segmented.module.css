@@ -1,0 +1,102 @@
+/* Filter chips as view tabs: a row of separate small rounded chips a little apart, bare words in
+   secondary ink but for the pressed one, the selected one, on the accent's soft wash in the
+   accent's ink (no edge; so the bar holds one fill, not a row of boxes); hover lights a chip's fill.
+   Each state glyph keeps its state's colour, so the filter reads as the list's groups do; counts
+   recede. The row takes the bar's free room and never wraps or clips: what doesn't fit goes into
+   the last chip's popover. */
+.track {
+  position: relative;
+  display: flex;
+  flex: 999 1 0;
+  gap: var(--sp-2);
+  align-items: center;
+  min-width: 0;
+  /* room inside the clip for a chip's focus ring (2px out, 2px wide), the bar's own box unmoved */
+  margin: calc(var(--focus-room) * -1);
+  padding: var(--focus-room);
+  overflow: hidden;
+}
+/* collapsed to the overflow chip alone: the bar gives way to it rather than clip it */
+.track[data-collapsed="true"] {
+  min-width: min-content;
+}
+.pill {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--h-control-sm);
+  padding: 0 var(--sp-4);
+  border: var(--line-1) solid transparent;
+  border-radius: var(--r-3);
+  background: none;
+  font-size: var(--fs-3);
+  font-weight: 500;
+  letter-spacing: var(--track-snug);
+  line-height: 1;
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
+}
+.pill:hover,
+.pill[data-popup-open] {
+  background: var(--chip-hover);
+  color: var(--ink-1);
+}
+/* pressed: a control's face on a firm hairline, its words in full ink, the accent in its count alone */
+.pill:is([aria-pressed="true"], [data-current="true"]) {
+  border-color: var(--rule-strong);
+  background: var(--ctl);
+  color: var(--ink-1);
+}
+.pill em {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.pill:is([aria-pressed="true"], [data-current="true"]) em {
+  color: var(--you-text);
+  opacity: 0.8;
+}
+.pill em[data-zero="true"] {
+  opacity: 0.6;
+}
+/* the overflow chip naming the pressed one: its chevron */
+.chev {
+  display: inline-flex;
+  margin-right: calc(var(--sp-2) * -1);
+  color: var(--ink-3);
+}
+.chev svg {
+  width: var(--sp-6);
+  height: var(--sp-6);
+}
+/* the ruler: every chip at natural width, laid out but never seen, as far apart as in the row */
+.ruler {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  column-gap: var(--sp-2);
+  visibility: hidden;
+  pointer-events: none;
+}
+/* the overflow popover: as wide as a filter's longest name and its count need */
+.sheet {
+  min-width: var(--w-pop-filter);
+}
+/* a filter's glyph in the popover, on the rows' lead column */
+.item {
+  display: inline-flex;
+  flex: none;
+  width: var(--glyph-sm);
+}
+/* fit: a choice of two in a form, as wide as its chips, every chip shown */
+.track[data-fit] {
+  flex: none;
+}

@@ -1,0 +1,154 @@
+/* Flat controls: at rest a button is a faint face on a hairline (white on Paper, a breath of fill on
+   Carbon), so it reads as something to press without being a slab; under the pointer a fill a step
+   firmer; the weight never changes by state. `you` is the primary, the accent's one solid fill with
+   white on it; `accent` the logo's ink, only Dispatch run. */
+.btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  height: var(--h-control);
+  padding: 0 var(--sp-6);
+  border-radius: var(--r-2);
+  border: var(--line-1) solid var(--ctl-rest-edge);
+  background: var(--ctl);
+  color: var(--ink-1);
+  font-size: var(--fs-3);
+  font-weight: 500;
+  letter-spacing: var(--track-snug);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+.glyph {
+  display: inline-flex;
+  color: var(--ink-3);
+}
+.btn:hover {
+  border-color: var(--ctl-edge-hover);
+  background: var(--ctl-lift);
+}
+.btn:hover .glyph {
+  color: var(--ink-1);
+}
+.xs {
+  height: var(--sp-9);
+  padding: 0 var(--sp-4);
+  gap: var(--sp-2);
+  font-size: var(--fs-2);
+}
+.sm {
+  height: var(--h-control-sm);
+  padding: 0 var(--sp-5);
+}
+.square {
+  padding: 0;
+  width: var(--h-control);
+  color: var(--ink-2);
+}
+.square:hover {
+  color: var(--ink-1);
+}
+.square.sm {
+  width: var(--h-control-sm);
+}
+.square.xs {
+  width: var(--h-chip);
+  height: var(--h-chip);
+  border-radius: var(--r-1);
+}
+
+/* icon-only and filled buttons draw their glyph in the button's own ink */
+.square .glyph,
+:is(.strong, .you, .accent) .glyph,
+.btn:is(.strong, .you, .accent):hover .glyph,
+.btn[aria-disabled="true"] .glyph {
+  color: inherit;
+}
+/* strong: a primary that isn't a gate, the default's face in a firmer weight (the solid one is the
+   accent's alone) */
+.strong {
+  font-weight: 600;
+}
+.you,
+.you:hover {
+  background: var(--you);
+  color: var(--you-ink);
+}
+.you:hover {
+  background: var(--you-lift);
+}
+.accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.accent:hover {
+  background: var(--accent-hover);
+}
+.quiet,
+.link {
+  background: transparent;
+}
+/* a filled or quiet button draws no rest edge */
+.btn:is(.you, .accent, .quiet) {
+  border-color: transparent;
+}
+.quiet {
+  color: var(--ink-2);
+}
+.quiet:hover {
+  background: var(--ctl-hover);
+  color: var(--ink-1);
+}
+.link,
+.link:hover {
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font-size: var(--fs-2);
+}
+.link:hover {
+  color: var(--ink-1);
+}
+/* inline: a primary in a list's line (Approve in My queue): the accent's words alone at rest, so the
+   row says act here without a box; under the pointer the accent's edge and soft wash */
+.inline {
+  border-color: transparent;
+  background: none;
+  color: var(--you-text);
+}
+.inline:hover {
+  border-color: var(--you);
+  background: var(--you-soft);
+}
+/* aside: a row's second action (Request changes): the default's look, shown while its row is under
+   the pointer or holds the focus, its room kept so nothing moves */
+:where([data-row]:not(:hover, :focus-within)) .aside {
+  visibility: hidden;
+}
+/* blocked (R11): an empty dashed outline in muted ink that hover leaves alone, the one line a button
+   draws; a quiet one is its faded glyph alone (no box), and the primary a soft wash of the accent
+   with its words in the accent's ink (still the bar's primary, plainly not lit) */
+.btn[aria-disabled="true"],
+.btn[aria-disabled="true"]:hover {
+  background: transparent;
+  border: var(--line-1) dashed var(--ctl-edge-hover);
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+.btn:is(.quiet, .you)[aria-disabled="true"] {
+  border-style: solid;
+  border-color: transparent;
+  opacity: var(--blocked-fade);
+}
+.btn.you[aria-disabled="true"] {
+  background: var(--you-soft);
+  color: var(--you-text);
+  opacity: 1;
+}

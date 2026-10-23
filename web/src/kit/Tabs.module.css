@@ -1,0 +1,48 @@
+/* Underline tabs with no rule across the column: plain words, the current one in the strong ink over
+   a short bar of the accent (this one), so a tab never reads as a button beside the real ones; a
+   count trails each in the quiet ink */
+.list {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-9);
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: var(--h-control);
+  margin-bottom: calc(var(--line-1) * -1);
+  padding: 0;
+  border: 0;
+  border-bottom: var(--line-2) solid transparent;
+  background: none;
+  color: var(--ink-3);
+  font-size: var(--fs-tk);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast),
+    border-color var(--dur-fast);
+}
+.tab:hover {
+  color: var(--ink-1);
+}
+.tab:focus-visible {
+  outline: var(--line-2) solid var(--focus);
+  outline-offset: var(--focus-tight);
+}
+.tab[data-active] {
+  color: var(--ink-1);
+  border-bottom-color: var(--you);
+}
+.count {
+  font-size: var(--fs-3);
+  font-weight: 400;
+  color: var(--tk-label);
+  font-variant-numeric: tabular-nums;
+}
+.panel {
+  padding-top: var(--sp-8);
+  outline: none;
+}

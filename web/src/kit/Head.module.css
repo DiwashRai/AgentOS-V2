@@ -1,0 +1,166 @@
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* group: a list's band (Linear's group head): a light block of grey square to the sheet's edges,
+   the rows straight under it, its words at the rows' size; its glyph on the list's column edge,
+   where the rows' words, tiles and panels stand, so it heads them; its end on the rows' end; a
+   fold's chevron after its count. One grey for every group, so the list never stripes; the state
+   is the glyph */
+.group {
+  position: relative;
+  height: var(--h-group);
+  margin-top: var(--group-gap);
+  padding: 0 var(--list-end, var(--list-inset)) 0 var(--list-inset);
+}
+.group:first-child {
+  margin-top: 0;
+}
+.group::before,
+.line::before {
+  content: "";
+  position: absolute;
+  inset: 0 var(--list-reach);
+  border-radius: var(--list-radius);
+  background: var(--group-band);
+  transition: background-color var(--dur-fast) ease;
+}
+.group > :not(.holds),
+.group .toggle {
+  position: relative;
+}
+.group .chev {
+  order: 1;
+  width: var(--sp-8);
+  margin-left: calc(var(--sp-2) * -1);
+}
+/* a fold's heading is no box: its button lays out as the head's own child */
+.holds {
+  display: contents;
+  font: inherit;
+}
+.toggle,
+.static {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-1);
+  background: none;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+.toggle {
+  cursor: pointer;
+}
+.chev {
+  display: inline-grid;
+  place-items: center;
+  width: var(--sp-9);
+  color: var(--ink-3);
+  opacity: 0.6;
+  transition:
+    transform var(--dur-fast) ease,
+    opacity var(--dur-fast) ease;
+}
+.toggle:hover > .chev {
+  opacity: 1;
+}
+.toggle[aria-expanded="false"] > .chev {
+  transform: rotate(-90deg);
+}
+.icon {
+  display: inline-flex;
+  align-items: center;
+}
+.name {
+  font-size: var(--fs-3);
+  font-weight: 500;
+  color: var(--ink-1);
+}
+/* the spacer between the title and the summary */
+.rule {
+  flex: 1;
+  min-width: var(--sp-8);
+  height: var(--line-1);
+}
+.summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  /* room inside the clip for a link's focus ring, the head's own line unmoved */
+  margin: calc(var(--focus-room) * -1);
+  padding: var(--focus-room);
+  overflow: hidden;
+  font-size: var(--fs-2);
+  color: var(--ink-2);
+}
+.note {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--fs-2);
+  color: var(--ink-3);
+}
+/* line: a query's head over its run (Intake), the group's band: parted from the run before by room,
+   held at the list's top while its rows pass under, lit a step on hover like a row (a Swap in its
+   summary answers to it). Its fold reaches across it (a click anywhere but the summary folds), the
+   chevron first, in the faces' column, so the key starts where the titles do */
+.line {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  height: var(--h-group);
+  margin-top: var(--group-gap);
+  padding: 0 var(--list-end, var(--list-inset)) 0 var(--list-inset);
+  background: var(--ground);
+}
+.line:first-child {
+  margin-top: 0;
+}
+.line:is(:hover, :focus-within)::before {
+  background: var(--group-band-hover);
+}
+.line > :not(.holds),
+.line .toggle {
+  position: relative;
+}
+.line .toggle {
+  flex: 1;
+  min-width: 0;
+}
+.line .chev {
+  width: var(--triage-face);
+}
+.line .rule {
+  display: none;
+}
+.line .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.line .icon {
+  color: var(--ink-3);
+  font-size: var(--fs-2);
+  font-weight: 500;
+  letter-spacing: var(--track-caps);
+}
+/* on a line the note is the query's state (didn't answer): said in the blocked colour */
+.line .note {
+  color: var(--blocked);
+}
+/* a group head in a scrolling list stays at its top while its rows pass under it */
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--ground);
+}

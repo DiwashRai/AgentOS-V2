@@ -1,0 +1,111 @@
+/* Linear's comments: a face, the name and time on one line, the text plain under it at body size;
+   mine sit on the right in a quiet raised bubble, as Linear's chat draws your own message */
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-9);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+.msg {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--sp-9) minmax(0, 1fr);
+  gap: var(--sp-5);
+  min-width: 0;
+}
+/* in a card, a hairline parts one person's message from the next, from the words' edge to the card's
+   (Linear's comment thread); a run of one person's messages stays unbroken */
+.msg:not(.mine) + .msg:not(.same, .mine)::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--sp-9) / -2);
+  left: calc(var(--sp-9) + var(--sp-5));
+  right: calc(var(--pad) * -1);
+  height: var(--line-1);
+  background: var(--thread-rule, transparent);
+}
+.same {
+  margin-top: calc(var(--sp-8) * -1);
+}
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.who {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  min-height: var(--sp-9);
+  padding-top: var(--sp-1);
+  font-size: var(--fs-tk);
+  font-weight: 500;
+  color: var(--ink-1);
+}
+.who > time {
+  font-size: var(--fs-3);
+  font-weight: 400;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.who > time::before {
+  content: "· ";
+}
+.bubble {
+  max-width: 100%;
+  color: var(--tk-ink);
+  font-size: var(--fs-tk);
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+/* each line of a message its own paragraph, filled to the column and kept from ending on one word */
+.para {
+  display: block;
+  text-wrap: pretty;
+}
+.same .bubble {
+  margin-top: calc(var(--sp-2) * -1);
+}
+.last .bubble {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.last .bubble,
+.last .who {
+  font-size: var(--fs-3);
+}
+/* mine: on the right, a bubble of tone, no face */
+.mine {
+  grid-template-columns: minmax(0, 1fr);
+}
+.mine > :first-child {
+  display: none;
+}
+.mine .body {
+  align-items: flex-end;
+}
+.mine .who {
+  flex-direction: row-reverse;
+  min-height: 0;
+}
+.mine .who > time::before {
+  content: none;
+}
+.mine .who > time::after {
+  content: " ·";
+}
+.mine .bubble {
+  max-width: 88%;
+  padding: var(--sp-4) var(--sp-6);
+  border-radius: var(--r-4);
+  background: var(--tk-mine);
+  box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
+}

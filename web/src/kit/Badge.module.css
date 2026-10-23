@@ -1,0 +1,63 @@
+/* key: an issue id, quiet text, no chip, so a row's title leads */
+.key {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  height: var(--h-chip);
+  color: var(--ink-3);
+  font-size: var(--fs-3);
+  font-weight: 400;
+  letter-spacing: var(--track-snug);
+  line-height: 1;
+  white-space: nowrap;
+}
+.sm {
+  height: var(--h-chip-sm);
+  font-size: var(--fs-2);
+}
+
+/* count: a bare quiet number after the name; the state's hue is its head's glyph, never its count */
+.count {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  height: var(--h-chip-sm);
+  color: var(--ink-3);
+  font-size: var(--fs-3);
+  font-weight: 400;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* keycap: a flat key, a fill (on Paper white on a faint hairline) */
+.kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--h-chip-sm);
+  height: var(--h-chip-sm);
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-1);
+  background: var(--field);
+  box-shadow: inset 0 0 0 var(--line-1) var(--tag-edge);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-1);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* YOU */
+.you {
+  display: inline-block;
+  flex: none;
+  padding: var(--line-mark) var(--sp-2) var(--line-1);
+  border-radius: var(--r-1);
+  background: var(--you);
+  color: var(--you-ink);
+  font-family: var(--font-mono);
+  font-size: var(--fs-1);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  line-height: 1.2;
+}

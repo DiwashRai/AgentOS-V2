@@ -1,0 +1,20 @@
+/* A tooltip: the kit's popover sheet at its smallest, as Linear's. Meta-sized words on the pop's
+   fill, a short line or two, never wider than a menu; it fades in after the rest and out at once. */
+.tip {
+  min-width: 0;
+  max-width: var(--w-menu);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-2);
+  font-size: var(--fs-2);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) ease;
+}
+.tip[data-starting-style],
+.tip[data-ending-style] {
+  opacity: 0;
+}
+.tip[data-instant] {
+  transition: none;
+}
