@@ -32,8 +32,8 @@
   letter-spacing: var(--track-snug);
   color: var(--pop-aside);
 }
-/* the filter: a real field, full bleed on a step of tone over the rows (no rule), its words on
-   theirs */
+/* the filter: a real field, full bleed on the popover's own tone, a hairline under it, its words on
+   the rows' */
 .find {
   display: flex;
   align-items: center;
@@ -42,8 +42,9 @@
   margin: calc(var(--sp-2) * -1) calc(var(--sp-2) * -1) var(--sp-2);
   padding: 0 var(--sp-6);
   border: 0;
+  border-bottom: var(--line-1) solid var(--pop-rule);
   border-radius: calc(var(--r-4) - var(--line-1)) calc(var(--r-4) - var(--line-1)) 0 0;
-  background: var(--fill-1);
+  background: none;
   font-size: var(--fs-3);
   color: var(--ink-1);
   font-family: inherit;

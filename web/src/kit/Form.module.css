@@ -12,7 +12,8 @@
   transition: background-color var(--dur-fast) ease;
 }
 .box:hover {
-  background: var(--fill-3);
+  border-color: var(--ctl-edge-hover);
+  background: var(--input-hover);
 }
 .box:focus-within {
   background: var(--input);
@@ -51,7 +52,8 @@
   transition: background-color var(--dur-fast);
 }
 .search:hover {
-  background: var(--fill-3);
+  background: var(--input-hover);
+  box-shadow: inset 0 0 0 var(--line-1) var(--ctl-edge-hover);
 }
 .search:focus-within {
   background: var(--field);
@@ -322,6 +324,7 @@
   border: 0;
   border-radius: var(--r-pill);
   background: var(--switch-off);
+  box-shadow: inset 0 0 0 var(--line-1) var(--switch-edge);
   transition: background-color var(--dur-fast) ease;
 }
 .switch::after {
@@ -337,6 +340,7 @@
 }
 .switch[aria-checked="true"] {
   background: var(--you);
+  box-shadow: none;
 }
 .switch[aria-checked="true"]::after {
   transform: translateX(calc(var(--w-switch) - var(--h-switch)));

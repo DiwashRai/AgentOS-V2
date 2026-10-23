@@ -47,9 +47,11 @@
   background: var(--chip-hover);
   color: var(--ink-1);
 }
+/* pressed: a control's face on a firm hairline, its words in full ink, the accent in its count alone */
 .pill:is([aria-pressed="true"], [data-current="true"]) {
-  background: var(--you-soft);
-  color: var(--you-text);
+  border-color: var(--rule-strong);
+  background: var(--ctl);
+  color: var(--ink-1);
 }
 .pill em {
   font-style: normal;

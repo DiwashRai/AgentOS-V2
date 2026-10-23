@@ -28,6 +28,7 @@
   color: var(--ink-3);
 }
 .btn:hover {
+  border-color: var(--ctl-edge-hover);
   background: var(--ctl-lift);
 }
 .btn:hover .glyph {

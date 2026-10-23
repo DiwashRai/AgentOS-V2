@@ -40,8 +40,10 @@
 .row:is(.line, .item, .triage):is(:hover, :has(:focus-visible))::before {
   background: var(--list-hover);
 }
+/* open: a card, the sheet's tone inside the card's hairline */
 .row:is(.line, .item).open::before {
   background: var(--list-open);
+  box-shadow: inset 0 0 0 var(--line-1) var(--card-edge);
 }
 /* selected rows one after another join into one patch */
 .row.open:has(+ .open)::before {

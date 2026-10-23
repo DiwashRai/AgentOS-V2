@@ -194,8 +194,8 @@
 .card .bar {
   margin-top: var(--sp-2);
 }
-/* the now row: the card's foot, a band a step deeper under the stages edge to edge, so the live run
-   reads as the card's status bar; the run's meter on it long enough to read, its steps to come on a
+/* the now row: the card's foot, parted from the stages by a hairline edge to edge (the card's own
+   tone, no band), so the live run reads as the card's status bar; the run's meter on it long enough to read, its steps to come on a
    firmer track */
 .now {
   grid-column: 1 / -1;
@@ -203,7 +203,7 @@
   margin: var(--sp-6) calc(var(--sp-8) * -1) 0;
   padding: var(--sp-6) var(--sp-8);
   border-radius: 0 0 var(--r-5) var(--r-5);
-  background: var(--fill-1);
+  box-shadow: inset 0 var(--line-1) 0 var(--card-edge);
   --w-meter: var(--w-tk-meter);
   --track: var(--rule-strong);
 }

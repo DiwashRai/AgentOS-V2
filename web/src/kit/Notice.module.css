@@ -130,7 +130,7 @@
   padding: var(--sp-6) var(--list-in) var(--sp-6)
     calc(var(--list-in) + var(--triage-face) + var(--sp-3));
   border-radius: var(--r-4);
-  background: var(--card-problem);
+  box-shadow: inset 0 0 0 var(--line-1) var(--problem-edge);
 }
 .problem[data-align="item"]::before {
   left: var(--list-in);
@@ -158,6 +158,6 @@
   width: var(--triage-face);
   height: var(--triage-face);
   border-radius: 50%;
-  background: var(--list-band);
+  box-shadow: inset 0 0 0 var(--line-1) var(--rule-strong);
   font-size: var(--fs-1);
 }

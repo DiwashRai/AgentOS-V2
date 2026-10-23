@@ -90,7 +90,7 @@
   /* ticket: the ticket page and the peek */
   --tk-ink: var(--ink-1); /* body-size text: a property, a plan item, a message */
   --tk-label: var(--ink-3); /* a property's head, a section head: clearly under the values */
-  --tk-scrim: color-mix(in srgb, var(--ink-1) 28%, transparent);
+  --tk-scrim: color-mix(in srgb, var(--ink-1) 14%, transparent);
   /* the popover: the sheet's white on its one hairline, lifted by a soft shadow (the one layer that
      floats, so the one shadow) */
   --pop: var(--raised);
@@ -163,7 +163,7 @@
   /* light on dark reads a weight heavier */
   --tk-ink: color-mix(in srgb, var(--ink-1) 55%, var(--ink-2));
   /* the popover: a clear step over what it opens on, a deeper shadow under it */
-  --pop: color-mix(in srgb, var(--wash) 8%, var(--page));
+  --pop: color-mix(in srgb, var(--wash) 6%, var(--page));
   --pop-hover: var(--fill-2);
   --pop-rule: var(--fill-2);
   --pop-shadow:
@@ -182,7 +182,9 @@
   --ring-ink: color-mix(in srgb, var(--ink-1) 22%, transparent);
   /* rows: a hover, a heading's count; a row's Chip, its grey dot or glyph; Unassigned's ring */
   --list-hover: var(--fill-1);
-  --list-open: var(--fill-2); /* the open row: a panel of tone under it, not a colour */
+  --list-open: var(
+    --tone-2
+  ); /* the open row: a card of the sheet's tone on a hairline, not a slab */
   --list-band: var(--fill-2);
   /* a group's band: a lighter block than a selected row, a step firmer under the pointer */
   --group-band: var(--fill-1);
@@ -209,6 +211,12 @@
   /* a firmer tag (a list row's Now) and its edge */
   --chip-firm: var(--fill-3);
   --chip-firm-edge: transparent;
+  /* a field under the pointer; the sheet's rim against the ground; a switch's edge off; a problem's
+     edge */
+  --input-hover: var(--fill-3);
+  --sheet-rim: var(--rule);
+  --switch-edge: transparent;
+  --problem-edge: color-mix(in srgb, var(--blocked) 35%, transparent);
   --pop-edge: var(--edge);
   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
   /* surfaces on the sheet: a board's card one tone, a step more under the pointer; the run card
@@ -224,7 +232,7 @@
   --sheet-edge-hover: var(--rule-strong);
   --tk-side: var(--page);
   --tk-hover: var(--fill-1);
-  --tk-mine: var(--fill-2);
+  --tk-mine: var(--tone-2);
   /* sidebar: a section's label, a view's count and a glyph, quieter than the labels (AA on --side) */
   --side-title: color-mix(in srgb, var(--side-ink) 70%, var(--side));
   --side-icon: color-mix(in srgb, var(--side-ink) 70%, var(--side));
@@ -260,7 +268,7 @@
   --priority-on: var(--ink-2);
   --priority-off: color-mix(in srgb, var(--ink-1) 16%, transparent);
   --priority-none: color-mix(in srgb, var(--ink-1) 34%, transparent);
-  --type-square: var(--fill-2);
+  --type-square: transparent;
   --type-glyph: var(--ink-2);
 }
 
@@ -275,8 +283,35 @@
   --list-chip-fill: var(--raised);
   --ctl-rest-edge: var(--rule-strong);
   --select-edge: var(--rule-strong);
-  --tag-edge: var(--rule);
+  --tag-edge: var(--rule-strong);
   --chip-firm: var(--raised);
+  --chip-firm-edge: var(--rule-strong);
+  /* a hover a faint step, a field white under the pointer (its edge firms); a group's band lighter
+     than a hover; the sheet's rim a line darker than the ground (Linear's Ash: #e3e4ec on #edeef3);
+     a switch white on an edge when off */
+  --ctl-lift: var(--tone-3);
+  --input-hover: var(--raised);
+  --group-band: color-mix(in srgb, var(--wash) 2%, transparent);
+  --group-band-hover: var(--fill-1);
+  --sheet-rim: color-mix(in srgb, var(--hair) 5%, var(--side));
+  --switch-off: var(--raised);
+  --switch-edge: var(--rule-strong);
+}
+
+/* Carbon's controls and tags, over the derived ones: Linear's dark, a fill barely over the sheet
+   inside a hairline, so the step is in the edge, not the fill; a hover fills (--ctl-lift), a tag is
+   its outline alone */
+[data-theme="dark"] {
+  --ctl: color-mix(in srgb, var(--wash) 2%, transparent);
+  --input: color-mix(in srgb, var(--wash) 2%, transparent);
+  --field: color-mix(in srgb, var(--wash) 2%, transparent);
+  --chip-rest: color-mix(in srgb, var(--wash) 2%, transparent);
+  --input-hover: var(--fill-2);
+  --ctl-rest-edge: var(--rule);
+  --select-edge: var(--rule);
+  --list-chip-fill: transparent;
+  --tag-edge: var(--rule);
+  --chip-firm: transparent;
   --chip-firm-edge: var(--rule-strong);
 }
 
