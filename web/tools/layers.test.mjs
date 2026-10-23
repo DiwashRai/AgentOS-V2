@@ -49,6 +49,41 @@ const FILES = {
     `export const C = () => h("p", { style: { color: "red" } });`,
     ``,
   ].join("\n"),
+  // round 2: a glob from the web's root, a glob of nothing
+  "features/ticket/Glob.tsx": `export const G = import.meta.glob("/src/features/compact/*.ts", { eager: true });\n`,
+  "features/ticket/Empty.tsx": `export const E = import.meta.glob("./nothing/*.tsx");\n`,
+  // a stylesheet Vite reads, in a pattern and in a screen
+  "patterns/skin.pcss": `.x { color: red; }\n`,
+  "patterns/styled.tsx": `import "./skin.pcss";\nexport const styled = 1;\n`,
+  "features/queue/q.css": `.x { color: red; }\n`,
+  "features/queue/Q.tsx": `import "./q.css";\nexport const Q = 1;\n`,
+  // JavaScript with a declaration beside it
+  "features/intake/helper.js": `import { nowLine } from "../compact/model";\nexport const h = () => nowLine;\n`,
+  "features/intake/helper.d.ts": `export declare const h: () => unknown;\n`,
+  "features/intake/I.tsx": `import { h } from "./helper";\nexport const I = h;\n`,
+  // createElement held in a const; a tag that may be a string
+  "features/library/Alias.tsx": [
+    `import React from "react";`,
+    `const h = React.createElement;`,
+    `declare const on: boolean;`,
+    `const Div: "div" | "span" = on ? "div" : "span";`,
+    `export const X = () => [h("div", { style: { color: "red" } }), <Div />];`,
+    ``,
+  ].join("\n"),
+  // the kit by another name: renamed, whole, held in a const, re-exported
+  "features/library/Kit.tsx": [
+    `import { Checklist as List } from "../../kit";`,
+    `import * as Kit from "../../kit";`,
+    `import { Checklist } from "../../kit";`,
+    `const Also = Checklist;`,
+    `export const K = () => [<List />, <Kit.Checklist />, <Also />, <Checklist />];`,
+    ``,
+  ].join("\n"),
+  "features/shared/kitAgain.ts": `export { Checklist } from "../../kit";\n`,
+  "features/compact/Ns.tsx": `import * as Parts from "../shared/peek";\nexport const N = Parts;\n`,
+  // a class component; the API's error class is fine
+  "patterns/cls.tsx": `export class Who {\n  render() {\n    return null;\n  }\n}\n`,
+  "api/oops.ts": `export class Oops extends Error {}\n`,
 };
 
 let root;
@@ -93,7 +128,39 @@ describe("the layers, on what each import resolves to", () => {
   });
 
   it("finds an element made without a tag outside the kit", () => {
-    const lines = at("features/intake/IntakeView.tsx").map((p) => p.split(" ")[0]);
-    expect(lines).toEqual([4, 5, 6].map((n) => `features/intake/IntakeView.tsx:${String(n)}`));
+    const lines = [...new Set(at("features/intake/IntakeView.tsx").map((p) => p.split(" ")[0]))];
+    expect(lines).toEqual([1, 2, 4, 5].map((n) => `features/intake/IntakeView.tsx:${String(n)}`));
+    const alias = [...new Set(at("features/library/Alias.tsx").map((p) => p.split(" ")[0]))];
+    expect(alias).toEqual([2, 5].map((n) => `features/library/Alias.tsx:${String(n)}`));
+  });
+
+  it("reads a glob from the web's root, and fails one that matches nothing", () => {
+    expect(at("features/ticket/Glob.tsx:1 ")).toHaveLength(1);
+    expect(at("features/ticket/Empty.tsx:1 ")).toHaveLength(1);
+  });
+
+  it("keeps every stylesheet in the kit", () => {
+    expect(at("patterns/skin.pcss")).toHaveLength(1);
+    expect(at("patterns/styled.tsx:1 ")).toHaveLength(1);
+    expect(at("features/queue/q.css")).toHaveLength(1);
+    expect(at("features/queue/Q.tsx:1 ")).toHaveLength(1);
+    expect(at("kit/base.css")).toEqual([]);
+  });
+
+  it("takes only TypeScript under src/", () => {
+    expect(at("features/intake/helper.js")).toHaveLength(1);
+    expect(at("features/intake/helper.d.ts")).toHaveLength(1);
+  });
+
+  it("takes the kit by its own names, and no module whole", () => {
+    const lines = [...new Set(at("features/library/Kit.tsx").map((p) => p.split(" ")[0]))];
+    expect(lines).toEqual([1, 2, 4].map((n) => `features/library/Kit.tsx:${String(n)}`));
+    expect(at("features/shared/kitAgain.ts:1 ")).toHaveLength(1);
+    expect(at("features/compact/Ns.tsx:1 ")).toHaveLength(1);
+  });
+
+  it("declares no class where the layers draw", () => {
+    expect(at("patterns/cls.tsx:1 ")).toHaveLength(1);
+    expect(at("api/oops.ts")).toEqual([]);
   });
 });

@@ -5,8 +5,9 @@
 //   code_lines    lines with code (not blank, not only comments)
 //   suppressions  [[line, marker]] for eslint-disable*, @ts-ignore, @ts-expect-error comments
 //   raw_tags      [line] of each element rendered without a component: a JSX intrinsic element
-//                 (<div>, <span>, ...), a tag bound to a string in the file (`const Div = "div"`),
-//                 a createElement call (by name, or an import renamed)
+//                 (<div>, <span>, ...), a tag bound in the file to what may be a string (`const
+//                 Div = "div"`, `const Tag: "a" | "b"`), a call by createElement's name or an
+//                 import renamed, and any other mention of createElement
 //   functions     [{name, start: [line, col], end: [line, col]}], 1-based, to name ESLint findings
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -29,8 +30,27 @@ function functionName(node) {
   return "<anonymous>";
 }
 
-/** The names a file binds to a string (`const Div = "div"`) and to createElement (an import of it,
- *  renamed or not): a JSX tag or a call by one of them renders an element. */
+/** An expression that is, or may be, a string: a literal, a template, either side of a choice. */
+function stringy(e) {
+  if (!e) return false;
+  if (ts.isParenthesizedExpression(e) || ts.isAsExpression(e) || ts.isSatisfiesExpression(e))
+    return stringy(e.expression);
+  if (ts.isStringLiteralLike(e) || ts.isTemplateExpression(e)) return true;
+  if (ts.isConditionalExpression(e)) return stringy(e.whenTrue) || stringy(e.whenFalse);
+  return ts.isBinaryExpression(e) && (stringy(e.left) || stringy(e.right));
+}
+
+/** A type written with a string in it (`"div" | "span"`, `string`). */
+function stringType(node) {
+  if (!node) return false;
+  if (node.kind === ts.SyntaxKind.StringKeyword) return true;
+  if (ts.isLiteralTypeNode(node) && ts.isStringLiteralLike(node.literal)) return true;
+  return ts.forEachChild(node, stringType) === true;
+}
+
+/** The names a file binds to a string, or to what may be one (`const Div = "div"`, `const Tag:
+ *  "a" | "b" = …`), and to createElement (an import of it, renamed or not): a JSX tag or a call by
+ *  one of them renders an element. */
 function rawNames(sf) {
   const strings = new Set();
   const makers = new Set(["createElement"]);
@@ -38,8 +58,7 @@ function rawNames(sf) {
     if (
       ts.isVariableDeclaration(node) &&
       ts.isIdentifier(node.name) &&
-      node.initializer &&
-      ts.isStringLiteralLike(node.initializer)
+      (stringy(node.initializer) || stringType(node.type))
     )
       strings.add(node.name.text);
     if (ts.isImportSpecifier(node) && (node.propertyName ?? node.name).text === "createElement")
@@ -50,19 +69,23 @@ function rawNames(sf) {
   return { strings, makers };
 }
 
-/** Whether a node renders an element without a component. */
+/** Whether a node renders an element without a component: an intrinsic tag, a tag that may be a
+ *  string, a call by createElement's name; and any other mention of createElement (`const h =
+ *  React.createElement`), which only the kit has a use for. */
 function isRaw(node, names) {
   if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node))
     return (
       ts.isIdentifier(node.tagName) &&
       (ts.isIntrinsicJsxName(node.tagName.text) || names.strings.has(node.tagName.text))
     );
-  if (!ts.isCallExpression(node)) return false;
-  const callee = node.expression;
-  if (ts.isPropertyAccessExpression(callee)) return callee.name.text === "createElement";
-  return ts.isIdentifier(callee) && names.makers.has(callee.text);
+  if (ts.isIdentifier(node)) return node.text === "createElement";
+  return (
+    ts.isCallExpression(node) &&
+    ts.isIdentifier(node.expression) &&
+    node.expression.text !== "createElement" &&
+    names.makers.has(node.expression.text)
+  );
 }
-
 function measure(path) {
   const text = readFileSync(join(webDir, path), "utf8");
   const kind = path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;

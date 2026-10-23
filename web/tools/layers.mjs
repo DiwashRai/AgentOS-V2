@@ -2,10 +2,16 @@
 // no spelling of a path gets past them (ESLint's import rules are the fast first line; this is the
 // one that can't be fooled). Every file under src/ is in a layer; each layer lists what it may
 // import: local modules by the layer they resolve to, packages by name. A static import, a
-// re-export, a type-only import and an `import.meta.glob` all count; a lazy `import()` is the app's
-// alone. Only the kit renders elements: a raw tag, a tag bound to a string, a createElement call
-// anywhere else fails. kit.mjs reads the modules (./reach.mjs) and checks them here; pure, so its
-// tests run on plain values as well as on a tree.
+// re-export, a type-only import and an `import.meta.glob` (its "/"-led patterns from the web's
+// root; one that matches nothing fails) all count; a lazy `import()` is the app's alone. Where a
+// construct could carry code past the checks, it is banned outright rather than read more
+// cleverly: code under src/ is .ts or .tsx (no JavaScript, no bare declarations); a stylesheet of
+// any language Vite reads is the kit's alone; outside the kit nothing renders an element itself (an
+// intrinsic tag, a tag that may be a string, any mention of createElement), takes the kit by
+// another name (a renamed or default import, a re-export, a component held in a const) or imports a
+// module whole as a namespace; and the layers that draw declare no class. kit.mjs reads the
+// modules (./reach.mjs) and checks them here; pure, so its tests run on plain values as well as on
+// a tree.
 
 /** Where a module under src/ sits ("features/ticket/RunsTab.tsx" is the ticket screen), or null
  *  when it is in no layer. */
@@ -72,9 +78,19 @@ function mayReach(at, rel, test) {
   return MAY[at.layer].includes(to) || (test && TEST.local.includes(to));
 }
 
+/** Every stylesheet Vite reads, whatever its language. */
+const STYLE = /\.(css|less|sass|scss|styl|stylus|pcss|postcss|sss)$/;
+/** The code under src/ is TypeScript, which every check reads: a JavaScript file, or a declaration
+ *  with no code of its own, would carry code past them. */
+const NOT_READ = /\.(js|jsx|mjs|cjs|d\.ts|d\.tsx|d\.mts|d\.cts)$/;
+/** The layers that draw: no class there (a class component would skip the props checks). */
+const DRAWING = ["patterns", "shared", "screen", "app", "main"];
+
 /** One import's problem, or null. */
 function importProblem(at, imp, test) {
   if (imp.kind === "dynamic" && at.layer !== "app") return "imports lazily: only the app does";
+  if (imp.to !== null && STYLE.test(imp.to) && at.layer !== "kit")
+    return "imports a stylesheet: only src/kit/ has CSS";
   if (imp.pkg !== null)
     return named(PACKAGES[at.layer], imp.pkg) || (test && named(TEST.packages, imp.pkg))
       ? null
@@ -84,11 +100,19 @@ function importProblem(at, imp, test) {
   return `reaches ${imp.to} (${reachOf(imp.to)}): not for ${at.layer}`;
 }
 
+const WHY = {
+  element: "only the kit renders elements",
+  kit: "outside the kit, a kit component is imported by its own name, from the index",
+  namespace: "outside the kit, import the names a module is used by",
+  class: "a class component would skip the props checks; write a function",
+};
+
 /**
  * @param {{rel: string, test: boolean, imports: {spec: string, to: string | null, pkg: string | null,
- *   kind: string, line: number}[], raw: {line: number, what: string}[]}[]} modules every file under
- *   src/, its imports resolved (a file under src/, else a package by name) and the elements it
- *   renders itself
+ *   kind: string, line: number}[], only: {line: number, kind: string, what: string}[]}[]} modules
+ *   every file under src/, its imports resolved (a file under src/, else a package by name) and
+ *   what in it only the kit may do (`kind`: element, kit, namespace; class, which only the layers
+ *   that draw may not)
  * @returns {string[]}
  */
 export function layerProblems(modules) {
@@ -99,15 +123,18 @@ export function layerProblems(modules) {
       problems.push(`${m.rel}: in no layer (src/ holds kit, domain, api, patterns, features, app)`);
       continue;
     }
+    if (NOT_READ.test(m.rel))
+      problems.push(`${m.rel}: not TypeScript code the checks read; write it as .ts or .tsx`);
+    if (STYLE.test(m.rel) && at.layer !== "kit")
+      problems.push(`${m.rel}: a stylesheet; only src/kit/ has CSS`);
     for (const imp of m.imports) {
       const p = importProblem(at, imp, m.test);
       if (p) problems.push(`${m.rel}:${String(imp.line)} "${imp.spec}" ${p}`);
     }
-    if (at.layer !== "kit")
-      for (const r of m.raw)
-        problems.push(
-          `${m.rel}:${String(r.line)} renders ${r.what}: only the kit renders elements`,
-        );
+    for (const o of m.only) {
+      const banned = o.kind === "class" ? DRAWING.includes(at.layer) : at.layer !== "kit";
+      if (banned) problems.push(`${m.rel}:${String(o.line)} ${o.what}: ${WHY[o.kind]}`);
+    }
   }
   return problems;
 }

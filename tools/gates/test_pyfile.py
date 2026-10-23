@@ -329,7 +329,11 @@ def test_ts_measures_counts_an_element_made_without_a_tag(tmp_path: Path) -> Non
         export const B = () => React.createElement("span");
         export const C = () => h("p", { style: { color: "red" } });
         export const D = () => <Card />;
+        const make = React.createElement;
+        const Tag: "a" | "b" = Math.random() > 0.5 ? "a" : "b";
+        export const E = () => <Tag />;
+        const Mode = "edit";
         """,
     )
 
-    assert measured["raw_tags"] == [4, 5, 6]
+    assert measured["raw_tags"] == [2, 4, 5, 6, 8, 10]
