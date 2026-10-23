@@ -21,7 +21,7 @@ Shell files are named `service.py`, `loops.py`, `reaper.py` or `dispatcher.py`; 
 | `src/agentos/<feature>/` | The server, one package per row of the module map |
 | `src/agentos_worker/` | The worker (stdlib only) |
 | `src/agentos_protocol/` | The protocol shared by both (stdlib only) |
-| `web/` | The web: `src/kit` alone renders elements and holds CSS (each component, prop and variant has a reason in `src/kit/ledger.json`), `src/patterns` composes the kit over domain values for two or more screens, `src/features/<screen>` composes the kit and the patterns and imports no other screen (`src/features/shared` holds what screens share), `src/domain` holds the pure rules and words, `src/api` is the one data module; ESLint (`web/eslint.config.js`) enforces the layers, `web/tools/kit.mjs` the kit's and the patterns' rules (`docs/architecture.md` › The web) |
+| `web/` | The web: `src/kit` alone renders elements and holds CSS (each component, prop and variant has a reason in `src/kit/ledger.json`), `src/patterns` composes the kit over domain values for two or more screens, `src/features/<screen>` composes the kit and the patterns and imports no other screen (`src/features/shared` holds what screens share), `src/domain` holds the pure rules and words, `src/api` is the one data module; `web/tools/kit.mjs` checks the layers on the file each import resolves to (`web/tools/layers.mjs`) and the kit's and the patterns' rules, ESLint (`web/eslint.config.js`) the same layers by how a path is spelled, as the fast first line (`docs/architecture.md` › The web) |
 | `tests/` | The fast suite (`conftest.py` at the root: clean environment, speed gate) |
 | `tests/integration/` | Real processes and git (everything here is marked `integration`) |
 | `tools/gates/` | The gates and their tests |
@@ -46,7 +46,7 @@ Shell files are named `service.py`, `loops.py`, `reaper.py` or `dispatcher.py`; 
 | `just fmt` | Format and apply lint fixes |
 | `just test` | The fast suite (under 10 s; its time is gated), then the web's unit tests (Vitest, outside the timed gate) |
 | `just test-integration` | Real git and real processes |
-| `just gates` | The measured limits: complexity, defensive patterns, `Any` in the core, fan-out, file size, suppressions; and the web's kit gate (ledger, budget, reuse: `web/tools/kit.mjs`) |
+| `just gates` | The measured limits: complexity, defensive patterns, `Any` in the core, fan-out, file size, suppressions; and the web's gate (`web/tools/kit.mjs`: the kit's ledger, budget and reuse, the patterns' rules, the layers on resolved imports) |
 | `just ratchet` | Lower the gate baseline after the code improved |
 | `just card` | The gate numbers for a PR's description |
 | `just dev` | The server on 127.0.0.1:8000 |

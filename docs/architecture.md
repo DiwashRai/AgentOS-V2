@@ -80,21 +80,28 @@ Anything that doesn't have to be a timeout isn't. Normal paths run on explicit m
 
 ## The web
 
-The web (`web/src`) is layered like the server: each layer imports only what its row names, and only the kit renders elements. ESLint (`web/eslint.config.js`) enforces the imports and bans raw tags outside the kit; `web/tools/kit.mjs` checks the kit's ledger and budget and the patterns' rules (`just gates`).
+The web (`web/src`) is layered like the server: every file under `src/` is in one of these layers, each layer imports only what its row names, and only the kit renders elements. Two checks hold it:
+
+- `web/tools/kit.mjs` (`just gates`) is the one no spelling gets past. It resolves every import as the bundler would (a static import, a re-export, a type-only import, an `import.meta.glob`, a lazy `import()`) and checks the file it reaches against the importer's allow-list, local modules by layer and packages by name (`web/tools/layers.mjs`). A file in no layer fails; a lazy `import()` is the app's alone. Outside the kit it fails an intrinsic tag, a tag whose type is a string (`const Div = "div"`) and a `createElement` call. It also checks the kit's ledger and budget and the patterns' rules.
+- ESLint (`web/eslint.config.js`) is the fast first line in the editor: the same bans on how a path is spelled (a path climbs only at its start, so `../shared/../ticket` fails), no `import()` outside the app, and no raw tag, string-bound tag or `createElement` outside the kit. The raw-tag gate counts the same three in `features/` and `patterns/`.
 
 | Layer | Holds | May import | Draws |
 |---|---|---|---|
 | `domain/` | Pure rules and words over the API's types: a ticket's group, stage and line (`board`), plain English for ages, times and names (`format`), a workflow's edits and problems (`workflow`), a plan's steps (`plan`), where a read stands (`load`) | `api/types` | Nothing: no React |
-| `api/` | The one data module: the `DataSource` (fixtures until the API exists; a read of one thing that isn't there rejects with its `NotFound`, any other failure is the server out of reach), the query hooks and `loadOf`, which turns a query into a `Load`, the types | `domain` | Nothing |
-| `kit/` | Every element and all the CSS. Each component, prop and variant has a reason in `kit/ledger.json`, within its budget | React, Base UI | Elements |
+| `domain/fixtures`, `library-fixtures` | The W0 data the fixture source serves | `domain`, `api/types` | Nothing |
+| `api/` | The one data module: the `DataSource` (fixtures until the API exists; a read of one thing that isn't there rejects with its `NotFound`, any other failure is the server out of reach), the query hooks and `loadOf`, which turns a query into a `Load`, the types | `domain`, the fixtures, React, TanStack Query | Nothing |
+| `kit/` | Every element and all the CSS. Each component, prop and variant has a reason in `kit/ledger.json`, within its budget | itself, React, React Router, Base UI | Elements |
 | `patterns/` | A composition of the kit over domain values that two or more screens draw (a person's face and name, a ticket's key cell), one file per family, no index | the kit's index, `domain`, `api/types`, other patterns, React for local state | Kit components only |
 | `features/shared/` | What two or more screens use that reads the session, the URL or the data: hooks (`useBoard`, `useSearch`, `useParam`, `useLibrary`), parts like `ActionButton`, and the editors two screens frame (`itemEditor/`, `workflowEditor/`) | as a screen, but no screen | as a screen |
-| `features/<screen>/` | One screen: its view, its own model, its parts | the kit's index, patterns, `domain`, `api/queries`, `api/types`, `features/shared` | Kit components and patterns |
-| `app/` | The routes and the frame: the composition root | every screen | Kit components |
+| `features/<screen>/` | One screen: its view, its own model, its parts | the kit's index, patterns, `domain`, `api/queries`, `api/types`, `features/shared`, its own folder, React, React Router | Kit components and patterns |
+| `app/` | The routes and the frame: the composition root | what a screen may, every screen, all of `api/`, TanStack Query; the only lazy `import()` | Kit components |
+| `main.tsx` | The entry: mounts the app | `app/`, the kit's index, React, `react-dom/client` | Nothing of its own |
+
+A test may also import the fixtures and Vitest.
 
 - A pattern's props are domain values (`TicketRow`, `Person`, an ISO time) or `ReactNode` slots, never the kit's vocabularies (`Tone`, `MarkKind`, a kit prop's type), and at most the kit's `budget.props`. Its data comes in as props: no query hooks, no router.
 - Each pattern export is imported by at least two screens, directly or through a shared module; one screen's part stays in that screen. The kit's reuse count credits a screen with everything it draws through its imports.
-- A screen doesn't import another screen, and `features/shared` imports no screen: what two screens share goes down a layer. ESLint bans both.
+- A screen doesn't import another screen, and `features/shared` imports no screen: what two screens share goes down a layer. The resolved check fails both, however the path is spelled.
 
 Where a new piece goes:
 

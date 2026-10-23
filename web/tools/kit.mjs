@@ -16,20 +16,24 @@
 //   tokens  no token is defined twice across tokens.css's blocks of one selector (./tokens.mjs);
 //   patterns  each value src/patterns exports is imported by 2 or more screens, and a component's
 //           props are domain values or slots, at most `budget.props` (the rules are
-//           ./patterns.mjs, tested beside it). The card lists each export with its screens.
+//           ./patterns.mjs, tested beside it). The card lists each export with its screens;
+//   layers  every file under src/ is in a layer, and each import, resolved to the file it loads,
+//           is one its layer may make; only the kit renders elements (./layers.mjs, its reading
+//           ./reach.mjs, tested beside them on a tree).
 // Usage: node tools/kit.mjs --check [--base REF]  (exit 1 on any failure; `just gates` runs it)
 //        node tools/kit.mjs --card [--base REF]   (markdown for a PR description)
 //   The base is the merge base with REF (default HEAD for --check, origin/main for --card), as
 //   the gates compare; a REF that doesn't resolve fails.
 //        node tools/kit.mjs --list                (the kit's components, props and variants)
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { createRequire } from "node:module";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { layerProblems } from "./layers.mjs";
 import { ledgerProblems, mergeProp } from "./ledger.mjs";
 import { patternProblems, staleSingles } from "./patterns.mjs";
+import { open, posix, readModules, walk } from "./reach.mjs";
 import { repeatedTokens } from "./tokens.mjs";
 
 const WEB = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -44,24 +48,11 @@ const VOCAB = ["Space", "Width", "Length", "Tone", "MarkKind", "IconName"];
 // Not screens: shared modules and patterns count for their importers; the kit sheet draws
 // everything on purpose.
 const NOT_SCREENS = new Set(["shared", "patterns", "sheet"]);
-const ts = createRequire(join(WEB, "package.json"))("typescript");
-
-const walk = (dir) =>
-  readdirSync(dir).flatMap((name) => {
-    const path = join(dir, name);
-    return statSync(path).isDirectory() ? walk(path) : [path];
-  });
-const posix = (p) => p.replace(/\\/g, "/");
 
 /** One program over the web (its own tsconfig), so the screens' expressions have their types too. */
-let built;
-function program() {
-  if (built) return built;
-  const config = ts.readConfigFile(join(WEB, "tsconfig.json"), ts.sys.readFile).config;
-  const parsed = ts.parseJsonConfigFileContent(config, ts.sys, WEB);
-  built = ts.createProgram(parsed.fileNames, parsed.options);
-  return built;
-}
+const W = open(WEB);
+const ts = W.ts;
+const program = () => W.program;
 
 /** The literal values of a type: its string and number literal members. */
 function literals(t) {
@@ -399,7 +390,13 @@ function check(base) {
     `  ${wrong.length ? "FAIL" : "ok  "} patterns        ${String(patterns.length)} exports in ${String(files)} files; 2+ screens each, domain props <= ${String(led.budget.props)}`,
   );
   for (const p of wrong) console.log(`         ${p}`);
-  return ok && wrong.length === 0;
+  const modules = readModules(W);
+  const strays = layerProblems(modules);
+  console.log(
+    `  ${strays.length ? "FAIL" : "ok  "} layers          ${String(modules.length)} files under src/, each import by the file it resolves to`,
+  );
+  for (const p of strays) console.log(`         ${p}`);
+  return ok && wrong.length === 0 && strays.length === 0;
 }
 
 /** Ledger entries new or changed since the base: components, props, variants, single reasons. */

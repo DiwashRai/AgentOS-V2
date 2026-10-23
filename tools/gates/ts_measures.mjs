@@ -4,7 +4,9 @@
 // Prints one JSON object: {"<file>": {code_lines, suppressions, raw_tags, functions}}.
 //   code_lines    lines with code (not blank, not only comments)
 //   suppressions  [[line, marker]] for eslint-disable*, @ts-ignore, @ts-expect-error comments
-//   raw_tags      [line] of each JSX intrinsic element (<div>, <span>, ...)
+//   raw_tags      [line] of each element rendered without a component: a JSX intrinsic element
+//                 (<div>, <span>, ...), a tag bound to a string in the file (`const Div = "div"`),
+//                 a createElement call (by name, or an import renamed)
 //   functions     [{name, start: [line, col], end: [line, col]}], 1-based, to name ESLint findings
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -27,6 +29,40 @@ function functionName(node) {
   return "<anonymous>";
 }
 
+/** The names a file binds to a string (`const Div = "div"`) and to createElement (an import of it,
+ *  renamed or not): a JSX tag or a call by one of them renders an element. */
+function rawNames(sf) {
+  const strings = new Set();
+  const makers = new Set(["createElement"]);
+  const visit = (node) => {
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer &&
+      ts.isStringLiteralLike(node.initializer)
+    )
+      strings.add(node.name.text);
+    if (ts.isImportSpecifier(node) && (node.propertyName ?? node.name).text === "createElement")
+      makers.add(node.name.text);
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return { strings, makers };
+}
+
+/** Whether a node renders an element without a component. */
+function isRaw(node, names) {
+  if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node))
+    return (
+      ts.isIdentifier(node.tagName) &&
+      (ts.isIntrinsicJsxName(node.tagName.text) || names.strings.has(node.tagName.text))
+    );
+  if (!ts.isCallExpression(node)) return false;
+  const callee = node.expression;
+  if (ts.isPropertyAccessExpression(callee)) return callee.name.text === "createElement";
+  return ts.isIdentifier(callee) && names.makers.has(callee.text);
+}
+
 function measure(path) {
   const text = readFileSync(join(webDir, path), "utf8");
   const kind = path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
@@ -39,6 +75,7 @@ function measure(path) {
   const jsxText = []; // [start, end]: "//" there is text, not a comment
   const rawTags = [];
   const functions = [];
+  const names = rawNames(sf);
 
   const visit = (node, scope) => {
     if (ts.isJSDoc(node)) return; // inside a comment
@@ -57,13 +94,7 @@ function measure(path) {
       inner = scope ? `${scope}.${functionName(node)}` : functionName(node);
       functions.push({ name: inner, start: at(node.getStart(sf)), end: at(node.end) });
     }
-    if (
-      (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
-      ts.isIdentifier(node.tagName) &&
-      ts.isIntrinsicJsxName(node.tagName.text)
-    ) {
-      rawTags.push(at(node.getStart(sf))[0]);
-    }
+    if (isRaw(node, names)) rawTags.push(at(node.getStart(sf))[0]);
     for (const child of node.getChildren(sf)) visit(child, inner);
   };
   visit(sf, "");

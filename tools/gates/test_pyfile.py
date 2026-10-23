@@ -312,3 +312,24 @@ def test_ts_measures_reads_comments_tags_and_names(tmp_path: Path) -> None:
     assert [marker for _, marker in measured["suppressions"]] == ["eslint-disable-next-line"]
     assert measured["raw_tags"] == [4, 7]
     assert [f["name"] for f in measured["functions"]] == ["Page", "Page.onClick(callback)"]
+
+
+@pytest.mark.skipif(
+    shutil.which("node") is None or not (ts_measures.WEB / "node_modules" / "typescript").is_dir(),
+    reason="needs node and the web's typescript (npm ci --prefix web)",
+)
+def test_ts_measures_counts_an_element_made_without_a_tag(tmp_path: Path) -> None:
+    measured = _ts_measures(
+        tmp_path,
+        """\
+        import * as React from "react";
+        import { createElement as h } from "react";
+        const Div = "div";
+        export const A = () => <Div />;
+        export const B = () => React.createElement("span");
+        export const C = () => h("p", { style: { color: "red" } });
+        export const D = () => <Card />;
+        """,
+    )
+
+    assert measured["raw_tags"] == [4, 5, 6]
