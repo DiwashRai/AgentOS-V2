@@ -9,7 +9,7 @@ import { useNavigate } from "react-router";
 
 import { loadOf, useItem, useItems, useSetWritable } from "../../api/queries";
 import type { Author, ItemSummary, Ticket } from "../../api/types";
-import { age, firstName, plural } from "../../domain/format";
+import { ago, firstName, plural } from "../../domain/format";
 import { Button, type Column, Icon, Row, Stack, Table, Text, Toggle } from "../../kit";
 import { LoadNotice } from "../../patterns/load";
 import { useBoard } from "../shared/board";
@@ -31,7 +31,7 @@ const who = (a: Author) =>
  *  changed it last and when. */
 function about(i: ItemSummary, now: number): string {
   const from = i.origin.kind === "copy" ? `, from library v${String(i.origin.version)}` : "";
-  return `${KIND[i.kind].word} · v${String(i.version)}${from} · ${who(i.updated_by)}, ${age(i.updated_at, now)} ago`;
+  return `${KIND[i.kind].word} · v${String(i.version)}${from} · ${who(i.updated_by)}, ${ago(i.updated_at, now)}`;
 }
 
 /** An item's drift, stacked in its column. */

@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 
 import type { Ticket } from "../../api/types";
 import { stagesText } from "../../domain/board";
-import { age } from "../../domain/format";
+import { ago } from "../../domain/format";
 import { type Fact, Facts, Stack } from "../../kit";
 
 const TYPE_WORD = {
@@ -30,7 +30,7 @@ function rows(t: Ticket, now: number, owner: Owner): Row[] {
     { label: "Type", icon: t.type, value: TYPE_WORD[t.type] },
     ...(t.priority === "high" ? [{ label: "Priority", icon: "high" as const, value: "High" }] : []),
     { label: "Owner", ...owner },
-    { label: "Opened", icon: "clock", value: "Opened", note: `${age(t.created_at, now)} ago` },
+    { label: "Opened", icon: "clock", value: "Opened", note: ago(t.created_at, now) },
   ];
   const code: Fact[] = [
     { label: "Repo", icon: "repo", value: t.repo ?? "No repo" },

@@ -1,7 +1,7 @@
 // Pure selection for Intake over the server's answer (`GET /api/jira/intake`): which rows a group
 // shows, and the words around them.
 import type { Intake, IntakeIssue, IntakeQuery } from "../../api/types";
-import { age, matches, prefixOf } from "../../domain/format";
+import { ago, matches, prefixOf } from "../../domain/format";
 
 /** Rows a group shows before "Show all": few enough that a screen holds every group's head. */
 export const ROW_CAP = 6;
@@ -76,18 +76,6 @@ export function issueFacts(issue: IntakeIssue): string {
   return [TYPE_WORD[issue.type], issue.status, PRIORITY_WORD[issue.priority]].join(" · ");
 }
 
-/** A row's age as Linear writes it, in its one largest unit: "14m ago", "1h ago", "just now". */
-export function ageLabel(updatedAt: string, now: number): string {
-  const full = age(updatedAt, now);
-  return full === "now" ? "just now" : `${full.split(" ")[0] ?? full} ago`;
-}
-
-/** The age's tooltip, to the minute: "Updated 1h 10m ago". */
-export function ageTitle(updatedAt: string, now: number): string {
-  const full = age(updatedAt, now);
-  return full === "now" ? "Updated just now" : `Updated ${full} ago`;
-}
-
 /** "Open in Jira" for a query's JQL. */
 export function jqlHref(jiraUrl: string, jql: string): string {
   return `${jiraUrl.replace(/\/+$/, "")}/issues/?jql=${encodeURIComponent(jql)}`;
@@ -96,10 +84,9 @@ export function jqlHref(jiraUrl: string, jql: string): string {
 /** The footer: "1 didn't answer · checked 2m ago" (the head already counts the queries). */
 export function footNote(intake: Intake, now: number): string {
   const failing = intake.queries.filter((q) => q.result.kind === "error").length;
-  const checked = age(intake.checked_at, now);
   return [
     failing > 0 ? `${String(failing)} didn't answer` : null,
-    checked === "now" ? "checked just now" : `checked ${checked} ago`,
+    `checked ${ago(intake.checked_at, now)}`,
   ]
     .filter(Boolean)
     .join(" · ");

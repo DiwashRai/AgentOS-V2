@@ -9,7 +9,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 
 import { useNow, useSession } from "../../api/queries";
 import type { ItemBody, UsedBy } from "../../api/types";
-import { age, authorName } from "../../domain/format";
+import { ago, authorName } from "../../domain/format";
 import { Button, Chip, Field, Page, type PageProps, Stack, Text } from "../../kit";
 import { Conflict } from "./conflict";
 import { Content } from "./content";
@@ -59,8 +59,6 @@ export interface EditorActs {
 }
 
 const MINUTE = 60_000;
-/** "3d ago", or "just now" for a save made here. */
-const ago = (a: string) => (a === "now" ? "just now" : `${a} ago`);
 const FIRST = "Keep yours or take theirs first";
 
 /** Discard and Save as a pair, once there is an edit (Save the bar's one filled button); with none,
@@ -200,7 +198,7 @@ export function ItemEditor(props: ItemEditorProps) {
   return (
     <Page
       title={title}
-      context={`v${String(s.version)} · edited by ${authorName(s.by)} · ${ago(age(s.at, now))}`}
+      context={`v${String(s.version)} · edited by ${authorName(s.by)} · ${ago(s.at, now)}`}
       middle={
         <>
           <State e={e} />

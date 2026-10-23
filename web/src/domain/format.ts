@@ -20,6 +20,12 @@ export function age(from: string, now: number): string {
   return `${String(Math.floor(total / 1440))}d`;
 }
 
+/** How long ago, as a sentence says it: "3h 10m ago", "2d ago", "just now". */
+export function ago(from: string, now: number): string {
+  const a = age(from, now);
+  return a === "now" ? "just now" : `${a} ago`;
+}
+
 /** The time of day, "10:48". */
 export function clock(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
@@ -98,8 +104,7 @@ export const authorName = (a: Author): string => nameOf(fromAuthor(a), true);
  *  Park · 2d ago", or "run #42 on NW-17 · 35m ago". */
 export function authorText(by: Author, at: string, now: number): string {
   const who = by.kind === "person" ? by.person.name : `run #${String(by.run_id)} on ${by.ticket}`;
-  const when = age(at, now);
-  return `${who} · ${when === "now" ? "just now" : `${when} ago`}`;
+  return `${who} · ${ago(at, now)}`;
 }
 
 /** A description's paragraphs: its lead (the first), and the rest. */

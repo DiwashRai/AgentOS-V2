@@ -4,7 +4,7 @@
 // version: yours, with each of their changes that doesn't touch yours carried over (the button says
 // how many of theirs it would drop). Take theirs drops your edit.
 import { useNow, useRuntimes } from "../../api/queries";
-import { age, authorName, plural } from "../../domain/format";
+import { ago, authorName, plural } from "../../domain/format";
 import { Button, Compare, Notice, Stack } from "../../kit";
 import type { Draft, Stored } from "./draft";
 import { changedFrom, mergeDraft } from "./merge";
@@ -45,7 +45,7 @@ export function Conflict({
   const runtimes = useRuntimes().data ?? [];
   const now = useNow(60_000);
   const who = authorName(theirs.by);
-  const when = age(theirs.at, now);
+  const when = ago(theirs.at, now);
   const lines = (d: Draft) => draftLines(d, runtimes);
   const b = lines(base.draft);
   const side = (d: Draft): Side => ({ lines: lines(d), changed: changedFrom(b, lines(d)) });
@@ -57,7 +57,7 @@ export function Conflict({
     <Stack gap={8}>
       <Notice
         kind="problem"
-        lead={`${who} saved ${v(theirs.version)} ${when} ago, while you were editing ${v(base.version)}`}
+        lead={`${who} saved ${v(theirs.version)} ${when}, while you were editing ${v(base.version)}`}
         fix={keep.fix}
       >
         Your changes aren&apos;t saved yet.
@@ -76,7 +76,7 @@ export function Conflict({
           },
           {
             title: who,
-            note: `${v(theirs.version)} · ${plural(count(their), "change")} from ${v(base.version)} · ${when} ago`,
+            note: `${v(theirs.version)} · ${plural(count(their), "change")} from ${v(base.version)} · ${when}`,
             action: (
               <Button size="sm" onClick={onTakeTheirs}>
                 Take theirs

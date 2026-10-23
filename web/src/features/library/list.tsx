@@ -9,9 +9,8 @@ import { useNavigate } from "react-router";
 
 import { useNow } from "../../api/queries";
 import type { Author, Iso, UsedBy } from "../../api/types";
-import { age, fromAuthor, plural } from "../../domain/format";
+import { fromAuthor, plural } from "../../domain/format";
 import {
-  Age,
   Badge,
   Button,
   type Column,
@@ -25,6 +24,7 @@ import {
   Table,
   Text,
 } from "../../kit";
+import { AgeCell } from "../../patterns/age";
 import { Who } from "../../patterns/who";
 import { contextOf, useSpace } from "../shared/board";
 
@@ -201,9 +201,7 @@ export function ChangedCell({ by, at }: { by: Author; at: Iso }) {
   return (
     <Stack dir="row" gap={3} align="center">
       <Who who={fromAuthor(by)} place="cell" />
-      <Text variant="meta" tone="3">
-        <Age text={age(at, now)} />
-      </Text>
+      <AgeCell since={at} now={now} what="changed" />
     </Stack>
   );
 }

@@ -1,17 +1,17 @@
 // The ticket's Runs tab (?tab=runs): its runs, newest first, in the app's list style. Each line is
 // one run: its key, its state glyph and where it is (the stage and round it is on, or where it
 // stopped, in the past tense once it has ended) with the stage it started from receding after it,
-// its time against its budget, how long ago it started and who started it. The newest is open: who
-// started it when, its route and the time it has left, then its stages in the order they ran, a
-// loop's once per round, and the gate it stopped at as the stepper's diamond. A stage's glyph says
-// its state; a check's verdict sits at the right end, or a word where it has none yet.
+// its time against its budget, how long ago it started and who started it (a dashed ring for
+// nobody, as every list's face). The newest is open: who started it when, its route and the time
+// it has left, then its stages in the order they ran, a loop's once per round, and the gate it
+// stopped at as the stepper's diamond. A stage's glyph says its state; a check's verdict sits at
+// the right end, or a word where it has none yet.
 import { useState } from "react";
 
 import { loadOf, useRuns, useTicketWorkflow } from "../../api/queries";
 import type { Run, RunState, StageRun, Ticket, TicketWorkflow } from "../../api/types";
 import { clock, firstName, fromPerson } from "../../domain/format";
 import {
-  Avatar,
   Badge,
   Chip,
   type Column,
@@ -24,6 +24,7 @@ import {
   Table,
   Text,
 } from "../../kit";
+import { AgeCell } from "../../patterns/age";
 import { LoadNotice } from "../../patterns/load";
 import { Who } from "../../patterns/who";
 import { useBoard } from "../shared/board";
@@ -111,13 +112,6 @@ function signedOff(r: Run, runs: readonly Run[], w: TicketWorkflow | undefined) 
   return { run: on.id, who: on.by ? firstName(on.by.name) : "Someone", at: clock(on.created_at) };
 }
 
-/** How long ago, to the hour once past one: "47m ago", "2h ago", "3d ago". */
-function ago(iso: string, now: number): string {
-  const m = Math.max(0, Math.round((now - Date.parse(iso)) / 60_000));
-  if (m < 60) return `${String(m)}m ago`;
-  return m < 1440 ? `${String(Math.floor(m / 60))}h ago` : `${String(Math.floor(m / 1440))}d ago`;
-}
-
 /** Where the run is: the stage it's on and its round, or where it stopped, said in the past; and
  *  whether those words say the run's state (a gate stop or the state's own word do; a stage's name
  *  doesn't), so its glyph knows whether to say it. */
@@ -149,7 +143,6 @@ function RunLine({ r, runs, w, now }: RunProps) {
   const signed = signedOff(r, runs, w);
   const after = `from ${stageName(w, r.from_stage)}${signed ? ` · signed off ${signed.at}` : ""}`;
   const time = `${String(minutes(r, now))}m of ${String(r.budget_min)}m`;
-  const started = r.started_at ?? r.created_at;
   return [
     <Badge key="key" kind="key">{`#${String(r.id)}`}</Badge>,
     <Stack key="where" dir="row" gap={4} align="center">
@@ -164,10 +157,8 @@ function RunLine({ r, runs, w, now }: RunProps) {
     <Text key="time" variant="meta" tone="3" tabular title={`${time} budget`}>
       {time}
     </Text>,
-    <Text key="age" variant="meta" tone="3" tabular title={`Started ${clock(started)}`}>
-      {ago(started, now)}
-    </Text>,
-    r.by ? <Avatar key="by" name={r.by.name} seed={String(r.by.id)} /> : <Avatar key="by" />,
+    <AgeCell key="age" since={r.started_at ?? r.created_at} now={now} what="started" />,
+    <Who key="by" who={fromPerson(r.by)} place="face" />,
   ];
 }
 

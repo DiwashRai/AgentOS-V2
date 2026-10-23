@@ -12,9 +12,8 @@ import { useSearchParams } from "react-router";
 import { useSettings } from "../../api/queries";
 import type { Person, TicketRow } from "../../api/types";
 import { groupOf, parseFilter, pills, stageModel, stageWord } from "../../domain/board";
-import { age, firstName, fromPerson, plural, repoShort } from "../../domain/format";
+import { firstName, fromPerson, plural, repoShort } from "../../domain/format";
 import {
-  Age,
   Button,
   type Column,
   Head,
@@ -28,6 +27,7 @@ import {
   Table,
   Text,
 } from "../../kit";
+import { TicketAge } from "../../patterns/age";
 import { LoadNotice } from "../../patterns/load";
 import { KeyCell, TicketTitle } from "../../patterns/ticketLine";
 import { Who } from "../../patterns/who";
@@ -122,9 +122,7 @@ function TicketLine({
       </Text>
       <StateCell t={t} me={me} />
       <Who who={fromPerson(t.owner)} place="cell" />
-      <Text variant="meta" tone="3">
-        <Age text={t.attention.kind === "running" ? "now" : age(t.since, now)} />
-      </Text>
+      <TicketAge t={t} now={now} />
     </Row>
   );
 }

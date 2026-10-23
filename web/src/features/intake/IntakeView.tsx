@@ -8,7 +8,6 @@ import { loadOf, useIntake, useNow, useSession } from "../../api/queries";
 import type { IntakeIssue, IntakeQuery } from "../../api/types";
 import { fromAssignee } from "../../domain/format";
 import {
-  Age,
   Badge,
   Button,
   type Column,
@@ -26,14 +25,13 @@ import {
   Table,
   Text,
 } from "../../kit";
+import { AgeCell } from "../../patterns/age";
 import { LoadNotice } from "../../patterns/load";
 import { Who } from "../../patterns/who";
 import { useSpace } from "../shared/board";
 import { NewTicket } from "../shared/NewTicket";
 import { useSearch } from "../shared/useSearch";
 import {
-  ageLabel,
-  ageTitle,
   emptyText,
   footNote,
   headSummary,
@@ -52,7 +50,7 @@ import {
 // before by room and a hairline. An issue is one line on fixed columns, so its facts read down
 // the list: the Jira key (a link to it), the title firm, its priority's bars and
 // its Jira status in the app's glyphs with the status's words (the rest in its tooltip), who has it (a face and a first
-// name, Unassigned a dashed ring), the age ("1h ago", in its largest unit; to the minute in its
+// name, Unassigned a dashed ring), the age ("1h 10m", as every list's; "Updated 1h 10m ago" in its
 // tooltip). Under the pointer or with focus, Take in takes the age's place. A query that didn't
 // answer says so on a panel of the blocked hue. When the queries were checked closes the list.
 const COLUMNS: readonly Column[] = [
@@ -96,9 +94,7 @@ function IssueRow({ issue, now }: { issue: IntakeIssue; now: number }) {
           </Button>
         }
       >
-        <Text variant="ui" tone="3" tabular>
-          <Age text={ageLabel(issue.updated_at, now)} title={ageTitle(issue.updated_at, now)} />
-        </Text>
+        <AgeCell since={issue.updated_at} now={now} what="updated" />
       </Swap>
     </Row>
   );

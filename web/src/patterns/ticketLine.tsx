@@ -14,8 +14,9 @@ import {
   stageModel,
   stageWord,
 } from "../domain/board";
-import { age, fromPerson } from "../domain/format";
-import { Age, Badge, type Column, Icon, Mark, Stack, Text } from "../kit";
+import { fromPerson } from "../domain/format";
+import { Badge, type Column, Icon, Mark, Stack, Text } from "../kit";
+import { TicketAge } from "./age";
 import { Who } from "./who";
 
 /** High and low priority are said; normal is the bars' resting form, said by nothing. */
@@ -102,9 +103,7 @@ export function lineEnd({ t, me, now }: { t: TicketRow; me: Person | null; now: 
     <Text key="source" variant="meta" tone="3" truncate title={source}>
       {source}
     </Text>,
-    <Text key="age" variant="meta" tone="3">
-      <Age text={t.attention.kind === "running" ? "now" : age(t.since, now)} />
-    </Text>,
+    <TicketAge key="age" t={t} now={now} />,
     <Who key="owner" who={fromPerson(t.owner)} place="face" />,
   ];
 }
