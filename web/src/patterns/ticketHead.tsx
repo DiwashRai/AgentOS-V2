@@ -171,7 +171,7 @@ export function TicketHead({ t, me, now, plan, stop, place, owner }: TicketHeadP
 
 /** Where the ticket is seen chooses the plan's rows: the page's at body size, the peek's shorter so
  *  its conversation fits beside it. */
-const PLAN_LOOK = { page: "page", peek: "peek" } as const satisfies Record<
+const PLAN_LOOK = { page: "roomy", peek: "snug" } as const satisfies Record<
   Place,
   ChecklistProps["look"]
 >;

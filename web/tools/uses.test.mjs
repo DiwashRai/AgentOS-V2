@@ -23,7 +23,7 @@ const FILES = {
   ].join("\n"),
   "kit/index.ts": [
     `export type Tone = "1" | "2";`,
-    `export interface ChecklistProps { look?: "bare" | "page" | "peek" }`,
+    `export interface ChecklistProps { look?: "bare" | "roomy" | "snug" }`,
     `export function Checklist(p: ChecklistProps) { return p.look ?? null; }`,
     `export function Avatar(p: { name: string }) { return p.name; }`,
     `export function Text(p: { tone?: Tone }) { return p.tone ?? null; }`,
@@ -36,9 +36,9 @@ const FILES = {
   ].join("\n"),
   "patterns/plan.tsx": [
     `import { Checklist } from "../kit";`,
-    `export function Plan({ place }: { place: "page" | "peek" }) { return <Checklist look={place} />; }`,
-    `export function Steps(props: { where: "page" | "peek" }) { return <Checklist look={props.where} />; }`,
-    `const LOOK = { page: "page", peek: "peek" } as const;`,
+    `export function Plan({ place }: { place: "roomy" | "snug" }) { return <Checklist look={place} />; }`,
+    `export function Steps(props: { where: "roomy" | "snug" }) { return <Checklist look={props.where} />; }`,
+    `const LOOK = { page: "roomy", peek: "snug" } as const;`,
     `export function Mapped({ place }: { place: "page" | "peek" }) { return <Checklist look={LOOK[place]} />; }`,
     ``,
   ].join("\n"),

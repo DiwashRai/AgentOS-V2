@@ -52,9 +52,9 @@
   color: var(--ink-3);
 }
 
-/* large: the ticket's and the peek's plan as Linear lists sub-issues: rows at body size straight on
-   the sheet under the head, no rule; a section head is a quiet label with room above it; done items
-   recede a step. The peek's rows are a little shorter */
+/* large (roomy and snug): rows at body size as Linear lists sub-issues, straight on the sheet under
+   the head, no rule; a section head is a quiet label with room above it; done items recede a step.
+   Snug rows are a little shorter */
 .large {
   margin-top: calc(var(--sp-3) * -1);
 }
@@ -90,6 +90,6 @@
   min-height: var(--h-check);
   padding-left: calc(var(--sp-7) + var(--sp-6));
 }
-.peek .line {
+.snug .line {
   min-height: var(--h-check-sm);
 }

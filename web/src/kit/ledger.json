@@ -239,11 +239,11 @@
           "why": "How many were left out (+N more)."
         },
         "look": {
-          "why": "A row's expansion keeps the bare list; the ticket's and the peek's plan are rows at body size on the page's own ground, as Linear lists sub-issues (no card, no rules).",
+          "why": "A row's expansion keeps the bare list; the ticket's and the peek's plan are rows at body size on the page's own ground, as Linear lists sub-issues (no card, no rules), tall or a little shorter.",
           "values": {
-            "bare": "An expanded row's list (the default).",
-            "page": "The ticket page's plan: 36px rows at body size, quiet section heads.",
-            "peek": "The peek's plan: the same, in shorter rows so its conversation fits beside it."
+            "bare": "A plain list: an expanded row's (the default).",
+            "roomy": "Tall rows (36px) at body size with quiet section heads: the ticket page's plan.",
+            "snug": "The same rows, shorter, so what sits beside them fits: the peek's plan."
           }
         }
       }

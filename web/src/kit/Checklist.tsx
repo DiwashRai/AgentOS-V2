@@ -15,14 +15,14 @@ export interface ChecklistProps {
   items: readonly CheckItem[];
   /** Items left out after these. */
   more?: number;
-  /** bare: an expanded row's list; page: rows at body size (the ticket's plan); peek: the same, a
-   *  little shorter. */
-  look?: "bare" | "page" | "peek";
+  /** bare: a plain list (an expanded row's); roomy: tall rows at body size, as Linear lists
+   *  sub-issues; snug: the same rows, a little shorter. */
+  look?: "bare" | "roomy" | "snug";
 }
 
 export function Checklist({ items, more = 0, look = "bare" }: ChecklistProps) {
   return (
-    <ul className={cx(s.list, look !== "bare" && s.large, look === "peek" && s.peek)}>
+    <ul className={cx(s.list, look !== "bare" && s.large, look === "snug" && s.snug)}>
       {items.map((it, i) => (
         <li key={i} className={s.item} data-done={it.done}>
           {it.section ? <span className={s.section}>{it.section}</span> : null}
