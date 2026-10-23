@@ -9,15 +9,20 @@ import type { Item, ItemSummary, Page } from "./types";
 
 export const SourceContext = createContext<DataSource | null>(null);
 
-/** A query's result, as far as a screen needs it (any of the hooks' results is one). */
+/** A query's result, as far as a screen needs it (any of the hooks' results is one). A failed
+ *  refetch keeps the data it had. */
 type Read<T> =
-  { status: "pending" } | { status: "error"; error: Error } | { status: "success"; data: T };
+  | { status: "pending" }
+  | { status: "error"; error: Error; data: T | undefined }
+  | { status: "success"; data: T };
 
-/** A query as the screens say it: its data, or where it stands without it. The source's NotFound
- *  is missing; any other failure is the server out of reach. */
+/** A query as the screens say it: its data whenever it has some (a failed background refetch
+ *  leaves the page as it was), or where it stands without it. The source's NotFound is missing;
+ *  any other failure is the server out of reach. */
 export function loadOf<T>(q: Read<T>): Loaded<T> {
   if (q.status === "success") return { kind: "ready", data: q.data };
   if (q.status === "pending") return { kind: "pending" };
+  if (q.data !== undefined) return { kind: "ready", data: q.data };
   return q.error instanceof NotFound
     ? { kind: "missing" }
     : { kind: "unreachable", message: q.error.message };

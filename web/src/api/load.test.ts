@@ -20,12 +20,18 @@ describe("a read's state, as the screens say it (loadOf)", () => {
   });
 
   it("is missing for a NotFound, and the server out of reach for any other failure", () => {
-    expect(loadOf({ status: "error", error: new NotFound("ticket NW-404") })).toEqual({
-      kind: "missing",
-    });
-    expect(loadOf({ status: "error", error: new Error("Failed to fetch") })).toEqual({
-      kind: "unreachable",
-      message: "Failed to fetch",
+    expect(
+      loadOf({ status: "error", error: new NotFound("ticket NW-404"), data: undefined }),
+    ).toEqual({ kind: "missing" });
+    expect(
+      loadOf({ status: "error", error: new Error("Failed to fetch"), data: undefined }),
+    ).toEqual({ kind: "unreachable", message: "Failed to fetch" });
+  });
+
+  it("keeps its data when a refetch fails", () => {
+    expect(loadOf({ status: "error", error: new Error("Failed to fetch"), data: 7 })).toEqual({
+      kind: "ready",
+      data: 7,
     });
   });
 });
