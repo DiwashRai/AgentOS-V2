@@ -162,7 +162,8 @@ const UNREAD = [{ selector: "Program", message: "Write code under src/ as .ts or
 /** The kit's index, however its path is spelled to it. */
 const KIT_INDEX = /(^|\/)kit(\/index(\.ts)?)?$/;
 // Two rules no selector can say: a JSX tag whose type is, or may be, a string; and the kit taken by
-// another name (a renamed or default import, a re-export, a component held in a const).
+// another name (a renamed or default import, a re-export, a component held in a const or an
+// object).
 const web = {
   rules: {
     "no-string-tag": {
@@ -199,14 +200,23 @@ const web = {
             for (const s of node.specifiers) {
               if (s.type !== "ImportSpecifier") report(s);
               else if (s.imported.name !== s.local.name) report(s);
-              else kit.add(s.local.name);
+              else if (
+                s.importKind !== "type" &&
+                node.importKind !== "type" &&
+                /^[A-Z]/.test(s.local.name)
+              )
+                kit.add(s.local.name);
             }
           },
           "ExportNamedDeclaration, ExportAllDeclaration"(node) {
             if (node.source && KIT_INDEX.test(node.source.value)) report(node);
           },
-          "VariableDeclarator > Identifier.init"(node) {
-            if (kit.has(node.name)) report(node);
+          // a kit component anywhere but its tag, a call's argument or a type (`typeof Text`)
+          Identifier(node) {
+            const p = node.parent;
+            if (!kit.has(node.name) || ["ImportSpecifier", "TSTypeQuery"].includes(p.type)) return;
+            if (p.type === "CallExpression" && p.arguments.includes(node)) return;
+            report(node);
           },
         };
       },

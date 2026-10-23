@@ -24,7 +24,7 @@ const FILES = {
     `import { Checklist } from "../../kit";`,
     `import { useTickets } from "../../api/queries";`,
     `import { plural } from "../../domain/format";`,
-    `export const RunsTab = () => [nowLine, again, Checklist, useTickets, plural, import("../compact/model")];`,
+    `export const RunsTab = () => [nowLine, again, <Checklist />, useTickets, plural, import("../compact/model")];`,
     ``,
   ].join("\n"),
   "features/queue/QueueView.tsx": `export { RunsTab } from "../shared/../ticket/RunsTab";\n`,
@@ -52,6 +52,7 @@ const FILES = {
   // round 2: a glob from the web's root, a glob of nothing
   "features/ticket/Glob.tsx": `export const G = import.meta.glob("/src/features/compact/*.ts", { eager: true });\n`,
   "features/ticket/Empty.tsx": `export const E = import.meta.glob("./nothing/*.tsx");\n`,
+  "features/ticket/Negated.tsx": `export const N = import.meta.glob(["./*.tsx", "!./Glob.tsx"]);\n`,
   // a stylesheet Vite reads, in a pattern and in a screen
   "patterns/skin.pcss": `.x { color: red; }\n`,
   "patterns/styled.tsx": `import "./skin.pcss";\nexport const styled = 1;\n`,
@@ -76,7 +77,8 @@ const FILES = {
     `import * as Kit from "../../kit";`,
     `import { Checklist } from "../../kit";`,
     `const Also = Checklist;`,
-    `export const K = () => [<List />, <Kit.Checklist />, <Also />, <Checklist />];`,
+    `const CELL = { list: Checklist };`,
+    `export const K = () => [<List />, <Kit.Checklist />, <Also />, <CELL.list />, <Checklist />];`,
     ``,
   ].join("\n"),
   "features/shared/kitAgain.ts": `export { Checklist } from "../../kit";\n`,
@@ -134,9 +136,10 @@ describe("the layers, on what each import resolves to", () => {
     expect(alias).toEqual([2, 5].map((n) => `features/library/Alias.tsx:${String(n)}`));
   });
 
-  it("reads a glob from the web's root, and fails one that matches nothing", () => {
+  it('reads a glob from the web\'s root, and fails one that matches nothing (a "!" one aside)', () => {
     expect(at("features/ticket/Glob.tsx:1 ")).toHaveLength(1);
     expect(at("features/ticket/Empty.tsx:1 ")).toHaveLength(1);
+    expect(at("features/ticket/Negated.tsx")).toEqual([]); // "!" takes out; it adds nothing
   });
 
   it("keeps every stylesheet in the kit", () => {
@@ -154,7 +157,7 @@ describe("the layers, on what each import resolves to", () => {
 
   it("takes the kit by its own names, and no module whole", () => {
     const lines = [...new Set(at("features/library/Kit.tsx").map((p) => p.split(" ")[0]))];
-    expect(lines).toEqual([1, 2, 4].map((n) => `features/library/Kit.tsx:${String(n)}`));
+    expect(lines).toEqual([1, 2, 4, 5].map((n) => `features/library/Kit.tsx:${String(n)}`));
     expect(at("features/shared/kitAgain.ts:1 ")).toHaveLength(1);
     expect(at("features/compact/Ns.tsx:1 ")).toHaveLength(1);
   });

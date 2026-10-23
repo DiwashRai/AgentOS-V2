@@ -2,9 +2,9 @@
 // or a test's tree): every module under src/ with its imports, each resolved to the file the
 // bundler would load (or named as a package), and what in it only the kit may do: render an
 // element itself (an intrinsic tag, a tag that may be a string, any mention of createElement),
-// take the kit by another name (a renamed or default import, a re-export, a kit component held in
-// a const), import a module whole as a namespace, declare a class. kit.mjs checks them against the
-// layers (./layers.mjs).
+// take the kit by another name (a renamed or default import, a re-export, a kit component held
+// anywhere but its tag, a call's argument or a type), import a module whole as a namespace,
+// declare a class. kit.mjs checks them against the layers (./layers.mjs).
 import { existsSync, globSync, readdirSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
@@ -54,28 +54,45 @@ const isGlob = (call) =>
   ts.isMetaProperty(call.expression.expression);
 
 /** The files an `import.meta.glob(…)` matches, as Vite reads its patterns: from the importer's
- *  folder, or from the web's root when one starts with "/". A pattern that isn't a string, or
- *  matches nothing, is an import of nothing. */
+ *  folder, or from the web's root when one starts with "/"; a "!"-led one takes its matches out of
+ *  the others'. A pattern that isn't a string, or one (not "!"-led) that matches nothing, is an
+ *  import of nothing. */
 function globbed(w, call, from) {
   const arg = call.arguments[0];
   const specs = arg && ts.isArrayLiteralExpression(arg) ? arg.elements : [arg];
-  return specs.flatMap((s) => {
-    if (!s || !ts.isStringLiteralLike(s)) return [{ spec: "<computed>", file: null }];
-    const [cwd, pattern] = s.text.startsWith("/")
-      ? [w.web, s.text.slice(1)]
-      : [dirname(from), s.text];
-    const files = globSync(pattern, { cwd }).map((f) => resolve(cwd, f));
-    return files.length
-      ? files.map((file) => ({ spec: s.text, file }))
-      : [{ spec: s.text, file: null }];
-  });
+  const matches = (text) => {
+    const [cwd, pattern] = text.startsWith("/") ? [w.web, text.slice(1)] : [dirname(from), text];
+    return globSync(pattern, { cwd }).map((f) => resolve(cwd, f));
+  };
+  const out = [];
+  const left = new Set();
+  for (const s of specs) {
+    if (!s || !ts.isStringLiteralLike(s)) out.push({ spec: "<computed>", file: null });
+    else if (s.text.startsWith("!")) for (const f of matches(s.text.slice(1))) left.add(f);
+    else {
+      const files = matches(s.text);
+      if (files.length === 0) out.push({ spec: s.text, file: null });
+      for (const file of files) out.push({ spec: s.text, file });
+    }
+  }
+  return out.filter((g) => g.file === null || !left.has(g.file));
 }
-
 /** A JSX tag whose type is a string, or may be one (`const Div: "div" | "span"`). */
 function stringTag(checker, tag) {
   const t = checker.getTypeAtLocation(tag);
   const stringy = (x) => (x.flags & (ts.TypeFlags.StringLike | ts.TypeFlags.Any)) !== 0;
   return stringy(t) || (t.isUnion() && t.types.some(stringy));
+}
+
+/** Whether a mention of a kit component is anything but its tag, a call's argument (`memo(Text)`)
+ *  or a type (`typeof Text`): one held anywhere else (`const List = Checklist`, `{ text: Text }`)
+ *  would draw under a name the checks don't know. */
+function kitUse(id) {
+  const p = id.parent;
+  if ((ts.isJsxOpeningLikeElement(p) || ts.isJsxClosingElement(p)) && p.tagName === id)
+    return false;
+  if (ts.isCallExpression(p) && p.arguments.includes(id)) return false;
+  return !ts.isTypeQueryNode(p);
 }
 
 /** One module: its imports (static, re-exports, lazy, globbed; type-only ones too), and what in it
@@ -145,10 +162,10 @@ function readModule(w, path) {
     }
     if (ts.isIdentifier(node) && node.text === "createElement")
       flag(node, "element", "names createElement");
-    if (ts.isVariableDeclaration(node) && node.initializer && ts.isIdentifier(node.initializer)) {
-      const decl = checker.getSymbolAtLocation(node.initializer)?.declarations?.[0];
+    if (ts.isIdentifier(node) && !kitBindings.has(node.parent) && kitUse(node)) {
+      const decl = checker.getSymbolAtLocation(node)?.declarations?.[0];
       if (decl && kitBindings.has(decl))
-        flag(node, "kit", `holds the kit's ${node.initializer.text} under another name`);
+        flag(node, "kit", `holds the kit's ${node.text} outside a tag (a const, an object)`);
     }
     if (ts.isClassDeclaration(node) || ts.isClassExpression(node))
       flag(node, "class", "declares a class");

@@ -8,8 +8,8 @@
 // cleverly: code under src/ is .ts or .tsx (no JavaScript, no bare declarations); a stylesheet of
 // any language Vite reads is the kit's alone; outside the kit nothing renders an element itself (an
 // intrinsic tag, a tag that may be a string, any mention of createElement), takes the kit by
-// another name (a renamed or default import, a re-export, a component held in a const) or imports a
-// module whole as a namespace; and the layers that draw declare no class. kit.mjs reads the
+// another name (a renamed or default import, a re-export, a component held in a const or an
+// object) or imports a module whole as a namespace; and the layers that draw declare no class. kit.mjs reads the
 // modules (./reach.mjs) and checks them here; pure, so its tests run on plain values as well as on
 // a tree.
 
