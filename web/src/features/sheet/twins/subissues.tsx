@@ -102,41 +102,39 @@ function Rows() {
 /** The open Display popover: the ordering, the completed issues, the display properties. */
 function Display() {
   return (
-    <Surface level="float" pad={8}>
-      <Stack gap={10}>
-        <Stack gap={9}>
-          <FormRow label="Ordering">
-            <Select
-              label="Ordering"
-              value="priority"
-              options={[{ id: "priority", label: "Priority" }]}
+    <Surface level="float" pad={8} parts>
+      <Stack gap={9}>
+        <FormRow label="Ordering">
+          <Select
+            label="Ordering"
+            value="priority"
+            options={[{ id: "priority", label: "Priority" }]}
+            onChange={NONE}
+          />
+          <Button size="sm" icon="up" title="Sort direction" onClick={NONE} />
+        </FormRow>
+        <FormRow label="Completed issues">
+          <Select
+            label="Completed issues"
+            value="all"
+            options={[{ id: "all", label: "All" }]}
+            onChange={NONE}
+          />
+        </FormRow>
+      </Stack>
+      <Stack gap={6}>
+        <Text tone="3">Display properties</Text>
+        <Stack gap={1}>
+          {LINES.map((line) => (
+            <Segmented
+              key={line.items[0]}
+              fit
+              label="Display properties"
+              value={line.on}
               onChange={NONE}
+              items={line.items.map((label) => ({ id: label, label }))}
             />
-            <Button size="sm" icon="up" title="Sort direction" onClick={NONE} />
-          </FormRow>
-          <FormRow label="Completed issues">
-            <Select
-              label="Completed issues"
-              value="all"
-              options={[{ id: "all", label: "All" }]}
-              onChange={NONE}
-            />
-          </FormRow>
-        </Stack>
-        <Stack gap={6}>
-          <Text tone="3">Display properties</Text>
-          <Stack gap={1}>
-            {LINES.map((line) => (
-              <Segmented
-                key={line.items[0]}
-                fit
-                label="Display properties"
-                value={line.on}
-                onChange={NONE}
-                items={line.items.map((label) => ({ id: label, label }))}
-              />
-            ))}
-          </Stack>
+          ))}
         </Stack>
       </Stack>
     </Surface>

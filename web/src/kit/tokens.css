@@ -485,7 +485,7 @@
   --fs-ticket: 26px; /* a document's title, the ticket's and an editor's: clearly over its body */
   --fs-ticket-lead: 15px; /* the ticket's description */
   --fs-tk: 14px; /* the page's body: a property, a stage, a plan item, a message */
-  --w-fact-label: 104px; /* the properties row's head column */
+  --w-fact-label: 92px; /* the properties row's head column */
   --h-fact: 30px; /* a property row */
   --h-check: 32px; /* a plan row */
   --h-check-sm: 30px; /* a plan row in the peek */

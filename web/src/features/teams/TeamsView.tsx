@@ -165,13 +165,12 @@ function TicketLine({
 function OpenList({ repo }: { repo: string }) {
   return (
     <Button
-      variant="link"
+      variant="quiet"
+      size="xs"
       icon="compact"
       href={`/compact?repo=${encodeURIComponent(repo)}`}
-      title={`Every ticket in ${repoShort(repo)}`}
-    >
-      Open list
-    </Button>
+      title={`Open the list of every ticket in ${repoShort(repo)}`}
+    />
   );
 }
 

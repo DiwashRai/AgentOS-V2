@@ -46,6 +46,14 @@
 .row:is(.line, .item).open::before {
   background: var(--list-open);
 }
+/* an expanded row (its expansion under it) is no band but a part of the list on two hairlines, so a
+   large panel never reads as a slab of the accent */
+.row:is(.line, .item).open:has(.more)::before {
+  background: none;
+  box-shadow:
+    inset 0 var(--line-1) 0 var(--card-edge),
+    inset 0 calc(var(--line-1) * -1) 0 var(--card-edge);
+}
 
 .rack:is(:hover, :has(:focus-visible)) > .inner {
   background: var(--list-hover);
