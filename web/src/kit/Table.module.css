@@ -52,7 +52,6 @@
   --h-line: var(--h-line-dense);
   --h-group: var(--h-group-dense);
   --group-gap: var(--group-gap-dense);
-  --fs-group: var(--fs-5);
 }
 /* a list on a surface keeps room at its sides for its rows' wash, so the rows' words (and the
    head's, over them) stay on the surface's edge; at its right the scrollbar's gutter is part of

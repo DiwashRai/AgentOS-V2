@@ -221,7 +221,7 @@
   flex: none;
   width: var(--sp-8);
   height: var(--sp-8);
-  color: var(--side-icon);
+  color: var(--kind, var(--side-icon));
   transition: color var(--dur-fast);
 }
 .item:hover {
@@ -232,7 +232,7 @@
   color: var(--side-on-ink);
 }
 .item[aria-current] svg {
-  color: var(--you);
+  color: var(--kind, var(--you));
 }
 .item:focus-visible {
   outline-offset: var(--focus-in);

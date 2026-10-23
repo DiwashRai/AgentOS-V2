@@ -74,6 +74,11 @@
   --done-ink: #ffffff;
   --done-text: #137337;
   --progress: #16a34a;
+  /* kinds: a library thing's glyph (a workflow, an agent, a skill, a file), a hue each */
+  --kind-workflow: #5e6ad2;
+  --kind-agent: #0d9488;
+  --kind-skill: #d97706;
+  --kind-file: #0284c7;
   /* sidebar: on the ground, its labels near the ink; the current view lit to the sheet's own white */
   --side-ink: color-mix(in srgb, var(--ink-1) 86%, var(--side));
   --side-hover: var(--fill-1);
@@ -144,6 +149,10 @@
   --done-ink: #052e14;
   --done-text: #86efac;
   --progress: #4ade80;
+  --kind-workflow: #8a94f2;
+  --kind-agent: #2dd4bf;
+  --kind-skill: #fbbf24;
+  --kind-file: #38bdf8;
   /* sidebar: the current view lit a step over the sheet */
   --side-ink: color-mix(in srgb, var(--ink-1) 84%, var(--side));
   --side-hover: var(--fill-1);
@@ -249,6 +258,9 @@
   --list-hover: var(--fill-1);
   --list-open: var(--fill-2); /* the open row: a panel of tone under it, not a colour */
   --list-band: var(--fill-2);
+  /* a group's band: a lighter block than a selected row, a step firmer under the pointer */
+  --group-band: var(--fill-1);
+  --group-band-hover: var(--fill-2);
   --list-rule: var(--fill-2);
   --list-chip-fill: var(--fill-2);
   --prop-mark: color-mix(in srgb, var(--ink-3) 72%, transparent);
@@ -270,6 +282,10 @@
   --tile-hover: var(--tone-3);
   --teams-card: var(--tone-2);
   --tk-card: var(--tone-2);
+  /* an editor's text sheet: half a tone over the page inside a hairline, firmer under the pointer */
+  --sheet: color-mix(in srgb, var(--tone-1) 50%, var(--page));
+  --sheet-edge: var(--rule);
+  --sheet-edge-hover: var(--rule-strong);
   --tk-side: var(--page);
   --tk-hover: var(--fill-1);
   --tk-mine: var(--fill-2);
@@ -322,8 +338,7 @@
   --fs-3: 13px; /* ui: rows, controls */
   --fs-4: 14px; /* row titles, body, a group's heading */
   --fs-5: 15px; /* headings, counter numbers */
-  --fs-head: 16px; /* a section's heading over its rows (a group, a zone, a query) */
-  --fs-6: 24px; /* a view's title, the bar's one anchor */
+  --fs-6: 20px; /* a view's title, the bar's one anchor */
   --track-snug: -0.01em;
   --track-caps: 0.06em;
 
@@ -377,7 +392,7 @@
   --list-inset: 0px;
   --list-bleed: var(--list-in);
   --bar-thin: 10px; /* a thin scrollbar's gutter, which a scroller keeps at its right */
-  /* the room above a group's heading: groups part by room, not by a band; a section (My queue's
+  /* the room above a group's band; a section (My queue's
      zones, Intake's queries) parts from the one before by more room and one hairline */
   --group-gap: 20px;
   --section-gap: 12px;
@@ -454,7 +469,7 @@
   --side-account-w: 224px; /* the switcher's sheet */
 
   /* ticket: a large title over a dense body at the lists' row type */
-  --fs-ticket: 28px; /* the ticket's title */
+  --fs-ticket: 22px; /* a document's title: the ticket's, an editor's */
   --fs-ticket-lead: 15px; /* the ticket's description */
   --fs-tk: 14px; /* the page's body: a property, a stage, a plan item, a message */
   --w-fact-label: 104px; /* the properties row's head column */

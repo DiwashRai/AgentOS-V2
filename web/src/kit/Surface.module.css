@@ -22,22 +22,13 @@
     var(--pop-shadow);
 }
 /* a section of a view under its own head (a zone of My queue, an Intake query): no card, flush
-   with the list's edges; one after another parts by more room than a group and one hairline on
-   the column edge, so a busy screen reads as its sections */
+   with the list's edges; one after another parts by more room than a group, its head's band
+   starting it, so a busy screen reads as its sections */
 .list {
   position: relative;
 }
 .list + .list {
   margin-top: var(--section-gap);
-  padding-top: var(--section-gap);
-}
-.list + .list::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  inset-inline: var(--list-inset);
-  height: var(--line-1);
-  background: var(--rule);
 }
 /* parts: a hairline between each part and the next, run edge to edge, the padding's room on both
    sides of it (a floating layer's rule, so it reads on any tone) */

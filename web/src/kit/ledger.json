@@ -477,8 +477,8 @@
         "level": {
           "why": "Two heads over a list's runs.",
           "values": {
-            "group": "A list's heading, parted from the group before by room, no band: Compact's fold (its chevron after the count), My queue's zones' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
-            "line": "A query's head (Intake's queries): a heading parted from the run before by room, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first on the list's column edge; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
+            "group": "A list's band, a light block of grey as Linear's group head (Compact's, All teams', My queue's): Compact's fold (its chevron after the count), My queue's zones' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
+            "line": "A query's head (Intake's queries): the group's band, parted from the run before by room, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first on the list's column edge; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
           }
         },
         "fold": {

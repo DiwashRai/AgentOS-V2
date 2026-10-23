@@ -6,18 +6,32 @@
   white-space: nowrap;
 }
 
-/* group: a list's heading, no band: the room above it parts it from the group before, and its
-   words (two sizes up, a weight up) say it is a head; its glyph on the list's column edge, where
-   the rows' words, tiles and panels stand, so it heads them; its end on the rows' end; a
-   fold's chevron after its count. One look for every group, so the list never stripes; the state
+/* group: a list's band (Linear's group head): a light block of grey as wide as the rows' patches,
+   the rows straight under it, its words at the rows' size; its glyph on the list's column edge,
+   where the rows' words, tiles and panels stand, so it heads them; its end on the rows' end; a
+   fold's chevron after its count. One grey for every group, so the list never stripes; the state
    is the glyph */
 .group {
+  position: relative;
   height: var(--h-group);
   margin-top: var(--group-gap);
   padding: 0 var(--list-inset);
 }
 .group:first-child {
   margin-top: 0;
+}
+.group::before,
+.line::before {
+  content: "";
+  position: absolute;
+  inset: 0 var(--list-pad);
+  border-radius: var(--r-3);
+  background: var(--group-band);
+  transition: background-color var(--dur-fast) ease;
+}
+.group > :not(.holds),
+.group .toggle {
+  position: relative;
 }
 .group .chev {
   order: 1;
@@ -67,9 +81,8 @@
   align-items: center;
 }
 .name {
-  font-size: var(--fs-group, var(--fs-head));
-  font-weight: 600;
-  letter-spacing: var(--track-snug);
+  font-size: var(--fs-3);
+  font-weight: 500;
   color: var(--ink-1);
 }
 /* the spacer between the title and the summary */
@@ -97,10 +110,10 @@
   font-size: var(--fs-2);
   color: var(--ink-3);
 }
-/* line: a query's heading over its run (Intake): parted from the run before by room, held at the
-   list's top while its rows pass under, lit on hover like a row (a Swap in its summary answers to
-   it). Its fold reaches across it (a click anywhere but the summary folds), the chevron first, in
-   the faces' column, so the key starts where the titles do */
+/* line: a query's head over its run (Intake), the group's band: parted from the run before by room,
+   held at the list's top while its rows pass under, lit a step on hover like a row (a Swap in its
+   summary answers to it). Its fold reaches across it (a click anywhere but the summary folds), the
+   chevron first, in the faces' column, so the key starts where the titles do */
 .line {
   position: sticky;
   top: 0;
@@ -113,15 +126,8 @@
 .line:first-child {
   margin-top: 0;
 }
-.line::before {
-  content: "";
-  position: absolute;
-  inset: 0 var(--list-pad);
-  border-radius: var(--r-3);
-  transition: background-color var(--dur-fast) ease;
-}
 .line:is(:hover, :focus-within)::before {
-  background: var(--list-hover);
+  background: var(--group-band-hover);
 }
 .line > :not(.holds),
 .line .toggle {

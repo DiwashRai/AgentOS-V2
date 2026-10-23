@@ -1,6 +1,6 @@
 // The head over a group (Compact, My queue's zones) or a list's run of lines (Intake): name,
-// count, note, and a summary slot at the far end. Every head is a heading set apart by room, never
-// a band. A head with `fold` collapses its group; the screen then leaves the group's rows out.
+// count, note, and a summary slot at the far end. Every head is a light grey band, Linear's group
+// head. A head with `fold` collapses its group; the screen then leaves the group's rows out.
 import { type ReactNode, useContext } from "react";
 
 import { Badge } from "./Badge";
@@ -21,11 +21,10 @@ export interface HeadProps {
   note?: string | undefined;
   /** At the far end: a stat, links. */
   summary?: ReactNode;
-  /** group: a list's heading, parted from the group before by room, no band (with or without a
-   *  fold), its glyph hung on the list's column edge, the rows' words inset under it; line: a
-   *  query's head, parted from the run before by room, held at the list's top, lit on hover like a
-   *  row (it is the row a Swap in its summary answers to), its fold reaching across it, the chevron
-   *  on the column edge (Intake's). */
+  /** group: a list's band, the rows straight under it (with or without a fold), its glyph on the
+   *  list's column edge over the rows' words; line: a query's band, parted from the run before by
+   *  room, held at the list's top, lit on hover like a row (it is the row a Swap in its summary
+   *  answers to), its fold reaching across it, the chevron on the column edge (Intake's). */
   level?: "group" | "line";
   /** Collapsible: whether the group is open, and how to flip it. */
   fold?: { open: boolean; toggle: () => void };
