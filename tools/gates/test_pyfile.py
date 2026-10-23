@@ -4,7 +4,6 @@ context-manager rule, optional fields, suppressions, code lines, and the complex
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import subprocess
 import textwrap
@@ -277,11 +276,15 @@ def test_both_python_tools_score_and_only_lizard_counts_boolean_operators(tmp_pa
 
 
 def _ts_measures(tmp_path: Path, source: str) -> dict[str, Any]:
-    (tmp_path / "Page.tsx").write_text(textwrap.dedent(source), encoding="utf-8", newline="\n")
-    rel = os.path.relpath(tmp_path / "Page.tsx", ts_measures.WEB)
+    page = tmp_path / "Page.tsx"
+    page.write_text(textwrap.dedent(source), encoding="utf-8", newline="\n")
     script = Path(ts_measures.__file__).with_name("ts_measures.mjs")
+    # absolute: the temp folder may be on another drive than the checkout (a Windows runner's)
     out = subprocess.run(
-        ["node", str(script), str(ts_measures.WEB), rel], capture_output=True, text=True, check=True
+        ["node", str(script), str(ts_measures.WEB), str(page)],
+        capture_output=True,
+        text=True,
+        check=True,
     )
     measured: dict[str, Any] = next(iter(json.loads(out.stdout).values()))
     return measured
