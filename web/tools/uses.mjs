@@ -1,8 +1,9 @@
 // What each screen uses, by name: a module's top-level names are its units, and a screen reaches a
 // unit of a shared module or a pattern only by naming it in code that runs (a type-only import, a
-// `typeof` in a type, a re-export give no reach and no credit). A screen is credited with each kit
-// component and variant the units it reaches draw, and with each pattern and shared export they
-// are. Read with the compiler over the web (./reach.mjs opens it); kit.mjs checks the counts. In a
+// `typeof` in a type, a re-export give no reach and no credit), starting from its units the app
+// reaches from main.tsx (a screen's export nothing imports runs nowhere). A screen is credited
+// with each kit component and variant the units it reaches draw, and with each pattern and shared
+// export they are. Read with the compiler over the web (./reach.mjs opens it); kit.mjs checks the counts. In a
 // pattern, a top-level function's prop handed unchanged to a kit variant (`look={place}`) is
 // noted: it is a styling knob, whatever its name.
 import { join } from "node:path";
@@ -202,52 +203,76 @@ const screenOf = (rel) => {
   return top === "features" && folder !== "shared" && folder !== "sheet" ? folder : null;
 };
 
+/** The units reached from `starts` ([path, unit] pairs), following each reference into the modules
+ *  `may` lets it enter; `each` sees every one once. */
+function reach(read, starts, may, each) {
+  const seen = new Set();
+  const go = (rel, unit) => {
+    const m = read.get(rel);
+    const u = m?.units.get(unit);
+    if (!u || seen.has(`${rel}#${unit}`)) return;
+    seen.add(`${rel}#${unit}`);
+    each?.(rel, unit, m, u);
+    for (const r of u.refs) {
+      if (r.startsWith(":")) {
+        go(rel, r.slice(1));
+        continue;
+      }
+      const at = r.lastIndexOf("#");
+      const [to, name] = [r.slice(0, at), r.slice(at + 1)];
+      const target = read.get(to);
+      if (!target || !may(to)) continue;
+      const locals = name === "*" ? [...target.exports.values()] : [target.exports.get(name)];
+      for (const l of locals) if (l) go(to, l);
+    }
+  };
+  for (const [rel, unit] of starts) go(rel, unit);
+  return seen;
+}
+
 /**
  * Each screen's uses, through the units it reaches: `kit` maps each component and variant to its
  * screens, `exports` each shared or pattern export ("patterns/who.tsx#Who") to the screens that
- * reach it.
+ * reach it. Only code that runs counts: a screen starts from its units the app reaches (main.tsx
+ * and the app's routes and frame are the roots), so a screen's export nothing imports earns
+ * nothing.
  * @param {Map<string, {units: Map, exports: Map}>} read each module's units, by its path
  */
 function screenUses(read) {
   const out = { kit: new Map(), exports: new Map() };
   const add = (map, key, screen) => map.set(key, new Set([...(map.get(key) ?? []), screen]));
+  const roots = [...read]
+    .filter(([rel]) => rel === "main.tsx" || screenOf(rel) === "app")
+    .flatMap(([rel, m]) => [...m.units.keys()].map((unit) => [rel, unit]));
+  const live = [...reach(read, roots, () => true)].map((key) => {
+    const at = key.lastIndexOf("#");
+    return [key.slice(0, at), key.slice(at + 1)];
+  });
   const screens = new Set([...read.keys()].map(screenOf).filter((s) => s !== null));
-  for (const screen of screens) {
-    const seen = new Set();
-    const go = (rel, unit) => {
-      const m = read.get(rel);
-      const u = m?.units.get(unit);
-      if (!u || seen.has(`${rel}#${unit}`)) return;
-      seen.add(`${rel}#${unit}`);
-      for (const d of u.draws) add(out.kit, d, screen);
-      if (SHARED(rel))
-        for (const [name, local] of m.exports)
-          if (local === unit) add(out.exports, `${rel}#${name}`, screen);
-      for (const r of u.refs) {
-        if (r.startsWith(":")) {
-          go(rel, r.slice(1));
-          continue;
-        }
-        const at = r.lastIndexOf("#");
-        const [to, name] = [r.slice(0, at), r.slice(at + 1)];
-        const target = read.get(to);
-        if (!target || !(SHARED(to) || screenOf(to) === screen)) continue;
-        const locals = name === "*" ? [...target.exports.values()] : [target.exports.get(name)];
-        for (const l of locals) if (l) go(to, l);
-      }
-    };
-    for (const [rel, m] of read)
-      if (screenOf(rel) === screen) for (const unit of m.units.keys()) go(rel, unit);
-  }
+  for (const screen of screens)
+    reach(
+      read,
+      live.filter(([rel]) => screenOf(rel) === screen),
+      (to) => SHARED(to) || screenOf(to) === screen,
+      (rel, unit, m, u) => {
+        for (const d of u.draws) add(out.kit, d, screen);
+        if (SHARED(rel))
+          for (const [name, local] of m.exports)
+            if (local === unit) add(out.exports, `${rel}#${name}`, screen);
+      },
+    );
   return out;
 }
-
 /** Every module that draws or is drawn: the screens', the shared modules', the patterns', the
- *  app's (tests aside), read into units. */
+ *  app's and main.tsx (tests aside), read into units. */
 function readUses(w, kit, modules) {
   const read = new Map();
   for (const m of modules)
-    if (!m.test && /\.tsx?$/.test(m.rel) && (SHARED(m.rel) || screenOf(m.rel) !== null))
+    if (
+      !m.test &&
+      /\.tsx?$/.test(m.rel) &&
+      (SHARED(m.rel) || screenOf(m.rel) !== null || m.rel === "main.tsx")
+    )
       read.set(m.rel, unitsOf(w, kit, m.rel));
   return read;
 }

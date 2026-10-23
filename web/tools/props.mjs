@@ -116,8 +116,9 @@ export function setBy(w, attr) {
 
 /** The kit's declared types a parameter's type names, however it is written: directly (`Tone`), by
  *  a kit prop's type (`ChecklistProps["look"]`, `ComponentProps<typeof Checklist>`), or through a
- *  local alias or interface, or a field of a nested shape, that names one. The API's types and the
- *  domain can't name the kit (the layers), so the walk stops at them, and at the packages. */
+ *  local alias or interface, a type parameter's constraint (`<T extends Tone>`), or a field of a
+ *  nested shape, that names one. The API's types and the domain can't name the kit (the layers),
+ *  so the walk stops at them, and at the packages. */
 function kitTypesIn(w, decl, type) {
   const { ts, checker } = w;
   const out = new Set();
@@ -129,7 +130,11 @@ function kitTypesIn(w, decl, type) {
       if (seen.has(d) || !inSrc(d) || !local(d)) continue;
       seen.add(d);
       if (ts.isTypeAliasDeclaration(d) || ts.isInterfaceDeclaration(d)) visit(d);
-      else if ((ts.isVariableDeclaration(d) || ts.isParameter(d)) && d.type) visit(d.type);
+      else if (ts.isTypeParameterDeclaration(d)) {
+        // `<T extends Tone>`: what it may be is its constraint's
+        if (d.constraint) visit(d.constraint);
+        if (d.default) visit(d.default);
+      } else if ((ts.isVariableDeclaration(d) || ts.isParameter(d)) && d.type) visit(d.type);
     }
   };
   const visit = (node) => {
@@ -160,6 +165,11 @@ function kitTypesIn(w, decl, type) {
       return;
     }
     if (t.isUnionOrIntersection()) t.types.forEach(walkType);
+    if (t.flags & ts.TypeFlags.TypeParameter) {
+      const constraint = checker.getBaseConstraintOfType(t);
+      if (constraint) walkType(constraint);
+      return;
+    }
     const d = sym?.declarations?.[0];
     if (d && !(inSrc(d) && local(d))) return;
     if (t.flags & ts.TypeFlags.Object) {

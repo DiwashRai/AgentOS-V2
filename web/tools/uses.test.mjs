@@ -8,8 +8,19 @@ import { readWeb } from "./uses.mjs";
 
 // A kit of three, the patterns that use it (some in disguise), and screens that reach them in the
 // ways the reviewers found: through a shared module that takes one name, by a type-only import,
-// by a re-export.
+// by a re-export, by naming it in code nothing runs. The app routes to each screen.
 const FILES = {
+  "main.tsx": `import { App } from "./app/App";\nexport const root = App;\n`,
+  "app/App.tsx": [
+    `import { A } from "../features/a/A";`,
+    `import { B } from "../features/b/B";`,
+    `import { Who } from "../features/c/C";`,
+    `import { D } from "../features/d/D";`,
+    `import { E } from "../features/e/E";`,
+    `import { F } from "../features/f/F";`,
+    `export const App = () => [A, B, Who, D, E, F];`,
+    ``,
+  ].join("\n"),
   "kit/index.ts": [
     `export type Tone = "1" | "2";`,
     `export interface ChecklistProps { look?: "bare" | "page" | "peek" }`,
@@ -41,6 +52,20 @@ const FILES = {
     `export function C({ look }: { look: PropsOf<typeof Checklist>["look"] }) { return look; }`,
     `export function lineEnd({ shade }: { shade: { deep: Tone }[] }) { return shade; }`,
     `export function D({ ok }: { ok: string }) { return ok; }`,
+    `export function G<T extends Tone>({ tone }: { tone: T }) { return tone; }`,
+    ``,
+  ].join("\n"),
+  // a screen's export nothing imports: code that never runs
+  "features/e/E.tsx": [
+    `import { Plan } from "../../patterns/plan";`,
+    `export const keep = [Plan];`,
+    `export const E = 1;`,
+    ``,
+  ].join("\n"),
+  "features/f/F.tsx": [
+    `import { Plan } from "../../patterns/plan";`,
+    `export const keep = [Plan];`,
+    `export const F = 1;`,
     ``,
   ].join("\n"),
   "features/shared/parts.ts": [
@@ -59,6 +84,7 @@ const FILES = {
     `import type { Who } from "../../patterns/who";`,
     `import { Plan } from "../../patterns/plan";`,
     `export type Signature = typeof Who | typeof Plan;`,
+    `export const B = 1;`,
     ``,
   ].join("\n"),
   "features/c/C.tsx": `export { Who, Plan } from "../../patterns/who";\n`,
@@ -88,6 +114,11 @@ describe("a screen's credit, by the names it uses", () => {
     expect(web.used.get("Checklist")).toBeUndefined();
   });
 
+  it("gives code nothing runs no credit", () => {
+    expect(pattern("patterns/plan.tsx", "Plan").screens).not.toContain("e");
+    expect(pattern("patterns/plan.tsx", "Plan").screens).not.toContain("f");
+  });
+
   it("gives a type-only import and a re-export no credit", () => {
     expect(pattern("patterns/who.tsx", "Who").screens).not.toContain("b");
     expect(pattern("patterns/who.tsx", "Who").screens).not.toContain("c");
@@ -110,6 +141,7 @@ describe("a pattern's props, through its types", () => {
       "patterns/disguise.tsx B.appearance",
       "patterns/disguise.tsx C.look",
       "patterns/disguise.tsx lineEnd.shade",
+      "patterns/disguise.tsx G.tone",
     ]);
   });
 
