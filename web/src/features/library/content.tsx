@@ -144,6 +144,7 @@ function Blocks({
   return (
     <Sortable
       label="AGENTS.md blocks"
+      gap={4}
       onMove={move}
       items={blocks.map((b, i) => {
         const key = keys[i] ?? b.name;

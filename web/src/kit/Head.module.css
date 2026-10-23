@@ -7,15 +7,15 @@
 }
 
 /* group: a list's heading, no band: the room above it parts it from the group before, and its
-   words (two sizes up, a weight up) say it is a head; its glyph hung on the list's column edge,
-   where tiles and panels stand, so it heads the rows inset under it; its end on the rows' end; a
+   words (two sizes up, a weight up) say it is a head; its glyph on the list's column edge, where
+   the rows' words, tiles and panels stand, so it heads them; its end on the rows' end; a
    fold's chevron after its count. One look for every group, so the list never stripes; the state
    is the glyph */
 .group,
 .zone {
   height: var(--h-group);
   margin-top: var(--group-gap);
-  padding: 0 var(--list-inset) 0 var(--list-pad);
+  padding: 0 var(--list-inset);
 }
 .group:first-child,
 .zone:first-child {
@@ -114,7 +114,7 @@
   z-index: var(--z-sticky);
   height: var(--h-group);
   margin-top: var(--group-gap);
-  padding: 0 var(--list-inset) 0 var(--list-pad);
+  padding: 0 var(--list-inset);
   background: var(--ground);
 }
 .line:first-child {

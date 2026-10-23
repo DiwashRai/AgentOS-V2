@@ -37,8 +37,9 @@
 .list {
   min-height: 0;
 }
+/* only as tall as its rows, so the foot stays under the last one; a longer list scrolls over it */
 .scroll > .list {
-  flex: 1;
+  flex: 0 1 auto;
   overflow: hidden auto;
   /* room under the last row when scrolled to the end, so it doesn't sit on the surface's foot */
   padding: 0 0 var(--sp-8);
@@ -53,20 +54,19 @@
   --group-gap: var(--group-gap-dense);
   --fs-group: var(--fs-5);
 }
-/* a list on a surface keeps room at its sides for a focus ring; at its right the scrollbar's own
-   gutter is that room, so the rows' column edge (and the head's, over them) stays the surface's */
-.scroll:not(.edge) > .list {
+/* a list on a surface keeps room at its sides for its rows' wash, so the rows' words (and the
+   head's, over them) stay on the surface's edge; at its right the scrollbar's gutter is part of
+   that room */
+.scroll:not(.edge) > :is(.list, .head) {
   margin-inline: calc(var(--list-bleed) * -1);
-  padding-left: var(--list-bleed);
+  padding-inline: var(--list-bleed) calc(var(--list-bleed) - var(--bar-thin));
 }
-.scroll:not(.edge) > .head {
-  margin-inline: calc(var(--list-bleed) * -1);
-  padding-left: calc(var(--list-bleed) + var(--list-inset));
-}
-/* the foot: its words on the rows' edges, under the list; it keeps the list's scrollbar gutter, so
-   its far end lines up with the rows'. Under a list that scrolls it is held at the sheet's foot, a
-   strip of tone (no rule) the rows fade out over */
+/* the foot: its words on the rows' edges, right under the list; it keeps the list's scrollbar
+   gutter, so its far end lines up with the rows'. Under a list that scrolls it is the list's last
+   line, one hairline over it on the column edges, held at the sheet's foot when the rows run past
+   it, which fade out over it */
 .foot {
+  position: relative;
   flex: none;
   display: flex;
   align-items: center;
@@ -81,19 +81,24 @@
   white-space: nowrap;
 }
 .scroll > .foot {
-  margin: 0 var(--list-pad) var(--sp-4);
-  padding: 0 var(--list-in);
-  border-radius: var(--r-3);
-  background: var(--tone-1);
+  min-height: var(--h-list-head);
+  margin-bottom: var(--sp-4);
   scrollbar-gutter: auto;
+}
+.scroll > .foot::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: var(--list-inset);
+  height: var(--line-1);
+  background: var(--rule);
 }
 /* edge: out through the sheet's gutter, no surface; its column edge the bar's title's, the head its
    quiet labels over the rows' words with no band and no rule, the rows ruled apart under their
-   words, the foot flush with the sheet's foot, or right under the last row when the list doesn't
-   fill the page */
+   words */
 .edge {
-  --list-pad: var(--gutter);
-  --list-inset: calc(var(--gutter) + var(--list-in));
+  --list-pad: calc(var(--gutter) - var(--list-in));
+  --list-inset: var(--gutter);
   --row-rule: var(--list-rule);
 }
 /* no gutter kept for a scrollbar a short list never shows */

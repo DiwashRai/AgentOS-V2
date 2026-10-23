@@ -131,22 +131,29 @@
   font-weight: 600;
 }
 
-/* a sheet (an item editor's content): a section of the document, not a box. Its head strip (a
-   heading's weight) parts it from the one before by room alone, the text under it on the column's
-   own edge (a folding block's under its name, past the fold) as tall as its lines; while the text
-   has the focus a short bar of the accent marks it at the head's start */
+/* a sheet (an item editor's content): one editable object, a quiet panel of tone with no line, its
+   head strip (a heading's weight) over its text (a folding block's under its name, past the fold);
+   it takes the column's free height, all of it a place to click and write. A step firmer under the
+   pointer; while the text has the focus a hairline of the focus colour rings it */
 .sheet {
   position: relative;
+  padding: 0 var(--sp-8);
+  border-radius: var(--r-4);
+  background: var(--tone-1);
+  transition:
+    background-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
 }
-.sheet:has(.leaf:focus)::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: var(--sp-9);
-  height: var(--line-2);
-  border-radius: var(--line-2);
-  background: var(--you);
+.sheet:hover {
+  background: var(--tone-2);
+}
+.sheet:has(.leaf:focus) {
+  background: var(--tone-1);
+  box-shadow: inset 0 0 0 var(--line-1) var(--focus);
+}
+.sheet > .read {
+  flex: 1;
+  align-content: start;
 }
 .sheetHead {
   display: flex;

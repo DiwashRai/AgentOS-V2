@@ -1,6 +1,6 @@
 /* the composer: a reply box of tone, no edge, one line of text with Send at its right end, growing
    as you type; in a full-height column it sits at the foot and stays there while the thread
-   scrolls. On a rail of tone it is a well of the sheet's own (--well) */
+   scrolls. On a held panel of tone (a Surface sheet) it is a well of the sheet's own (--well) */
 .compose {
   position: sticky;
   bottom: 0;

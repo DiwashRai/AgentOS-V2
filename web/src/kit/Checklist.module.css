@@ -59,8 +59,9 @@
   margin-top: calc(var(--sp-3) * -1);
 }
 .large .section {
-  min-height: var(--h-control-sm);
+  min-height: var(--h-chip-sm);
   margin-top: var(--sp-6);
+  margin-bottom: var(--sp-2);
   font-size: var(--fs-3);
   color: var(--tk-label);
 }

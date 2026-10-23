@@ -339,7 +339,6 @@ export function QueueView() {
       counters={[
         { n: z.yourMove.length, label: "your move", mark: "you" },
         { n: z.mine, label: "runs yours" },
-        "|",
         { n: z.running, label: "running", mark: "run" },
         { n: z.queued, label: "queued", mark: "queued" },
       ]}

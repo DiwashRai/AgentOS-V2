@@ -266,12 +266,11 @@
   --pop-edge: var(--edge);
   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
   /* surfaces on the sheet: an agent's tile and a board's card one tone, a step more under the
-     pointer; the run card, the Talk column and the peek's ground */
+     pointer; the run card and the peek's ground */
   --tile: var(--tone-2);
   --tile-hover: var(--tone-3);
   --teams-card: var(--tone-2);
   --tk-card: var(--tone-2);
-  --tk-well: var(--tone-1);
   --tk-side: var(--page);
   --tk-hover: var(--fill-1);
   --tk-mine: var(--fill-2);
@@ -369,18 +368,20 @@
   --h-group: 36px;
   --h-list-head: 32px;
   --h-list-chip: 20px;
-  /* rows: one column edge for every shape (a list's own edge: the sheet's gutter, or a surface's):
-     a row's wash, an open row's panel, a tile and a foot strip all stand on it, and a row's words
-     sit --list-in inside it, as a tile's do; a group's heading hangs on the edge itself, so it
-     heads its rows. The bleed is the room a scroller keeps at its sides for a ring */
-  --list-pad: 0px;
+  /* rows: one column edge for every shape (the sheet's gutter, where the bar's title and buttons
+     end): a row's words, a group's glyph, a column head, a foot's words and a tile's side all
+     stand on it; a row's wash, an open row's panel and a foot strip reach --list-in past it, so
+     the words keep the edge and the wash still has room round them. The bleed is that room, kept
+     by a scroller at its sides */
   --list-in: 16px;
-  --list-inset: calc(var(--list-pad) + var(--list-in));
-  --list-bleed: 10px;
+  --list-pad: calc(var(--list-in) * -1);
+  --list-inset: 0px;
+  --list-bleed: var(--list-in);
+  --bar-thin: 10px; /* a thin scrollbar's gutter, which a scroller keeps at its right */
   /* the room above a group's heading: groups part by room, not by a band; a section (My queue's
      zones, Intake's queries) parts from the one before by more room and one hairline */
   --group-gap: 20px;
-  --section-gap: 18px;
+  --section-gap: 12px;
   /* a list that scrolls in its own surface (Compact): the same parts a step tighter, so a whole
      board of groups fits the window over its foot */
   --h-line-dense: 32px;
@@ -458,7 +459,7 @@
   --fs-tk: 14px; /* the page's body: a property, a stage, a plan item, a message */
   --w-fact-label: 104px; /* the properties row's head column */
   --h-fact: 30px; /* a property row */
-  --h-check: 34px; /* a plan row */
+  --h-check: 32px; /* a plan row */
   --h-check-sm: 30px; /* a plan row in the peek */
   --h-compose: 24px; /* the composer's text, one line beside Send; it grows as you type */
   --w-ticket: 760px; /* the ticket body's reading width */

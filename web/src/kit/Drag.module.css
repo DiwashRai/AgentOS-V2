@@ -68,17 +68,6 @@
   position: relative;
   min-width: 0;
 }
-/* one row parts from the next by a hairline across the list at its top (AGENTS.md's blocks: a
-   document's sections), so each reads as its own block */
-.slot + .slot::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  inset-inline: 0;
-  height: var(--line-1);
-  background: var(--rule);
-  pointer-events: none;
-}
 /* the handle: a quiet glyph at its row's head, full strength while its row is hovered */
 .grip {
   flex: none;

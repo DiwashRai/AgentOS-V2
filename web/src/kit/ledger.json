@@ -587,7 +587,7 @@
         "align": {
           "why": "Where it sits: standing for a group (the default, its glyph on the column edge as a head's), or a line under a query's head (Intake's).",
           "values": {
-            "item": "A line under a query's head (Intake's): an empty ring or the +N on a grey disc where the rows' words start; a problem as a panel of the blocked hue's wash on the column edge, its blocked dot on a halo before its words, so a query that didn't answer stands apart."
+            "item": "A line under a query's head (Intake's): an empty ring or the +N on a grey disc where the rows' words start; a problem as a panel of the blocked hue's wash standing on the column edge as a tile does, its blocked dot on a halo before its words, so a query that didn't answer stands apart."
           }
         },
         "fix": {
@@ -661,7 +661,7 @@
           "why": "The bar's buttons at its right end (New ticket; the ticket's actions)."
         },
         "side": {
-          "why": "A full-height column beside the body, as Linear's issue sidebar: a rounded panel a step of tone off the sheet, no line, on the bar's right edge and inset from the sheet's foot, so the sheet keeps its corners; or, its look doc, none, and the body one centred document.",
+          "why": "A full-height column beside the body, as Linear's issue sidebar: no panel, the sheet itself parted from the body by one hairline from the bar to the sheet's foot, its words ending on the bar's right edge; or, its look doc, none, and the body one centred document.",
           "items": {
             "look": {
               "why": "Whether the column is there.",
@@ -678,7 +678,7 @@
       }
     },
     "Row": {
-      "why": "One item of a list: its cells on the table's columns; a flat row (Linear's list) on the list's column edge with its words inset, a card or a swimlane.",
+      "why": "One item of a list: its cells on the table's columns; a flat row (Linear's list) with its words on the list's column edge and its wash reaching past it, a card or a swimlane.",
       "props": {
         "children": {
           "why": "The cells."
@@ -686,7 +686,7 @@
         "kind": {
           "why": "The shapes the app's lists take.",
           "values": {
-            "line": "A list's row (Compact, My queue, Intake, the library's four lists): one dense line, its rhythm and the room above each heading parting the rows (a faint hairline under its words in a list out at the sheet's edges); its words inset from the column edge the group head's glyph hangs on; hover and open wash a rounded patch on that edge, so an open row's panel stands where a tile does.",
+            "line": "A list's row (Compact, My queue, Intake, the library's four lists): one dense line, its rhythm and the room above each heading parting the rows (a faint hairline under its words in a list out at the sheet's edges); its words on the column edge the group head's glyph and the bar's title stand on; hover and open wash a rounded patch reaching a little past that edge, so the words keep it.",
             "item": "A two-line row (a ticket's context): roomy, unruled, washed on hover.",
             "triage": "A triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; washed on hover.",
             "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
@@ -964,7 +964,7 @@
           "why": "Fill the surface and scroll inside it, a step denser (its lines, heads and the room above them) so a whole board of groups stands over its foot; or sit in a longer page."
         },
         "foot": {
-          "why": "The bar under the list: key hints, a summary; under a list that scrolls, a strip of tone held at the sheet's foot."
+          "why": "The line under the list: key hints, a summary; under a list that scrolls, right under its last row on one hairline, held at the sheet's foot when the rows run past it."
         },
         "children": {
           "why": "The groups and rows."
@@ -1066,7 +1066,7 @@
           "why": "Its least height in lines (a prompt's few, an editor's many)."
         },
         "head": {
-          "why": "An item editor's content is a section of its document, as Linear writes a description under its properties: a head strip parted from the one before by room (its title and length; a block's fold and name), the text under it as tall as its lines, read at rest as a document (paragraphs, lists, `code` chips, front matter and a fenced block in mono) over its hidden source, which a click edits in place, a short bar of the accent at its head while it has the focus; popped out, it is the plain box at a readable measure."
+          "why": "An item editor's content is a section of its document, as Linear writes a description under its properties: a head strip parted from the one before by room (its title and length; a block's fold and name), the text under it as tall as its lines, read at rest as a document (paragraphs, lists, `code` chips, front matter and a fenced block in mono) over its hidden source, which a click edits in place, the whole of it one quiet panel of tone taking the column's free height (a click anywhere in it writes), ringed by a hairline of the focus colour while it has the focus; popped out, it is the plain box at a readable measure."
         },
         "tools": {
           "why": "A block's controls at its head's end (its moves, then its handle): the moves show while the block is in use, so a head at rest is its name and its handle."
@@ -1106,7 +1106,7 @@
       }
     },
     "Composer": {
-      "why": "The reply box under a conversation (the ticket's Talk, the peek's foot): one line growing as you type, Send at its end, pinned at a full-height column's foot; on that column's panel of tone, a well of the sheet's own.",
+      "why": "The reply box under a conversation (the ticket's Talk, the peek's foot): one line growing as you type, Send at its end, pinned at a full-height column's foot; on a held panel of tone, a well of the sheet's own.",
       "props": {
         "label": {
           "why": "Its accessible name and placeholder (\"Say something to Bea and Cy\")."

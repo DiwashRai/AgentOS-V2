@@ -9,8 +9,8 @@
 }
 
 /* lists: a line, an item and a triage row are flat: the rhythm and the room above each group part
-   the rows. Their wash (hover, open) is a rounded patch on the list's column edge, the words
-   --list-in inside it, so an open row's panel stands where a tile does. No card, nothing moves */
+   the rows. Their words stand on the list's column edge; their wash (hover, open) is a rounded
+   patch reaching --list-in past it. No card, nothing moves */
 .line,
 .item,
 .triage {
@@ -97,7 +97,7 @@
   column-gap: var(--sp-6);
   border-radius: 0;
 }
-/* a list row's first cell starts at the inset, under its group head's glyph; its cells sit a
+/* a list row's first cell starts on the column edge, under its group head's glyph; its cells sit a
    step closer, as Linear packs a row's end */
 .line > .inner {
   column-gap: var(--sp-5);
@@ -177,7 +177,7 @@
 .band > .inner {
   align-items: stretch;
   column-gap: var(--sp-6);
-  padding: 0 var(--list-pad);
+  padding: 0 var(--list-inset);
   border-radius: 0;
 }
 .band .cell {

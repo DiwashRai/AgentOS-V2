@@ -1,4 +1,5 @@
-/* --ground: the surface's own fill, for what paints an opaque copy of it (a sticky head) */
+/* --ground: the surface's own fill, for what paints an opaque copy of it (a sticky head); --well:
+   what a box sunk into it fills with (a reply box) */
 .surface {
   min-width: 0;
   padding: var(--pad);
@@ -13,6 +14,7 @@
    on the popover's hairline and soft shadow, the kit's one lifted look */
 .sheet {
   --ground: var(--tone-2);
+  --well: var(--page);
   background: var(--tone-2);
   border-radius: var(--r-4);
   box-shadow:
@@ -33,7 +35,7 @@
   content: "";
   position: absolute;
   top: 0;
-  inset-inline: var(--list-pad);
+  inset-inline: var(--list-inset);
   height: var(--line-1);
   background: var(--rule);
 }

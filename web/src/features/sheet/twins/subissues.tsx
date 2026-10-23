@@ -76,19 +76,25 @@ function Head() {
   );
 }
 
-/** The rows' leading cells: the status glyph and the placeholder. */
+/** The rows' leading cells: the status glyph and the placeholder, set in past the head's fold as
+ *  Linear's are. */
 function Rows() {
   return (
-    <Table columns={[{ label: "Sub-issue", width: "fill" }]} head={false} scroll={false}>
-      {ROWS.map((r) => (
-        <Row key={r.id}>
-          <Stack dir="row" gap={4} align="center">
-            <Glyph glyph={r.glyph} />
-            <Chip tone="fill" label={bar(r.n)} />
-          </Stack>
-        </Row>
-      ))}
-    </Table>
+    <Stack dir="row" gap={8}>
+      <Stack />
+      <Stack grow>
+        <Table columns={[{ label: "Sub-issue", width: "fill" }]} head={false} scroll={false}>
+          {ROWS.map((r) => (
+            <Row key={r.id}>
+              <Stack dir="row" gap={4} align="center">
+                <Glyph glyph={r.glyph} />
+                <Chip tone="fill" label={bar(r.n)} />
+              </Stack>
+            </Row>
+          ))}
+        </Table>
+      </Stack>
+    </Stack>
   );
 }
 

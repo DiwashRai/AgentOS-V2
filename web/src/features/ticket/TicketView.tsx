@@ -67,8 +67,8 @@ interface HeaderProps {
 function Header({ t, me, now, plan }: HeaderProps) {
   const lead = t.description.split("\n\n")[0] ?? "";
   return (
-    <Stack gap={9}>
-      <Stack gap={5}>
+    <Stack gap={8}>
+      <Stack gap={4}>
         <Text variant="display" as="h1">
           {t.title}
         </Text>
@@ -92,7 +92,7 @@ function Overview({
 }) {
   const rest = t.description.split("\n\n").slice(1);
   return (
-    <Stack gap={10}>
+    <Stack gap={9}>
       {rest.map((p, i) => (
         <Text key={i} variant="body" as="p">
           {p}
@@ -145,7 +145,7 @@ function Body({ t, me, now }: { t: Ticket; me: Person | null; now: number }) {
     workflow: <WorkflowTab t={t} />,
   };
   return (
-    <Stack gap={9}>
+    <Stack gap={8}>
       <Header t={t} me={me} now={now} plan={plan} />
       <Tabs
         label="Ticket sections"

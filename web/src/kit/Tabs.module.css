@@ -43,6 +43,6 @@
   font-variant-numeric: tabular-nums;
 }
 .panel {
-  padding-top: var(--sp-9);
+  padding-top: var(--sp-8);
   outline: none;
 }

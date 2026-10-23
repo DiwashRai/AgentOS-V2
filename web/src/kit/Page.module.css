@@ -142,15 +142,6 @@
 .you > b {
   color: var(--you-text);
 }
-/* the separator: a small dot, so the two groups of counters part evenly */
-.sep {
-  flex: none;
-  width: var(--line-3);
-  height: var(--line-3);
-  border-radius: 50%;
-  background: var(--ink-3);
-  opacity: 0.6;
-}
 
 /* the bar's search: 240 wide, giving way first when the bar is short */
 .search {
@@ -167,10 +158,15 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 28vw, var(--w-talk-max));
 }
-/* the body: one calm reading column, room under its last line when scrolled to the end */
+/* the body: one calm reading column, close under the bar, room under its last line when scrolled to
+   the end */
 .split > .body {
+  /* a list in it (a ticket's runs) stands on the column's edge as the run card does, its words
+     inset as the card's are */
+  --list-pad: 0;
+  --list-inset: var(--list-in);
   margin-right: 0;
-  padding: var(--sp-10) var(--sp-9) calc(var(--sp-10) * 2) var(--list-bleed);
+  padding: var(--sp-8) var(--sp-9) calc(var(--sp-10) * 2) var(--list-bleed);
 }
 /* a document: the reading column centred under the bar, room above and under it */
 .doc {
@@ -186,19 +182,15 @@
   max-width: var(--w-ticket);
   margin-inline: auto;
 }
-/* the column beside: a panel a step of tone off the sheet (no line), on the bar's right edge and
-   set up off the sheet's foot by the frame's own inset, so the sheet keeps its rounded corners and
-   the rail reads as its own surface; full height, so what it holds can pin its foot (Talk's reply
-   box) to the window's bottom */
+/* the column beside: no panel, the sheet itself, parted from the body by one hairline from the bar
+   to the sheet's foot, its words ending on the bar's right edge; full height, so what it holds can
+   pin its foot (Talk's reply box) to the window's bottom */
 .side {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--inset);
-  padding: var(--sp-9) var(--sp-9) var(--sp-8);
-  border-radius: var(--r-4);
-  --well: var(--page);
-  background: var(--tk-well);
+  padding: var(--sp-8) 0 var(--sp-8) var(--sp-9);
+  border-left: var(--line-1) solid var(--rule);
   overflow-y: auto;
   scrollbar-width: thin;
 }

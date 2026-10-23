@@ -25,7 +25,7 @@
   align-items: center;
   gap: var(--sp-4);
   min-height: var(--h-row);
-  padding: 0 var(--list-inset) 0 var(--list-pad);
+  padding: 0 var(--list-inset);
   color: var(--ink-3);
   font-size: var(--fs-3);
   white-space: nowrap;
@@ -112,8 +112,9 @@
 
 /* a line under a query's head (Intake), a row's height, its glyph where the rows' words start: an
    empty ring; the +N of a capped run on a grey disc, its Show button after it. A problem is the
-   query's whole answer, so it is a panel: the blocked hue's faint wash on the column edge, its
-   words inset as a row's, a blocked dot on a halo hung before them on its first line */
+   query's whole answer, so it is a panel: the blocked hue's faint wash standing on the column
+   edge as a tile does, its words inset, a blocked dot on a halo hung before them on its first
+   line */
 .empty[data-align="item"],
 .more[data-align="item"] {
   gap: var(--sp-4);
@@ -125,7 +126,7 @@
 }
 .problem[data-align="item"] {
   gap: 0;
-  margin: var(--sp-2) var(--list-pad) 0;
+  margin: var(--sp-2) var(--list-inset) 0;
   padding: var(--sp-6) var(--list-in) var(--sp-6)
     calc(var(--list-in) + var(--triage-face) + var(--sp-3));
   border-radius: var(--r-4);
