@@ -11,7 +11,6 @@ import { useNow } from "../../api/queries";
 import type { Author, Iso, UsedBy } from "../../api/types";
 import { fromAuthor, plural } from "../../domain/format";
 import {
-  Badge,
   Button,
   type Column,
   Icon,
@@ -25,6 +24,7 @@ import {
   Text,
 } from "../../kit";
 import { AgeCell } from "../../patterns/age";
+import { KeyHints } from "../../patterns/hints";
 import { Who } from "../../patterns/who";
 import { contextOf, useSpace } from "../shared/board";
 
@@ -42,10 +42,10 @@ interface LibraryListProps {
   children: ReactNode;
 }
 
-const HINTS = [
-  ["↑↓", "Select"],
-  ["↵", "Open"],
-  ["/", "Search"],
+const KEYS = [
+  { key: "↑↓", does: "Select" },
+  { key: "↵", does: "Open" },
+  { key: "/", does: "Search" },
 ] as const;
 
 /** The selected row's editor, for the rows to light it. */
@@ -54,12 +54,7 @@ const Selected = createContext<string | null>(null);
 function Foot({ noun, total, shown }: { noun: string; total: number; shown: number }) {
   return (
     <>
-      {HINTS.map(([key, word]) => (
-        <Stack key={key} dir="row" gap={3} align="center">
-          <Badge kind="kbd">{key}</Badge>
-          <Text variant="meta">{word}</Text>
-        </Stack>
-      ))}
+      <KeyHints keys={KEYS} />
       <Stack grow />
       <Text variant="meta" tone="2">
         {shown === total ? plural(total, noun) : `${String(shown)} of ${plural(total, noun)}`}

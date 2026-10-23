@@ -27,6 +27,7 @@ import {
 import { TicketAge } from "../../patterns/age";
 import { LoadNotice } from "../../patterns/load";
 import { RunNow } from "../../patterns/runNow";
+import { Tally } from "../../patterns/tally";
 import { KeyCell, TicketTitle } from "../../patterns/ticketLine";
 import { Who } from "../../patterns/who";
 import { contextOf, useBoard, useSpace } from "../shared/board";
@@ -53,10 +54,7 @@ function Legend({ stages }: { stages: readonly { name: string; n: number }[] }) 
   return (
     <>
       <Text variant="meta" tone="2" tabular>
-        <Text weight={600} tone="1">
-          {String(stages.reduce((n, st) => n + st.n, 0))}
-        </Text>
-        {" in flight"}
+        <Tally n={stages.reduce((n, st) => n + st.n, 0)} one="in flight" many="in flight" />
         {stages.map((st) => (
           <Text key={st.name} tone={st.n > 0 ? "2" : "3"}>
             {` · ${st.name} `}

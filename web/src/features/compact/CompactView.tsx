@@ -35,7 +35,9 @@ import {
   Text,
   Thread,
 } from "../../kit";
+import { KeyHints } from "../../patterns/hints";
 import { LoadNotice } from "../../patterns/load";
+import { Tally } from "../../patterns/tally";
 import { KeyCell, LINE_END, lineEnd, TicketTitle } from "../../patterns/ticketLine";
 import { ActionButton, expandedActions } from "../shared/Actions";
 import { contextOf, threadMessage, useBoard, useSpace } from "../shared/board";
@@ -68,6 +70,13 @@ function NowTag({ mark, count }: { mark: MarkModel | null; count: string | null 
     </Text>
   );
 }
+
+/** The keys the foot says: a row expands and collapses in place. */
+const KEYS = [
+  { key: "↵", does: "Expand" },
+  { key: "Esc", does: "Collapse" },
+  { key: "/", does: "Search" },
+] as const;
 
 const PLAN_MAX = 6;
 
@@ -228,24 +237,10 @@ export function CompactView() {
           columns={COLUMNS}
           foot={
             <>
-              {[
-                ["↵", "Expand"],
-                ["Esc", "Collapse"],
-                ["/", "Search"],
-              ].map(([key, word]) => (
-                <Stack key={key} dir="row" gap={3} align="center">
-                  <Badge kind="kbd">{key ?? ""}</Badge>
-                  <Text variant="meta">{word}</Text>
-                </Stack>
-              ))}
+              <KeyHints keys={KEYS} />
               <Stack grow />
               <Stack dir="row" gap={3} align="center">
-                <Text variant="meta" tone="2">
-                  <Text weight={600} tone="1">
-                    {String(foot.tickets)}
-                  </Text>
-                  {foot.tickets === 1 ? " ticket" : " tickets"}
-                </Text>
+                <Tally n={foot.tickets} one="ticket" />
                 <Text variant="meta">·</Text>
                 {foot.projects.map((p) => (
                   <Badge key={p} kind="key" size="sm">
@@ -253,12 +248,7 @@ export function CompactView() {
                   </Badge>
                 ))}
                 <Text variant="meta">·</Text>
-                <Text variant="meta" tone="2">
-                  <Text weight={600} tone="1">
-                    {String(foot.repos)}
-                  </Text>
-                  {foot.repos === 1 ? " repo" : " repos"}
-                </Text>
+                <Tally n={foot.repos} one="repo" />
               </Stack>
             </>
           }
