@@ -1,0 +1,2214 @@
+diff --git a/quality-baseline.json b/quality-baseline.json
+index c65499e..4a5d9ab 100644
+--- a/quality-baseline.json
++++ b/quality-baseline.json
+@@ -8,7 +8,13 @@
+       "src/agentos/**/rules/**",
+       "src/agentos/workflows/**",
+       "src/agentos_protocol/**",
+-      "src/agentos_worker/core/**"
++      "src/agentos_worker/core/**",
++      "tools/gates/common.py",
++      "tools/gates/defaults.py",
++      "tools/gates/baseline.py",
++      "tools/gates/measures.py",
++      "tools/gates/results.py",
++      "tools/gates/report.py"
+     ],
+     "shell": [
+       "src/agentos/*/service.py",
+@@ -19,7 +25,9 @@
+       "src/agentos/*/__init__.py",
+       "src/agentos_worker/__init__.py",
+       "src/agentos_worker/run/**",
+-      "src/agentos_worker/client/**"
++      "src/agentos_worker/client/**",
++      "tools/gates/gates.py",
++      "tools/gates/card.py"
+     ],
+     "boundary": [
+       "src/agentos/*/routes.py",
+@@ -35,7 +43,15 @@
+       "src/agentos_worker/git/**",
+       "src/agentos_worker/procs/**",
+       "src/agentos_worker/files/**",
+-      "src/agentos_worker/__main__.py"
++      "src/agentos_worker/__main__.py",
++      "tools/gates/repo.py",
++      "tools/gates/schema.py",
++      "tools/gates/collect.py",
++      "tools/gates/pyfile.py",
++      "tools/gates/python_names.py",
++      "tools/gates/python_measures.py",
++      "tools/gates/mypy_any.py",
++      "tools/gates/ts_measures.py"
+     ]
+   },
+   "limits": {
+diff --git a/tests/test_core_purity.py b/tests/test_core_purity.py
+index 382c761..448a057 100644
+--- a/tests/test_core_purity.py
++++ b/tests/test_core_purity.py
+@@ -1,6 +1,6 @@
+-"""The core (the files the gates' baseline puts in the `core` layer) is pure, by allowlist: it
+-imports only the pure standard-library modules below, our own core modules and jinja2; it never
+-reads the clock; it calls no I/O or code-running built-in."""
++"""The core (the files the gates' baseline puts in the `core` layer, the gate scripts' too) is
++pure, by allowlist: it imports only the pure standard-library modules below, our own core modules
++and jinja2; it never reads the clock; it calls no I/O or code-running built-in."""
+ 
+ import ast
+ import fnmatch
+@@ -11,6 +11,7 @@ from tests.ast_checks import builtin_calls
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+ SRC = ROOT / "src"
++TOOLS = ROOT / "tools" / "gates"  # its modules import each other by their bare names
+ CORE_GLOBS: list[str] = json.loads((ROOT / "quality-baseline.json").read_text(encoding="utf-8"))[
+     "layers"
+ ]["core"]
+@@ -19,8 +20,9 @@ CORE_GLOBS: list[str] = json.loads((ROOT / "quality-baseline.json").read_text(en
+ # boundary. `datetime` is for its types: reading the clock is refused separately.
+ PURE_STDLIB = {
+     "__future__", "abc", "base64", "bisect", "collections", "copy", "dataclasses", "datetime",
+-    "decimal", "enum", "fractions", "functools", "hashlib", "heapq", "itertools", "json", "math",
+-    "operator", "re", "string", "struct", "textwrap", "types", "typing", "unicodedata",
++    "decimal", "enum", "fnmatch", "fractions", "functools", "hashlib", "heapq", "itertools",
++    "json", "math", "operator", "re", "string", "struct", "textwrap", "types", "typing",
++    "unicodedata",
+ }  # fmt: skip
+ THIRD_PARTY = {"jinja2"}  # prompt templates (D15)
+ OURS = {"agentos", "agentos_worker", "agentos_protocol"}
+@@ -58,17 +60,19 @@ def _absolute(node: ast.ImportFrom, package: str) -> str:
+     return ".".join([*parts, *([node.module] if node.module else [])])
+ 
+ 
+-def _allowed(module: str) -> bool:
++def _allowed(module: str, package: str) -> bool:
+     top = module.split(".")[0]
+     if top in OURS:
+         return _is_core_module(module)
++    if package == "" and (TOOLS / f"{top}.py").exists():  # a gate script's sibling
++        return is_core((TOOLS / f"{top}.py").relative_to(ROOT).as_posix())
+     return top in THIRD_PARTY or top in PURE_STDLIB
+ 
+ 
+ def _import_problems(node: ast.stmt, package: str) -> list[str]:
+     match node:
+         case ast.Import(names=names):
+-            return [a.name for a in names if not _allowed(a.name)]
++            return [a.name for a in names if not _allowed(a.name, package)]
+         case ast.ImportFrom(module="pathlib", level=0, names=names):
+             return [f"pathlib.{a.name}" for a in names if a.name not in PURE_PATHS]
+         case ast.ImportFrom(names=names) as imported:
+@@ -78,7 +82,7 @@ def _import_problems(node: ast.stmt, package: str) -> list[str]:
+                 named = [f"{module}.{a.name}" for a in names]
+                 found = [m if _module_path(m).exists() else module for m in named]
+                 return clock + [m for m in found if not _is_core_module(m)]
+-            return clock if _allowed(module) else [module]
++            return clock if _allowed(module, package) else [module]
+         case _:
+             return []
+ 
+@@ -102,11 +106,13 @@ def impurities(source: str, package: str = "agentos.workflows") -> list[str]:
+ 
+ 
+ def _core_files() -> list[Path]:
+-    paths = sorted(SRC.rglob("*.py"))
++    paths = sorted([*SRC.rglob("*.py"), *TOOLS.glob("*.py")])
+     return [p for p in paths if is_core(p.relative_to(ROOT).as_posix())]
+ 
+ 
+ def _package(path: Path) -> str:
++    if not path.is_relative_to(SRC):
++        return ""  # a gate script: no package
+     parts = path.relative_to(SRC).with_suffix("").parts
+     return ".".join(parts if parts[-1] == "__init__" else parts[:-1]).removesuffix(".__init__")
+ 
+@@ -181,3 +187,13 @@ len("pure")
+ """
+     # line 2 and 3 are also refused imports (builtins)
+     assert _lines(source) == [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
++
++
++def test_only_a_gate_script_imports_the_core_gate_scripts_by_bare_name() -> None:
++    source = """
++import report
++from measures import Measures
++import repo
++"""
++    assert _lines(source, package="") == [4]  # repo is a boundary gate script
++    assert _lines(source) == [2, 3, 4]  # a src core module can't import gate scripts
+diff --git a/tools/gates/baseline.py b/tools/gates/baseline.py
+index 04a90dd..de266ec 100644
+--- a/tools/gates/baseline.py
++++ b/tools/gates/baseline.py
+@@ -1,88 +1,79 @@
+-"""The baseline file (`quality-baseline.json`): loading (checked against its schema) and saving,
+-raise detection against a base revision, the ratchet, `--init` and `--rebaseline-cyclomatic`."""
++"""The baseline (`quality-baseline.json`) as typed values: raise detection against a base
++revision, the ratchet, `--init` and `--rebaseline-cyclomatic`. `repo` reads and writes the file."""
+ 
+ from __future__ import annotations
+ 
+-import json
+-import subprocess
+-from typing import TYPE_CHECKING, Any
+-
+-from common import ROOT
+-from defaults import DEFAULT_LAYERS, DEFAULT_LIMITS, DEFAULT_UNCAPPED, EXCEPTION_GATES
+-from schema import problems
+-
+-if TYPE_CHECKING:
+-    from measures import Measures
+-
+-BASELINE = ROOT / "quality-baseline.json"
+-
+-
+-class BaselineError(ValueError):
+-    """The baseline file doesn't match its schema; `problems` says where."""
+-
+-    def __init__(self, problems: list[str]) -> None:
+-        super().__init__(f"{BASELINE.name} is invalid")
+-        self.problems = problems
+-
+-
+-def normalise(raw: dict[str, Any]) -> dict[str, Any]:
+-    """Fill what a baseline leaves out with the strictest value (a missing cap is 0). A base
+-    revision's older baseline may hold one suppression total: it compares as no per-file caps."""
+-    allowed = raw.get("allowed", {})
+-    exceptions = raw.get("exceptions", {})
+-    suppressions = allowed.get("suppressions", {})
+-    return {
+-        "version": raw.get("version", 1),
+-        "layers": raw.get("layers", DEFAULT_LAYERS),
+-        "limits": DEFAULT_LIMITS | raw.get("limits", {}),
+-        "allowed": {
+-            "uncapped": allowed.get("uncapped", {}),
+-            "defensive": allowed.get("defensive", {}),
+-            "suppressions": suppressions if isinstance(suppressions, dict) else {},
+-            "raw_tags": allowed.get("raw_tags", {}),
+-        },
+-        "exceptions": {gate: exceptions.get(gate, {}) for gate in EXCEPTION_GATES},
+-        "raises": raw.get("raises", []),
++from collections.abc import Mapping
++from dataclasses import dataclass, replace
++from typing import TypeAlias
++
++from defaults import (
++    DEFAULT_LAYERS,
++    DEFAULT_LIMITS,
++    DEFAULT_PYTHON_TOOL,
++    DEFAULT_UNCAPPED,
++    EXCEPTION_GATES,
++    PYTHON_TOOL,
++)
++from measures import Measures
++
++Json: TypeAlias = str | int | float | bool | list["Json"] | dict[str, "Json"] | None
++Caps: TypeAlias = Mapping[str, int]
++
++
++@dataclass(frozen=True)
++class Raise:
++    """A `raises` entry; `entry` is the entry as written (saved as is, unknown keys too)."""
++
++    date: str
++    what: str
++    span: tuple[Json, Json]  # from, to
++    reason: str
++    entry: Mapping[str, Json]
++
++
++@dataclass(frozen=True)
++class Baseline:
++    """The file's sections, flattened one level: `limits` holds the numeric limits, `uncapped`,
++    `defensive`, `suppressions` and `raw_tags` are `allowed`'s, `exceptions` has every gate."""
++
++    version: int
++    layers: Mapping[str, tuple[str, ...]]
++    limits: Caps
++    python_tool: str
++    uncapped: Mapping[str, tuple[str, ...]]
++    defensive: Mapping[str, Caps]
++    suppressions: Caps
++    raw_tags: Caps
++    exceptions: Mapping[str, Caps]
++    raises: tuple[Raise, ...]
++
++
++def _nested(tables: Mapping[str, Caps]) -> dict[str, int]:
++    return {f"{outer}.{inner}": n for outer, table in tables.items() for inner, n in table.items()}
++
++
++def flatten(b: Baseline) -> dict[str, int]:
++    """Every number the raise check compares, by key (a kind uncapped counts as 1: a raise)."""
++    sections: dict[str, Caps] = {
++        "limits": b.limits,
++        "allowed.uncapped": _nested({k: dict.fromkeys(v, 1) for k, v in b.uncapped.items()}),
++        "allowed.defensive": _nested(b.defensive),
++        "allowed.suppressions": b.suppressions,
++        "allowed.raw_tags": b.raw_tags,
++        "exceptions": _nested(b.exceptions),
+     }
++    return {f"{name}.{key}": n for name, table in sections.items() for key, n in table.items()}
+ 
+ 
+-def load() -> dict[str, Any]:
+-    """The baseline, checked and normalised; with no file, the strictest one."""
+-    if not BASELINE.exists():
+-        return normalise({})
+-    raw = json.loads(BASELINE.read_text(encoding="utf-8"))
+-    if found := problems(raw):
+-        raise BaselineError(found)
+-    return normalise(raw)
+-
+-
+-def save(baseline: dict[str, Any]) -> None:
+-    BASELINE.write_text(json.dumps(baseline, indent=2) + "\n", encoding="utf-8", newline="\n")
+-
+-
+-def flatten(baseline: dict[str, Any]) -> dict[str, int]:
+-    flat = {f"limits.{k}": v for k, v in baseline["limits"].items() if isinstance(v, int)}
+-    allowed = baseline["allowed"]
+-    for layer, uncapped in allowed["uncapped"].items():  # a kind uncapped counts as 1: a raise
+-        flat |= {f"allowed.uncapped.{layer}.{kind}": 1 for kind in uncapped}
+-    for path, kinds in allowed["defensive"].items():
+-        flat |= {f"allowed.defensive.{path}.{kind}": n for kind, n in kinds.items()}
+-    flat |= {f"allowed.suppressions.{p}": n for p, n in allowed["suppressions"].items()}
+-    flat |= {f"allowed.raw_tags.{f}": n for f, n in allowed["raw_tags"].items()}
+-    for gate, named in baseline["exceptions"].items():
+-        flat |= {f"exceptions.{gate}.{name}": n for name, n in named.items()}
+-    return flat
+-
+-
+-def raised(old: dict[str, Any], new: dict[str, Any]) -> list[str]:
++def raised(old: Baseline, new: Baseline) -> list[str]:
+     """Every key that went up from `old` to `new` (the layers and the Python tool count as one)."""
+     before = flatten(old)
+     keys = [k for k, v in flatten(new).items() if v > before.get(k, 0)]
+-    if new["layers"] != old["layers"]:
++    if new.layers != old.layers:
+         keys.append("layers")
+-    tool = "cyclomatic_python_tool"
+-    if new["limits"][tool] != old["limits"][tool]:
+-        keys.append(f"limits.{tool}")
++    if new.python_tool != old.python_tool:
++        keys.append(f"limits.{PYTHON_TOOL}")
+     return sorted(keys)
+ 
+ 
+@@ -91,12 +82,12 @@ def covers(what: str, key: str) -> bool:
+     return key == what or key.startswith(f"{what}.")
+ 
+ 
+-def unexplained_raises(old: dict[str, Any], new: dict[str, Any]) -> list[str]:
++def unexplained_raises(old: Baseline, new: Baseline) -> list[str]:
+     """What went up from `old` to `new` without a new `raises` entry (with a reason) naming it."""
+-    kept = len(old["raises"])
+-    if new["raises"][:kept] != old["raises"]:
++    kept = len(old.raises)
++    if new.raises[:kept] != old.raises:
+         return ["raises: earlier entries were changed or removed"]
+-    named = [e.get("what", "") for e in new["raises"][kept:] if str(e.get("reason", "")).strip()]
++    named = [e.what for e in new.raises[kept:] if e.reason.strip()]
+     before, after = flatten(old), flatten(new)
+     return [
+         f"{key}: {before.get(key, 'none')} -> {after.get(key, 'changed')}"
+@@ -105,84 +96,81 @@ def unexplained_raises(old: dict[str, Any], new: dict[str, Any]) -> list[str]:
+     ]
+ 
+ 
+-def new_raises(old: dict[str, Any], new: dict[str, Any]) -> list[dict[str, Any]]:
++def new_raises(old: Baseline, new: Baseline) -> tuple[Raise, ...]:
+     """The `raises` entries `new` adds to `old`'s: the ones the owner still has to approve."""
+-    kept = len(old["raises"])
+-    entries: list[dict[str, Any]] = new["raises"]
+-    return entries[kept:] if entries[:kept] == old["raises"] else entries
++    kept = len(old.raises)
++    return new.raises[kept:] if new.raises[:kept] == old.raises else new.raises
+ 
+ 
+-def git(*args: str) -> str | None:
+-    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=False)
+-    return result.stdout if result.returncode == 0 else None
+-
+-
+-def at_revision(rev: str) -> dict[str, Any] | None:
+-    """The baseline committed at `rev`, normalised (not schema-checked: it may be older)."""
+-    committed = git("show", f"{rev}:{BASELINE.name}")
+-    return None if committed is None else normalise(json.loads(committed))
++def _lowered(caps: Caps, now: Caps, where: str) -> tuple[dict[str, int], list[str]]:
++    """Each cap lowered to its count, and what changed; a cap that reaches 0 goes."""
++    changes = [
++        f"{where}.{k}: {cap} -> {now.get(k, 0)}" for k, cap in caps.items() if now.get(k, 0) < cap
++    ]
++    return {k: low for k, cap in caps.items() if (low := min(cap, now.get(k, 0)))}, changes
+ 
+ 
+-def _ratchet_counts(caps: dict[str, Any], now: dict[str, int], where: str) -> list[str]:
+-    """Lower each cap to its count; a cap that reaches 0 goes."""
++def _lowered_named(
++    named: Caps, now: Caps, limit: int, where: str
++) -> tuple[dict[str, int], list[str]]:
++    """Each named score lowered to today's; a name back within the limit goes."""
++    kept: dict[str, int] = {}
+     changes: list[str] = []
+-    for key, cap in list(caps.items()):
+-        if now.get(key, 0) < cap:
+-            changes.append(f"{where}.{key}: {cap} -> {now.get(key, 0)}")
+-            caps[key] = now.get(key, 0)
+-        if not caps[key]:
+-            del caps[key]
+-    return changes
+-
+-
+-def ratchet(baseline: dict[str, Any], m: Measures) -> list[str]:
+-    """Lower every cap and named score the code now beats. Never raises one."""
+-    allowed = baseline["allowed"]
+-    counts = m.counts(allowed["uncapped"])
++    for name, cap in named.items():
++        score = now.get(name, 0)
++        if score <= limit:
++            changes.append(f"{where}.{name}: removed (now {score})")
++            continue
++        kept[name] = min(cap, score)
++        changes += [f"{where}.{name}: {cap} -> {score}"] if score < cap else []
++    return kept, changes
++
++
++def ratchet(b: Baseline, m: Measures) -> tuple[Baseline, list[str]]:
++    """Every cap and named score lowered to what the code now beats, and what changed. Never
++    raises one."""
++    counts = m.counts(b.uncapped)
+     changes: list[str] = []
+-    for path, kinds in list(allowed["defensive"].items()):
+-        changes += _ratchet_counts(kinds, counts.get(path, {}), f"allowed.defensive.{path}")
+-        if not kinds:
+-            del allowed["defensive"][path]
+-    suppressions = m.suppression_counts()
+-    changes += _ratchet_counts(allowed["suppressions"], suppressions, "allowed.suppressions")
+-    changes += _ratchet_counts(allowed["raw_tags"], m.raw_tags, "allowed.raw_tags")
++    defensive: dict[str, dict[str, int]] = {}
++    for path, kinds in b.defensive.items():
++        lowered, more = _lowered(kinds, counts.get(path, {}), f"allowed.defensive.{path}")
++        changes += more
++        if lowered:
++            defensive[path] = lowered
++    suppressions, more = _lowered(b.suppressions, m.suppression_counts(), "allowed.suppressions")
++    changes += more
++    raw_tags, more = _lowered(b.raw_tags, m.raw_tags, "allowed.raw_tags")
++    changes += more
++    exceptions: dict[str, Caps] = {}
+     for gate in EXCEPTION_GATES:
+-        current, limit = m.scores(gate), baseline["limits"][gate]
+-        named: dict[str, int] = baseline["exceptions"][gate]
+-        for name, cap in list(named.items()):
+-            now = current.get(name, 0)
+-            if now <= limit:
+-                del named[name]
+-                changes.append(f"exceptions.{gate}.{name}: removed (now {now})")
+-            elif now < cap:
+-                named[name] = now
+-                changes.append(f"exceptions.{gate}.{name}: {cap} -> {now}")
+-    return changes
+-
+-
+-def initial_baseline(m: Measures) -> dict[str, Any]:
+-    limits = dict(DEFAULT_LIMITS)
+-    return {
+-        "version": 2,
+-        "layers": DEFAULT_LAYERS,
+-        "limits": limits,
+-        "allowed": {
+-            "uncapped": DEFAULT_UNCAPPED,
+-            "defensive": dict(sorted(m.counts(DEFAULT_UNCAPPED).items())),
+-            "suppressions": dict(sorted(m.suppression_counts().items())),
+-            "raw_tags": dict(sorted(m.raw_tags.items())),
+-        },
+-        "exceptions": {
+-            gate: {k: v for k, v in sorted(m.scores(gate).items()) if v > limits[gate]}
+-            for gate in EXCEPTION_GATES
+-        },
+-        "raises": [],
+-    }
+-
+-
+-def rebaseline_cyclomatic(baseline: dict[str, Any], m: Measures) -> None:
+-    """Name every function over the cyclomatic limit at its score (after a tool switch)."""
+-    limit = baseline["limits"]["cyclomatic"]
+-    scores = sorted(m.scores("cyclomatic").items())
+-    baseline["exceptions"]["cyclomatic"] = {k: v for k, v in scores if v > limit}
++        named, now, limit = b.exceptions[gate], m.scores(gate), b.limits[gate]
++        exceptions[gate], more = _lowered_named(named, now, limit, f"exceptions.{gate}")
++        changes += more
++    lowered_b = replace(b, defensive=defensive, suppressions=suppressions, raw_tags=raw_tags)
++    return replace(lowered_b, exceptions=exceptions), changes
++
++
++def _over(scores: Caps, limit: int) -> dict[str, int]:
++    """Every score over the limit, sorted by name: the named exceptions."""
++    return {k: v for k, v in sorted(scores.items()) if v > limit}
++
++
++def initial_baseline(m: Measures) -> Baseline:
++    return Baseline(
++        version=2,
++        layers=DEFAULT_LAYERS,
++        limits=DEFAULT_LIMITS,
++        python_tool=DEFAULT_PYTHON_TOOL,
++        uncapped=DEFAULT_UNCAPPED,
++        defensive=dict(sorted(m.counts(DEFAULT_UNCAPPED).items())),
++        suppressions=dict(sorted(m.suppression_counts().items())),
++        raw_tags=dict(sorted(m.raw_tags.items())),
++        exceptions={gate: _over(m.scores(gate), DEFAULT_LIMITS[gate]) for gate in EXCEPTION_GATES},
++        raises=(),
++    )
++
++
++def rebaseline_cyclomatic(b: Baseline, m: Measures) -> Baseline:
++    """Every function over the cyclomatic limit named at its score (after a tool switch)."""
++    cyclomatic = _over(m.scores("cyclomatic"), b.limits["cyclomatic"])
++    return replace(b, exceptions={**b.exceptions, "cyclomatic": cyclomatic})
+diff --git a/tools/gates/card.py b/tools/gates/card.py
+index 51eddbf..a3a4433 100644
+--- a/tools/gates/card.py
++++ b/tools/gates/card.py
+@@ -8,137 +8,39 @@ The card adds no measures of its own: it compares the two baselines and runs the
+ from __future__ import annotations
+ 
+ import argparse
+-import copy
+-import io
+ import sys
+-from typing import Any
+ 
+-from baseline import at_revision, covers, flatten, load, new_raises, normalise, raised, ratchet
+-from common import layer_of
+-from defaults import EXCEPTION_GATES
+-from gates import base_revision
+-from measures import measure
++from baseline import ratchet
++from collect import measure
++from repo import Invalid, at_revision, base_revision, load, parse, utf8_stdout
++from report import card
+ from results import run_gates
+ 
+-SHOWN = 25  # improvements listed before "+N more"
+-
+-
+-def _cell(before: int | None, after: int | None) -> str:
+-    if before == after:
+-        return "-" if before is None else str(before)
+-    mark = " ▼" if (after or 0) < (before or 0) else " ▲"
+-    return f"{'-' if before is None else before} → {'-' if after is None else after}{mark}"
+-
+-
+-def _defensive(baseline: dict[str, Any], layer: str) -> int:
+-    caps: dict[str, dict[str, int]] = baseline["allowed"]["defensive"]
+-    in_layer = (k for p, k in caps.items() if layer_of(p, baseline["layers"]) == layer)
+-    return sum(sum(kinds.values()) for kinds in in_layer)
+-
+-
+-def summary(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
+-    """One row per gate: named offenders, worst named score and their total (▼ better, ▲ worse)."""
+-    rows = ["| Gate | Named | Worst | Total |", "|---|---|---|---|"]
+-    for gate in EXCEPTION_GATES:
+-        b: dict[str, int] = before["exceptions"][gate]
+-        a: dict[str, int] = after["exceptions"][gate]
+-        worst = _cell(max(b.values(), default=None), max(a.values(), default=None))
+-        total = _cell(sum(b.values()), sum(a.values()))
+-        rows.append(f"| {gate} | {_cell(len(b), len(a))} | {worst} | {total} |")
+-    for layer in dict.fromkeys([*before["layers"], *after["layers"]]):
+-        total = _cell(_defensive(before, layer), _defensive(after, layer))
+-        rows.append(f"| defensive ({layer}) | | | {total} |")
+-    for section in ("suppressions", "raw_tags"):
+-        b, a = before["allowed"][section], after["allowed"][section]
+-        rows.append(f"| {section} | | | {_cell(sum(b.values()), sum(a.values()))} |")
+-    return rows
+-
+-
+-def _label(key: str) -> str:
+-    """`exceptions.cognitive.a.py::f` -> `cognitive  a.py::f`."""
+-    section, _, rest = key.removeprefix("exceptions.").removeprefix("allowed.").partition(".")
+-    return f"{section}  {rest}" if rest else section
+-
+-
+-def improved(before: dict[str, Any], after: dict[str, Any], now: dict[str, int]) -> list[str]:
+-    """Each number that went down, biggest gain first; `now` gives a removed offender's score."""
+-    b, a = flatten(before), flatten(after)
+-    found: list[tuple[int, str]] = []
+-    for key, old in b.items():
+-        if key in a and a[key] >= old:
+-            continue
+-        new = a.get(key, now.get(key, 0))
+-        gone = "" if key in a else " (removed)"
+-        found.append((old - new, f"`{_label(key)}`  {old} → {new}{gone}"))
+-    lines = [line for _, line in sorted(found, key=lambda gain: (-gain[0], gain[1]))]
+-    more = [f"- +{len(lines) - SHOWN} more"] if len(lines) > SHOWN else []
+-    return [f"- {line}" for line in lines[:SHOWN]] + more
+-
+-
+-def worse(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
+-    """Each number that went up, with the `raises` entry that names it (if any)."""
+-    b, a = flatten(before), flatten(after)
+-    entries = new_raises(before, after)
+-    lines: list[str] = []
+-    for key in raised(before, after):
+-        entry = next((e for e in entries if covers(e.get("what", ""), key)), None)
+-        why = f"raises `{entry['what']}`: {entry['reason']}" if entry else "no raises entry"
+-        lines.append(f"- `{_label(key)}`  {b.get(key, '-')} → {a.get(key, 'changed')}; {why}")
+-    return lines
+-
+-
+-def _escape(value: object) -> str:
+-    return str(value).replace("|", "\\|").replace("\n", " ")
+-
+-
+-def raises_table(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
+-    rows = ["| What | From → to | Reason |", "|---|---|---|"]
+-    for e in new_raises(before, after):
+-        what, span = _escape(e.get("what")), f"{_escape(e.get('from'))} → {_escape(e.get('to'))}"
+-        rows.append(f"| `{what}` | {span} | {_escape(e.get('reason'))} |")
+-    return rows if len(rows) > 2 else []
+-
+-
+-def card(
+-    before: dict[str, Any], after: dict[str, Any], now: dict[str, int], verdict: str
+-) -> list[str]:
+-    better, up, table = (
+-        improved(before, after, now),
+-        worse(before, after),
+-        raises_table(before, after),
+-    )
+-    unchanged = [] if better or up or table else ["", "No change to the gate numbers."]
+-    sections = [("Improved", better), ("Worse", up), ("Raises to approve", table)]
+-    out = [verdict, *unchanged, "", *summary(before, after)]
+-    for title, lines in sections:
+-        if lines:
+-            out += ["", f"### {title}", "", *lines]
+-    return out
+-
+ 
+ def main(argv: list[str]) -> int:
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("--base", metavar="REF", default="origin/main")
+     args = parser.parse_args(argv)
+-    if isinstance(sys.stdout, io.TextIOWrapper):
+-        sys.stdout.reconfigure(encoding="utf-8")  # a Windows pipe may not be UTF-8
++    utf8_stdout()
+     revision = base_revision(args.base)
+     if revision is None:
+         print(f"--base {args.base}: no merge base with HEAD")
+         return 2
+     rev, label = revision
+     working = load()
+-    m = measure(working["layers"], working["limits"])
++    match working:
++        case Invalid():
++            print(working.message())
++            return 2
++    m = measure(working)
+     base = at_revision(rev)
+     failed = [r.name for r in run_gates(working, m, base, label) if not r.ok]
+-    after = copy.deepcopy(working)
+-    pending = bool(ratchet(after, m))
++    after, changes = ratchet(working, m)
+     gates = f"**Gates fail:** {', '.join(failed)}" if failed else "**Gates pass**"
+-    todo = "ratchet pending: run `just ratchet`" if pending else "baseline up to date"
++    todo = "ratchet pending: run `just ratchet`" if changes else "baseline up to date"
+     against = label if base else f"{label}, which has no baseline"
+-    now = {f"exceptions.{g}.{k}": v for g in EXCEPTION_GATES for k, v in m.scores(g).items()}
+     verdict = f"{gates}; {todo} (against {against})"
+-    print("\n".join(card(base or normalise({}), after, now, verdict)))
++    print("\n".join(card(base or parse({}), after, m.named_scores(), verdict)))
+     return 0
+ 
+ 
+diff --git a/tools/gates/collect.py b/tools/gates/collect.py
+new file mode 100644
+index 0000000..2417e62
+--- /dev/null
++++ b/tools/gates/collect.py
+@@ -0,0 +1,57 @@
++"""Every measure, collected into one `Measures`: the node, mypy and Python measures, run side by
++side."""
++
++from __future__ import annotations
++
++from typing import Any
++
++from baseline import Baseline
++from common import FEATURES, Finding, layer_of, module_of
++from measures import Measures
++from mypy_any import core_overrides, finish_any, start_any
++from pyfile import PyFile, analyse_python
++from python_measures import cognitive_python, cyclomatic_python, fan_out, python_files
++from repo import ROOT
++from ts_measures import finish_ts, start_ts
++
++
++def _add_python(m: Measures, py: list[PyFile]) -> None:
++    for f in py:
++        m.file_lines.append(Finding(f.path, 1, "file", f.code_lines))
++        m.suppressions += [(f.path, line, marker) for line, marker in f.suppressions]
++        m.defensive[f.path] = f.hits
++        m.cleanup_try += [f"{f.path}:{line}" for line in f.cleanup_try]
++        if m.layer[f.path] == "core":
++            m.optional_fields += [Finding(f.path, *c) for c in f.optional_fields]
++
++
++def _add_ts(m: Measures, ts: tuple[dict[str, Any], list[Finding], list[Finding]]) -> None:
++    files, cognitive, cyclomatic = ts
++    m.cognitive += cognitive
++    m.cyclomatic += cyclomatic
++    for path, data in files.items():
++        m.file_lines.append(Finding(path, 1, "file", data["code_lines"]))
++        m.suppressions += [(path, line, marker) for line, marker in data["suppressions"]]
++        if path.startswith(FEATURES) and path.endswith(".tsx"):
++            feature = path.removeprefix(FEATURES).split("/")[0]
++            m.raw_tags[feature] = m.raw_tags.get(feature, 0) + len(data["raw_tags"])
++
++
++def measure(b: Baseline) -> Measures:
++    ts = start_ts(b.limits)
++    paths = python_files()
++    m = Measures(layer={p: layer_of(p, b.layers) for p in paths})
++    core = [p for p in paths if m.layer[p] == "core"]
++    mypy = start_any(core)
++    py = [analyse_python(p, (ROOT / p).read_text(encoding="utf-8")) for p in paths]
++    m.files = len(py) + (len(ts.files) if ts else 0)
++    m.cognitive = cognitive_python(py)
++    m.cyclomatic = cyclomatic_python(py, b.python_tool, b.limits["cyclomatic"])
++    m.fan_out = fan_out()
++    _add_python(m, py)
++    m.any_overrides = core_overrides([module_of(p) for p in core])
++    run = finish_any(mypy)
++    m.any_errors, m.any_problems = run.errors, run.problems
++    m.any = [Finding(p, errors[0][0], "Any", len(errors)) for p, errors in m.any_errors.items()]
++    _add_ts(m, finish_ts(ts))
++    return m
+diff --git a/tools/gates/common.py b/tools/gates/common.py
+index b4dfb66..daa4fdc 100644
+--- a/tools/gates/common.py
++++ b/tools/gates/common.py
+@@ -1,15 +1,16 @@
+-"""What every gate module shares: the repo paths, the defensive kinds, a finding, layers."""
++"""What every gate module shares: the repo's paths, the defensive kinds, a finding, layers."""
+ 
+ from __future__ import annotations
+ 
+ import fnmatch
++from collections.abc import Mapping, Sequence
+ from dataclasses import dataclass
+-from pathlib import Path
+ 
+-ROOT = Path(__file__).resolve().parents[2]
+ SRC = "src"
++TOOLS = "tools/gates"
+ AGENTOS = f"{SRC}/agentos"
+ FEATURES = "web/src/features/"
++BASELINE_NAME = "quality-baseline.json"
+ # The composition root wires every feature together; its fan-out is its job.
+ FAN_OUT_EXEMPT = {"app"}
+ # `is None` and optional parameters are not counted: they are syntax, and capping them pushes code
+@@ -33,7 +34,7 @@ class Finding:
+         return f"{self.path}::{self.name}"
+ 
+ 
+-def layer_of(path: str, layers: dict[str, list[str]]) -> str:
++def layer_of(path: str, layers: Mapping[str, Sequence[str]]) -> str:
+     for layer, patterns in layers.items():
+         if any(fnmatch.fnmatchcase(path, pattern) for pattern in patterns):
+             return layer
+@@ -41,8 +42,8 @@ def layer_of(path: str, layers: dict[str, list[str]]) -> str:
+ 
+ 
+ def module_of(path: str) -> str:
+-    """`src/agentos/runs/rules.py` -> `agentos.runs.rules`, and
+-    `src/agentos_worker/core/__init__.py` -> `agentos_worker.core`."""
+-    relative = path.removeprefix(f"{SRC}/")
++    """`src/agentos/runs/rules.py` -> `agentos.runs.rules`,
++    `src/agentos_worker/core/__init__.py` -> `agentos_worker.core`, `tools/gates/a.py` -> `a`."""
++    relative = path.removeprefix(f"{SRC}/").removeprefix(f"{TOOLS}/")
+     dotted = relative.removesuffix(".py").replace("/", ".")
+     return dotted.removesuffix(".__init__")
+diff --git a/tools/gates/defaults.py b/tools/gates/defaults.py
+index 360987c..a1a5f5d 100644
+--- a/tools/gates/defaults.py
++++ b/tools/gates/defaults.py
+@@ -3,33 +3,34 @@ gets (limits; everything else defaults to the strictest value)."""
+ 
+ from __future__ import annotations
+ 
+-from typing import Any
+-
+-from common import AGENTOS, SRC
++from common import AGENTOS, SRC, TOOLS
+ 
+ WORKER = f"{SRC}/agentos_worker"
+ 
+-# `cyclomatic_python_tool` picks the Python cyclomatic counter: "lizard" (and/or, ternaries and
+-# comprehensions count; what the reference ranges were measured with) or "ruff" (C901, McCabe:
+-# they don't). The named cyclomatic exceptions are that tool's scores, so a switch goes with
+-# `--rebaseline-cyclomatic` and a `raises` entry naming both changes.
+-DEFAULT_LIMITS: dict[str, Any] = {
++DEFAULT_LIMITS = {
+     "cognitive": 15,
+     "cyclomatic": 10,
+-    "cyclomatic_python_tool": "lizard",
+     "file_lines": 1000,
+     "fan_out": 5,
+     "optional_fields": 1,
+     "any": 0,
+ }
++# `cyclomatic_python_tool` picks the Python cyclomatic counter: "lizard" (and/or, ternaries and
++# comprehensions count; what the reference ranges were measured with) or "ruff" (C901, McCabe:
++# they don't). The named cyclomatic exceptions are that tool's scores, so a switch goes with
++# `--rebaseline-cyclomatic` and a `raises` entry naming both changes.
++PYTHON_TOOL = "cyclomatic_python_tool"
++DEFAULT_PYTHON_TOOL = "lizard"
+ PY_CYCLOMATIC_TOOLS = ("lizard", "ruff")
++# The limits in the baseline file's order: the tool follows `cyclomatic`.
++LIMIT_KEYS = (*tuple(DEFAULT_LIMITS)[:2], PYTHON_TOOL, *tuple(DEFAULT_LIMITS)[2:])
+ # fnmatch patterns ("*" also matches "/"), relative to the repo root. First match wins.
+ # core: domain types and rules on parsed values. shell: the use cases between the core and the
+ # boundary (and the docstring-only package files). boundary: everything touching the outside
+ # (HTTP, db rows, config, the HTTP clients, git, processes, files), named. A Python file in none
+ # fails the `layers` gate: name its role, or add it to a layer here (a raise).
+ DEFAULT_LAYERS = {
+-    "core": [
++    "core": (
+         f"{AGENTOS}/*/model.py",
+         f"{AGENTOS}/*/rules.py",
+         f"{AGENTOS}/**/model/**",  # a model or rules grown into a package
+@@ -37,8 +38,10 @@ DEFAULT_LAYERS = {
+         f"{AGENTOS}/workflows/**",
+         f"{SRC}/agentos_protocol/**",
+         f"{WORKER}/core/**",
+-    ],
+-    "shell": [
++        *(f"{TOOLS}/{name}.py" for name in ("common", "defaults", "baseline", "measures")),
++        *(f"{TOOLS}/{name}.py" for name in ("results", "report")),
++    ),
++    "shell": (
+         f"{AGENTOS}/*/service.py",
+         f"{AGENTOS}/*/loops.py",
+         f"{AGENTOS}/*/reaper.py",
+@@ -48,8 +51,10 @@ DEFAULT_LAYERS = {
+         f"{WORKER}/__init__.py",
+         f"{WORKER}/run/**",
+         f"{WORKER}/client/**",
+-    ],
+-    "boundary": [
++        f"{TOOLS}/gates.py",
++        f"{TOOLS}/card.py",
++    ),
++    "boundary": (
+         f"{AGENTOS}/*/routes.py",
+         f"{AGENTOS}/*/rows.py",
+         f"{AGENTOS}/app/**",
+@@ -64,12 +69,17 @@ DEFAULT_LAYERS = {
+         f"{WORKER}/procs/**",
+         f"{WORKER}/files/**",
+         f"{WORKER}/__main__.py",
+-    ],
++        # pyfile and python_names hold no I/O, but they turn source text into typed records: the
++        # same parse-at-the-edge role as rows.py, so they check node types freely here.
++        *(f"{TOOLS}/{name}.py" for name in ("repo", "schema", "collect", "pyfile")),
++        *(f"{TOOLS}/{name}.py" for name in ("python_names", "python_measures")),
++        *(f"{TOOLS}/{name}.py" for name in ("mypy_any", "ts_measures")),
++    ),
+ }
+ # What `--init` leaves uncapped per layer (the baseline's `allowed.uncapped` is what applies): the
+ # boundary is where chaotic input gets checked; `cast` is capped in the core only.
+ DEFAULT_UNCAPPED = {
+-    "boundary": ["isinstance", "try", "cast"],
+-    "shell": ["cast"],
++    "boundary": ("isinstance", "try", "cast"),
++    "shell": ("cast",),
+ }
+ EXCEPTION_GATES = ("cognitive", "cyclomatic", "file_lines", "fan_out", "optional_fields", "any")
+diff --git a/tools/gates/gates.py b/tools/gates/gates.py
+index 1882a54..fbf7bb0 100644
+--- a/tools/gates/gates.py
++++ b/tools/gates/gates.py
+@@ -20,75 +20,35 @@ class with optional fields that stand in for a missing state type. The baseline'
+ from __future__ import annotations
+ 
+ import argparse
+-import copy
+-import io
+ import sys
+ import time
+-from collections.abc import Iterator
+-from typing import Any
+-
+-from baseline import (
+-    BASELINE,
+-    BaselineError,
+-    at_revision,
+-    git,
+-    initial_baseline,
+-    load,
+-    new_raises,
+-    ratchet,
+-    rebaseline_cyclomatic,
+-    save,
+-)
+-from measures import Measures, measure
+-from results import Result, run_gates
+-
+-
+-def report(
+-    results: list[Result], m: Measures, seconds: float, can_ratchet: bool, approve: list[str]
+-) -> Iterator[str]:
+-    yield f"gates: {m.files} files in {seconds:.1f} s"
+-    for r in results:
+-        yield f"  {'ok  ' if r.ok else 'FAIL'} {r.name:<15} {r.summary}"
+-        yield from (f"         {line}" for line in r.details)
+-        if not r.ok and r.hint:
+-            yield f"         fix: {r.hint}"
+-    yield from approve
+-    if can_ratchet:
+-        yield "ratchet available: run `just ratchet`"
+-    failed = [r.name for r in results if not r.ok]
+-    yield f"FAIL: {', '.join(failed)}" if failed else "PASS"
+-
+-
+-def to_approve(baseline: dict[str, Any], base: dict[str, Any] | None, label: str) -> list[str]:
+-    """The `raises` entries that aren't in the base revision's baseline, one line each."""
+-    entries = new_raises(base, baseline) if base else baseline["raises"]
+-    if not entries:
+-        return []
+-    lines = [f"raises to approve ({len(entries)} not in the baseline at {label}):"]
+-    for e in entries:
+-        lines.append(f"  {e['date']}  {e['what']}: {e['from']} -> {e['to']}")
+-        lines.append(f"      {e['reason']}")
+-    return lines
+-
+-
+-def base_revision(ref: str | None) -> tuple[str, str] | None:
+-    """The revision to compare the baseline with, and how to name it; None if `ref` is unknown."""
+-    if ref is None:
+-        return "HEAD", "HEAD"
+-    merge_base = git("merge-base", "HEAD", ref)
+-    if merge_base is None:
+-        return None
+-    return merge_base.strip(), f"the merge base with {ref} ({merge_base[:7]})"
++
++from baseline import Baseline, initial_baseline, ratchet, rebaseline_cyclomatic
++from collect import measure
++from measures import Measures
++from repo import BASELINE, Invalid, at_revision, base_revision, load, save, utf8_stdout
++from report import report, to_approve
++from results import run_gates
+ 
+ 
+ def _parser() -> argparse.ArgumentParser:
+     parser = argparse.ArgumentParser(description=__doc__)
+     group = parser.add_mutually_exclusive_group()
+-    group.add_argument("--ratchet", action="store_true", help="lower the baseline, never raise")
+-    group.add_argument("--init", action="store_true", help="write the first baseline")
++    group.add_argument(
++        "--ratchet",
++        dest="mode",
++        action="store_const",
++        const="ratchet",
++        help="lower the baseline, never raise",
++    )
++    group.add_argument(
++        "--init", dest="mode", action="store_const", const="init", help="write the first baseline"
++    )
+     group.add_argument(
+         "--rebaseline-cyclomatic",
+-        action="store_true",
++        dest="mode",
++        action="store_const",
++        const="rebaseline",
+         help="rewrite the named cyclomatic exceptions (after switching the Python tool)",
+     )
+     parser.add_argument(
+@@ -97,48 +57,55 @@ def _parser() -> argparse.ArgumentParser:
+     return parser
+ 
+ 
++def _refusal(mode: str | None, exists: bool) -> str | None:
++    """Why the mode can't run on the baseline file as it is, if it can't."""
++    if mode == "init" and exists:
++        return f"{BASELINE.name} exists already; edit it or run `just ratchet`"
++    if mode in ("ratchet", "rebaseline") and not exists:
++        return f"no {BASELINE.name} yet; write the first one with --init"
++    return None
++
++
++def _write(mode: str, baseline: Baseline, m: Measures) -> None:
++    """`--init`, `--rebaseline-cyclomatic` or `--ratchet`: write the baseline, say what changed."""
++    if mode == "init":
++        save(initial_baseline(m))
++        print(f"wrote {BASELINE.name}")
++    elif mode == "rebaseline":
++        save(rebaseline_cyclomatic(baseline, m))
++        print("rewrote exceptions.cyclomatic: add a `raises` entry for it, with the reason")
++    else:
++        lowered, changes = ratchet(baseline, m)
++        save(lowered)
++        print("\n".join(changes) if changes else "nothing to ratchet")
++
++
+ def main(argv: list[str]) -> int:
+     args = _parser().parse_args(argv)
+-    if isinstance(sys.stdout, io.TextIOWrapper):
+-        sys.stdout.reconfigure(encoding="utf-8")  # a Windows pipe may not be UTF-8
+-
++    utf8_stdout()
+     started = time.monotonic()
+     exists = BASELINE.exists()
+-    try:
+-        baseline = load()
+-    except BaselineError as error:
+-        print("\n".join([f"{error}:", *(f"  {p}" for p in error.problems)]))
+-        return 2
+-    if args.init and exists:
+-        print(f"{BASELINE.name} exists already; edit it or run `just ratchet`")
+-        return 2
+-    if (args.ratchet or args.rebaseline_cyclomatic) and not exists:
+-        print(f"no {BASELINE.name} yet; write the first one with --init")
++    baseline = load()
++    match baseline:
++        case Invalid():
++            print(baseline.message())
++            return 2
++    refused = _refusal(args.mode, exists)
++    if refused:
++        print(refused)
+         return 2
+     revision = base_revision(args.base)
+     if revision is None:
+         print(f"--base {args.base}: no merge base with HEAD")
+         return 2
+-    m = measure(baseline["layers"], baseline["limits"])
+-
+-    if args.init:
+-        save(initial_baseline(m))
+-        print(f"wrote {BASELINE.name}")
+-        return 0
+-    if args.rebaseline_cyclomatic:
+-        rebaseline_cyclomatic(baseline, m)
+-        save(baseline)
+-        print("rewrote exceptions.cyclomatic: add a `raises` entry for it, with the reason")
+-        return 0
+-    if args.ratchet:
+-        changes = ratchet(baseline, m)
+-        save(baseline)
+-        print("\n".join(changes) if changes else "nothing to ratchet")
++    m = measure(baseline)
++    if args.mode:
++        _write(args.mode, baseline, m)
+         return 0
+     rev, label = revision
+     base = at_revision(rev)
+     results = run_gates(baseline, m, base, label)
+-    can_ratchet = exists and bool(ratchet(copy.deepcopy(baseline), m))
++    can_ratchet = exists and bool(ratchet(baseline, m)[1])
+     approve = to_approve(baseline, base, label)
+     for line in report(results, m, time.monotonic() - started, can_ratchet, approve):
+         print(line)
+diff --git a/tools/gates/lizard.pyi b/tools/gates/lizard.pyi
+new file mode 100644
+index 0000000..5fd61d4
+--- /dev/null
++++ b/tools/gates/lizard.pyi
+@@ -0,0 +1,24 @@
++"""Types for the part of lizard the gates use (lizard ships no type hints). Written against lizard
++1.24.1 (uv.lock); check it when lizard is upgraded."""
++
++from collections.abc import Callable, Iterable
++from typing import Any
++
++# A processing step: lizard passes its token stream and its reader, an object it doesn't export.
++_Step = Callable[[Iterable[str], Any], Iterable[str]]
++preprocessing: _Step
++line_counter: _Step
++token_counter: _Step
++condition_counter: _Step
++
++class FunctionInfo:
++    name: str
++    start_line: int
++    cyclomatic_complexity: int
++
++class FileInformation:
++    function_list: list[FunctionInfo]
++
++class FileAnalyzer:
++    def __init__(self, extensions: list[_Step]) -> None: ...
++    def analyze_source_code(self, filename: str, code: str) -> FileInformation: ...
+diff --git a/tools/gates/measures.py b/tools/gates/measures.py
+index adaa64a..f016fa1 100644
+--- a/tools/gates/measures.py
++++ b/tools/gates/measures.py
+@@ -1,15 +1,12 @@
+-"""Every measure in one `Measures`: the node, mypy and Python measures, run side by side."""
++"""Every measure in one `Measures` (`collect` fills it), and the scores and counts read from it."""
+ 
+ from __future__ import annotations
+ 
++from collections.abc import Mapping, Sequence
+ from dataclasses import dataclass, field
+-from typing import Any
+ 
+-from common import FAN_OUT_EXEMPT, FEATURES, ROOT, Finding, layer_of, module_of
+-from mypy_any import core_overrides, finish_any, start_any
+-from pyfile import analyse_python
+-from python_measures import cognitive_python, cyclomatic_python, fan_out, python_files
+-from ts_measures import finish_ts, start_ts
++from common import FAN_OUT_EXEMPT, Finding
++from defaults import EXCEPTION_GATES
+ 
+ 
+ @dataclass
+@@ -21,15 +18,20 @@ class Measures:
+     fan_out: dict[str, set[str]] = field(default_factory=dict[str, set[str]])
+     layer: dict[str, str] = field(default_factory=dict[str, str])  # Python path -> layer
+     # path -> kind -> lines
+-    defensive: dict[str, dict[str, list[int]]] = field(default_factory=dict)
++    defensive: dict[str, dict[str, list[int]]] = field(
++        default_factory=dict[str, dict[str, list[int]]]
++    )
+     cleanup_try: list[str] = field(default_factory=list[str])  # "path:line", not counted
+     optional_fields: list[Finding] = field(default_factory=list[Finding])  # core classes
+     any: list[Finding] = field(default_factory=list[Finding])  # core files
+     # core path -> (line, message) per `Any` error
+-    any_errors: dict[str, list[tuple[int, str]]] = field(default_factory=dict)
++    any_errors: dict[str, list[tuple[int, str]]] = field(
++        default_factory=dict[str, list[tuple[int, str]]]
++    )
+     any_problems: list[str] = field(default_factory=list[str])  # other errors, unreadable output
+     any_overrides: list[str] = field(default_factory=list[str])  # mypy overrides on the core
+-    suppressions: list[tuple[str, int, str]] = field(default_factory=list)  # (path, line, marker)
++    # one (path, line, marker) per suppression
++    suppressions: list[tuple[str, int, str]] = field(default_factory=list[tuple[str, int, str]])
+     raw_tags: dict[str, int] = field(default_factory=dict[str, int])  # feature -> count
+ 
+     def scores(self, gate: str) -> dict[str, int]:
+@@ -41,6 +43,11 @@ class Measures:
+             out[f.id] = max(out.get(f.id, 0), f.score)
+         return out
+ 
++    def named_scores(self) -> dict[str, int]:
++        """Every exception gate's current scores, by the baseline's flattened key."""
++        scores = {gate: self.scores(gate) for gate in EXCEPTION_GATES}
++        return {f"exceptions.{g}.{k}": v for g, named in scores.items() for k, v in named.items()}
++
+     def findings(self, gate: str) -> list[Finding]:
+         found: dict[str, list[Finding]] = {
+             "cognitive": self.cognitive,
+@@ -51,11 +58,11 @@ class Measures:
+         }
+         return found[gate]
+ 
+-    def counts(self, uncapped_kinds: dict[str, list[str]]) -> dict[str, dict[str, int]]:
++    def counts(self, uncapped_kinds: Mapping[str, Sequence[str]]) -> dict[str, dict[str, int]]:
+         """Per file, its counts of the kinds its layer caps."""
+         out: dict[str, dict[str, int]] = {}
+         for path, kinds in self.defensive.items():
+-            uncapped = uncapped_kinds.get(self.layer[path], [])
++            uncapped = uncapped_kinds.get(self.layer[path], ())
+             row = {k: len(lines) for k, lines in kinds.items() if lines and k not in uncapped}
+             if row:
+                 out[path] = row
+@@ -67,38 +74,3 @@ class Measures:
+         for path, _, _ in self.suppressions:
+             out[path] = out.get(path, 0) + 1
+         return out
+-
+-
+-def measure(layers: dict[str, list[str]], limits: dict[str, Any]) -> Measures:
+-    ts = start_ts(limits)
+-    paths = python_files()
+-    m = Measures(layer={p: layer_of(p, layers) for p in paths})
+-    core = [p for p in paths if m.layer[p] == "core"]
+-    mypy = start_any(core)
+-    py = [analyse_python(p, (ROOT / p).read_text(encoding="utf-8")) for p in paths]
+-    m.files = len(py) + (len(ts.files) if ts else 0)
+-    m.cognitive = cognitive_python(py)
+-    m.cyclomatic = cyclomatic_python(py, limits)
+-    m.fan_out = fan_out()
+-    for f in py:
+-        m.file_lines.append(Finding(f.path, 1, "file", f.code_lines))
+-        m.suppressions += [(f.path, line, marker) for line, marker in f.suppressions]
+-        m.defensive[f.path] = f.hits
+-        m.cleanup_try += [f"{f.path}:{line}" for line in f.cleanup_try]
+-        if m.layer[f.path] == "core":
+-            m.optional_fields += [Finding(f.path, *c) for c in f.optional_fields]
+-
+-    m.any_overrides = core_overrides([module_of(p) for p in core])
+-    run = finish_any(mypy)
+-    m.any_errors, m.any_problems = run.errors, run.problems
+-    m.any = [Finding(p, errors[0][0], "Any", len(errors)) for p, errors in m.any_errors.items()]
+-    ts_measures, cognitive, cyclomatic = finish_ts(ts)
+-    m.cognitive += cognitive
+-    m.cyclomatic += cyclomatic
+-    for path, data in ts_measures.items():
+-        m.file_lines.append(Finding(path, 1, "file", data["code_lines"]))
+-        m.suppressions += [(path, line, marker) for line, marker in data["suppressions"]]
+-        if path.startswith(FEATURES) and path.endswith(".tsx"):
+-            feature = path.removeprefix(FEATURES).split("/")[0]
+-            m.raw_tags[feature] = m.raw_tags.get(feature, 0) + len(data["raw_tags"])
+-    return m
+diff --git a/tools/gates/mypy_any.py b/tools/gates/mypy_any.py
+index ffa0b9a..dc44320 100644
+--- a/tools/gates/mypy_any.py
++++ b/tools/gates/mypy_any.py
+@@ -11,7 +11,7 @@ import tomllib
+ from dataclasses import dataclass, field
+ from typing import Any
+ 
+-from common import ROOT
++from repo import ROOT
+ 
+ PYPROJECT = ROOT / "pyproject.toml"
+ # What `--disallow-any-expr` and `--disallow-any-explicit` report; anything else is a type error.
+diff --git a/tools/gates/pyfile.py b/tools/gates/pyfile.py
+index 0438129..5be061c 100644
+--- a/tools/gates/pyfile.py
++++ b/tools/gates/pyfile.py
+@@ -66,11 +66,7 @@ def _call_kind(node: ast.Call, names: Names) -> str | None:
+             return "getattr_default"
+         case ast.Name(id="hasattr"):
+             return "hasattr"
+-        case ast.Name(id=name) if name in names.suppress:
+-            return "suppress"
+-        case ast.Attribute(attr="suppress", value=ast.Name(id=module)) if (
+-            module in names.contextlib
+-        ):
++        case func if names.is_suppress(func):
+             return "suppress"
+         case func if names.typing_member(func) == "cast":
+             return "cast"
+diff --git a/tools/gates/python_measures.py b/tools/gates/python_measures.py
+index a636f41..47d0f05 100644
+--- a/tools/gates/python_measures.py
++++ b/tools/gates/python_measures.py
+@@ -3,28 +3,31 @@ cyclomatic complexity (lizard or ruff C901) and fan-out between agentos subpacka
+ 
+ from __future__ import annotations
+ 
++import fnmatch
+ import json
+ import re
+ import subprocess
+ import sys
+-from collections.abc import Iterator
++from collections.abc import Iterable, Iterator
+ from pathlib import Path
+-from typing import Any
++from typing import Protocol
+ 
+ import complexipy
+ import grimp
+-import lizard  # type: ignore[import-untyped]  # lizard ships no type hints
++import lizard  # typed by lizard.pyi: lizard ships no type hints
+ 
+-from common import ROOT, SRC, Finding
+-from defaults import PY_CYCLOMATIC_TOOLS
++from common import SRC, TOOLS, Finding
+ from pyfile import PyFile
++from repo import ROOT
+ 
+-PY_SCOPE = (f"{SRC}/**/*.py",)
++PY_SCOPE = (f"{SRC}/**/*.py", f"{TOOLS}/*.py")
++TESTS = f"{TOOLS}/test_*.py"  # tests are not measured
+ 
+ 
+ def python_files() -> list[str]:
+     paths = {p for pattern in PY_SCOPE for p in ROOT.glob(pattern)}
+-    return sorted(p.relative_to(ROOT).as_posix() for p in paths if "__pycache__" not in p.parts)
++    rel = (p.relative_to(ROOT).as_posix() for p in paths if "__pycache__" not in p.parts)
++    return sorted(p for p in rel if not fnmatch.fnmatchcase(p, TESTS))
+ 
+ 
+ def cognitive_python(files: list[PyFile]) -> list[Finding]:
+@@ -37,7 +40,13 @@ def cognitive_python(files: list[PyFile]) -> list[Finding]:
+     return found
+ 
+ 
+-def _ignore_comments(tokens: Iterator[str], reader: Any) -> Iterator[str]:
++class _Reader(Protocol):
++    """The part of lizard's reader (`lizard_languages.CodeReader`) the comment step uses."""
++
++    def get_comment_from_token(self, token: str) -> str | None: ...
++
++
++def _ignore_comments(tokens: Iterable[str], reader: _Reader) -> Iterator[str]:
+     """Lizard's comment step without its directives: `#lizard forgive*` and "GENERATED CODE"
+     comments would drop functions from the count, so comments are only skipped here."""
+     for token in tokens:
+@@ -59,15 +68,9 @@ _LIZARD = lizard.FileAnalyzer(
+ )
+ 
+ 
+-def cyclomatic_python(files: list[PyFile], limits: dict[str, Any]) -> list[Finding]:
+-    tool = limits["cyclomatic_python_tool"]
+-    if tool == "ruff":
+-        return cyclomatic_ruff(files, limits["cyclomatic"])
+-    if tool != "lizard":
+-        raise ValueError(
+-            f"limits.cyclomatic_python_tool: {tool!r}, not one of {PY_CYCLOMATIC_TOOLS}"
+-        )
+-    return cyclomatic_lizard(files)
++def cyclomatic_python(files: list[PyFile], tool: str, limit: int) -> list[Finding]:
++    """The functions' cyclomatic scores by the baseline's tool (its schema allows only these)."""
++    return cyclomatic_ruff(files, limit) if tool == "ruff" else cyclomatic_lizard(files)
+ 
+ 
+ def cyclomatic_lizard(files: list[PyFile]) -> list[Finding]:
+diff --git a/tools/gates/python_names.py b/tools/gates/python_names.py
+index 90cecea..b34d312 100644
+--- a/tools/gates/python_names.py
++++ b/tools/gates/python_names.py
+@@ -36,6 +36,16 @@ class Names:
+             case _:
+                 return None
+ 
++    def is_suppress(self, func: ast.expr) -> bool:
++        """contextlib.suppress, as this module imported it."""
++        match func:
++            case ast.Name(id=name):
++                return name in self.suppress
++            case ast.Attribute(attr="suppress", value=ast.Name(id=module)):
++                return module in self.contextlib
++            case _:
++                return False
++
+     def is_context_manager(self, decorator: ast.expr) -> bool:
+         """The real contextlib.(async)contextmanager, as this module imported it."""
+         match decorator:
+@@ -69,16 +79,21 @@ def is_optional_type(node: ast.expr, names: Names) -> bool:
+         case ast.BinOp(op=ast.BitOr(), left=left, right=right):
+             return is_optional_type(left, names) or is_optional_type(right, names)
+         case ast.Subscript(value=form, slice=inner):
+-            args = inner.elts if isinstance(inner, ast.Tuple) else [inner]
+-            match names.typing_member(form):
+-                case "Optional":
+-                    return True
+-                case "Union":
+-                    return any(is_optional_type(arg, names) for arg in args)
+-                case "Annotated" | "Final":
+-                    return is_optional_type(args[0], names)
+-                case _:
+-                    return False
++            return _is_optional_form(names.typing_member(form), inner, names)
++        case _:
++            return False
++
++
++def _is_optional_form(form: str | None, inner: ast.expr, names: Names) -> bool:
++    """`Optional[X]`, `Union[.., None]`, or an optional `X` in `Annotated[X, ..]` or `Final[X]`."""
++    args = inner.elts if isinstance(inner, ast.Tuple) else [inner]
++    match form:
++        case "Optional":
++            return True
++        case "Union":
++            return any(is_optional_type(arg, names) for arg in args)
++        case "Annotated" | "Final":
++            return is_optional_type(args[0], names)
+         case _:
+             return False
+ 
+@@ -147,15 +162,20 @@ def _pydantic_models(tree: ast.Module) -> frozenset[str]:
+     return found
+ 
+ 
++def _locals(pairs: list[tuple[str, str]], wanted: set[str]) -> set[str]:
++    """The local names an import gives the wanted names."""
++    return {local for name, local in pairs if name in wanted}
++
++
+ def _add_import(names: Names, node: ast.Import | ast.ImportFrom) -> None:
+     pairs = [(a.name, a.asname or a.name) for a in node.names]
+     match node:
+         case ast.Import():
+-            names.contextlib |= {local for name, local in pairs if name == "contextlib"}
+-            names.typing |= {local for name, local in pairs if name in TYPING_MODULES}
++            names.contextlib |= _locals(pairs, {"contextlib"})
++            names.typing |= _locals(pairs, TYPING_MODULES)
+         case ast.ImportFrom(module="contextlib"):
+-            names.suppress |= {local for name, local in pairs if name == "suppress"}
+-            names.context_managers |= {local for name, local in pairs if name in CONTEXT_MANAGERS}
++            names.suppress |= _locals(pairs, {"suppress"})
++            names.context_managers |= _locals(pairs, CONTEXT_MANAGERS)
+         case ast.ImportFrom(module=module) if module in TYPING_MODULES:
+             names.typing_members |= {local: name for name, local in pairs}
+         case _:
+diff --git a/tools/gates/repo.py b/tools/gates/repo.py
+new file mode 100644
+index 0000000..acd35bd
+--- /dev/null
++++ b/tools/gates/repo.py
+@@ -0,0 +1,111 @@
++"""The repository the shells read and write: its root, git, stdout, and the baseline file, checked
++against its schema and parsed once on load into a `Baseline`, and written back the same way."""
++
++from __future__ import annotations
++
++import io
++import json
++import subprocess
++import sys
++from dataclasses import dataclass
++from pathlib import Path
++from typing import Any
++
++from baseline import Baseline, Raise
++from common import BASELINE_NAME
++from defaults import (
++    DEFAULT_LAYERS,
++    DEFAULT_LIMITS,
++    DEFAULT_PYTHON_TOOL,
++    EXCEPTION_GATES,
++    LIMIT_KEYS,
++    PYTHON_TOOL,
++)
++from schema import problems
++
++ROOT = Path(__file__).resolve().parents[2]
++BASELINE = ROOT / BASELINE_NAME
++
++
++@dataclass(frozen=True)
++class Invalid:
++    """The baseline file doesn't match its schema; `problems` says where."""
++
++    problems: list[str]
++
++    def message(self) -> str:
++        return "\n".join([f"{BASELINE.name} is invalid:", *(f"  {p}" for p in self.problems)])
++
++
++def _raise(e: dict[str, Any]) -> Raise:
++    """An entry (a base revision's may lack keys: those read as empty)."""
++    what, reason, date = (str(e.get(key, "")) for key in ("what", "reason", "date"))
++    return Raise(date, what, (e.get("from"), e.get("to")), reason, e)
++
++
++def parse(raw: dict[str, Any]) -> Baseline:
++    """A baseline from its JSON, with what it leaves out filled with the strictest value (a missing
++    cap is 0). A base revision's older baseline may hold one suppression total: it compares as no
++    per-file caps."""
++    allowed, limits = raw.get("allowed", {}), raw.get("limits", {})
++    suppressions, exceptions = allowed.get("suppressions", {}), raw.get("exceptions", {})
++    return Baseline(
++        version=raw.get("version", 1),
++        layers={k: tuple(v) for k, v in raw.get("layers", DEFAULT_LAYERS).items()},
++        limits=DEFAULT_LIMITS | {k: v for k, v in limits.items() if k != PYTHON_TOOL},
++        python_tool=limits.get(PYTHON_TOOL, DEFAULT_PYTHON_TOOL),
++        uncapped={k: tuple(v) for k, v in allowed.get("uncapped", {}).items()},
++        defensive=allowed.get("defensive", {}),
++        suppressions=suppressions if isinstance(suppressions, dict) else {},
++        raw_tags=allowed.get("raw_tags", {}),
++        exceptions={gate: exceptions.get(gate, {}) for gate in EXCEPTION_GATES},
++        raises=tuple(_raise(e) for e in raw.get("raises", [])),
++    )
++
++
++def load() -> Baseline | Invalid:
++    """The baseline, checked and parsed; with no file, the strictest one."""
++    if not BASELINE.exists():
++        return parse({})
++    raw = json.loads(BASELINE.read_text(encoding="utf-8"))
++    found = problems(raw)
++    return Invalid(found) if found else parse(raw)
++
++
++def save(b: Baseline) -> None:
++    limits = {k: b.python_tool if k == PYTHON_TOOL else b.limits[k] for k in LIMIT_KEYS}
++    allowed = {
++        "uncapped": b.uncapped,
++        "defensive": b.defensive,
++        "suppressions": b.suppressions,
++        "raw_tags": b.raw_tags,
++    }
++    raw = {"version": b.version, "layers": b.layers, "limits": limits, "allowed": allowed}
++    raw |= {"exceptions": b.exceptions, "raises": [r.entry for r in b.raises]}
++    BASELINE.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8", newline="\n")
++
++
++def git(*args: str) -> str | None:
++    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=False)
++    return result.stdout if result.returncode == 0 else None
++
++
++def at_revision(rev: str) -> Baseline | None:
++    """The baseline committed at `rev`, parsed (not schema-checked: it may be older)."""
++    committed = git("show", f"{rev}:{BASELINE.name}")
++    return None if committed is None else parse(json.loads(committed))
++
++
++def base_revision(ref: str | None) -> tuple[str, str] | None:
++    """The revision to compare the baseline with, and how to name it; None if `ref` is unknown."""
++    if ref is None:
++        return "HEAD", "HEAD"
++    merge_base = git("merge-base", "HEAD", ref)
++    if merge_base is None:
++        return None
++    return merge_base.strip(), f"the merge base with {ref} ({merge_base[:7]})"
++
++
++def utf8_stdout() -> None:
++    if isinstance(sys.stdout, io.TextIOWrapper):
++        sys.stdout.reconfigure(encoding="utf-8")  # a Windows pipe may not be UTF-8
+diff --git a/tools/gates/report.py b/tools/gates/report.py
+new file mode 100644
+index 0000000..ea204a2
+--- /dev/null
++++ b/tools/gates/report.py
+@@ -0,0 +1,134 @@
++"""The lines the shells print: `just gates`' report, the raises to approve, and `just card`'s
++markdown (what a branch did to the gate numbers: the base revision's baseline against the working
++one with the ratchet applied)."""
++
++from __future__ import annotations
++
++from collections.abc import Iterator
++
++from baseline import Baseline, Json, covers, flatten, new_raises, raised
++from common import layer_of
++from defaults import EXCEPTION_GATES
++from measures import Measures
++from results import Result
++
++SHOWN = 25  # improvements listed before "+N more"
++
++
++def report(
++    results: list[Result], m: Measures, seconds: float, can_ratchet: bool, approve: list[str]
++) -> Iterator[str]:
++    yield f"gates: {m.files} files in {seconds:.1f} s"
++    for r in results:
++        yield f"  {'ok  ' if r.ok else 'FAIL'} {r.name:<15} {r.summary}"
++        yield from (f"         {line}" for line in r.details)
++        if not r.ok and r.hint:
++            yield f"         fix: {r.hint}"
++    yield from approve
++    if can_ratchet:
++        yield "ratchet available: run `just ratchet`"
++    failed = [r.name for r in results if not r.ok]
++    yield f"FAIL: {', '.join(failed)}" if failed else "PASS"
++
++
++def to_approve(baseline: Baseline, base: Baseline | None, label: str) -> list[str]:
++    """The `raises` entries that aren't in the base revision's baseline, one line each."""
++    entries = new_raises(base, baseline) if base else baseline.raises
++    if not entries:
++        return []
++    lines = [f"raises to approve ({len(entries)} not in the baseline at {label}):"]
++    for e in entries:
++        lines.append(f"  {e.date}  {e.what}: {e.span[0]} -> {e.span[1]}")
++        lines.append(f"      {e.reason}")
++    return lines
++
++
++def _cell(before: int | None, after: int | None) -> str:
++    if before == after:
++        return "-" if before is None else str(before)
++    mark = " ▼" if (after or 0) < (before or 0) else " ▲"
++    return f"{'-' if before is None else before} → {'-' if after is None else after}{mark}"
++
++
++def _defensive(baseline: Baseline, layer: str) -> int:
++    caps = baseline.defensive
++    return sum(sum(k.values()) for p, k in caps.items() if layer_of(p, baseline.layers) == layer)
++
++
++def summary(before: Baseline, after: Baseline) -> list[str]:
++    """One row per gate: named offenders, worst named score and their total (▼ better, ▲ worse)."""
++    rows = ["| Gate | Named | Worst | Total |", "|---|---|---|---|"]
++    for gate in EXCEPTION_GATES:
++        b, a = before.exceptions[gate], after.exceptions[gate]
++        worst = _cell(max(b.values(), default=None), max(a.values(), default=None))
++        total = _cell(sum(b.values()), sum(a.values()))
++        rows.append(f"| {gate} | {_cell(len(b), len(a))} | {worst} | {total} |")
++    for layer in {**before.layers, **after.layers}:  # before's layers, then any new ones
++        total = _cell(_defensive(before, layer), _defensive(after, layer))
++        rows.append(f"| defensive ({layer}) | | | {total} |")
++    for section, b, a in (
++        ("suppressions", before.suppressions, after.suppressions),
++        ("raw_tags", before.raw_tags, after.raw_tags),
++    ):
++        rows.append(f"| {section} | | | {_cell(sum(b.values()), sum(a.values()))} |")
++    return rows
++
++
++def _label(key: str) -> str:
++    """`exceptions.cognitive.a.py::f` -> `cognitive  a.py::f`."""
++    section, _, rest = key.removeprefix("exceptions.").removeprefix("allowed.").partition(".")
++    return f"{section}  {rest}" if rest else section
++
++
++def improved(before: Baseline, after: Baseline, now: dict[str, int]) -> list[str]:
++    """Each number that went down, biggest gain first; `now` gives a removed offender's score."""
++    b, a = flatten(before), flatten(after)
++    found: list[tuple[int, str]] = []
++    for key, old in b.items():
++        if key in a and a[key] >= old:
++            continue
++        new = a.get(key, now.get(key, 0))
++        gone = "" if key in a else " (removed)"
++        found.append((new - old, f"`{_label(key)}`  {old} → {new}{gone}"))
++    lines = [line for _, line in sorted(found)]  # the biggest gain first
++    more = [f"- +{len(lines) - SHOWN} more"] if len(lines) > SHOWN else []
++    return [f"- {line}" for line in lines[:SHOWN]] + more
++
++
++def worse(before: Baseline, after: Baseline) -> list[str]:
++    """Each number that went up, with the `raises` entry that names it (if any)."""
++    b, a = flatten(before), flatten(after)
++    entries = new_raises(before, after)
++    lines: list[str] = []
++    for key in raised(before, after):
++        entry = next((e for e in entries if covers(e.what, key)), None)
++        why = f"raises `{entry.what}`: {entry.reason}" if entry else "no raises entry"
++        lines.append(f"- `{_label(key)}`  {b.get(key, '-')} → {a.get(key, 'changed')}; {why}")
++    return lines
++
++
++def _escape(value: Json) -> str:
++    return str(value).replace("|", "\\|").replace("\n", " ")
++
++
++def raises_table(before: Baseline, after: Baseline) -> list[str]:
++    rows = ["| What | From → to | Reason |", "|---|---|---|"]
++    for e in new_raises(before, after):
++        span = f"{_escape(e.span[0])} → {_escape(e.span[1])}"
++        rows.append(f"| `{_escape(e.what)}` | {span} | {_escape(e.reason)} |")
++    return rows if len(rows) > 2 else []
++
++
++def card(before: Baseline, after: Baseline, now: dict[str, int], verdict: str) -> list[str]:
++    better, up, table = (
++        improved(before, after, now),
++        worse(before, after),
++        raises_table(before, after),
++    )
++    unchanged = [] if better or up or table else ["", "No change to the gate numbers."]
++    sections = [("Improved", better), ("Worse", up), ("Raises to approve", table)]
++    out = [verdict, *unchanged, "", *summary(before, after)]
++    for title, lines in sections:
++        if lines:
++            out += ["", f"### {title}", "", *lines]
++    return out
+diff --git a/tools/gates/results.py b/tools/gates/results.py
+index 7b8a8c4..a8f722b 100644
+--- a/tools/gates/results.py
++++ b/tools/gates/results.py
+@@ -3,10 +3,9 @@
+ from __future__ import annotations
+ 
+ from dataclasses import dataclass, field
+-from typing import Any
+ 
+-from baseline import BASELINE, unexplained_raises
+-from common import AGENTOS, FAN_OUT_EXEMPT, FEATURES, KINDS, NO_LAYER, Finding
++from baseline import Baseline, unexplained_raises
++from common import AGENTOS, BASELINE_NAME, FAN_OUT_EXEMPT, FEATURES, KINDS, NO_LAYER, Finding
+ from measures import Measures
+ 
+ HINTS = {
+@@ -18,8 +17,9 @@ HINTS = {
+     "any": "parse it at the boundary into a typed value; the core never sees Any",
+     "any_config": "remove the override: the core is checked with every Any an error",
+     "suppressions": "fix what the suppression hides; one that stays names its code and why",
+-    "layers": f"add the file to a layer in {BASELINE.name}",
++    "layers": f"add the file to a layer in {BASELINE_NAME}",
+ }
++TABLE_HEADER = f"{'layer':<9}" + "".join(f"{kind[:10]:>11}" for kind in KINDS)
+ 
+ 
+ @dataclass
+@@ -31,21 +31,23 @@ class Result:
+     hint: str = ""  # how to fix a failure
+ 
+ 
+-def _over(name: str, found: list[Finding], baseline: dict[str, Any]) -> list[Finding]:
++def _over(name: str, found: list[Finding], baseline: Baseline) -> list[Finding]:
+     """The worst finding per id that is over its named score or the limit, worst first."""
+-    limit: int = baseline["limits"][name]
+-    named: dict[str, int] = baseline["exceptions"][name]
++    limit, named = baseline.limits[name], baseline.exceptions[name]
+     worst: dict[str, Finding] = {}
+     for f in found:
+         if f.id not in worst or f.score > worst[f.id].score:
+             worst[f.id] = f
+     over = [f for f in worst.values() if f.score > named.get(f.id, limit)]
+-    return sorted(over, key=lambda f: (-f.score, f.path, f.line))
++    return sorted(over, key=_worst_first)
+ 
+ 
+-def named_gate(name: str, found: list[Finding], baseline: dict[str, Any], what: str) -> Result:
+-    limit: int = baseline["limits"][name]
+-    named: dict[str, int] = baseline["exceptions"][name]
++def _worst_first(f: Finding) -> tuple[int, str, int]:
++    return -f.score, f.path, f.line
++
++
++def named_gate(name: str, found: list[Finding], baseline: Baseline, what: str) -> Result:
++    limit, named = baseline.limits[name], baseline.exceptions[name]
+     over = _over(name, found, baseline)
+     details = [f"{f.path}:{f.line}  {f.name}  {f.score} > {named.get(f.id, limit)}" for f in over]
+     top = max((f.score for f in found), default=0)
+@@ -53,7 +55,7 @@ def named_gate(name: str, found: list[Finding], baseline: dict[str, Any], what:
+     return Result(name, not over, summary, details, HINTS.get(name, ""))
+ 
+ 
+-def gate_any(m: Measures, baseline: dict[str, Any]) -> Result:
++def gate_any(m: Measures, baseline: Baseline) -> Result:
+     """mypy's `Any` errors per core file, each offending file's errors listed. Any other mypy
+     error, or output that can't be read, fails on its own: it is never budget."""
+     result = named_gate("any", m.any, baseline, "core files with Any errors")
+@@ -79,57 +81,67 @@ def gate_layers(m: Measures) -> Result:
+     return Result("layers", not unmatched, summary, details, HINTS["layers"])
+ 
+ 
+-def gate_defensive(m: Measures, baseline: dict[str, Any]) -> Result:
+-    """Each file's capped kinds against its own caps; a per-layer table as the summary."""
+-    caps: dict[str, dict[str, int]] = baseline["allowed"]["defensive"]
+-    uncapped_kinds: dict[str, list[str]] = baseline["allowed"]["uncapped"]
+-    rows = [*baseline["layers"], *([NO_LAYER] if NO_LAYER in m.layer.values() else [])]
++def _defensive_table(m: Measures, baseline: Baseline) -> list[str]:
++    """Per layer and kind, count/cap summed over its files (`-` where the layer leaves the kind
++    uncapped)."""
++    rows = [*baseline.layers, *([NO_LAYER] if NO_LAYER in m.layer.values() else [])]
+     table = {layer: {kind: [0, 0] for kind in KINDS} for layer in rows}
++    for path, kinds in m.defensive.items():
++        for kind, lines in kinds.items():
++            cell = table[m.layer[path]][kind]
++            cell[0] += len(lines)
++            cell[1] += baseline.defensive.get(path, {}).get(kind, 0)
++    details = [TABLE_HEADER]
++    for layer, kinds_in_layer in table.items():
++        uncapped = baseline.uncapped.get(layer, ())
++        cells = (f"{n}/{'-' if k in uncapped else cap}" for k, (n, cap) in kinds_in_layer.items())
++        details.append(f"{layer:<9}" + "".join(cell.rjust(11) for cell in cells))
++    return details
++
++
++def _over_caps(m: Measures, baseline: Baseline) -> list[str]:
++    """Each file and capped kind over its cap, then the lines it is at."""
+     places: list[str] = []
+     for path, kinds in sorted(m.defensive.items()):
+-        layer = m.layer[path]
++        uncapped = baseline.uncapped.get(m.layer[path], ())
+         for kind, lines in kinds.items():
+-            cap = caps.get(path, {}).get(kind, 0)
+-            table[layer][kind][0] += len(lines)
+-            table[layer][kind][1] += cap
+-            if len(lines) > cap and kind not in uncapped_kinds.get(layer, []):
++            cap = baseline.defensive.get(path, {}).get(kind, 0)
++            if len(lines) > cap and kind not in uncapped:
+                 fix = f"  fix: {HINTS[kind]}" if kind in HINTS else ""
+                 places += [f"{path}  {kind}  {len(lines)} > {cap}{fix}"]
+                 places += [f"    {path}:{line}" for line in lines]
+-    header = "".join(f"{kind[:10]:>11}" for kind in KINDS)
+-    details = [f"{'layer':<9}{header}"]
+-    for layer, kinds in table.items():
+-        uncapped = uncapped_kinds.get(layer, [])
+-        cells = (f"{n}/{'-' if kind in uncapped else cap}" for kind, (n, cap) in kinds.items())
+-        details.append(f"{layer:<9}" + "".join(cell.rjust(11) for cell in cells))
++    return places
++
++
++def gate_defensive(m: Measures, baseline: Baseline) -> Result:
++    """Each file's capped kinds against its own caps; a per-layer table as the summary."""
++    places = _over_caps(m, baseline)
+     failed = sum(not line.startswith(" ") for line in places)
+     summary = (
+         f"{failed} file/kind counts over their cap (per layer below: count/cap, - is uncapped); "
+         f"{len(m.cleanup_try)} try blocks cleaning up in context managers not counted"
+     )
+-    return Result("defensive", not failed, summary, details + places)
++    return Result("defensive", not failed, summary, _defensive_table(m, baseline) + places)
+ 
+ 
+-def gate_fan_out(m: Measures, baseline: dict[str, Any]) -> Result:
+-    limit: int = baseline["limits"]["fan_out"]
+-    named: dict[str, int] = baseline["exceptions"]["fan_out"]
++def gate_fan_out(m: Measures, baseline: Baseline) -> Result:
++    limit, named = baseline.limits["fan_out"], baseline.exceptions["fan_out"]
+     details: list[str] = []
+-    for unit, targets in sorted(m.fan_out.items(), key=lambda kv: -len(kv[1])):
++    sizes = {unit: len(targets) for unit, targets in m.fan_out.items()}
++    for unit in sorted(sizes, key=sizes.__getitem__, reverse=True):  # stable: ties keep order
+         cap = named.get(unit, limit)
+-        if unit not in FAN_OUT_EXEMPT and len(targets) > cap:
+-            path = f"{AGENTOS}/{unit}"
+-            details.append(
+-                f"{path}  imports  {len(targets)} > {cap}  ({', '.join(sorted(targets))})"
+-            )
++        if unit not in FAN_OUT_EXEMPT and sizes[unit] > cap:
++            targets = ", ".join(sorted(m.fan_out[unit]))
++            details.append(f"{AGENTOS}/{unit}  imports  {sizes[unit]} > {cap}  ({targets})")
+     counts = ", ".join(f"{u} {len(t)}" for u, t in sorted(m.fan_out.items()) if t)
+     exempt = ", ".join(sorted(FAN_OUT_EXEMPT))
+     summary = f"{len(details)} over {limit} other subpackages ({exempt} exempt): {counts}"
+     return Result("fan_out", not details, summary, details)
+ 
+ 
+-def gate_suppressions(m: Measures, baseline: dict[str, Any]) -> Result:
++def gate_suppressions(m: Measures, baseline: Baseline) -> Result:
+     """Each file's suppressions against its own cap."""
+-    caps: dict[str, int] = baseline["allowed"]["suppressions"]
++    caps = baseline.suppressions
+     counts = m.suppression_counts()
+     details: list[str] = []
+     over = [path for path, n in sorted(counts.items()) if n > caps.get(path, 0)]
+@@ -143,12 +155,12 @@ def gate_suppressions(m: Measures, baseline: dict[str, Any]) -> Result:
+     return Result("suppressions", not over, summary, details, HINTS["suppressions"])
+ 
+ 
+-def gate_raw_tags(m: Measures, baseline: dict[str, Any]) -> Result:
+-    caps: dict[str, int] = baseline["allowed"]["raw_tags"]
++def gate_raw_tags(m: Measures, baseline: Baseline) -> Result:
++    caps = baseline.raw_tags
+     details: list[str] = []
+     failed = 0
+-    for feature, count in sorted(m.raw_tags.items(), key=lambda kv: -kv[1]):
+-        cap = caps.get(feature, 0)
++    for feature in sorted(m.raw_tags, key=m.raw_tags.__getitem__, reverse=True):  # stable
++        count, cap = m.raw_tags[feature], caps.get(feature, 0)
+         failed += count > cap
+         mark = "  over" if count > cap else ""
+         details.append(f"{FEATURES}{feature}  raw tags  {count}/{cap}{mark}")
+@@ -157,7 +169,7 @@ def gate_raw_tags(m: Measures, baseline: dict[str, Any]) -> Result:
+     return Result("raw_tags", not failed, summary, details)
+ 
+ 
+-def gate_baseline(baseline: dict[str, Any], base: dict[str, Any] | None, label: str) -> Result:
++def gate_baseline(baseline: Baseline, base: Baseline | None, label: str) -> Result:
+     if base is None:
+         return Result("baseline", True, f"no baseline at {label} to compare with")
+     missing = unexplained_raises(base, baseline)
+@@ -165,9 +177,7 @@ def gate_baseline(baseline: dict[str, Any], base: dict[str, Any] | None, label:
+     return Result("baseline", not missing, summary, missing)
+ 
+ 
+-def run_gates(
+-    baseline: dict[str, Any], m: Measures, base: dict[str, Any] | None, label: str
+-) -> list[Result]:
++def run_gates(baseline: Baseline, m: Measures, base: Baseline | None, label: str) -> list[Result]:
+     return [
+         gate_layers(m),
+         named_gate("cognitive", m.cognitive, baseline, "functions"),
+diff --git a/tools/gates/ruff.toml b/tools/gates/ruff.toml
+index ea3715d..0eee37b 100644
+--- a/tools/gates/ruff.toml
++++ b/tools/gates/ruff.toml
+@@ -4,10 +4,11 @@ extend = "../../pyproject.toml"
+ [lint.extend-per-file-ignores]
+ "test_*.py" = ["S101", "S603", "S607"]
+ # Running ruff, git, mypy and node is the gate scripts' job.
+-"{baseline,mypy_any,python_measures,ts_measures}.py" = ["S603", "S607"]
++"{repo,mypy_any,python_measures,ts_measures}.py" = ["S603", "S607"]
+ 
+ [lint.isort]
+ known-first-party = [
+-    "baseline", "card", "common", "defaults", "gates", "measures", "mypy_any", "pyfile",
+-    "python_measures", "python_names", "results", "schema", "ts_measures",
++    "baseline", "card", "collect", "common", "defaults", "gates", "measures", "mypy_any",
++    "pyfile", "python_measures", "python_names", "repo", "report", "results", "schema",
++    "ts_measures",
+ ]
+diff --git a/tools/gates/schema.py b/tools/gates/schema.py
+index ba9f6dd..306b48b 100644
+--- a/tools/gates/schema.py
++++ b/tools/gates/schema.py
+@@ -7,7 +7,7 @@ import datetime
+ from typing import Any
+ 
+ from common import KINDS, NO_LAYER
+-from defaults import DEFAULT_LAYERS, DEFAULT_LIMITS, EXCEPTION_GATES, PY_CYCLOMATIC_TOOLS
++from defaults import DEFAULT_LAYERS, EXCEPTION_GATES, LIMIT_KEYS, PY_CYCLOMATIC_TOOLS, PYTHON_TOOL
+ 
+ TOP = {"version", "layers", "limits", "allowed", "exceptions", "raises"}
+ ALLOWED = {"uncapped", "defensive", "suppressions", "raw_tags"}
+@@ -53,9 +53,9 @@ def _limits(value: object) -> list[str]:
+     table = _table(value)
+     if table is None:
+         return ["limits: not a table"]
+-    out = _unknown("limits.", table, tuple(DEFAULT_LIMITS))
++    out = _unknown("limits.", table, LIMIT_KEYS)
+     for key, limit in table.items():
+-        if key == "cyclomatic_python_tool":
++        if key == PYTHON_TOOL:
+             if limit not in PY_CYCLOMATIC_TOOLS:
+                 out.append(f"limits.{key}: {limit!r}, not one of {PY_CYCLOMATIC_TOOLS}")
+         elif not _is_count(limit):
+@@ -109,6 +109,22 @@ def _raise(i: int, entry: object) -> list[str]:
+     return out
+ 
+ 
++def _exceptions(value: object) -> list[str]:
++    exceptions = _table(value)
++    if exceptions is None:
++        return ["exceptions: not a table"]
++    out = _unknown("exceptions.", exceptions, EXCEPTION_GATES)
++    return out + [
++        p for gate, named in exceptions.items() for p in _counts(f"exceptions.{gate}", named)
++    ]
++
++
++def _raises(entries: object) -> list[str]:
++    if not isinstance(entries, list):
++        return ["raises: not a list"]
++    return [p for i, entry in enumerate(entries) for p in _raise(i, entry)]
++
++
+ def problems(raw: object) -> list[str]:
+     """Everything wrong with a baseline as loaded from JSON; empty when it is well formed."""
+     if not isinstance(raw, dict):
+@@ -116,17 +132,7 @@ def problems(raw: object) -> list[str]:
+     out = _unknown("", raw, TOP)
+     if "version" in raw and not _is_count(raw["version"]):
+         out.append(f"version: {raw['version']!r} is not a non-negative integer")
++    out += _layers(raw.get("layers", {})) + _limits(raw.get("limits", {}))
+     layers = raw.get("layers", DEFAULT_LAYERS)
+-    out += _layers(layers)
+-    out += _limits(raw.get("limits", {}))
+     out += _allowed(raw.get("allowed", {}), set(layers) if isinstance(layers, dict) else set())
+-    exceptions = _table(raw.get("exceptions", {}))
+-    if exceptions is None:
+-        out.append("exceptions: not a table")
+-    out += _unknown("exceptions.", exceptions or {}, EXCEPTION_GATES)
+-    for gate, named in (exceptions or {}).items():
+-        out += _counts(f"exceptions.{gate}", named)
+-    entries = raw.get("raises", [])
+-    if not isinstance(entries, list):
+-        return [*out, "raises: not a list"]
+-    return out + [p for i, entry in enumerate(entries) for p in _raise(i, entry)]
++    return out + _exceptions(raw.get("exceptions", {})) + _raises(raw.get("raises", []))
+diff --git a/tools/gates/test_gates.py b/tools/gates/test_gates.py
+index eece1d2..9aa567e 100644
+--- a/tools/gates/test_gates.py
++++ b/tools/gates/test_gates.py
+@@ -3,21 +3,25 @@ mypy, and the gates' verdicts (per-file caps, layers)."""
+ 
+ from __future__ import annotations
+ 
+-import copy
++from dataclasses import replace
++from pathlib import Path
+ from typing import Any
+ 
++import pytest
++
+ import baseline as bl
+ import card
+ import common
+-import gates
+ import mypy_any
++import repo
++import report
+ import results
+ import schema
+ from common import Finding
+ from measures import Measures
+ 
+ 
+-def _baseline(**changes: Any) -> dict[str, Any]:
++def _baseline(**changes: Any) -> bl.Baseline:
+     raw: dict[str, Any] = {
+         "allowed": {
+             "uncapped": {"boundary": ["try"]},
+@@ -28,7 +32,11 @@ def _baseline(**changes: Any) -> dict[str, Any]:
+         "exceptions": {"cognitive": {"a.py::worse": 20, "a.py::better": 30, "a.py::fixed": 18}},
+     }
+     raw.update(changes)
+-    return bl.normalise(raw)
++    return repo.parse(raw)
++
++
++def _raises(*entries: dict[str, Any]) -> tuple[bl.Raise, ...]:
++    return repo.parse({"raises": list(entries)}).raises
+ 
+ 
+ def _measures() -> Measures:
+@@ -46,25 +54,24 @@ def _measures() -> Measures:
+ 
+ def test_ratchet_lowers_what_improved_and_never_raises() -> None:
+     baseline = _baseline()
+-    before = bl.flatten(copy.deepcopy(baseline))
++    before = bl.flatten(baseline)
+ 
+-    bl.ratchet(baseline, _measures())
++    lowered, _ = bl.ratchet(baseline, _measures())
+ 
+-    after = bl.flatten(baseline)
++    after = bl.flatten(lowered)
+     assert all(after[key] <= value for key, value in before.items() if key in after)
+     assert after["allowed.defensive.a.py.isinstance"] == 3
+     assert "allowed.defensive.a.py.try" not in after  # a cap that reaches 0 goes
+     assert after["allowed.suppressions.a.py"] == 5
+     assert after["allowed.suppressions.b.py"] == 1
+     assert after["allowed.raw_tags.queue"] == 4
+-    assert baseline["exceptions"]["cognitive"] == {"a.py::worse": 20, "a.py::better": 22}
++    assert lowered.exceptions["cognitive"] == {"a.py::worse": 20, "a.py::better": 22}
+ 
+ 
+ def _raised(entry: dict[str, str] | None) -> list[str]:
+     old = _baseline()
+-    new = copy.deepcopy(old)
+-    new["allowed"]["defensive"]["a.py"]["isinstance"] = 4
+-    new["raises"] = [entry] if entry else []
++    defensive = {"a.py": {"isinstance": 4, "try": 1}}
++    new = replace(old, defensive=defensive, raises=_raises(entry) if entry else ())
+     return bl.unexplained_raises(old, new)
+ 
+ 
+@@ -78,30 +85,26 @@ def test_a_raise_needs_an_entry_with_a_reason() -> None:
+ 
+ def test_a_new_named_offender_is_a_raise() -> None:
+     old = _baseline()
+-    new = copy.deepcopy(old)
+-    new["exceptions"]["cyclomatic"]["b.py::new"] = 12
++    new = replace(old, exceptions={**old.exceptions, "cyclomatic": {"b.py::new": 12}})
+     assert bl.unexplained_raises(old, new)
+     assert not bl.unexplained_raises(new, old)  # dropping one only tightens
+ 
+ 
+ def test_uncapping_a_kind_in_a_layer_is_a_raise() -> None:
+     old = _baseline()
+-    new = copy.deepcopy(old)
+-    new["allowed"]["uncapped"]["boundary"].append("broad_except")
+-    new["allowed"]["uncapped"]["shell"] = ["isinstance"]
++    new = replace(old, uncapped={"boundary": ("try", "broad_except"), "shell": ("isinstance",)})
+     assert len(bl.unexplained_raises(old, new)) == 2
+-    new["raises"] = [{"what": "allowed.uncapped", "reason": "the shell parses rows now"}]
+-    assert not bl.unexplained_raises(old, new)
+-    assert not bl.unexplained_raises(new | {"raises": []}, old)  # capping one only tightens
++    entry = {"what": "allowed.uncapped", "reason": "the shell parses rows now"}
++    assert not bl.unexplained_raises(old, replace(new, raises=_raises(entry)))
++    assert not bl.unexplained_raises(new, old)  # capping one only tightens
+ 
+ 
+ def test_switching_the_python_cyclomatic_tool_needs_a_raises_entry() -> None:
+     old = _baseline()
+-    new = copy.deepcopy(old)
+-    new["limits"]["cyclomatic_python_tool"] = "ruff"
++    new = replace(old, python_tool="ruff")
+     assert bl.unexplained_raises(old, new)
+-    new["raises"] = [{"what": "limits.cyclomatic_python_tool", "reason": "McCabe as upstream"}]
+-    assert not bl.unexplained_raises(old, new)
++    entry = {"what": "limits.cyclomatic_python_tool", "reason": "McCabe as upstream"}
++    assert not bl.unexplained_raises(old, replace(new, raises=_raises(entry)))
+ 
+ 
+ def test_the_schema_rejects_what_the_raise_check_cannot_compare() -> None:
+@@ -157,7 +160,7 @@ def test_a_mypy_override_naming_a_core_module_is_found() -> None:
+ 
+ def test_defensive_caps_are_per_file_and_the_boundary_checks_input_freely() -> None:
+     caps = {"uncapped": {"boundary": ["try"]}, "defensive": {"a.py": {"try": 2}}}
+-    baseline = bl.normalise({"allowed": caps})
++    baseline = repo.parse({"allowed": caps})
+     m = Measures(layer={"a.py": "shell", "b.py": "shell", "c.py": "boundary"})
+     m.defensive = {"a.py": {"try": [1]}, "b.py": {"try": [7]}, "c.py": {"try": [1, 2]}}
+ 
+@@ -168,7 +171,7 @@ def test_defensive_caps_are_per_file_and_the_boundary_checks_input_freely() -> N
+ 
+ 
+ def test_suppression_caps_are_per_file() -> None:
+-    baseline = bl.normalise({"allowed": {"suppressions": {"a.py": 2}}})
++    baseline = repo.parse({"allowed": {"suppressions": {"a.py": 2}}})
+     m = Measures()
+     m.suppressions = [("a.py", 1, "noqa"), ("b.py", 3, "type: ignore")]  # total 2, as allowed
+ 
+@@ -195,40 +198,39 @@ def test_new_raises_are_listed_for_approval() -> None:
+     base = _baseline(raises=[entry])
+     current = _baseline(raises=[entry, entry | {"what": "allowed.suppressions"}])
+ 
+-    lines = gates.to_approve(current, base, "HEAD")
++    lines = report.to_approve(current, base, "HEAD")
+ 
+     assert len(lines) == 3  # the heading, then the one new entry on two lines
+     assert "allowed.suppressions" in lines[1]
+-    assert not gates.to_approve(base, base, "HEAD")
++    assert not report.to_approve(base, base, "HEAD")
+ 
+ 
+ def test_the_card_lists_improvements_biggest_gain_first_and_removed_offenders() -> None:
+     before = _baseline()
+-    after = copy.deepcopy(before)
+-    after["exceptions"]["cognitive"] = {"a.py::worse": 20, "a.py::better": 22}  # fixed: removed
++    cognitive = {"a.py::worse": 20, "a.py::better": 22}  # fixed: removed
++    after = replace(before, exceptions={**before.exceptions, "cognitive": cognitive})
+     now = {"exceptions.cognitive.a.py::fixed": 9}
+ 
+-    lines = card.improved(before, after, now)
++    lines = report.improved(before, after, now)
+ 
+     assert [line.split("`")[1] for line in lines] == [
+         "cognitive  a.py::fixed",
+         "cognitive  a.py::better",
+     ]
+     assert "18 → 9 (removed)" in lines[0]
+-    assert not card.worse(before, after)
+-    assert not card.improved(before, before, now)
++    assert not report.worse(before, after)
++    assert not report.improved(before, before, now)
+ 
+ 
+ def test_a_raise_shows_in_the_card_as_worse_and_to_approve() -> None:
+     entry = {"date": "2026-10-17", "what": "allowed.suppressions", "from": 2, "to": 3}
+     before = _baseline()
+-    after = copy.deepcopy(before)
+-    after["allowed"]["suppressions"]["b.py"] = 3
+-    after["raises"] = [entry | {"reason": "a | in the reason"}]
++    raises = _raises(entry | {"reason": "a | in the reason"})
++    after = replace(before, suppressions={"a.py": 5, "b.py": 3}, raises=raises)
+ 
+-    out = card.card(before, after, {}, "**Gates pass**")
++    out = report.card(before, after, {}, "**Gates pass**")
+ 
+-    worse = card.worse(before, after)
++    worse = report.worse(before, after)
+     assert len(worse) == 1
+     assert "suppressions  b.py" in worse[0]
+     assert "a | in the reason" in worse[0]
+@@ -237,7 +239,9 @@ def test_a_raise_shows_in_the_card_as_worse_and_to_approve() -> None:
+ 
+ 
+ def test_a_file_whose_name_says_no_role_is_in_no_layer() -> None:
+-    layers = bl.load()["layers"]  # the real baseline's
++    baseline = repo.load()  # the real baseline
++    assert isinstance(baseline, bl.Baseline)
++    layers = baseline.layers
+     assert common.layer_of("src/agentos/runs/launch.py", layers) == common.NO_LAYER
+     assert common.layer_of("src/agentos_worker/helpers.py", layers) == common.NO_LAYER
+     assert common.layer_of("src/agentos/runs/launch/rules.py", layers) == "core"
+@@ -247,3 +251,17 @@ def test_a_file_whose_name_says_no_role_is_in_no_layer() -> None:
+     assert common.layer_of("src/agentos/runs/__init__.py", layers) == "shell"
+     assert common.layer_of("src/agentos/jira/client.py", layers) == "boundary"
+     assert common.layer_of("src/agentos/targets/github_actions.py", layers) == "boundary"
++
++
++def test_the_card_on_an_invalid_baseline_says_why_and_exits_2(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
++) -> None:
++    invalid = tmp_path / "quality-baseline.json"
++    invalid.write_text('{"limits": {"cognitive": 1.5}}', encoding="utf-8")
++    monkeypatch.setattr(repo, "BASELINE", invalid)
++
++    assert card.main(["--base", "HEAD"]) == 2  # returned, not raised: no traceback
++
++    out = capsys.readouterr().out
++    assert "quality-baseline.json is invalid" in out
++    assert "limits.cognitive" in out
+diff --git a/tools/gates/test_pyfile.py b/tools/gates/test_pyfile.py
+index b0d806d..8886246 100644
+--- a/tools/gates/test_pyfile.py
++++ b/tools/gates/test_pyfile.py
+@@ -13,9 +13,8 @@ from typing import Any
+ 
+ import pytest
+ 
+-import baseline as bl
+-import defaults
+ import python_measures
++import repo
+ import ts_measures
+ from common import Finding
+ from pyfile import PyFile, analyse_python
+@@ -178,7 +177,7 @@ def test_a_domain_class_with_two_optional_fields_is_flagged() -> None:
+             title: str | None = None
+     """
+     found = [Finding("x.py", *c) for c in _analyse(source).optional_fields]
+-    result = named_gate("optional_fields", found, bl.normalise({}), "classes")
++    result = named_gate("optional_fields", found, repo.parse({}), "classes")
+     assert {f.name: f.score for f in found} == {"Run": 2, "Ticket": 1}
+     assert [line.split()[1] for line in result.details] == ["Run"]
+ 
+@@ -236,8 +235,7 @@ def _py_file(tmp_path: Path, source: str) -> PyFile:
+ 
+ 
+ def _cyclomatic(report: PyFile, tool: str, limit: int = 10) -> dict[str, int]:
+-    limits = defaults.DEFAULT_LIMITS | {"cyclomatic": limit, "cyclomatic_python_tool": tool}
+-    return {f.name: f.score for f in python_measures.cyclomatic_python([report], limits)}
++    return {f.name: f.score for f in python_measures.cyclomatic_python([report], tool, limit)}
+ 
+ 
+ def test_lizard_ignores_its_forgive_comments(tmp_path: Path) -> None:
+diff --git a/tools/gates/ts_measures.py b/tools/gates/ts_measures.py
+index eddd338..06be5f1 100644
+--- a/tools/gates/ts_measures.py
++++ b/tools/gates/ts_measures.py
+@@ -9,14 +9,17 @@ import json
+ import re
+ import shutil
+ import subprocess
++from collections.abc import Mapping
+ from dataclasses import dataclass
+ from pathlib import Path
+ from typing import Any
+ 
+-from common import ROOT, Finding
++from common import Finding
++from repo import ROOT
+ 
+ WEB = ROOT / "web"
+ TS_EXCLUDE = ("web/src/api/schema.ts", "*.test.ts", "*.test.tsx", "web/src/domain/fixtures.ts")
++ESLINT_RULES = {"sonarjs/cognitive-complexity": "cognitive", "complexity": "cyclomatic"}
+ 
+ 
+ @dataclass
+@@ -32,7 +35,7 @@ def ts_files() -> list[str]:
+     return [p for p in rel if not any(fnmatch.fnmatchcase(p, x) for x in TS_EXCLUDE)]
+ 
+ 
+-def start_ts(limits: dict[str, Any]) -> TsRun | None:
++def start_ts(limits: Mapping[str, int]) -> TsRun | None:
+     """Start both node processes at once; they run while Python is measured."""
+     files = ts_files()
+     if not files:
+@@ -60,6 +63,21 @@ def _innermost(functions: list[dict[str, Any]], line: int, column: int) -> str:
+     return str(max(inside, key=lambda f: tuple(f["start"]))["name"])
+ 
+ 
++def _finding(
++    path: str, message: dict[str, Any], measures: dict[str, Any]
++) -> tuple[str, Finding] | None:
++    """An ESLint message as a cognitive (sonarjs) or cyclomatic (complexity) finding, if one."""
++    if message.get("fatal"):
++        raise RuntimeError(f"eslint could not parse {path}: {message['message']}")
++    gate = ESLINT_RULES.get(message.get("ruleId") or "")
++    score = re.search(r"(?:complexity of|from) (\d+)", message["message"])
++    if not gate or not score:
++        return None
++    line, column = int(message["line"]), int(message["column"])
++    name = _innermost(measures[path]["functions"], line, column)
++    return gate, Finding(path, line, name, int(score[1]))
++
++
+ def finish_ts(run: TsRun | None) -> tuple[dict[str, Any], list[Finding], list[Finding]]:
+     """The per-file measures, then the cognitive (sonarjs) and cyclomatic (complexity) findings."""
+     if run is None:
+@@ -71,18 +89,10 @@ def finish_ts(run: TsRun | None) -> tuple[dict[str, Any], list[Finding], list[Fi
+     report, _ = run.eslint.communicate()
+     if run.eslint.returncode not in (0, 1):
+         raise RuntimeError(f"eslint exited with {run.eslint.returncode}")
+-    rules = {"sonarjs/cognitive-complexity": "cognitive", "complexity": "cyclomatic"}
+     found: dict[str, list[Finding]] = {"cognitive": [], "cyclomatic": []}
+     for result in json.loads(report):
+         path = Path(result["filePath"]).resolve().relative_to(ROOT).as_posix()
+         for message in result["messages"]:
+-            if message.get("fatal"):
+-                raise RuntimeError(f"eslint could not parse {path}: {message['message']}")
+-            gate = rules.get(message.get("ruleId") or "")
+-            score = re.search(r"(?:complexity of|from) (\d+)", message["message"])
+-            if not gate or not score:
+-                continue
+-            line, column = int(message["line"]), int(message["column"])
+-            name = _innermost(measures[path]["functions"], line, column)
+-            found[gate].append(Finding(path, line, name, int(score[1])))
++            if hit := _finding(path, message, measures):
++                found[hit[0]].append(hit[1])
+     return measures, found["cognitive"], found["cyclomatic"]
