@@ -17,3 +17,12 @@ Status: design. No code yet.
 | [docs/decisions.md](docs/decisions.md) | Decisions taken, and the ones still open |
 | [docs/plan.md](docs/plan.md) | Build order and how we measure progress |
 | [AGENTS.md](AGENTS.md) | Rules for agents (and people) working in this repo |
+
+## Branches after the 2026-10-30 clean-up
+
+The local working copies had grown to many worktrees and stale branches, so they were cleared out. What was worth keeping now lives on two branches:
+
+- **`frontend`** (this one): the web restyle (`web-restyle`, plus the 29 commits of front-end checks from `web-patterns`), and [docs/design/](docs/design/README.md): the HTML mockups, the gauntlet notes (`web-review/gauntlet3/state.md` is the full history) and the review rounds.
+- **`backend`**: ticket-01 (the database), the gates rework as a patch, the ticket list, and the API docs (`docs/api.md`, `docs/api-v1.md`, `docs/api-map/`). Its README says how to pick each up.
+
+Screenshots were not kept. The app's screens regenerate from `web/e2e/screens.spec.ts`. The owner keeps the final screens and the Linear references separately.
