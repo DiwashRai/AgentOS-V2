@@ -6,8 +6,8 @@
 |---|---|
 | Server | Python 3.11+, FastAPI. The API, the run state machine, the dispatcher and the worker protocol. |
 | Database | Turso, behind one boundary module, so SQLite can replace it without touching anything else. |
-| Worker | Python 3.11, standard library only (runners have plain Python). Served by the server as one file. |
-| Web | V1's web app until V2's API exists; then an adapter or a rebuild on a component kit (Q3, plan step 10). |
+| Worker | Python 3.11, standard library only (runners have plain Python). Served by the server as an archive: 7z for Windows, tar.gz for Linux (D17). |
+| Web | A new web on a component kit (plan step 10). V1 keeps running until V2 does everything it does (D4). |
 
 ## Core, shell, boundary
 
@@ -23,9 +23,40 @@ Every feature (tickets, context, runs, workers, ...) is split by role:
 - One module, one job, readable in a sitting: most a few hundred lines, none over 1,000.
 - import-linter enforces the direction: boundary and shell may use the core; the core uses nothing else; features use each other only through their public modules; no cycles.
 
+## Modules
+
+The server's packages, highest first. Each owns its tables (in the one schema file) and its slice of the API ([api.md](api.md)). "Uses" lists the only packages it may import; import-linter enforces the list from plan step 1. A package only uses rows below it, so there are no cycles.
+
+| Package | Owns | Uses |
+|---|---|---|
+| `app` | The composition root: the FastAPI app, startup config, the choice of target adapter, auth dependencies, the error handler, `/health`, `/changes` | every package's routes |
+| `board` | `/tickets` and `/tickets/{key}`, which span features: the list and detail with derived fields (phase, rail, waiting on, now, plan progress) and the actions on offer, from `runs`' rules (R11-R14); create and take in (with the starting context); edits (a cleared repo turns off repo-only stages); `/jira/intake` and the once-a-minute intake refresh behind it | `runs`, `context`, `tickets`, `settings`, `people`, `jira` |
+| `admin` | Settings saves and checks, which look across features (a repo, runtime or library item in use); `/jira/fields` | `context`, `tickets`, `settings`, `jira` |
+| `journal` | The worker side: `/worker/*` (serving the program, the job, binding and ingest, the output upload, the client lease and its "gone" reports) and the mailbox loop (it watches the CI run, fetches the outbox and replays it through the same ingest) | `runs`, `context`, `people`, `targets`, `program` |
+| `runs` | Run, job and stage-run states, the transition table, the actions a ticket offers (pure: ticket, workflow, runs in; actions and reasons out), dispatch, launch (building the package, placing context where each runtime reads it, R20), the fence, cancel, the live reaper, `/tickets/{key}/runs` and `/runs/*`. It sets and clears the ticket's run lock and sets the workspace pin at the first stage start (rules.md › Runs and jobs); `tickets` and `context` check them | `context`, `tickets`, `settings`, `people`, `targets`, `program` |
+| `targets` | The `Target` interface (start, cancel, status) and its adapters: GitHub Actions, and mailbox (Artifactory, then GitHub Actions), which also fetches, deletes and sweeps outboxes for `journal`. No database: what an adapter returns, its caller stores | `github`, `artifactory` |
+| `context` | Items, versions, the library, drift, take and promote, size limits; `/tickets/{key}/items`, `/library/items`, `/tickets/{key}/take`, `/promote` | `tickets`, `settings` |
+| `tickets` | Tickets: fields, keys, states, the run lock and the workspace pin, the conversation (`/messages`) | `people`, `settings` |
+| `people` | People, roles, sessions, sign-in, client tokens and whether one is online (the one derivation dispatch and `/me/clients` read); `/session`, `/people`, `/me/clients` | `settings`, `jira` |
+| `settings` | The settings documents, their typed reads, `GET /settings` | nothing |
+| `program` | Builds and hashes the worker program's archives (rules.md › Worker protocol) | nothing |
+| `jira`, `github`, `artifactory` | Their HTTP clients: boundary only | nothing |
+| `workflows` | Stage and loop rules, prompt templates (sandboxed Jinja), runtimes (argv, where context is placed, the usage-limit marker): pure | nothing |
+| `protocol` | The job package and journal record types, the protocol version, the path rules: stdlib only, shared with the worker | nothing |
+| `db` | The Turso connection, the schema, transactions, the change sequence | nothing |
+
+- Every package above them may use the pure ones (`workflows`, which uses `protocol`; `protocol`, which uses nothing), and every package with tables uses `db`; the lists above leave them out. `workflows`, `protocol`, `program`, `targets` and the HTTP clients never use the database.
+- `runs` is the largest: most of V1's hard logic. If it outgrows a sitting, the reaper and launch split out first.
+- `board` grows with the plan: tickets in step 5, the derived fields and actions once `runs` exists (step 7).
+
+The worker is its own package (`agentos_worker`):
+- `core` holds the job plan, verdicts and the stage order, using `protocol`;
+- `run` (one job) and `client` (the lease loop) are the shell;
+- `http`, `git`, `procs` and `files` are its boundaries, each behind an interface the tests fake.
+
 ## States first
 
-Bad states can't be written down. A value's type says which state it's in, so code matches on it once. The full set of states and transitions is designed before the API (plan step 2); the sketch:
+Bad states can't be written down. A value's type says which state it's in, so code matches on it once. The full set of states and transitions is designed before the API's models (plan step 2); the sketch:
 
 ```python
 Run       = Queued(reason) | Launched(UnboundJob) | Running(BoundJob | HandedOutJob, started_at, stop: Stop | None)
@@ -59,16 +90,16 @@ Item      = an owned copy (version, copied_from: library version | None)
 - Schema in one file: CHECK constraints for every enum and state, foreign keys on, the one-active-run rule as a unique index.
 - One typed decoder per query: the only place a raw row is read.
 - The run state machine is a table of allowed transitions; every state write is a guarded update generated from it, in one transaction; one function ends a run.
-- A contract test suite runs against the real database engine (transactions, concurrent dispatch and leases, constraints), so fast in-memory tests elsewhere don't hide engine behaviour.
+- A contract test suite runs against the real database engine (transactions, concurrent dispatch and leases, constraints, commits applied in order), so fast in-memory tests elsewhere don't hide engine behaviour.
 - No migrations while one person uses it: a schema change means a fresh database.
 
 ## Events over timers
 
-Anything that doesn't have to be a timeout isn't. Normal paths run on explicit messages: a result lifts the fence, a cancel rides the worker's next journal reply (runners take no inbound calls), a client reports a finished worker. Timers only detect a party that died and can't say so.
+Anything that doesn't have to be a timeout isn't. Normal paths run on explicit messages: a result lifts the fence, a cancel rides the worker's next journal reply (runners take no inbound calls), a client reports a finished worker. Timers only detect a party that died and can't say so, plus one outside source that can't tell us it changed: the once-a-minute Jira intake refresh.
 
 ## The worker
 
-- A package with the same three roles, enforced the same way; built into one deterministic file the server serves and hashes.
+- A package with the same three roles, enforced the same way; served as 7z and tar.gz archives (D17).
 - Git, processes, HTTP and the clock sit behind small interfaces, so tests use fakes.
 - Process handling for Windows and Linux (rules.md › Processes) is part of the process boundary from the first version.
 
@@ -76,7 +107,7 @@ Anything that doesn't have to be a timeout isn't. Normal paths run on explicit m
 
 - Designed from the requirements, as small as it can be: the resources and actions the requirements need, nothing per screen.
 - Models are discriminated unions where the domain is; the web's types are generated from the server's schema.
-- Writes that can conflict carry a version and get `stale_version` back.
+- Item and settings edits carry a version and get `stale_version` back.
 
 ## Tests and gates
 

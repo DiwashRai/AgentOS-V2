@@ -17,12 +17,12 @@ What V2 must do: the parity list against V1. Every V1 capability is here, or und
 - R8. Edit a ticket's fields, owner, repo (or no repo) and base branch, and see where the base branch came from (set by hand, from a Jira field, the repo's default).
 - R9. States: open, done, closed. Resolve as completed (done) or abandoned (closed); reopen.
 - R10. List and search; filter by type and priority; closed tickets hidden by default.
-- R11. The server decides which actions a ticket offers now (dispatch, continue, retry, run from, request changes, cancel, resolve, reopen) and why one is blocked. Request changes sends a gated ticket back to its last stage with the reviewer's notes added to its context.
+- R11. The server decides which actions a ticket offers now (dispatch, continue, retry, run from, request changes, cancel, resolve, reopen) and why one is blocked. After the ticket's workflow changes, continue, retry and request changes aren't offered until the next run (D18). Request changes sends a gated ticket back to its last stage with the reviewer's notes added to its context.
 
 ## Board
 
 - R12. Derived from runs, never stored: the phase (inbox, plan, build, verify, review, done); the rail of stages (pending, current, done, failed, stale, skipped, with gate state and "round N of M"); attention (needs you, waiting on someone, running, queued, blocked, inbox, done); and a one-line "now".
-- R13. Attention depends on the viewer: "needs you" if you own the ticket or nobody does, else "waiting on <owner>". My queue is how you learn something needs you, until notifications exist (Q1).
+- R13. Attention depends on the viewer: "needs you" if you own the ticket or nobody does, else "waiting on <owner>". My queue is how you learn something needs you; there are no notifications (D16).
 - R14. Views: my queue, a compact list, intake, the ticket (overview, runs, context, workflow, conversation) and a quick peek. Changes appear within 3 s.
 
 ## Conversation
@@ -35,12 +35,12 @@ What V2 must do: the parity list against V1. Every V1 capability is here, or und
 - R17. Each item is versioned, with who or which run wrote each version; every version can be read back.
 - R18. Edit, add and delete items with a version check, so two people can't overwrite each other.
 - R19. The Space library holds the shared items, agents and workflows. A new ticket copies what it uses. Drift between a ticket's copy and the library is shown both ways; a ticket can take the library's newer version. Admins edit the library directly and promote a ticket's version into it, with a version check: if the library moved meanwhile, promote is refused with the diff.
-- R20. Each runtime gets the context the way its CLI reads it, from one authored source: people write `AGENTS.md` and skills once; any CLI-specific file or folder is generated per run, never authored or committed.
+- R20. Each runtime gets the context from one authored source: people write `AGENTS.md` and skills once. Instructions items go at the repo root under their own names; the runtime says where its CLI reads skills and agents (R22). Nothing CLI-specific is generated; a Space that wants a `CLAUDE.md` adds it as a default item (D5). A run whose stages use several runtimes places context for each. Shipped context is never committed, wherever it was placed.
 - R21. A run gets exactly the item versions current at launch (when its job is built), and records them.
 
 ## Agents and workflows
 
-- R22. A runtime is how to call an agent CLI: an argv template, edited in Settings. Claude Code and Copilot CLI are built in.
+- R22. A runtime is how to call an agent CLI: an argv template, the paths where that CLI reads skills and agents (instructions items always go at the repo root under their own names), and the output marker of a usage limit; edited in Settings. Claude Code and Copilot CLI are built in.
 - R23. An agent is a library item: instructions plus a runtime, model and effort. A stage uses an agent, can override its runtime, model and effort, and has its own timeout.
 - R24. A workflow is a library item: stages, each with enabled, gate after, phase, needs a repo and timeout. An agent stage can resume its session and be a check with verdict repairs (0-3); a shell stage can be a check (exit 0 passes).
 - R25. Loops: a block of stages repeated up to 5 rounds until its checks pass (rules.md › Workflows).
@@ -53,7 +53,7 @@ What V2 must do: the parity list against V1. Every V1 capability is here, or und
 - R29. Dispatch from the next stage or a chosen stage; continue after a gate; retry after a failure; cancel.
 - R30. A run runs its stages up to the next gate or the end, and ends gated (a gate with an enabled stage after it), succeeded, failed or cancelled, with the reason shown.
 - R31. A time budget from the stages' timeouts, rounds and repairs, capped so it fits the CI job's timeout; over budget, the run fails.
-- R32. Watch a run live: stages, rounds, verdicts, summarised agent output, warnings; see exactly what each stage was given and how it was called; download its other output (at most 20 MiB).
+- R32. Watch a run live: stages, rounds, verdicts, summarised agent output, warnings; see exactly what each stage was given and how it was called; download its other output (at most 20 MiB; mailbox runs have none).
 - R33. The worker commits and pushes after every stage and syncs declared context back after every stage.
 - R34. The last stage can open a pull request; the ticket gets its URL.
 - R35. Runs that never start, go silent or outlive their budget are ended with the reason (rules.md › Runs and jobs).
@@ -63,13 +63,13 @@ What V2 must do: the parity list against V1. Every V1 capability is here, or und
 - R36. GitHub Actions runners, reporting live.
 - R37. Mailbox: for work CI that can't reach the server, the job goes out and the results come back as files through Artifactory.
 - R38. Your own machine: a client started with a token from Settings takes your runs, several at once, and survives restarts.
-- R39. Run targets are plugins; adding one doesn't touch the core. Runtimes are data (argv templates). Jira sits behind one boundary module.
+- R39. Run targets are plugins; adding one doesn't touch the core. Runtimes are data (R22). Jira sits behind one boundary module.
 
 ## Worker protocol
 
 - R40. One protocol for every target: a complete job package built at launch (no secrets in it), and an ordered journal from the worker (started, stage started and finished, logs, warnings, verdicts, synced files, pushes, result), applied once each, in order.
 - R41. Live targets: the first worker to start a job owns it, and learns within 10 s that its run ended or was cancelled. Mailbox works through the CI provider instead (rules.md › Mailbox).
-- R42. The server serves the worker program, versioned and hashed.
+- R42. The server serves the worker program, versioned and hashed, as 7z (Windows) and tar.gz (Linux) (D17).
 
 ## Safety and platform
 
@@ -87,6 +87,6 @@ What V2 must do: the parity list against V1. Every V1 capability is here, or und
 
 ## Dropped from V1
 
-- `CLAUDE.md` as an authored file: `AGENTS.md` is the source (R20 generates what a CLI needs).
-- Protocol 1, the local launcher (the client covers it), `agentos.toml` seeding, server-sent events with no client, upgrade shims: dead weight in V1.
+- `CLAUDE.md` shipped by default: `AGENTS.md` is the source; a Space can add a `CLAUDE.md` item (D5).
+- Protocol 1, the local launcher (the client covers it), `agentos.toml` seeding, V1's unused server-sent events code, upgrade shims: dead weight in V1.
 - Separate "template" and "save as preset" mechanisms: one library with promote (R19).
