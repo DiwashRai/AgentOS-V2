@@ -17,8 +17,9 @@ def test_health() -> None:
 
 
 def test_config_defaults_ignore_other_variables() -> None:
-    assert load_config({"PATH": "/bin"}) == Config(host="127.0.0.1", port=8000)
+    assert load_config({"PATH": "/bin"}) == Config(host="127.0.0.1", port=8000, data_dir="data")
     assert load_config({"AGENTOS_PORT": "9000"}).port == 9000
+    assert load_config({"AGENTOS_DATA_DIR": "/srv/agentos"}).data_dir == "/srv/agentos"
 
 
 def _problems(environ: dict[str, str]) -> list[str]:

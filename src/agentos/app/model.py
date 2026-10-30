@@ -7,3 +7,4 @@ from dataclasses import dataclass
 class Config:
     host: str
     port: int
+    data_dir: str  # holds agentos.db

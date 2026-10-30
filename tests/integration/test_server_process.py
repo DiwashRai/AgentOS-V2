@@ -1,5 +1,5 @@
-"""`python -m agentos` as a real process: it starts, answers health, and stops; and the cleanup
-owns the whole process tree."""
+"""`python -m agentos` as a real process: it starts, creates its database, answers health, and
+stops; and the cleanup owns the whole process tree."""
 
 import http.client
 import os
@@ -113,16 +113,21 @@ def _wait_healthy(proc: Popen, port: int) -> bool:
     return False
 
 
-def _server(port: int, out: Stream) -> Popen:
-    env = os.environ | {"AGENTOS_HOST": "127.0.0.1", "AGENTOS_PORT": str(port)}
+def _server(port: int, out: Stream, data: Path) -> Popen:
+    env = os.environ | {
+        "AGENTOS_HOST": "127.0.0.1",
+        "AGENTOS_PORT": str(port),
+        "AGENTOS_DATA_DIR": str(data),
+    }
     return _spawn([sys.executable, "-m", "agentos"], subprocess.DEVNULL, out, env)
 
 
 def test_the_server_starts_answers_health_and_stops(tmp_path: Path) -> None:
     port = _free_port()
     log = tmp_path / "server.log"
+    data = tmp_path / "data"  # a fresh folder: the server creates it and its database
     with log.open("wb") as out:
-        proc = _server(port, out)
+        proc = _server(port, out, data)
     job = None
     try:
         job = _own(proc)
@@ -132,6 +137,7 @@ def test_the_server_starts_answers_health_and_stops(tmp_path: Path) -> None:
 
     output = log.read_text(encoding="utf-8", errors="replace")
     assert healthy, output
+    assert (data / "agentos.db").is_file()
     assert proc.poll() is not None
     assert not _healthy(port)
     if sys.platform != "win32":
@@ -164,13 +170,13 @@ def test_cleanup_ends_a_child_that_outlived_its_parent() -> None:
 
 @pytest.mark.skipif(sys.platform != "win32", reason="job objects are Windows")
 def test_a_failed_job_assignment_kills_the_server_and_raises(
-    monkeypatch: pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     def refuse(pid: int) -> int:
         raise OSError("assignment refused")
 
     monkeypatch.setattr(winjob, "kill_on_close_job", refuse, raising=False)
-    proc = _server(_free_port(), subprocess.DEVNULL)
+    proc = _server(_free_port(), subprocess.DEVNULL, tmp_path / "data")
 
     with pytest.raises(OSError, match="assignment refused"):
         _own(proc)

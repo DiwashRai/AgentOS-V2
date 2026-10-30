@@ -37,6 +37,7 @@ class _Env(BaseModel):
 
     host: str = Field(default="127.0.0.1", min_length=1, alias="AGENTOS_HOST")
     port: Port = Field(default=8000, alias="AGENTOS_PORT")
+    data_dir: str = Field(default="data", min_length=1, alias="AGENTOS_DATA_DIR")
 
 
 def _problem(error: ErrorDetails) -> str:
@@ -53,4 +54,4 @@ def load_config(environ: Mapping[str, str]) -> Config:
         env = _Env.model_validate(keys)
     except ValidationError as error:
         raise ConfigError([_problem(e) for e in error.errors()]) from None
-    return Config(host=env.host, port=env.port)
+    return Config(host=env.host, port=env.port, data_dir=env.data_dir)
