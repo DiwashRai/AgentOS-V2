@@ -1,0 +1,43 @@
+// One-off: shoot the screens step 4 touched (Intake's heads, an item editor's rail, AGENTS.md's
+// blocks, a stage's settings and the library panel's search), light. Starts Vite on 5191.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const shoot = async (path, name) => {
+    await page.goto(base + path);
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: join(out, `${name}.png`) });
+  };
+  await shoot("/intake", "intake");
+  // fold the first query by its head, then shoot
+  await page.locator("[data-head='line'] button").first().click();
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: join(out, "intake-folded.png") });
+  await shoot("/library/agents/builder", "agent");
+  await shoot("/library/files/agents-md", "agentsmd");
+  await page.goto(`${base}/library/workflows/standard`);
+  await page.evaluate(() => document.fonts.ready);
+  await page.getByRole("button", { name: /^Edit Implement/ }).click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: join(out, "stage.png") });
+  console.log("errors:", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

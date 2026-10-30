@@ -1,0 +1,14 @@
+// One-off: Menu's items became groups.
+import { readFileSync, writeFileSync } from "node:fs";
+
+const path = process.argv[2];
+const l = JSON.parse(readFileSync(path, "utf8"));
+const { label, size } = l.components.Menu.props;
+l.components.Menu.props = {
+  label,
+  groups: {
+    why: "The actions in groups, a rule between each group and the next (so no rule can lead, trail or double); each something to run or a link (a path in the app is the router's, a URL opens in a new tab, its row ending on the out arrow).",
+  },
+  size,
+};
+writeFileSync(path, JSON.stringify(l, null, 2) + "\n");

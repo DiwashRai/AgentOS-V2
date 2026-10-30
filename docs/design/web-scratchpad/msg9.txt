@@ -1,0 +1,10 @@
+web: Checklist's looks named for how they look, not where they are
+
+PlanSection's fix was an identity map, { page: "page", peek: "peek" }:
+`place` still was Checklist's `look`, a knob passed through a disguise.
+The looks now say how they look: "bare", "roomy" (tall rows at body
+size) and "snug" (the same rows, shorter), with the ledger's reasons
+rewritten; the pattern's own place chooses one, the page roomy and the
+peek snug. The tree test's map is a real one too. No screenshot moves.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

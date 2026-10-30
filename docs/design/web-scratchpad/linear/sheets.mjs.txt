@@ -1,0 +1,22 @@
+// One-off: contact sheets of the raw grabs (5 x 4 labelled thumbnails each), to choose from.
+import { readdirSync, mkdirSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+
+const [web, dir] = process.argv.slice(2);
+const files = readdirSync(join(dir, "raw")).sort();
+mkdirSync(join(dir, "sheets"), { recursive: true });
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const browser = await chromium.launch({ channel: "chrome" });
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+for (let s = 0; s * 20 < files.length; s++) {
+  const cells = files.slice(s * 20, s * 20 + 20).map((f) =>
+    `<figure><img src="raw/${f}"><figcaption>${f}</figcaption></figure>`).join("");
+  writeFileSync(join(dir, "sheet.html"), `<style>body{margin:0;background:#888;font:14px sans-serif}main{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:6px}figure{margin:0;background:#222}img{width:100%;height:190px;object-fit:contain;display:block}figcaption{color:#fff;padding:2px 4px}</style><main>${cells}</main>`);
+  await page.goto(pathToFileURL(join(dir, "sheet.html")).href, { waitUntil: "load" });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: join(dir, "sheets", `sheet-${s}.png`), fullPage: true });
+}
+await browser.close();
+console.log(files.length, "files");

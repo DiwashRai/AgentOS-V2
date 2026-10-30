@@ -1,0 +1,61 @@
+// One-off: the ledger for step 3 of the kit consolidation (pills into Chip, cards into Card).
+import { readFileSync, writeFileSync } from "node:fs";
+
+const path = process.argv[2];
+const led = JSON.parse(readFileSync(path, "utf8"));
+const c = led.components;
+
+c.Badge.why = "The small text forms: a key, a count, a keycap, YOU. A labelled pill is a Chip.";
+delete c.Badge.props.kind.values.tag;
+delete c.Badge.props.kind.values.prop;
+delete c.Badge.props.icon;
+delete c.Badge.props.dot;
+if (c.Badge.props.tone) {
+  for (const v of ["blocked", "quiet", "fill"]) delete c.Badge.props.tone.values[v];
+}
+
+c.Chip.why =
+  "Linear's label chip, the kit's one pill: a stage, a repo, a skill on a stage, a property, an agent's state (Badge's tag and prop pills and Mark's chip folded into it).";
+delete c.Chip.props.icon;
+c.Chip.props.lead = { why: "A small glyph before the words: an Icon (skills, files, repo), or a still Mark glyph." };
+c.Chip.props.dot = {
+  why: "A dot in a state's hue before the words: a row's stage, a verdict, drift.",
+  values: {
+    neutral: "No state of its own (a queued card's stage).",
+    live: "Running.",
+    you: "Your move, or the library's newer version.",
+    blocked: "Failed or blocked.",
+    done: "Passed, complete, the default.",
+  },
+};
+c.Chip.props.tone = {
+  why: "Most chips are muted words on a hairline; a few stand out.",
+  values: {
+    line: "A hairline, no fill: the default.",
+    fill: "A faint fill on the hairline: an agent card's chips, a board card's state, a stage's phase.",
+    strong: "The words in full ink: a ticket's type.",
+    blocked: "The words in the blocked ink: a high priority, a conflict.",
+  },
+};
+c.Chip.props.title = { why: "The full text on hover, when it says more than the words." };
+c.Chip.props.after = { why: "Quieter, after the words: a step count, or an agent's glyph and a face." };
+c.Chip.props.label.why = "Its words (tests, AGENTS.md, Implement, northwind/web).";
+
+c.Card.why =
+  "A card: one object on its own surface, the whole of it one button. Three looks on one surface and one activation (a workflow stage, an agent at work, a ticket on a board).";
+c.Card.props.look = {
+  why: "Stages, agents at work and board tickets are cards in three places.",
+  values: {
+    stage: "A workflow stage on the lane: its face on the axis, opening in place to its settings (the default).",
+    agent: "An agent at work (My queue): its lines down to the card's foot; a Meter lies along its bottom edge.",
+    ticket: "A ticket on a board (All teams): its key, title and state chip on a hairline card.",
+  },
+};
+if (c.Card.single) delete c.Card.single;
+
+delete c.Mark.props.chip;
+c.Mark.props.still = { why: "No breathing halo: a grid of cards or a board would pulse all at once." };
+
+delete c.Row.props.kind.values.tile;
+
+writeFileSync(path, JSON.stringify(led, null, 2) + "\n", { encoding: "utf8" });

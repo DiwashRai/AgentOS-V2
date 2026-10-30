@@ -1,0 +1,148 @@
+diff --git a/web/src/features/intake/IntakeView.tsx b/web/src/features/intake/IntakeView.tsx
+index d467d85..4b32a32 100644
+--- a/web/src/features/intake/IntakeView.tsx
++++ b/web/src/features/intake/IntakeView.tsx
+@@ -41,13 +41,13 @@ import {
+ } from "./model";
+ 
+ // One triage inbox, as Linear's Inbox: no cards. The list runs out to the sheet's edges under the
+-// bar, each saved query a run of it under a grey band (chevron, project key, name, count) that
+-// stays at the top while its run scrolls past and parts it from the run before. An issue is a
++// bar, each saved query a run of it under a label row a hair off the page (chevron, project key,
++// name, count) that stays at the top while its run scrolls past and parts it from the run before. An issue is a
+ // tight two-line row led by who has it (a face, Unassigned a dashed ring): the title firm; under
+ // it the Jira key (a link to it), the assignee and one fact (a priority worth saying, led by its
+ // bars, else the Jira status; the rest in its tooltip); across from both the age ("1h ago", in its
+ // largest unit; to the minute in its tooltip). Under the pointer or with focus, Take in takes the
+-// age's place. When the queries were checked closes the list, right under its last run. No
++// age's place. When the queries were checked sits at the page's foot, a status line. No
+ // column head: the cells say what they are.
+ const COLUMNS: readonly Column[] = [
+   { label: "Issue", width: "fill" },
+@@ -264,6 +264,7 @@ export function IntakeView() {
+         head={false}
+         edge
+         scroll={false}
++        pin
+         {...(data ? { foot: footNote(data, now) } : {})}
+       >
+         {data ? (
+diff --git a/web/src/kit/Head.module.css b/web/src/kit/Head.module.css
+index 916e1f1..e055ac8 100644
+--- a/web/src/kit/Head.module.css
++++ b/web/src/kit/Head.module.css
+@@ -101,23 +101,25 @@
+   font-size: var(--fs-2);
+   color: var(--ink-3);
+ }
+-/* line: a query's head over its run, Linear's group band: a grey fill edge to edge that parts one
+-   run from the next, held at the list's top while its rows pass under, lit on hover like a row (a
+-   Swap in its summary answers to it). Its fold reaches across it (a click anywhere but the summary
+-   folds), the chevron first, in the faces' column, so the key starts where the titles do */
++/* line: a query's head over its run, a label row a hair off the page (lighter than a group's band,
++   so the titles outweigh it) on a hairline that parts it from its rows, held at the list's top while
++   they pass under, lit on hover like a row (a Swap in its summary answers to it). Its fold reaches
++   across it (a click anywhere but the summary folds), the chevron first, in the faces' column, so
++   the key starts where the titles do */
+ .line {
+   position: sticky;
+   top: 0;
+   z-index: var(--z-sticky);
+   height: var(--h-group);
+   padding: 0 var(--list-pad) 0 var(--list-inset);
+-  background: linear-gradient(var(--list-band), var(--list-band)), var(--ground);
++  background: linear-gradient(var(--line-band), var(--line-band)), var(--ground);
++  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+   transition: background-color var(--dur-fast) ease;
+ }
+ .line:is(:hover, :focus-within) {
+   background:
+     linear-gradient(var(--list-hover), var(--list-hover)),
+-    linear-gradient(var(--list-band), var(--list-band)), var(--ground);
++    linear-gradient(var(--line-band), var(--line-band)), var(--ground);
+ }
+ .line .toggle {
+   flex: 1;
+diff --git a/web/src/kit/Table.module.css b/web/src/kit/Table.module.css
+index cf23c4a..b9f9d0d 100644
+--- a/web/src/kit/Table.module.css
++++ b/web/src/kit/Table.module.css
+@@ -88,3 +88,10 @@
+   background: var(--list-band);
+   color: var(--ink-2);
+ }
++/* pin: the table takes the page's height, its foot at the bottom however short the list */
++.pin {
++  flex: 1 0 auto;
++}
++.pin > .foot {
++  margin-top: auto;
++}
+diff --git a/web/src/kit/Table.tsx b/web/src/kit/Table.tsx
+index da082ee..fcb216d 100644
+--- a/web/src/kit/Table.tsx
++++ b/web/src/kit/Table.tsx
+@@ -61,17 +61,25 @@ export interface TableProps {
+   /** Out to the main sheet's edges with no surface of its own, under a head on a grey band, its
+    *  first cell under the bar's title (Linear's lists: the library's, Intake's, All teams'). */
+   edge?: boolean;
++  /** Its foot held at the page's bottom when the list is short, a status line (Intake's last check). */
++  pin?: boolean;
+   children: ReactNode;
+ }
+ 
+ export function Table(props: TableProps) {
+-  const { columns, head = true, scroll = true, foot, bleed, edge, children } = props;
++  const { columns, head = true, scroll = true, foot, bleed, edge, pin, children } = props;
+   const cols = columns.map(track);
+   return (
+     <Columns.Provider value={columns}>
+       <Scrolling.Provider value={scroll}>
+         <div
+-          className={cx(s.table, scroll && s.scroll, bleed && s.bleed, edge && s.edge)}
++          className={cx(
++            s.table,
++            scroll && s.scroll,
++            bleed && s.bleed,
++            edge && s.edge,
++            pin && s.pin,
++          )}
+           style={vars({ "--cols": cols.join(" ") })}
+           data-edge={edge}
+         >
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index c22a739..e1d8cb6 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -480,7 +480,7 @@
+           "values": {
+             "zone": "A band run through its surface's padding, edge to edge (My queue's Agents at work, over its cards).",
+             "group": "A list's band edge to edge (Linear's group head): Compact's fold, My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
+-            "line": "A query's head (Intake's queries): Linear's group band, a grey fill edge to edge that parts one run from the next, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first in the faces' column, so its key starts where the titles do; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
++            "line": "A query's head (Intake's queries): a label row a hair off the page on a hairline, lighter than a group's band so the titles outweigh it, parting one run from the next, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first in the faces' column, so its key starts where the titles do; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
+           }
+         },
+         "fold": {
+@@ -974,6 +974,9 @@
+         },
+         "edge": {
+           "why": "Out to the main sheet's edges with no surface of its own, as Linear's lists run: the column labels on a group's grey band, each row's first cell under the bar's title (the library's four lists, Intake's queries without a head, and All teams' board, its legend in the foot)."
++        },
++        "pin": {
++          "why": "Hold the foot at the page's bottom when the list is short, a status line rather than a last row (Intake's last check)."
+         }
+       }
+     },
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 421a207..5508b38 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -368,6 +368,8 @@
+   --face-dashed: color-mix(in srgb, var(--ink-3) 75%, transparent);
+   /* intake · Notice: a failed query's halo, the blocked dot's disc in the faces' column */
+   --notice-halo: color-mix(in srgb, var(--blocked) 15%, transparent);
++  /* intake · Head: a query's label row, a few points off the page (under half a group's band) */
++  --line-band: color-mix(in srgb, var(--list-band) 40%, transparent);
+   --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
+   /* themes · faces: a hue each, the same in every theme (a person reads the same everywhere), white
+      initials on it */

@@ -1,0 +1,39 @@
+// Folds an exploration round's output into one feedback file per direction (the judges' reasons and
+// named gaps, attributed to the direction, the current screens or Linear, never A or B) and prints
+// the tally. Usage: node xsummary.mjs <workflow output file> <round dir, e.g. ...\gauntlet3\x1>
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const [file, xdir] = process.argv.slice(2);
+const run = JSON.parse(readFileSync(file, "utf8"));
+const { verdicts } = run.result ?? run;
+mkdirSync(join(xdir, "feedback"), { recursive: true });
+
+function section(title, m, yl) {
+  if (!m) return [`## ${title}: not judged`, ""];
+  const who = (j, side) => (side === j.xIs ? "your direction" : yl);
+  const lines = [`## ${title}: your direction ${m.X}, ${yl} ${m.Y}, same ${m.same}`, ""];
+  for (const j of m.judges.sort((a, b) => a.judge - b.judge)) {
+    const winner = j.pick === "same" ? "same" : who(j, j.pick);
+    const loser = j.pick === "same" ? "both" : winner === yl ? "your direction" : yl;
+    lines.push(`- **Judge ${j.judge}** (A was ${who(j, "A")}) picked ${winner}. ${j.why}`);
+    lines.push(`  - ${loser === "both" ? "Shared flaw" : `${loser}'s gap`}: ${j.loserGap}`);
+    lines.push(`  - ${winner === "same" ? "Also" : `${winner}'s flaw`}: ${j.winnerFlaw}`);
+    if (j.broken) lines.push(`  - Broken: ${j.broken}`);
+  }
+  return [...lines, ""];
+}
+
+for (const v of verdicts) {
+  const md = [
+    `# ${v.key}: the judges' notes`,
+    "",
+    "In each judge's text, A and B are the images as that judge saw them; the line before says which was yours.",
+    "",
+    ...section("Our screens against the current ones (the goal)", v.screens, "the current screens"),
+    ...section("The twins against Linear (secondary)", v.twins, "Linear"),
+  ];
+  writeFileSync(join(xdir, "feedback", `${v.key}.md`), md.join("\n"));
+  const t = (m) => (m ? `${m.X}-${m.Y}${m.same ? ` (${m.same} same)` : ""}` : "-");
+  console.log(`${v.key}: screens ${t(v.screens)}, twins vs Linear ${t(v.twins)}${v.prepFailed ? " PREP FAILED" : ""}`);
+}

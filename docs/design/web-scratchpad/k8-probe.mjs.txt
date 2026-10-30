@@ -1,0 +1,43 @@
+// One-off: a menu closed by Tab leaves no rest on its button; one tip at a time. Vite on 5191.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const tip = () => page.evaluate(() => [...document.querySelectorAll("[class*=_tip_]")].filter((e) => e.checkVisibility()).map((e) => e.textContent));
+  const focus = () => page.evaluate(() => document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.textContent?.slice(0, 20));
+  for (const path of ["/t/NW-17", "/?peek=NW-17"]) {
+    await page.goto(base + path);
+    await page.waitForTimeout(600);
+    const more = page.getByRole("button", { name: "More on NW-17" });
+    await more.focus();
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(300);
+    await page.keyboard.press("Tab");
+    await page.waitForTimeout(400);
+    say(`${path} Tab out of the menu: menus, focus, rest`, [await page.getByRole("menu").count(), await focus(), await more.getAttribute("data-tip-rest")]);
+    await page.keyboard.press("Shift+Tab");
+    await page.waitForTimeout(900);
+    say(`${path} Shift+Tab back: focus, tips`, [await focus(), await tip()]);
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(300);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(900);
+    say(`${path} Esc: focus, tips, rest`, [await focus(), await tip(), await more.getAttribute("data-tip-rest")]);
+  }
+  await browser.close();
+} finally {
+  vite.kill();
+}

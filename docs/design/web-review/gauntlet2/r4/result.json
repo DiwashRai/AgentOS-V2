@@ -1,0 +1,143 @@
+{
+  "round": 4,
+  "mode": "polish",
+  "verdicts": [
+    {
+      "key": "lists",
+      "kept": true,
+      "linear": 8.6,
+      "best": 7,
+      "cand": 7.2,
+      "gap": "Fix the right side of every row. The metadata columns (stage, repo, age, avatar) are about 14px of plain grey text with tiny avatars whose initials can't be read. Set them on a real grid with fixed column widths and right-aligned times, and make the avatars at least 20px. Drop the '···' placeholder priority glyph, which puts noise at the start of almost every row.",
+      "problems": "The 'Review 2/3' stage text in NW-21 repeats the 'Reviewer 2/3' chip right next to it. The My queue header stats ('3 your move  3 runs yours  4 running  2 queued') look like tabs or links but are plain text in mixed colours. The 'All done tickets' link sits about 10px to the right of the avatar column above it. In dark mode the row titles render noticeably heavier than in light mode, so weights are inconsistent between themes. In the expanded dark panel, 'Cancel', 'Peek' and 'Open ticket' have equal weight, so there is no primary action, and the left column leaves a large dead area. The NW-24 row is dimmed by the footer fade and reads as disabled. The agent card grid leaves a large empty gap before 'Ready to start'. Two solid purple 'Approve' buttons in adjacent rows compete strongly with each other.",
+      "linearGap": "Mark the group headers more firmly. Give the 'In Review / In Progress / Todo / Done' header bands a stronger tint or a hairline above them, so the groups separate clearly from rows at a glance (in the light cycle view they are almost the same grey as hovered rows).",
+      "patch": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\patches\\lists.patch",
+      "shots": [
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\lists\\lists\\1-my-queue-light.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\lists\\lists\\2-compact-open-dark.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\lists\\lists\\3-compact-light.png"
+      ],
+      "summary": "Approve now has real primary weight in list rows. Before, Button.module.css had a list-row override that turned the `you` (gate primary) button into a pale lavender wash with lavender text, so it looked disabled. I removed that override, so in a row Approve is now the same solid indigo fill with white text it has everywhere else. I also removed the two tokens only that override used (--gate-soft, --gate-soft-hover) and updated the ledger's `you` reason to match. The blocked Approve (flat grey fill) is unchanged. Net change: 14 fewer kit lines, 3 files. Only My queue shows a visible difference: both Approve buttons are solid and stand out next to the outlined Request changes. The two Compact shots have no Approve in their rows and look the same as before.",
+      "checks": "tsc --noEmit: pass; eslint src: pass; stylelint src/**/*.css: pass; prettier --write src: done; node tools/kit.mjs --check: ok (44/45 components, 8500 lines, budget 9000); git apply --check -R on the saved patch: pass"
+    },
+    {
+      "key": "intake",
+      "kept": true,
+      "linear": 8.6,
+      "best": 6.4,
+      "cand": 6.6,
+      "gap": "Each row is an indented two-line title and metadata block with a ~900px empty middle and the timestamp pushed to the far edge. Put status, priority and assignee into fixed right-aligned columns, or cap the content width, so the eye isn't sent across a dead gutter on every row.",
+      "problems": "Nothing is clipped or overlapping. Same right-edge mismatch as X: the group bands and their hairlines run to 1440 while row dividers and timestamps stop at 1416. The status line is now pinned to a bottom bar, which leaves a ~250px void between 'All quiet' and the footer, so the page looks unfinished rather than intentionally spare. 'Show all 11' is still set smaller and tighter than the surrounding metadata. In dark mode the lighter group band is barely distinguishable from the row background (only the hairline separates it), so the group structure weakens. The header stats ('11 to take in', '3 queries') mix bold numerals with regular labels on a baseline that sits slightly below the 'Intake' title.",
+      "linearGap": "Each ticket gets roughly 190px of height (title, then source on a second line, with very loose padding). Cut the row to one dense line, or tighten the two-line row to about 56px, so an inbox shows 10 or more items instead of 4.",
+      "patch": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\patches\\intake.patch",
+      "shots": [
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\intake\\intake\\1-intake-light.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\intake\\intake\\2-intake-dark.png"
+      ],
+      "summary": "This closes the critic's main gap on Intake.\n1) The query group heads are now light label rows instead of heavy grey bands. Head level=\"line\" uses a new derived token, --line-band, which is 40% of --list-band, so it sits about 2% off the page in every theme. A hairline under each head separates it from its rows. The head still sticks to the top of the list, and hover still uses --list-hover.\n2) The \"1 didn't answer · checked 2m ago\" status now sits at the bottom edge of the page. Table has a new `pin` prop: the table fills the page height and its foot gets margin-top:auto. Only Intake uses it, so the library and All teams screens look the same as before.\nAlso updated: the ledger's reasons for Head line and the new Table pin prop, and the Intake view's header comment. Kit lines went up by about 19 net (now 8526/9000). No component was added and no budget or raises entry was changed.",
+      "checks": "npx tsc -p . --noEmit: pass. npx eslint src: pass. stylelint \"src/**/*.css\": pass. npx prettier --write src: ran, then everything was re-checked. node tools/kit.mjs --check: pass (44/45 components, 8526 lines, budget 9000, props <= 8). Camera: both shots were taken after formatting, and Geist loaded. The patch reverse-applies cleanly against the index (git apply --check -R --cached)."
+    },
+    {
+      "key": "teams",
+      "kept": false,
+      "linear": 9.2,
+      "best": 6.7,
+      "cand": 6.4,
+      "gap": "Lighten the grid. Drop the grey fill on the repo header bands, or reduce it to a hairline plus a slightly bolder repo name, and thin the lane dividers to near-invisible. At the moment the full-height dividers plus filled bands make a spreadsheet-like lattice that competes with the cards for attention.",
+      "problems": "Nothing is clipped. The Review column's cards stop about 35px short of the right edge while every other column runs to its dividers, so the right margin is uneven. The Verify lane is a narrow empty strip that runs the full height and wastes space. The 'docs' band has no empty state. The double status encoding (pill dot plus state icon) is the same as in X. The pill text is small and low-contrast in dark mode. Card titles are heavier in dark mode than in light. The header stat row is colour-mixed with no hierarchy.",
+      "linearGap": "On the board, give the per-card metadata chips (the priority bars, labels and PR links) slightly lower contrast than the titles. They currently sit almost at title weight, so each card's second row pulls focus. Calm them so the title and status lead.",
+      "patch": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\patches\\teams.patch",
+      "shots": [
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\teams\\teams\\1-all-teams-light.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\teams\\teams\\2-all-teams-dark.png"
+      ],
+      "summary": "All teams board (the band look of Row, in web/src/kit/Row.module.css): I fixed the uneven card gutters. Each stage cell now has the same half gap (--sp-6, 12px) on both sides, and the band's inner padding is the page gutter minus that half gap. Cards are now 24px apart, and the outer cards sit 24px from the sheet's edges, lined up with the page title. Measured in the light shot: Plan 252-586, Build 611-944, Review 1081-1415, which is 25px from the right edge. I dropped the hairline rules between stages, as Linear's board has none. The stage names in the column head now all use one inset, so each sits over its cards' keys.\n\nThe lane heads lost their grey band fill and are now one line with a hairline above. The first lane, which sits under the sticky column head's rule, has no extra hairline. In both themes the stripes no longer compete with the cards. I updated the Row.tsx prop comment and the ledger's band and columns entries to match. No change to TeamsView, tokens, \"budget\" or \"raises\". The kit is 3 lines smaller net.",
+      "checks": "All run from web/: tsc --noEmit passed (exit 0); eslint src passed (exit 0); stylelint src/**/*.css passed (exit 0); prettier --write src finished (exit 0, no reformatting needed); kit.mjs --check reported \"ok kit 44/45 components, 8505 lines (4009 TS, 4039 CSS, 457 tokens), budget 9000; props <= 8\" (exit 0). Diff is 3 kit files, +18/-21 lines. Geist loaded in both shots. Setup: HEAD was detached to c9f15ab. The junction loop stopped on the .package-lock.json file, so I copied that file in by hand; every other package was linked, with @fontsource copied for real."
+    },
+    {
+      "key": "ticket",
+      "kept": false,
+      "linear": 9.1,
+      "best": 7.4,
+      "cand": 7.1,
+      "gap": "Anchor the Talk thread to the bottom so the latest messages sit just above the pinned composer, or add activity and system events to fill the column. Right now the messages hang at the top and the composer at the bottom, with a ~430px void between them.",
+      "problems": "Talk has a large empty gap between the last message and the composer. Workflow tab: the same stray second rail line (x~255) runs beside the Implement card, misaligned with the sign-off diamond and connector at x~286. Dark Runs: the expanded row's navy fill is off-palette against the Carbon greys. Workflow and run metadata is very small (about 12px) with weak contrast. The struck-through 'high' reads as an error. The 'Log →' text link and the bordered 'Cancel' button don't match. The skipped stage (dotted) is barely different from upcoming stages.",
+      "linearGap": "Lighten the Resources block: make the chips smaller with quieter fills, and collapse duplicates like 'Launch Run of Show' x3 and 'Project spec' x2. Right now three rows of heavy chips outweigh the title and description.",
+      "patch": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\patches\\ticket.patch",
+      "shots": [
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\ticket\\ticket\\1-ticket-light.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\ticket\\ticket\\2-ticket-runs-dark.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\ticket\\ticket\\3-ticket-workflow-light.png"
+      ],
+      "summary": "Closes the critic's main gap: the roughly 400px blank stretch between the last Talk message and the reply box. The ticket's Talk rail no longer stretches its Stack to full height (`grow` is removed in Rail in features/ticket/TicketView.tsx). Because of that, the Composer's margin-top:auto no longer pushes it to the window's bottom, and the reply box now sits right under the last message, the way Linear's comment box follows the activity. The Composer is still sticky at the bottom, so a long thread scrolls with the box held at the rail's foot. Nothing else changes visually. Comments are updated to stay true: the TicketView header and Rail doc, the `.side` comment in Page.module.css, and the Composer's \"why\" in ledger.json. Kit size is unchanged (0 lines net, 44/45 components). The Peek's composer is untouched.",
+      "checks": "npx tsc -p . --noEmit: pass (exit 0). npx eslint src: pass (exit 0). stylelint src/**/*.css: pass (exit 0). npx prettier --write src: no files changed. node tools/kit.mjs --check: ok, 44/45 components, 8511 lines (4009 TS, 4045 CSS, 457 tokens), budget 9000, props <= 8. This change adds 0 kit lines net (comment and ledger text only). The Geist font loaded in all shots."
+    },
+    {
+      "key": "overlays",
+      "kept": true,
+      "linear": 8.6,
+      "best": 6.3,
+      "cand": 6.9,
+      "gap": "Replace the coarse typewriter monospace used for prompts and code across the workflow editor with a modern code face (JetBrains Mono, SF Mono or similar) at matching x-height. Raise the contrast of the dark theme's card borders and 12px meta text so the stage cards separate from the canvas.",
+      "problems": "Peek and workflow overlay look the same as in Set Y, so they have the same issues. The top bar's 'running' stat and queue rows are cut off under the peek panel, and the last chat bubble is faded or clipped against the composer. In dark mode, card borders and grey meta text have low contrast. Discard, Promote and the Lint card use dashed borders that read as placeholders. 'Add stage' sits against the bottom edge of the modal. The library rail is mostly empty space. Prompt text uses a typewriter mono. Item overlay: markdown now renders properly (inline code chips, bullets, a filled code block). However, the code chips and code block still use the same typewriter mono. Background text ('Agent · v1 from library v4 · Ada 1d ago') still shows through below the modal, clipped at the viewport edge. The blocks leave large empty space below them, and the narrow centred column leaves wide unused margins inside a full-width modal.",
+      "linearGap": "Show one popover at a time: close the lead-team menu when the teams menu opens, and drop the native-looking 'Data Solutions' tooltip that lands on the row below it, so the active menu is the only layer above the page.",
+      "patch": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\patches\\overlays.patch",
+      "shots": [
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\overlays\\overlays\\1-peek-light.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\overlays\\overlays\\2-workflow-overlay-dark.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\overlays\\overlays\\3-item-overlay-light.png"
+      ],
+      "summary": "This closes the critic's main gap in the item overlay: when you aren't editing, each block's Markdown now reads as a formatted document in the Geist body face. Inline code shows as faint mono chips, a fenced block is a tinted mono code block, and lists, headings and bold text render properly, so no backticks or ``` fences show.\n\nHow it works: in web/src/kit/TextArea.tsx, any text area with a head strip (the item editor's content: AGENTS.md blocks, an agent's instructions, a SKILL.md) stacks a rendered layer over its textarea in one grid cell. The rendered layer is hidden from screen readers and lets clicks through. At rest the textarea's text is transparent, so you see the rendered layer. A click lands in the source at roughly that spot. While the textarea has focus the rendered layer hides and you edit the raw source in place. On blur it reads formatted again.\n\nThe renderer is about 20 lines and handles paragraphs, `-`/`*` lists, `#` headings, ``` fences, `code` and **strong**. The CSS is in Form.module.css (.read and .prose) and uses existing tokens only (--chip-hover, --fs-tk, --font-mono), so there are no new colours. `.sheet:has(> .leaf:focus)` became `.sheet:has(.leaf:focus)` so the lit hairline still works inside the new wrapper. I updated the TextArea `head` entry in ledger.json and the header comments in TextArea.tsx and features/library/content.tsx.\n\nThe same rendering also shows in the library's editors, because they use the same item editor. A separate click-through run (scratchpad\\g2\\ovtest) checked that clicking edits the source, Unsaved changes appears, and blur goes back to the formatted view. It also checked the library file and agent editors. Nothing else in the piece changed: the peek and workflow overlay shots look the same as before.\n\nKit: 8,511 → 8,567 lines (+56 net, under the 60 limit), still 44 components, no new props, \"budget\" and \"raises\" untouched.",
+      "checks": "All five required checks pass, run from web/:\n- npx tsc -p . --noEmit: exit 0\n- npx eslint src: exit 0\n- stylelint \"src/**/*.css\": exit 0 (my first try, `grid-area: 1 / 1`, broke the no-new-ratio rule, so it now uses `grid-row: 1; grid-column: 1`; the rule was not weakened)\n- npx prettier --write src: done\n- node tools/kit.mjs --check: ok, 44/45 components, 8567 lines (4031 TS, 4079 CSS, 457 tokens), budget 9000, props <= 8\n\nThe patch reverse-applies cleanly to the index (`git apply --check -R --cached`, exit 0). Geist loaded in every shot (the camera checks it).\n\nSetup note: the camera puts the shots in an extra overlays\\ subfolder (cand\\overlays\\overlays\\). At setup, the junction loop printed one error because web\\node_modules\\.package-lock.json is a file, not a folder. Every package folder was linked and the fonts were copied."
+    },
+    {
+      "key": "library",
+      "kept": true,
+      "linear": 9,
+      "best": 7.1,
+      "cand": 7.3,
+      "gap": "Close off the table and deal with the void. Add a bottom rule or subtle row dividers so the last row doesn't float, raise row height and header contrast hierarchy (quiet caption headers, stronger primary column), and fill the roughly 600px of dead canvas between the table and the pinned status bar with a preview or empty-state panel.",
+      "problems": "The status bar is now pinned at the bottom and stays in the same place on every page, which fixes X's jumping footer. But the table now has no closing edge: the last row ends in open space with no border, and the count ('3 workflows') sits about 680px away from the rows it counts. Everything else from X is unchanged: avatar initials about 7px and hard to read, a heavy grey header band in light mode, a faint grey Version column and '–' cells, and tiny stage-pipeline glyphs. Nothing is clipped or overlapping.",
+      "linearGap": "Use one chip language in the project properties: Labels are outlined pills with dots, Resources are filled tinted tiles and Properties are bare icon+text. Pick one container treatment (or two, with a clear rule), so the property block stops reading as three different components stacked together.",
+      "patch": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\patches\\library.patch",
+      "shots": [
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\library\\library\\1-workflows-light.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\library\\library\\2-skills-dark.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\library\\library\\3-agents-light.png"
+      ],
+      "summary": "I fixed the gap the critic named: the keyboard-hint and count bar now sits at the bottom of the pane. Before, it floated right under the last row and looked like a stray table row.\n\nThe fix is one line. LibraryList (web/src/features/library/list.tsx) dropped `scroll={false}` on its edge Table, so it now uses the kit Table's default scroll mode, the same one TeamsView already uses. The table fills the pane and the rows scroll inside it. The foot (the Select, Open and Search hints, with the count at the right) stays at the bottom with its top hairline, level with the sidebar's Settings and Theme rows. The file's header comment now describes this.\n\nI changed no kit files, added no kit lines and left the ledger alone. All four lists (Workflows, Agents, Skills, Files) get the change because they all use LibraryList. Everything else looks as it did.",
+      "checks": "All five checks passed, run from web/:\n- `npx tsc -p . --noEmit`: exit 0\n- `npx eslint src`: exit 0\n- stylelint on `src/**/*.css`: exit 0\n- `npx prettier --write src`: exit 0\n- `node tools/kit.mjs --check`: ok (44/45 components, 8511 lines, budget 9000, props <= 8)\n\nThe Geist font loaded in the shots.\n\nTwo things to know:\n- **Shot folder:** the camera command puts shots in a subfolder named after the piece, so they ended up in r4\\cand\\library\\library\\ rather than r4\\cand\\library\\ as the task asked.\n- **One package not linked:** in setup, web\\node_modules\\.package-lock.json couldn't be linked, because a junction must point to a folder and that is a file. Every package folder was linked, @fontsource was copied, and nothing failed because of it."
+    },
+    {
+      "key": "controls",
+      "kept": false,
+      "linear": 8.6,
+      "best": 6.8,
+      "cand": 6.8,
+      "gap": "Remove the solid grey full-width fill from the group header bands in the compact list. Mark each group with a hairline divider and a slightly heavier label instead, so the ticket rows lead. Make the right-aligned group summaries use one consistent pattern.",
+      "problems": "These screens are almost pixel-identical to Set Y. In the dark owner picker, the menu surface is about 3 RGB levels darker, which gives slightly less lift from the page, and nothing else differs visibly. The broken items are the same as in Y. The light '...' menu cuts the Talk subtitle to 'Agents don't read t' and hides the avatars, and it has a faint border and shadow on white. The owner picker cuts the stage label to 'Implem'. The initials in the tiny avatars are cramped and hard to read. The priority column is mostly '···' noise. The table's right edge does not line up with the header controls.",
+      "linearGap": "Give the 'off' state of the display-property chips a visible outline or surface, the same as the 'on' chips but dimmer. Right now 'Links' is bare text sitting in a grid of filled chips and looks like a rendering bug, not a toggled-off option.",
+      "patch": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\patches\\controls.patch",
+      "shots": [
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\controls\\controls\\1-ticket-menu-light.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\controls\\controls\\2-owner-picker-dark.png",
+        "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\cand\\controls\\controls\\3-compact-filters-dark.png"
+      ],
+      "summary": "This change lifts the dark popovers (owner picker, menus, Select, the account sheet) off the page, which was the critic's biggest gap. Only the dark-theme popover tokens in web/src/kit/tokens.css change, so every dark theme (Carbon, Midnight, Plum, Harbour) picks it up and light is untouched.\n- Surface: --pop goes from 9.5% to 11% wash over the recess, about one more step above what it opens on (pixel 49 to about 52 on a page of 23; Linear's step is about 12).\n- Shadow: --shadow-pop now has a brighter lit top edge (0.06), a firmer dark ring (0.6), a close contact shadow (4px/12px at 0.45), a mid drop (16px/40px, spread 4, 0.6) and a wide falloff (32px/96px, spread 16, 0.55). The page under the popover's edge now goes down to about 6 and fades back over roughly 100px, so the content it covers is shaded instead of the popover looking like a box drawn on it. Before, the shadow barely showed.\n- Edge: the 1px lit hairline (12% hair, about 10% white on the surface) already matched the critic's ask, so it is unchanged.\n- The token comment is updated to say this.\nNet kit lines: +2 (8,512 of 9,000). No component, prop or ledger entry changed. Not addressed, because they are outside this one focused change: the stray \"Talk\" fragment, the small 14px avatars, the half-cut NW-26 row and the pill noise in the compact list.",
+      "checks": "From web/: npx tsc -p . --noEmit passed (exit 0). npx eslint src passed (exit 0). stylelint \"src/**/*.css\" passed (exit 0). npx prettier --write src ran with exit 0. node tools/kit.mjs --check passed: \"ok kit 44/45 components, 8512 lines (4009 TS, 4045 CSS, 458 tokens), budget 9000; props <= 8\". The camera confirmed Geist loaded on every shot. Setup: HEAD was checked out detached at c9f15abbb4647792f3a6c7e6da3b742caa042649 and node_modules was linked by junctions with @fontsource copied for real (.package-lock.json is a file, so it was skipped)."
+    }
+  ],
+  "integration": {
+    "commit": "ca384b9 (gauntlet: round 4) on web-restyle, parent c9f15ab",
+    "applied": [
+      "overlays: an item editor's content (AGENTS.md blocks, an agent's instructions, a SKILL.md) reads at rest as a formatted document over its hidden source, and a click edits the source in place. Applied cleanly, with two integration fixes. (1) TextArea went over the cyclomatic limit (11 > 10), so I moved the rendered layer into a small `Read` component inside TextArea.tsx. No gate was touched. (2) The SKILL.md front matter rendered as one run-on paragraph ('--- name: ticket description: ... ---'), so a paragraph starting with `---` now renders as a mono block. The ledger's TextArea `head` reason and the TextArea header comment now mention front matter.",
+      "lists: Approve keeps its solid primary fill in list rows. The soft-wash override and the --gate-soft / --gate-soft-hover tokens are removed, and the ledger's `you` reason is updated. Applied cleanly.",
+      "library: LibraryList's edge Table uses the default scroll mode, so the keys-and-count foot sits at the pane's bottom. Applied cleanly.",
+      "intake: query heads are light label rows on a hairline (new derived token --line-band), and the new Table `pin` prop holds the 'didn't answer · checked' status at the page's foot. Applied cleanly. I re-wrapped one comment line in IntakeView.tsx that ran past the 100-column width."
+    ],
+    "dropped": "None. All four patches applied with `git apply --3way` and no conflicts. The shared files (ledger.json, tokens.css) took the edits in separate places. Intake's `pin` and library's default `scroll` both use Table but don't overlap: library uses scroll and Intake keeps scroll={false} with pin. Nothing was trimmed.",
+    "checks": "`just check` passes (ruff, mypy, import-linter 19/19 kept, tsc, eslint, stylelint, prettier). `just test` passes: 65 pytest and 17 Vitest tests. `just gates` passes after the TextArea fix, with cyclomatic worst at 5 and no baseline or raises changes. `just shots --update-snapshots` passed 22 tests and changed 6 baselines: intake light and dark, my-queue light and dark, skill-editor light and dark. I looked at skill-editor (front matter now a mono block), intake-dark (light heads, status at the foot) and my-queue-light (solid Approve); none is broken. The pre-commit hook passed on the first commit, without --no-verify. gshots.mjs wrote 19 shots across the 7 pieces to C:\\code\\AgentOS-V2-web\\.review\\gauntlet2\\r4\\best. I looked at library\\2-skills-dark.png (foot pinned at the bottom) and overlays\\3-item-overlay-light.png (formatted blocks); both look right.",
+    "kit": "44/45 components, 8584 of 9000 lines (4051 TS, 4077 CSS, 456 tokens); props <= 8. Budget and raises are unchanged.",
+    "notes": "The only kit addition beyond the patches is the front-matter line in TextArea's renderer plus the `Read` helper that brought TextArea back under the cyclomatic limit. In the item overlay, each block has a little empty space under its rendered text, because the textarea underneath is sized to the source's line count. That comes from the overlays patch's design; I left it as is. Commit message file: C:\\Users\\diwash\\AppData\\Local\\Temp\\claude\\C--code-AgentOS-V2-web\\6d0fdab0-5ae2-4898-99b9-b3d2c29ccdad\\scratchpad\\g2\\r4-commit.txt"
+  }
+}

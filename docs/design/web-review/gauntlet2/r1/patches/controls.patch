@@ -1,0 +1,362 @@
+diff --git a/web/src/kit/Menu.module.css b/web/src/kit/Menu.module.css
+index e6390ec..ed44768 100644
+--- a/web/src/kit/Menu.module.css
++++ b/web/src/kit/Menu.module.css
+@@ -1,11 +1,14 @@
+-/* A menu: the "…" button held down while its menu is open (its own state, not a tooltip's), and
+-   the popover's rows with a rule between groups and a link out's arrow at its row's end. */
++/* A menu: the "…" button held down while its menu is open (pressed into a firmer fill, its own
++   state, not a tooltip's), and the popover's rows with a full-bleed rule between groups and a link
++   out's arrow at its row's end. */
+ .trigger[aria-expanded="true"] {
+-  background: var(--pop-hover);
++  background: var(--ctl-strong);
++  border-color: var(--ctl-edge-hover);
++  color: var(--ink-1);
+ }
+ .rule {
+   height: var(--line-1);
+-  margin: var(--sp-2) calc(var(--sp-2) * -1);
++  margin: var(--sp-3) calc(var(--sp-3) * -1);
+   background: var(--pop-rule);
+ }
+ .out {
+diff --git a/web/src/kit/Popover.module.css b/web/src/kit/Popover.module.css
+index b11a107..202568d 100644
+--- a/web/src/kit/Popover.module.css
++++ b/web/src/kit/Popover.module.css
+@@ -1,20 +1,21 @@
+-/* The kit's one popover (Select, Segmented's overflow and the account sheet draw it): Linear's
+-   lifted layer, its fill only a few percent over the page, told from what it covers by its edge, a crisp lit
+-   hairline over its own fill (so it reads the same over any row) and a large soft drop. Every list
+-   of choices opens on its filter field, ruled off from the rows. 32px rows inset 4px from the sheet's edge,
+-   6px round; only the one active row (pointer or keys) fills, so at most one is ever lit. A row
+-   reads as Linear's: its picture, its name, its muted aside (a count, a descriptor) right after
+-   the name, and the check at the far end on the current one alone. */
++/* The kit's one popover (Select, Segmented's overflow, Menu, the tooltip, the toasts and the
++   account sheet draw it): a lifted sheet a step over the page, told from it by a lit hairline
++   with a brighter top edge and a deep soft drop. 12px round, its rows inset 6px and 6px round, so
++   their corners run true with the sheet's. Every list of choices opens on its filter field, ruled
++   off from the rows. Rows are roomy (34px, the body's 14px): only the one active row (pointer or
++   keys) lights, in a wash of your move, so at most one is ever lit. A row reads as Linear's: its
++   picture, its name, its muted aside (a count, a descriptor) right after the name, and the check
++   in your move's ink at the far end on the current one alone. */
+ /* the positioner a popup sits in: above the page, its sticky heads included */
+ .layer {
+   z-index: var(--z-pop);
+ }
+ .sheet {
+   min-width: var(--col-2xl);
+-  padding: var(--sp-2);
++  padding: var(--sp-3);
+   background: var(--pop);
+   border: var(--line-1) solid var(--pop-edge);
+-  border-radius: var(--r-4);
++  border-radius: var(--r-5);
+   box-shadow: var(--shadow-pop);
+   color: var(--ink-1);
+   outline: none;
+@@ -30,19 +31,19 @@
+   letter-spacing: var(--track-snug);
+   color: var(--pop-aside);
+ }
+-/* the filter: a real field, full bleed and ruled off from the rows */
++/* the filter: a real field, full bleed and ruled off from the rows, in the rows' type */
+ .find {
+   display: flex;
+   align-items: center;
+-  width: calc(100% + var(--sp-2) * 2);
++  width: calc(100% + var(--sp-3) * 2);
+   height: var(--h-pop-find);
+-  margin: calc(var(--sp-2) * -1) calc(var(--sp-2) * -1) var(--sp-2);
++  margin: calc(var(--sp-3) * -1) calc(var(--sp-3) * -1) var(--sp-3);
+   padding: 0 var(--sp-6);
+   border: 0;
+   border-bottom: var(--line-1) solid var(--pop-rule);
+-  border-radius: var(--r-4) var(--r-4) 0 0;
++  border-radius: var(--r-5) var(--r-5) 0 0;
+   background: none;
+-  font-size: var(--fs-3);
++  font-size: var(--fs-4);
+   color: var(--ink-1);
+   font-family: inherit;
+   outline: none;
+@@ -54,11 +55,11 @@
+ .row {
+   display: flex;
+   align-items: center;
+-  gap: var(--sp-4);
++  gap: var(--sp-5);
+   height: var(--h-pop-item);
+-  padding: 0 var(--sp-4);
++  padding: 0 var(--sp-3);
+   border-radius: var(--r-2);
+-  font-size: var(--fs-3);
++  font-size: var(--fs-4);
+   letter-spacing: var(--track-snug);
+   white-space: nowrap;
+   outline: none;
+@@ -75,13 +76,13 @@
+   color: var(--pop-aside);
+   font-variant-numeric: tabular-nums;
+ }
+-/* the current one's check, at the row's far end */
++/* the current one's check, at the row's far end, in your move's ink */
+ .check {
+   display: inline-flex;
+   flex: none;
+   margin-left: auto;
+   padding-left: var(--sp-4);
+-  color: var(--ink-1);
++  color: var(--you-text);
+ }
+ .check svg {
+   width: var(--sp-7);
+@@ -91,7 +92,7 @@
+   display: flex;
+   align-items: center;
+   height: var(--h-pop-item);
+-  padding: 0 var(--sp-4);
+-  font-size: var(--fs-3);
++  padding: 0 var(--sp-3);
++  font-size: var(--fs-4);
+   color: var(--pop-aside);
+ }
+diff --git a/web/src/kit/Segmented.module.css b/web/src/kit/Segmented.module.css
+index c43c556..009e66b 100644
+--- a/web/src/kit/Segmented.module.css
++++ b/web/src/kit/Segmented.module.css
+@@ -1,14 +1,14 @@
+-/* Linear's view chips: one row of the same chip (one height, radius and weight). A chip is its
+-   words in secondary ink and nothing else until hovered (a light fill); the pressed one alone is
+-   a firm fill on a lit hairline in primary ink, so it reads at a glance. Counts recede and the
+-   state glyphs stay small and muted. The row takes the bar's free room and never wraps or clips:
+-   what doesn't fit goes into the last chip's popover. */
++/* Filter chips as one control: the chips butt together into a recessed well (one height, rounded
++   at its two ends), each its words in secondary ink; hover lights a soft key in it, and the pressed
++   one alone is a raised key (the button's lifted fill, hairline and top light) in primary ink, so
++   it reads at a glance, as a switch's thumb does. Counts recede and the state glyphs stay small and
++   muted. The row takes the bar's free room and never wraps or clips: what doesn't fit goes into
++   the last chip's popover. */
+ .track {
+   position: relative;
+   display: flex;
+   flex: 999 1 0;
+   align-items: center;
+-  gap: var(--sp-2);
+   min-width: 0;
+   /* room inside the clip for a chip's focus ring (2px out, 2px wide), the bar's own box unmoved */
+   margin: calc(var(--focus-room) * -1);
+@@ -20,15 +20,17 @@
+   min-width: min-content;
+ }
+ .pill {
++  position: relative;
++  isolation: isolate;
+   flex: none;
+   display: inline-flex;
+   align-items: center;
+   gap: var(--sp-3);
+   height: var(--h-pill);
+-  padding: 0 var(--sp-4);
+-  border: var(--line-1) solid transparent;
+-  border-radius: var(--r-2);
+-  background: transparent;
++  padding: 0 var(--sp-5);
++  border: 0;
++  border-radius: 0;
++  background: var(--chip-well);
+   font-size: var(--fs-3);
+   font-weight: 500;
+   letter-spacing: var(--track-snug);
+@@ -36,10 +38,24 @@
+   color: var(--ink-2);
+   white-space: nowrap;
+   cursor: pointer;
+-  transition:
+-    background-color var(--dur-fast) ease,
+-    border-color var(--dur-fast) ease,
+-    color var(--dur-fast) ease;
++  transition: color var(--dur-fast) ease;
++}
++/* the well's two ends */
++.pill:first-child {
++  border-radius: var(--r-3) 0 0 var(--r-3);
++}
++.pill:nth-last-child(1 of .pill) {
++  border-top-right-radius: var(--r-3);
++  border-bottom-right-radius: var(--r-3);
++}
++/* the key in the well, inset from its edges */
++.pill::before {
++  content: "";
++  position: absolute;
++  inset: var(--sp-1);
++  z-index: -1;
++  border-radius: var(--r-2);
++  transition: background-color var(--dur-fast) ease;
+ }
+ /* the state glyphs in the muted ink, whatever their state (on the row and in the popover) */
+ .pill,
+@@ -51,17 +67,19 @@
+ }
+ .pill:hover,
+ .pill[data-popup-open] {
+-  background: var(--chip-hover);
+   color: var(--ink-1);
+ }
+-.pill[aria-pressed="true"],
+-.pill[data-current="true"] {
+-  background: var(--chip-on);
+-  border-color: var(--chip-on-edge);
++.pill:is(:hover, [data-popup-open])::before {
++  background: var(--chip-hover);
++}
++.pill:is([aria-pressed="true"], [data-current="true"]) {
+   color: var(--ink-1);
+ }
+-.pill:is([aria-pressed="true"], [data-current="true"]):hover {
+-  background: var(--chip-on-hover);
++.pill:is([aria-pressed="true"], [data-current="true"])::before {
++  background: var(--chip-key);
++  box-shadow:
++    0 0 0 var(--line-1) var(--ctl-edge),
++    var(--ctl-shadow);
+ }
+ .pill em {
+   font-style: normal;
+@@ -91,7 +109,6 @@
+   top: 0;
+   left: 0;
+   display: flex;
+-  column-gap: var(--sp-2);
+   visibility: hidden;
+   pointer-events: none;
+ }
+diff --git a/web/src/kit/Segmented.tsx b/web/src/kit/Segmented.tsx
+index 4900508..455d08e 100644
+--- a/web/src/kit/Segmented.tsx
++++ b/web/src/kit/Segmented.tsx
+@@ -1,5 +1,5 @@
+-// Filter chips, Linear's view chips: one row of equal chips (one height and radius), bare words
+-// but for the pressed one, filled on a hairline. When the bar can't hold them all, the ones that
++// Filter chips: one row of equal chips (one height) butted into one recessed well, the pressed one
++// a raised key in it, as a switch's thumb. When the bar can't hold them all, the ones that
+ // don't fit go into a last chip ("+N" and a chevron) that opens the kit's popover (Base UI's
+ // combobox, as the other pickers: its filter field, then the rows); while the pressed one is
+ // among them, that chip is the pressed one (filled, its name and the chevron). The popover holds
+diff --git a/web/src/kit/Toast.module.css b/web/src/kit/Toast.module.css
+index ca7e8e1..0cbf6ab 100644
+--- a/web/src/kit/Toast.module.css
++++ b/web/src/kit/Toast.module.css
+@@ -83,7 +83,7 @@
+   color: var(--ink-3);
+ }
+ .close:hover {
+-  background: var(--pop-hover);
++  background: var(--chip-on);
+   color: var(--ink-1);
+ }
+ .close:focus-visible {
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 0741f2b..f0d4ca1 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -692,7 +692,7 @@
+       }
+     },
+     "Segmented": {
+-      "why": "Filter chips, one row on the bar that never clips: bare words but for the pressed one, filled on a hairline; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
++      "why": "Filter chips, one row on the bar that never clips, butted into one recessed well, the pressed one a raised key in it; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
+       "single": "Compact's filter, and a stage's Maker | Check in the workflow editor (one of two, said on screen, where a switch's off would need decoding); Settings › Mappings' Try it and the settings nav use it in W8 and W9.",
+       "props": {
+         "label": {
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 12d2292..27c200b 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -120,13 +120,18 @@
+   --ctl-edge: color-mix(in srgb, var(--ink-1) 10%, transparent);
+   --ctl-edge-hover: color-mix(in srgb, var(--ink-1) 17%, transparent);
+   --ctl-hover: color-mix(in srgb, var(--ink-1) 4.5%, transparent);
+-  --ctl-shadow: 0 1px 2px rgba(9, 9, 11, 0.05);
+-  /* controls · the popover: white on a crisp hairline, lifted by a soft two-layer drop */
++  --chip-key: var(--surface); /* the pressed filter chip, raised in its well */
++  /* controls: a key's shade along its foot, so a button sits up off the sheet */
++  --ctl-shadow: 0 1px 2px rgba(9, 9, 11, 0.06), inset 0 -1px 0 rgba(9, 9, 11, 0.05);
++  /* controls · the popover: white on a crisp hairline, lifted by a deep soft drop; the lit
++     row a wash of your move */
+   --pop: var(--surface);
+-  --pop-edge: color-mix(in srgb, var(--ink-1) 11%, transparent);
+-  --pop-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
++  --pop-edge: color-mix(in srgb, var(--ink-1) 9%, transparent);
++  --pop-hover: color-mix(in srgb, var(--you) 10%, transparent);
+   --pop-rule: color-mix(in srgb, var(--ink-1) 7%, transparent);
+-  --shadow-pop: 0 2px 4px rgba(9, 9, 11, 0.04), 0 12px 32px rgba(9, 9, 11, 0.12);
++  --shadow-pop:
++    0 1px 2px rgba(9, 9, 11, 0.05), 0 8px 16px -4px rgba(9, 9, 11, 0.08),
++    0 24px 48px -8px rgba(9, 9, 11, 0.18);
+   /* agents: My queue's agent cards, a shade off the surface on a hairline */
+   --tile: color-mix(in srgb, var(--ink-1) 1.5%, var(--surface));
+   --tile-edge: color-mix(in srgb, var(--ink-1) 12%, transparent);
+@@ -236,16 +241,20 @@
+   --ctl-edge: color-mix(in srgb, var(--ink-1) 9%, transparent);
+   --ctl-edge-hover: color-mix(in srgb, var(--ink-1) 15%, transparent);
+   --ctl-hover: color-mix(in srgb, var(--ink-1) 6%, transparent);
+-  --ctl-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+-  /* controls · the popover: Linear's lifted layer, only a few percent over the page (not a grey
+-     slab), told from what it covers by its edge: a crisp lit hairline (about 8% white) inside a
+-     dark ring, and a large soft drop under it; a row lights a 6% tint */
+-  --pop: color-mix(in srgb, var(--wash) 5.5%, var(--recess));
+-  --pop-edge: color-mix(in srgb, var(--hair) 9%, transparent);
+-  --pop-hover: color-mix(in srgb, var(--wash) 6%, transparent);
+-  --pop-rule: color-mix(in srgb, var(--hair) 8%, transparent);
++  --chip-key: color-mix(in srgb, var(--ink-1) 19%, var(--recess));
++  /* controls: lit from above, a key's bright top edge inside its hairline and a drop under it */
++  --ctl-shadow:
++    inset 0 1px 0 color-mix(in srgb, var(--ink-1) 7%, transparent), 0 1px 2px rgba(0, 0, 0, 0.4);
++  /* controls · the popover: a lifted layer a step over the page, told from what it covers
++     by a lit hairline, a brighter top edge inside it, a dark ring and a large soft drop; the lit
++     row a wash of your move, as Linear's selected rows */
++  --pop: color-mix(in srgb, var(--wash) 7%, var(--recess));
++  --pop-edge: color-mix(in srgb, var(--hair) 11%, transparent);
++  --pop-hover: color-mix(in srgb, var(--you) 26%, transparent);
++  --pop-rule: color-mix(in srgb, var(--hair) 9%, transparent);
+   --shadow-pop:
+-    0 0 0 1px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.35), 0 16px 48px rgba(0, 0, 0, 0.55);
++    inset 0 1px 0 color-mix(in srgb, var(--ink-1) 6%, transparent), 0 0 0 1px rgba(0, 0, 0, 0.4),
++    0 8px 16px -4px rgba(0, 0, 0, 0.4), 0 24px 56px -8px rgba(0, 0, 0, 0.7);
+   /* agents: a raised card a step over the panel (about band height) on a firm hairline */
+   --tile: color-mix(in srgb, var(--wash) 6%, var(--recess));
+   --tile-edge: color-mix(in srgb, var(--hair) 12%, transparent);
+@@ -409,13 +418,12 @@
+      faint ink fill. The team faces: a disc large enough to read its initials, a firm ink step off
+      the surface with ink-1 initials */
+   --teams-card-hover: color-mix(in srgb, var(--ink-1) 3%, var(--teams-card));
+-  /* controls: chips (filter chips, a picker's trigger), Linear's view chips: a chip is bare words
+-     until hovered (a light fill); the pressed one alone is a firm fill on a lit hairline; and the
++  /* controls: chips (a picker's trigger, the filter chips' well): a light fill on hover, a firmer
++     one open; the filter chips sit in a recessed well, the pressed one a raised key in it; and the
+      ink button's firmer fill */
+   --chip-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
+   --chip-on: color-mix(in srgb, var(--ink-1) 9%, transparent);
+-  --chip-on-hover: color-mix(in srgb, var(--ink-1) 12%, transparent);
+-  --chip-on-edge: color-mix(in srgb, var(--ink-1) 14%, transparent);
++  --chip-well: color-mix(in srgb, var(--ink-1) 5.5%, transparent);
+   /* controls · a popover row's aside (a descriptor, a count), its section label and its filter's
+      placeholder: a step under ink-3 on the popover's own surface, so the names lead */
+   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
+@@ -541,10 +549,10 @@
+   --w-swatch: 34px;
+   --h-swatch: 22px;
+   --w-swatch-side: 9px;
+-  --h-pop-item: 32px; /* a menu's or picker's row */
+-  --h-pop-find: 40px; /* a picker's filter field */
++  --h-pop-item: 34px; /* a menu's or picker's row */
++  --h-pop-find: 44px; /* a picker's filter field */
+   --h-pop-head: 28px; /* a menu's section label */
+-  --h-pill: 26px; /* a filter chip, a picker's trigger */
++  --h-pill: 30px; /* a filter chip's well */
+ 
+   /* motion: transform and opacity only, and only on live things */
+   --dur-fast: 0.16s;

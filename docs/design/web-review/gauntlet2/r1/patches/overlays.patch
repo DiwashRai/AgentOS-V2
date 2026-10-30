@@ -1,0 +1,416 @@
+diff --git a/web/src/features/peek/Peek.tsx b/web/src/features/peek/Peek.tsx
+index 005d715..6c5537e 100644
+--- a/web/src/features/peek/Peek.tsx
++++ b/web/src/features/peek/Peek.tsx
+@@ -15,6 +15,7 @@ import {
+   Button,
+   Composer,
+   Dialog,
++  Icon,
+   Notice,
+   Section,
+   Stack,
+@@ -33,26 +34,34 @@ interface BodyProps {
+   t: Ticket;
+   me: Person | null;
+   now: number;
+-  onClose: () => void;
+ }
+ 
+-/** The ticket's head, as the ticket page's: key, title, its lead, properties, the stepper. */
+-function Head({ t, me, now, onClose, plan }: BodyProps & { plan: readonly PlanItem[] }) {
++/** The panel's bar, pinned over it: the ticket's key (and its Jira issue), then Open ticket, the
++ *  ticket's menu and the close. */
++function Bar({ ticketKey, onClose }: { ticketKey: string; onClose: () => void }) {
++  const t = useTicket(ticketKey).data;
++  return (
++    <Stack dir="row" gap={3} align="center" grow>
++      {t ? <Icon name={t.type} /> : null}
++      <Text tone="2" weight={500} tabular>
++        {t?.source ? `${ticketKey} · Jira ${t.source.ref}` : ticketKey}
++      </Text>
++      <Stack grow />
++      <Button variant="quiet" size="sm" href={`/t/${ticketKey}`}>
++        Open ticket
++      </Button>
++      {t ? <TicketMenu t={t} size="sm" /> : null}
++      <Button variant="quiet" size="sm" icon="close" title="Close peek (Esc)" onClick={onClose} />
++    </Stack>
++  );
++}
++
++/** The ticket's head, as the ticket page's: title, its lead, properties, the stepper. */
++function Head({ t, me, now, plan }: BodyProps & { plan: readonly PlanItem[] }) {
+   return (
+     <Stack gap={8}>
+-      <Stack dir="row" gap={4} align="center">
+-        <Text tone="2" weight={500} tabular>
+-          {t.source ? `${t.key} · Jira ${t.source.ref}` : t.key}
+-        </Text>
+-        <Stack grow />
+-        <Button size="sm" href={`/t/${t.key}`}>
+-          Open ticket
+-        </Button>
+-        <TicketMenu t={t} size="sm" />
+-        <Button size="sm" icon="close" title="Close peek (Esc)" onClick={onClose} />
+-      </Stack>
+       <Stack gap={4}>
+-        <Text variant="title" as="h2">
++        <Text variant="display" as="h2">
+           {t.title}
+         </Text>
+         <Text variant="body" as="p">
+@@ -147,9 +156,10 @@ export function Peek() {
+       open={key !== null}
+       onClose={close}
+       // keyed by the ticket: a draft is one ticket's
++      bar={key ? <Bar ticketKey={key} onClose={close} /> : null}
+       foot={key ? <Reply key={key} ticketKey={key} /> : null}
+     >
+-      {key ? <Loaded ticketKey={key} me={me} now={now} onClose={close} /> : null}
++      {key ? <Loaded ticketKey={key} me={me} now={now} /> : null}
+     </Dialog>
+   );
+ }
+diff --git a/web/src/features/sheet/KitSheet.tsx b/web/src/features/sheet/KitSheet.tsx
+index fc9fcb5..e2c8132 100644
+--- a/web/src/features/sheet/KitSheet.tsx
++++ b/web/src/features/sheet/KitSheet.tsx
+@@ -98,16 +98,7 @@ const MARKS: readonly MarkKind[] = [
+   "queued",
+   "idle",
+ ];
+-const TEXTS: readonly TextVariant[] = [
+-  "display",
+-  "title",
+-  "heading",
+-  "body",
+-  "label",
+-  "ui",
+-  "meta",
+-  "code",
+-];
++const TEXTS: readonly TextVariant[] = ["display", "heading", "body", "label", "ui", "meta", "code"];
+ 
+ const stages = (
+   at: number,
+diff --git a/web/src/kit/Dialog.module.css b/web/src/kit/Dialog.module.css
+index df9c099..79cb609 100644
+--- a/web/src/kit/Dialog.module.css
++++ b/web/src/kit/Dialog.module.css
+@@ -1,23 +1,26 @@
++/* side: the peek, docked full height at the window's right edge, as Linear's issue peek is: one
++   sheet on a hairline and a long soft shadow, the list beside it only veiled, so it still reads */
+ .side {
+   position: fixed;
+-  inset: var(--sp-2) var(--sp-2) var(--sp-2) auto;
+-  width: min(var(--w-peek), calc(100vw - var(--sp-9)));
+-  height: auto;
++  inset: 0 0 0 auto;
++  width: min(var(--w-peek), calc(100vw - var(--sp-10)));
++  height: 100dvh;
+   max-height: none;
+   margin: 0;
+   padding: 0;
+   border: 0;
+-  border-radius: var(--r-5);
++  border-left: var(--line-1) solid var(--tk-card-edge);
+   background: var(--tk-side);
+   color: var(--ink-2);
+-  box-shadow: var(--shadow-float);
++  box-shadow: var(--shadow-dock);
+   overflow: hidden;
+ }
+-.side:focus-visible {
++.side:focus-visible,
++.full:focus-visible {
+   outline: none;
+ }
+ .side::backdrop {
+-  background: var(--tk-scrim);
++  background: var(--tk-veil);
+ }
+ .side[open] {
+   display: flex;
+@@ -34,7 +37,18 @@
+     transform: none;
+   }
+ }
+-/* the Sections scroll inside the panel (each draws its own padding and the hairline to the next) */
++/* the bar: the panel's chrome, pinned over the sections the way the foot is under them (the key,
++   then its buttons at the end), ruled off from the document it heads on the line the view's own
++   top bar ends on, so the two read as one bar across the window */
++.bar {
++  flex: none;
++  display: flex;
++  align-items: center;
++  height: calc(var(--h-top) + var(--sp-4));
++  padding: 0 var(--sp-6) 0 var(--sp-9);
++  border-bottom: var(--line-1) solid var(--tk-card-edge);
++}
++/* the Sections scroll inside the panel as one document (each draws its own padding) */
+ .body {
+   flex: 1;
+   min-height: 0;
+@@ -61,25 +75,25 @@
+   display: none;
+ }
+ 
+-/* full: the whole window over the app, for editing. The close sits at the top left, level with
+-   the view's top bar; the view (a Page) fills the rest, as the frame's main column does. */
++/* full: the app's main sheet lifted over the whole window, for editing: the same inset and corner
++   as the sheet it covers, on the scrim. Its bar runs edge to edge (the close, a rule, then the
++   view's top bar), one hairline under all of it; the view (a Page) fills the rest. */
+ .full {
+   position: fixed;
+-  inset: 0;
+-  width: 100vw;
+-  height: 100dvh;
++  inset: var(--sp-4);
++  width: auto;
++  height: auto;
+   max-width: none;
+   max-height: none;
+   margin: 0;
+   padding: 0;
+   border: 0;
++  border-radius: var(--r-4);
+   background: var(--page);
+   color: var(--ink-2);
++  box-shadow: var(--shadow-float);
+   overflow: hidden;
+ }
+-.full:focus-visible {
+-  outline: none;
+-}
+ .full::backdrop {
+   background: var(--tk-scrim);
+ }
+@@ -98,16 +112,30 @@
+   }
+ }
+ .frame {
++  position: relative;
+   display: grid;
+   grid-template-columns: auto minmax(0, 1fr);
+-  column-gap: var(--sp-4);
+   height: 100%;
+-  padding: 0 var(--sp-9) 0 var(--sp-6);
++  padding-right: var(--sp-9);
++}
++/* the bar's hairline, under the close as well as the view's top bar */
++.frame::before {
++  content: "";
++  position: absolute;
++  inset: var(--h-top) 0 auto;
++  border-top: var(--line-1) solid var(--tk-card-edge);
+ }
+ .close {
+   display: flex;
+   align-items: center;
++  gap: var(--sp-6);
+   height: var(--h-top);
++  padding: 0 var(--sp-8) 0 var(--sp-6);
++}
++.close::after {
++  content: "";
++  height: var(--sp-9);
++  border-left: var(--line-1) solid var(--tk-card-edge);
+ }
+ .view {
+   display: flex;
+diff --git a/web/src/kit/Dialog.tsx b/web/src/kit/Dialog.tsx
+index 57795d5..7e96e5c 100644
+--- a/web/src/kit/Dialog.tsx
++++ b/web/src/kit/Dialog.tsx
+@@ -1,11 +1,12 @@
+ // A modal on the browser's own <dialog>: it holds focus, the rest of the page is inert, and focus
+ // goes back to the opener. Esc and the close button ask the screen to close it (`onClose`); the
+ // screen closes it by setting `open`, so it can ask first. Two looks:
+-// - side: the peek, sliding in from the right. Its parts are Sections, each padded and ruled off
+-//   from the next; they scroll inside the panel, over a foot that stays put.
+-// - full: the whole window, for editing (a ticket's workflow or item): the close at the top left,
+-//   then the view (a Page, so its top bar and body are the same as on its own screen). `ask`
+-//   draws a question over it, modal inside it (unsaved changes: Save, Discard, Keep editing).
++// - side: the peek, docked full height at the right edge. Its parts are Sections, padded apart as
++//   one document; they scroll inside the panel, between a bar and a foot that stay put.
++// - full: the whole window, for editing (a ticket's workflow or item): the app's sheet lifted over
++//   it, the close at the top left of its bar, then the view (a Page, so its top bar and body are
++//   the same as on its own screen). `ask` draws a question over it, modal inside it (unsaved
++//   changes: Save, Discard, Keep editing).
+ // It sits in the browser's top layer, so the kit's popovers, tooltips and toasts raised inside it
+ // mount inside it.
+ import { type ReactNode, useEffect, useId, useRef } from "react";
+@@ -28,6 +29,8 @@ export type DialogProps = {
+ } & (
+   | {
+       look?: "side";
++      /** Pinned over the scrolling sections (the peek's key and its buttons). */
++      bar?: ReactNode;
+       /** Pinned under the scrolling sections (the peek's reply box). */
+       foot?: ReactNode;
+       ask?: never;
+@@ -36,6 +39,7 @@ export type DialogProps = {
+       look: "full";
+       /** A question over it, modal inside it; the view under it is inert. */
+       ask?: DialogAsk | undefined;
++      bar?: never;
+       foot?: never;
+     }
+ );
+@@ -125,7 +129,8 @@ function Full({
+   );
+ }
+ 
+-export function Dialog({ label, open, onClose, children, foot, look = "side", ask }: DialogProps) {
++export function Dialog(props: DialogProps) {
++  const { label, open, onClose, children, bar, foot, look = "side", ask } = props;
+   const ref = useRef<HTMLDialogElement>(null);
+   // Whether the screen still wants it open: a close it didn't ask for (the browser's own, when it
+   // won't let Esc be held) is the user's, and is reported; a close that follows `open` going false
+@@ -150,6 +155,7 @@ export function Dialog({ label, open, onClose, children, foot, look = "side", as
+   const dock = useRef<HTMLDivElement>(null);
+   const side = (
+     <>
++      {open && bar ? <div className={s.bar}>{bar}</div> : null}
+       <div className={s.body}>
+         <InPanel value>{open ? children : null}</InPanel>
+       </div>
+diff --git a/web/src/kit/Section.module.css b/web/src/kit/Section.module.css
+index 0c4d8e8..2cc1a1e 100644
+--- a/web/src/kit/Section.module.css
++++ b/web/src/kit/Section.module.css
+@@ -1,6 +1,7 @@
+ /* A section: its head (the heading in Text's heading role, quiet words after it on its
+    baseline, its end item at the far edge, a quiet line under it), then the body. In a side panel,
+-   one of the panel's parts: padded to the panel's gutter and ruled off from the next. */
++   one of the panel's parts: padded to the panel's gutter and set apart by room, not a rule, so
++   the panel reads as one document between its bar and its foot (Linear's doc page). */
+ .section {
+   display: flex;
+   flex-direction: column;
+@@ -9,11 +10,10 @@
+ }
+ .part {
+   flex: none;
+-  padding: var(--sp-8) var(--sp-9);
+-  border-bottom: var(--line-1) solid var(--tk-card-edge);
++  padding: var(--sp-9) var(--sp-9) var(--sp-6);
+ }
+ .part:last-child {
+-  border-bottom: 0;
++  padding-bottom: var(--sp-10);
+ }
+ .head {
+   display: flex;
+diff --git a/web/src/kit/Text.module.css b/web/src/kit/Text.module.css
+index a170bed..1ee6cc9 100644
+--- a/web/src/kit/Text.module.css
++++ b/web/src/kit/Text.module.css
+@@ -9,13 +9,6 @@
+   letter-spacing: var(--track-snug);
+   color: var(--ink-1);
+ }
+-.title {
+-  font-size: var(--fs-6);
+-  font-weight: 600;
+-  line-height: 1.2;
+-  letter-spacing: var(--track-snug);
+-  color: var(--ink-1);
+-}
+ .heading {
+   font-size: var(--fs-5);
+   font-weight: 600;
+diff --git a/web/src/kit/Text.tsx b/web/src/kit/Text.tsx
+index ed05d3e..8d925c0 100644
+--- a/web/src/kit/Text.tsx
++++ b/web/src/kit/Text.tsx
+@@ -4,8 +4,7 @@ import s from "./Text.module.css";
+ import { Tip } from "./tip";
+ import { cx, type Tone } from "./vars";
+ 
+-export type TextVariant =
+-  "display" | "title" | "heading" | "body" | "label" | "ui" | "meta" | "code";
++export type TextVariant = "display" | "heading" | "body" | "label" | "ui" | "meta" | "code";
+ 
+ export interface TextProps {
+   children: ReactNode;
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 0741f2b..0c016ba 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -280,14 +280,17 @@
+         "children": {
+           "why": "Beside the page: its Sections, each one of the panel's parts. Full: the one view."
+         },
++        "bar": {
++          "why": "Pinned over the scrolling sections, as Linear's peek keeps its chrome in reach (the peek's key, Open ticket, its menu, the close); the side look only."
++        },
+         "foot": {
+           "why": "Pinned under the scrolling sections, as Linear's reply box sits at its panel's foot (the peek's composer); the side look only."
+         },
+         "look": {
+           "why": "The peek reads beside the list; editing always gets the whole window (the owner's rule).",
+           "values": {
+-            "side": "The peek: a panel sliding in from the right, its sections ruled apart (the default).",
+-            "full": "A full-window editor over the page (a ticket's workflow or item): the close at the top left, then a Page, so the editor is framed as on its own screen."
++            "side": "The peek: a panel docked full height at the right edge, the list beside it veiled, not dimmed; its sections one document between its bar and foot (the default).",
++            "full": "A full-window editor over the page (a ticket's workflow or item): the app's sheet lifted over the window on a scrim, the close at the top left of its bar, then a Page, so the editor is framed as on its own screen."
+           }
+         },
+         "ask": {
+@@ -992,8 +995,7 @@
+         "variant": {
+           "why": "The type roles.",
+           "values": {
+-            "display": "The ticket's title (24px).",
+-            "title": "The peek's title (20px).",
++            "display": "The ticket's title, on its page and in the peek (24px).",
+             "heading": "Section and band headings (15px).",
+             "body": "A description (16px, loose).",
+             "label": "Row titles (14px, 500).",
+@@ -1160,7 +1162,7 @@
+       }
+     },
+     "Section": {
+-      "why": "A named part of a view (a ticket's Plan and Talk, the library rail's Properties, Used by and History, a workflow's head, the editor's Library): a <section> named by its heading, quiet words after it or a line under it, an item at its end; in a side panel each is one of the panel's parts, padded and ruled off, so the peek's parts are said, not styled by position.",
++      "why": "A named part of a view (a ticket's Plan and Talk, the library rail's Properties, Used by and History, a workflow's head, the editor's Library): a <section> named by its heading, quiet words after it or a line under it, an item at its end; in a side panel each is one of the panel's parts, padded apart, so the peek's parts are said, not styled by position.",
+       "props": {
+         "title": {
+           "why": "The heading, and the part's name."
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 12d2292..e055719 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -106,13 +106,15 @@
+   --tk-mine-edge: color-mix(in srgb, var(--ink-1) 6%, transparent);
+   --tk-side: var(--surface);
+   --tk-scrim: color-mix(in srgb, var(--ink-1) 24%, transparent);
++  --tk-veil: color-mix(in srgb, var(--ink-1) 7%, transparent); /* under the peek: the list reads */
+   --tk-ink: var(--ink-1); /* body-size text: a property, a plan item, a message */
+   --tk-label: var(--ink-3); /* a property's head, a section head: clearly under the values */
+   --tk-well: color-mix(in srgb, var(--ink-1) 1.8%, var(--surface)); /* the run card, Talk's card */
+   --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
+   /* depth: hairlines, almost no shadow */
+   --shadow-recess: inset 0 0 0 1px rgba(9, 9, 11, 0.06);
+-  --shadow-float: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 16px 40px -16px rgba(9, 9, 11, 0.25);
++  --shadow-float: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 24px 64px -24px rgba(9, 9, 11, 0.35);
++  --shadow-dock: -16px 0 48px -24px rgba(9, 9, 11, 0.22); /* the peek's long shadow on the list */
+   --shadow-accent: none;
+   /* controls: buttons, filter pills, menus and pickers (Linear's quiet filled controls) */
+   --ctl: var(--surface);
+@@ -224,11 +226,13 @@
+   --tk-side: color-mix(in srgb, var(--ink-1) 3%, var(--page));
+   --tk-well: color-mix(in srgb, var(--ink-1) 4%, var(--page));
+   --tk-scrim: color-mix(in srgb, #000000 72%, transparent);
++  --tk-veil: color-mix(in srgb, #000000 38%, transparent);
+   --tk-label: color-mix(in srgb, var(--ink-3) 70%, var(--page)); /* dark ink-3 sits near ink-2 */
+   /* light on dark reads a weight heavier */
+   --tk-ink: color-mix(in srgb, var(--ink-1) 55%, var(--ink-2));
+   --shadow-recess: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+-  --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 40px -16px rgba(0, 0, 0, 0.8);
++  --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 64px -24px rgba(0, 0, 0, 0.9);
++  --shadow-dock: -16px 0 48px -16px rgba(0, 0, 0, 0.7);
+   --shadow-accent: none;
+   /* controls: buttons, filter pills, menus and pickers (Linear's quiet filled controls) */
+   --ctl: color-mix(in srgb, var(--ink-1) 6%, var(--recess));

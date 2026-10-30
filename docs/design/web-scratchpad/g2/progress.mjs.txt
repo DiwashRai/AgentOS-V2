@@ -1,0 +1,123 @@
+// Builds the gauntlet's progress page from the run's state file and the latest best shots.
+// Usage: node progress.mjs <state.json> <out dir>  -> <out dir>/progress.html, <out dir>/files.json
+// (files.json maps each published image path to its source, for the Artifact publish).
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const [statePath, outDir] = process.argv.slice(2);
+const state = JSON.parse(readFileSync(statePath, "utf8"));
+const G = "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2";
+const PIECES = {
+  frame: "Frame and themes", lists: "My queue and Compact", intake: "Intake", teams: "All teams",
+  ticket: "Ticket page", overlays: "Peek and editors over the ticket", library: "Library lists",
+  editors: "Library editors", controls: "Controls and popovers",
+};
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+// the latest best shots of each piece: the newest round folder that has them
+const files = {};
+const latest = {};
+const rounds = [0, ...state.rounds.map((r) => r.round)].sort((a, b) => b - a);
+for (const key of Object.keys(PIECES)) {
+  for (const r of rounds) {
+    const dir = r === 0 ? join(G, "r0", key) : join(G, `r${r}`, "best", key);
+    if (!existsSync(dir)) continue;
+    const imgs = readdirSync(dir).filter((f) => f.endsWith(".png")).sort();
+    if (!imgs.length) continue;
+    latest[key] = { round: r, imgs: imgs.map((f) => { const pub = `shots/${key}/${f}`; files[pub] = join(dir, f); return pub; }) };
+    break;
+  }
+}
+
+const history = (key) => state.rounds.map((r) => ({ round: r.round, mode: r.mode, ...(r.verdicts.find((v) => v.key === key) || {}) }));
+const keptBest = (h) => h.map((x) => (typeof x.cand === "number" ? Math.max(x.best, x.kept ? x.cand : x.best) : null));
+
+function chart(key) {
+  const h = history(key).filter((x) => typeof x.best === "number");
+  if (!h.length) return `<p class="muted small">No rounds yet.</p>`;
+  const W = 300, H = 120, P = 22;
+  const xs = (i) => P + (h.length === 1 ? (W - 2 * P) / 2 : (i * (W - 2 * P)) / (h.length - 1));
+  const ys = (v) => H - P - ((v - 0) / 10) * (H - 2 * P);
+  const line = (vals, cls) => `<polyline class="${cls}" points="${vals.map((v, i) => `${xs(i)},${ys(v)}`).join(" ")}"/>` + vals.map((v, i) => `<circle class="${cls}" cx="${xs(i)}" cy="${ys(v)}" r="3"/>`).join("");
+  const best = keptBest(h);
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Scores by round">
+    ${[0, 5, 10].map((v) => `<line class="grid" x1="${P}" x2="${W - P}" y1="${ys(v)}" y2="${ys(v)}"/><text class="tick" x="4" y="${ys(v) + 4}">${v}</text>`).join("")}
+    ${line(h.map((x) => x.linear), "linear")}${line(best, "ours")}
+    ${h.map((x, i) => `<text class="tick" x="${xs(i)}" y="${H - 4}" text-anchor="middle">r${x.round}</text>`).join("")}
+  </svg>`;
+}
+
+function card(key) {
+  const h = history(key);
+  const last = h[h.length - 1] || {};
+  const best = keptBest(h.filter((x) => typeof x.best === "number"));
+  const now = best.length ? best[best.length - 1] : null;
+  const recent = best.slice(-3);
+  const flat = recent.length === 3 && Math.max(...recent) - Math.min(...recent) <= 0.5;
+  const status = state.stopped?.includes(key) ? `<span class="pill stop">stopped: plateau</span>` : flat ? `<span class="pill stop">plateau</span>` : last.kept ? `<span class="pill win">challenger kept</span>` : h.length ? `<span class="pill">best held</span>` : `<span class="pill">baseline</span>`;
+  const L = latest[key];
+  return `<article class="piece" id="${key}">
+    <header><h2>${esc(PIECES[key])}</h2>${status}</header>
+    <div class="scores">
+      <div><span class="big">${now ?? "–"}</span><span class="muted small">ours</span></div>
+      <div><span class="big linear-t">${last.linear ?? "–"}</span><span class="muted small">Linear</span></div>
+      ${chart(key)}
+    </div>
+    ${last.gap ? `<p class="gap"><b>Biggest gap:</b> ${esc(last.gap)}</p>` : ""}
+    ${last.summary && last.kept ? `<p class="small muted"><b>Kept this round:</b> ${esc(last.summary)}</p>` : ""}
+    <div class="shots">${(L?.imgs || []).map((src) => `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="${esc(PIECES[key])}: ${esc(src.split("/").pop())}" loading="lazy"></a>`).join("")}</div>
+    <p class="small muted">Best shots from ${L ? (L.round === 0 ? "the baseline" : `round ${L.round}`) : "–"}.</p>
+  </article>`;
+}
+
+const doneRounds = state.rounds.length;
+const html = `<title>Gauntlet Progress</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a header with the run's state, then one card per piece: its scores (ours against
+   Linear by round), the critic's biggest gap and its current best screens. */
+:root { --bg:#f6f6f8; --panel:#fff; --fg:#1b1c22; --muted:#676a78; --line:#e2e3ea; --ours:#5b5bd6; --linear:#9a9cab; --win:#1f8a4c; --stop:#b4541b;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#131418; --panel:#1b1c22; --fg:#e7e8ee; --muted:#9a9cab; --line:#2c2e37; --ours:#9b9bf0; --linear:#6c6f80; --win:#4cc27e; --stop:#e08a52; color-scheme:dark; } }
+:root[data-theme="dark"] { --bg:#131418; --panel:#1b1c22; --fg:#e7e8ee; --muted:#9a9cab; --line:#2c2e37; --ours:#9b9bf0; --linear:#6c6f80; --win:#4cc27e; --stop:#e08a52; color-scheme:dark; }
+* { box-sizing:border-box; }
+body { background:var(--bg); color:var(--fg); font:14px/1.5 var(--sans); padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px)); padding-block:28px 64px; }
+.wrap { max-width:1500px; margin:0 auto; display:flex; flex-direction:column; gap:24px; }
+h1,h2 { margin:0; text-wrap:balance; } h1 { font-size:26px; } h2 { font-size:16px; font-weight:600; }
+p { margin:0; } .muted { color:var(--muted); } .small { font-size:12.5px; }
+.eyebrow { font:500 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+header.top { display:flex; flex-direction:column; gap:8px; }
+.stats { display:flex; flex-wrap:wrap; gap:6px 22px; font-variant-numeric:tabular-nums; }
+.legend { display:flex; gap:16px; align-items:center; font-size:12.5px; color:var(--muted); }
+.legend i { display:inline-block; width:14px; height:3px; border-radius:2px; vertical-align:middle; margin-right:6px; }
+.grid-pieces { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr)); gap:16px; }
+.piece { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:12px; min-width:0; }
+.piece header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.pill { font:500 11px/1.7 var(--mono); padding:0 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted); white-space:nowrap; }
+.pill.win { color:var(--win); border-color:var(--win); } .pill.stop { color:var(--stop); border-color:var(--stop); }
+.scores { display:grid; grid-template-columns:auto auto minmax(0,1fr); gap:16px; align-items:center; }
+.scores > div { display:flex; flex-direction:column; align-items:flex-start; }
+.big { font:600 28px/1 var(--sans); font-variant-numeric:tabular-nums; color:var(--ours); } .linear-t { color:var(--linear); }
+.chart { width:100%; max-width:300px; height:auto; }
+.chart .grid { stroke:var(--line); } .chart .tick { fill:var(--muted); font:10px var(--mono); }
+.chart polyline { fill:none; stroke-width:2; } .chart polyline.ours { stroke:var(--ours); } .chart polyline.linear { stroke:var(--linear); stroke-dasharray:4 3; }
+.chart circle.ours { fill:var(--ours); } .chart circle.linear { fill:var(--linear); }
+.gap { font-size:13px; border-left:3px solid var(--line); padding-left:10px; }
+.shots { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+.shots img { width:100%; height:auto; border-radius:6px; border:1px solid var(--line); display:block; }
+a:focus-visible { outline:2px solid var(--ours); outline-offset:2px; }
+</style>
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">AgentOS V2 web · branch web-restyle · Linear-style restyle</span>
+    <h1>Gauntlet progress</h1>
+    <p class="muted">Each round every piece gets one challenger beside its current best. A fresh critic scores Linear, our best and the challenger blind, out of 10, and the higher of ours is kept. A piece stops when its best stays within 0.5 for three rounds. ${esc(state.note || "")}</p>
+    <div class="stats"><span><b>${doneRounds}</b> rounds done</span><span><b>${esc(state.status || "")}</b></span><span>last commit <code>${esc(state.rounds.at(-1)?.commit || state.base || "")}</code></span></div>
+    <div class="legend"><span><i style="background:var(--ours)"></i>ours (best kept)</span><span><i style="background:var(--linear)"></i>Linear</span></div>
+  </header>
+  <section class="grid-pieces">${Object.keys(PIECES).map(card).join("")}</section>
+</div>`;
+writeFileSync(join(outDir, "progress.html"), html);
+writeFileSync(join(outDir, "files.json"), JSON.stringify(files, null, 1));
+console.log(Object.keys(files).length, "images");

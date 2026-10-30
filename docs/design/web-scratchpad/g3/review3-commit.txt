@@ -1,0 +1,22 @@
+gauntlet: one filter bar, quieter row actions, Intake's glyphs
+
+From a browser agent's review, checked against the code and shots and
+taken in full by the owner.
+
+- One header pattern: every list's bar is its filter's chips, as
+  Compact's. My queue's chips are its zones (?z=), All teams' are
+  Compact's groups with its ?f=, Intake's are its queries (?q=; one that
+  didn't answer carries the blocked glyph). Page's counters had no users
+  left and go.
+- Row actions: in a list's line the gate's primary is outlined in the
+  accent (Button outline) and the second action shows only while its row
+  is under the pointer or holds the focus (Button aside); a header or
+  an expanded row keeps the solid primary.
+- Intake: a row's priority bars and its Jira status in the app's glyphs
+  (finished, under way, not started) with the status's words.
+- A queued meter is its empty track, not dashes; Carbon's quiet ink a
+  step up; the library's lists are a narrow Table, their columns held to
+  a reading width with their rules still to the edges.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

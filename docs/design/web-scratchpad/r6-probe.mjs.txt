@@ -1,0 +1,85 @@
+// One-off: check the kit review's round-6 fixes in Chrome. Starts Vite on 5191 and stops it.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const go = async (path) => { await page.goto(base + path); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(300); };
+  const state = () => page.evaluate(() => ({
+    dialogs: document.querySelectorAll("dialog[open]").length,
+    asking: !!document.querySelector("[role=alertdialog]"),
+    url: location.search,
+    focus: document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.tagName,
+  }));
+
+  // M1: Done and Esc in a popped prompt, clean and dirty: the overlay stays, nothing is asked
+  for (const dirty of [false, true]) {
+    for (const how of ["Done", "Escape"]) {
+      await go("/t/NW-17?tab=workflow&edit=workflow");
+      await page.getByRole("button", { name: "Edit Implement" }).focus();
+      await page.keyboard.press("Enter");
+      await page.waitForTimeout(300);
+      if (dirty) {
+        const name = page.getByRole("textbox", { name: "Name" });
+        await name.click();
+        await page.keyboard.type(" x");
+      }
+      const prompt = page.getByRole("textbox", { name: "Prompt" });
+      await prompt.hover();
+      await page.getByRole("button", { name: /Prompt in the whole window/ }).first().click();
+      await page.waitForTimeout(300);
+      if (how === "Done") await page.getByRole("button", { name: "Done" }).click();
+      else await page.keyboard.press("Escape");
+      await page.waitForTimeout(300);
+      say(`M1 ${dirty ? "dirty" : "clean"} ${how}`, await state());
+    }
+  }
+
+  // N1: a held Esc asks once
+  await go("/t/NW-17?tab=workflow&edit=workflow");
+  await page.getByRole("button", { name: "Edit Implement" }).focus();
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(300);
+  await page.getByRole("textbox", { name: "Name" }).click();
+  await page.keyboard.type(" x");
+  await page.evaluate(() => {
+    const t = document.activeElement;
+    for (const repeat of [false, true, true, true])
+      t.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", repeat, bubbles: true, cancelable: true }));
+  });
+  await page.waitForTimeout(250);
+  say("N1 held Esc", await state());
+
+  // N6: Compact's folding heads are headings; N9: priority said; S1: names once
+  await go("/compact?open=NW-17");
+  const snap = await page.locator("main").ariaSnapshot();
+  say("N6 headings", snap.split("\n").filter((l) => /heading .*level=2/.test(l)).slice(0, 3).map((l) => l.trim()));
+  say("N9 priority", snap.split("\n").filter((l) => /priority/.test(l)).slice(0, 2).map((l) => l.trim()));
+  await go("/");
+  say("S1 agent chip", (await page.locator("main").ariaSnapshot()).split("\n").filter((l) => /running/.test(l)).slice(0, 2).map((l) => l.trim()));
+  await go("/t/NW-17");
+  say("S1 now line / N4 meter", (await page.locator("main").ariaSnapshot()).split("\n").filter((l) => /Running|steps/.test(l)).slice(0, 3).map((l) => l.trim()));
+  say("N7 facts lists", await page.evaluate(() => [...document.querySelectorAll("dl")].map((d) => d.getAttribute("aria-labelledby") && document.getElementById(d.getAttribute("aria-labelledby"))?.textContent)));
+  await go("/t/NW-17?tab=workflow");
+  say("S1 stage cards", (await page.locator("main").ariaSnapshot()).split("\n").filter((l) => /img|Plan|Implement/.test(l)).slice(0, 6).map((l) => l.trim()));
+  await go("/?peek=");
+  say("N10 empty peek", await page.evaluate(() => document.querySelectorAll("dialog[open]").length));
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

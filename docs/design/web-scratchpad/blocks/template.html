@@ -1,0 +1,309 @@
+<title>AgentOS Kit Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a sticky legend of the 40 kit components beside the screen viewer, the usage matrix and
+   the building-blocks notes below. The screenshots stay light; only the page chrome follows the theme. */
+:root {
+  --bg: #f6f6f8;
+  --panel: #ffffff;
+  --fg: #1b1c22;
+  --muted: #676a78;
+  --line: #e2e3ea;
+  --accent: #5b5bd6;
+  --accent-soft: #ececfb;
+  --stage: #e9e9ef;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131418; --panel: #1b1c22; --fg: #e7e8ee; --muted: #9a9cab; --line: #2c2e37;
+    --accent: #9b9bf0; --accent-soft: #272848; --stage: #0d0e11; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131418; --panel: #1b1c22; --fg: #e7e8ee; --muted: #9a9cab; --line: #2c2e37;
+  --accent: #9b9bf0; --accent-soft: #272848; --stage: #0d0e11; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font: 14px/1.5 var(--sans);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+}
+.wrap { max-width: 1680px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; }
+h1 { font-size: 26px; letter-spacing: -0.01em; }
+h2 { font-size: 19px; }
+h3 { font-size: 15px; }
+p { margin: 0; max-width: 72ch; }
+.muted { color: var(--muted); }
+code, .mono { font-family: var(--mono); font-size: 12.5px; }
+.eyebrow { font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+header { display: flex; flex-direction: column; gap: 8px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.stats b { font-weight: 600; }
+
+.main { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 20px; align-items: start; }
+aside {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px; max-height: calc(100vh - 24px); overflow: auto;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.legend-groups { display: flex; flex-direction: column; gap: 16px; }
+.group { display: flex; flex-direction: column; gap: 2px; }
+.group .eyebrow { padding: 0 6px 4px; }
+.comp {
+  display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 8px;
+  width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left;
+  padding: 3px 6px; border-radius: 6px; cursor: pointer;
+}
+.comp:hover { background: var(--accent-soft); }
+.comp[aria-pressed="true"] { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.comp.off { opacity: 0.45; }
+.comp .sw { width: 12px; height: 12px; border-radius: 3px; border: 2px solid var(--c); }
+.comp .n { font: 12px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.comp.zero .name { color: var(--muted); }
+
+.viewer { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.picker { display: flex; flex-wrap: wrap; gap: 6px; }
+.picker button {
+  border: 1px solid var(--line); background: var(--panel); color: inherit; font: inherit; font-size: 13px;
+  padding: 4px 10px; border-radius: 999px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center;
+}
+.picker button:hover { border-color: var(--accent); }
+.picker button[aria-current="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.picker .k { font: 11px var(--mono); padding: 0 5px; border-radius: 4px; background: var(--accent); color: var(--panel); }
+.picker button.none { opacity: 0.4; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+.tools label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.tools .sep { flex: 1; }
+.tools button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--panel); color: inherit; padding: 3px 10px; border-radius: 6px; cursor: pointer; }
+.title-row { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+
+.stage { position: relative; background: var(--stage); border-radius: 10px; border: 1px solid var(--line); overflow: hidden; }
+.stage img { display: block; width: 100%; height: auto; transition: filter 0.15s; }
+.stage.solo img { filter: grayscale(0.6) brightness(0.92); }
+.boxes { position: absolute; inset: 0; }
+.box {
+  position: absolute; border: 1.5px solid var(--c); border-radius: 3px;
+  background: color-mix(in oklab, var(--c) 6%, transparent);
+}
+.box:hover, .box.hot { background: color-mix(in oklab, var(--c) 22%, transparent); border-width: 2px; z-index: 5; }
+.stage.solo .box { border-width: 2.5px; border-radius: 6px; box-shadow: 0 0 0 2px color-mix(in oklab, var(--c) 30%, transparent); }
+.box .tag {
+  position: absolute; left: -1px; top: -1px; transform: translateY(-100%);
+  font: 500 10px/1 var(--mono); padding: 2px 4px; border-radius: 3px 3px 3px 0;
+  background: var(--c); color: #fff; white-space: nowrap; pointer-events: none; display: none;
+}
+.stage.labels .box .tag, .box:hover .tag { display: block; }
+.tip {
+  position: fixed; z-index: 50; pointer-events: none; max-width: 340px;
+  background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 8px;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.18); padding: 8px 10px; font-size: 12.5px;
+}
+.tip b { font-size: 13px; }
+.tip .props { font: 11.5px/1.45 var(--mono); color: var(--muted); margin-top: 4px; word-break: break-word; }
+
+.here { display: flex; flex-wrap: wrap; gap: 6px; }
+.here button {
+  font: 12px var(--mono); border: 1px solid var(--line); background: var(--panel); color: inherit;
+  border-radius: 6px; padding: 2px 8px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center;
+}
+.here button::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--c); }
+
+section.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.scroll { overflow-x: auto; }
+table.matrix { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 12px; }
+.matrix th, .matrix td { border-bottom: 1px solid var(--line); padding: 0; text-align: center; }
+.matrix th.c { text-align: left; padding: 4px 10px 4px 0; white-space: nowrap; font-weight: 500; position: sticky; left: 0; background: var(--panel); }
+.matrix thead th { font: 500 11px var(--mono); color: var(--muted); height: 130px; vertical-align: bottom; padding-bottom: 6px; }
+.matrix thead th span { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; }
+.matrix td button { width: 34px; height: 24px; border: 0; font: 11px var(--mono); color: var(--fg); cursor: pointer; background: color-mix(in oklab, var(--accent) var(--h), transparent); }
+.matrix td button:hover { outline: 2px solid var(--accent); outline-offset: -2px; }
+.matrix td.z { color: var(--muted); }
+.matrix .grp th { text-align: left; font: 500 11px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 12px 0 4px; position: sticky; left: 0; background: var(--panel); }
+
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.note { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.note ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.pill { display: inline-block; font: 500 11px/1.6 var(--mono); padding: 0 6px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .main { grid-template-columns: minmax(0, 1fr); }
+  aside { position: static; max-height: none; }
+  .legend-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .stage img { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">AgentOS V2 web · branch web-restyle · 090db35</span>
+    <h1>Kit map</h1>
+    <p class="muted">Every screen of the app with each kit component outlined where it renders. Pick a component on the left to see only that one; hover an outline for its props and what it sits inside. Captured in Chrome at 1440×1200 from the fixtures, light theme.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="main">
+    <aside aria-label="Components">
+      <div class="legend-groups" id="legend"></div>
+    </aside>
+    <div class="viewer">
+      <nav class="picker" id="picker" aria-label="Screens"></nav>
+      <div class="title-row">
+        <h2 id="screen-title"></h2>
+        <code class="muted" id="screen-path"></code>
+        <span class="muted" id="screen-count"></span>
+      </div>
+      <div class="tools">
+        <label><input type="checkbox" id="prims"> Show primitives (Text, Stack, Icon)</label>
+        <label><input type="checkbox" id="outer"> Outermost only</label>
+        <label><input type="checkbox" id="labels"> Name tags</label>
+        <span class="sep"></span>
+        <button type="button" id="clear" hidden>Show all components</button>
+      </div>
+      <div class="stage" id="stage">
+        <img id="shot" alt="" width="1440" height="1200">
+        <div class="boxes" id="boxes"></div>
+      </div>
+      <div class="here" id="here" aria-label="Components on this screen"></div>
+    </div>
+  </div>
+
+  <section class="card" aria-labelledby="m-h">
+    <div><h2 id="m-h">Where each component is used</h2>
+    <p class="muted">Instances on screen per state. Click a cell to open that screen with the component picked.</p></div>
+    <div class="scroll"><table class="matrix" id="matrix"></table></div>
+  </section>
+
+  <section class="card" aria-labelledby="b-h" id="blocks">
+    <!--NOTES-->
+  </section>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const DATA = /*DATA*/;
+const GROUPS = [
+  ["Frame & layout", ["Frame", "Page", "Surface", "Stack", "Head"]],
+  ["Lists & records", ["Table", "Row", "Card", "Facts", "Swap", "Notice"]],
+  ["Text & marks", ["Text", "Icon", "Badge", "Chip", "Mark", "Avatar", "Age", "Meter", "Override"]],
+  ["Controls", ["Button", "Select", "Segmented", "Tabs", "Field", "NumberField", "TextArea", "Toggle", "FormRow", "Composer"]],
+  ["Workflow", ["Stepper", "Lane", "Strip", "Checklist", "Sortable", "Drag", "Drop"]],
+  ["Overlays & talk", ["Dialog", "Thread", "Compare"]],
+];
+const HUES = [265, 205, 25, 150, 320, 75];
+const PRIMS = new Set(["Text", "Stack", "Icon"]);
+const COLOR = {}, GROUP = {};
+GROUPS.forEach(([g, names], gi) => names.forEach((n, i) => {
+  const h = HUES[gi] + (i - (names.length - 1) / 2) * 14;
+  COLOR[n] = `oklch(${0.58 + (i % 2) * 0.06} 0.19 ${h})`;
+  GROUP[n] = g;
+}));
+const ALL = GROUPS.flatMap(([, n]) => n);
+const [VW, VH] = DATA.viewport;
+const $ = (id) => document.getElementById(id);
+const state = { screen: 0, solo: null };
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+for (const id of ["prims", "outer", "labels"]) { $(id).checked = store.get("km-" + id) === "1"; }
+
+const counts = DATA.screens.map((s) => { const c = {}; for (const i of s.items) c[i.name] = (c[i.name] || 0) + 1; return c; });
+const totals = {}; const screensUsing = {};
+counts.forEach((c) => { for (const [n, v] of Object.entries(c)) { totals[n] = (totals[n] || 0) + v; screensUsing[n] = (screensUsing[n] || 0) + 1; } });
+
+const rendered = ALL.filter((n) => totals[n]).length;
+const instances = DATA.screens.reduce((a, s) => a + s.items.length, 0);
+$("stats").innerHTML = `<span><b>${ALL.length}</b> components in the kit</span><span><b>${rendered}</b> rendered on these screens</span><span><b>${DATA.screens.length}</b> screen states</span><span><b>${instances.toLocaleString()}</b> instances outlined</span>`;
+
+function legend() {
+  const c = counts[state.screen];
+  $("legend").innerHTML = GROUPS.map(([g, names]) => `<div class="group"><span class="eyebrow">${g}</span>${names.map((n) => {
+    const here = c[n] || 0;
+    const off = PRIMS.has(n) && !$("prims").checked && state.solo !== n;
+    return `<button type="button" class="comp${here ? "" : " zero"}${off ? " off" : ""}" style="--c:${COLOR[n]}" data-n="${n}" aria-pressed="${state.solo === n}" title="${totals[n] ? `${totals[n]} instances on ${screensUsing[n]} screens` : "Not on any captured screen"}"><span class="sw"></span><span class="name">${n}</span><span class="n">${here || "·"}</span></button>`;
+  }).join("")}</div>`).join("");
+}
+function picker() {
+  $("picker").innerHTML = DATA.screens.map((s, i) => {
+    const k = state.solo ? counts[i][state.solo] || 0 : null;
+    return `<button type="button" data-i="${i}" aria-current="${i === state.screen}" class="${k === 0 ? "none" : ""}">${s.title}${k ? `<span class="k">${k}</span>` : ""}</button>`;
+  }).join("");
+}
+function visible(item) {
+  if (state.solo) return item.name === state.solo;
+  if (!$("prims").checked && PRIMS.has(item.name)) return false;
+  if ($("outer").checked && item.depth > 2) return false;
+  return true;
+}
+function stage() {
+  const s = DATA.screens[state.screen];
+  $("shot").src = `shots/${s.id}.png`;
+  $("shot").alt = `Screenshot: ${s.title}`;
+  $("screen-title").textContent = s.title;
+  $("screen-path").textContent = s.path;
+  const items = s.items.filter(visible).sort((a, b) => b.box[2] * b.box[3] - a.box[2] * a.box[3]);
+  $("screen-count").textContent = `${items.length} outlined`;
+  $("stage").classList.toggle("solo", !!state.solo);
+  $("stage").classList.toggle("labels", $("labels").checked);
+  $("clear").hidden = !state.solo;
+  $("boxes").innerHTML = items.map((it) => {
+    const [x, y, w, h] = it.box;
+    return `<div class="box" data-k="${s.items.indexOf(it)}" style="--c:${COLOR[it.name]};left:${(x / VW) * 100}%;top:${(y / VH) * 100}%;width:${(w / VW) * 100}%;height:${(h / VH) * 100}%"><span class="tag">${it.name}</span></div>`;
+  }).join("");
+  const c = counts[state.screen];
+  $("here").innerHTML = ALL.filter((n) => c[n]).sort((a, b) => c[b] - c[a]).map((n) => `<button type="button" data-n="${n}" style="--c:${COLOR[n]}">${n} ${c[n]}</button>`).join("");
+}
+function render() { legend(); picker(); stage(); }
+function pick(n) { state.solo = state.solo === n ? null : n; render(); }
+function go(i, solo) {
+  state.screen = i; if (solo !== undefined) state.solo = solo; render();
+  try { history.replaceState(null, "", "#" + DATA.screens[i].id); } catch {}
+}
+
+$("legend").addEventListener("click", (e) => { const b = e.target.closest("[data-n]"); if (b) pick(b.dataset.n); });
+$("here").addEventListener("click", (e) => { const b = e.target.closest("[data-n]"); if (b) pick(b.dataset.n); });
+$("picker").addEventListener("click", (e) => { const b = e.target.closest("[data-i]"); if (b) go(+b.dataset.i); });
+$("clear").addEventListener("click", () => pick(null));
+for (const id of ["prims", "outer", "labels"]) $(id).addEventListener("change", () => { store.set("km-" + id, $(id).checked ? "1" : "0"); render(); });
+
+const tip = $("tip");
+const esc = (v) => String(v).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+$("boxes").addEventListener("mousemove", (e) => {
+  const b = e.target.closest(".box");
+  if (!b) { tip.hidden = true; return; }
+  const it = DATA.screens[state.screen].items[+b.dataset.k];
+  const props = Object.entries(it.props).filter(([, v]) => v !== "ƒ").map(([k, v]) => `${k}=${esc(v)}`).join("  ");
+  tip.innerHTML = `<b style="color:${COLOR[it.name]}">${it.name}</b> <span class="muted">· ${GROUP[it.name]}</span>${it.in ? `<div class="muted">in ${esc(it.in)}</div>` : ""}${props ? `<div class="props">${props}</div>` : ""}`;
+  tip.hidden = false;
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8);
+  const y = e.clientY + 16 + tip.offsetHeight > innerHeight ? e.clientY - tip.offsetHeight - 10 : e.clientY + 16;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+});
+$("boxes").addEventListener("mouseleave", () => { tip.hidden = true; });
+
+// the matrix
+(function matrix() {
+  const max = Math.max(...counts.flatMap((c) => Object.values(c)));
+  const head = `<thead><tr><th></th>${DATA.screens.map((s) => `<th><span>${s.title}</span></th>`).join("")}<th><span>Screens</span></th></tr></thead>`;
+  const body = GROUPS.map(([g, names]) => `<tr class="grp"><th colspan="${DATA.screens.length + 2}">${g}</th></tr>` + names.map((n) =>
+    `<tr><th class="c" style="color:${COLOR[n]}">${n}</th>${DATA.screens.map((s, i) => {
+      const v = counts[i][n] || 0;
+      return v ? `<td><button type="button" data-i="${i}" data-n="${n}" title="${n} on ${esc(s.title)}" style="--h:${Math.round(8 + 60 * Math.sqrt(v / max))}%">${v}</button></td>` : `<td class="z">·</td>`;
+    }).join("")}<td class="mono">${screensUsing[n] || 0}</td></tr>`).join("")).join("");
+  $("matrix").innerHTML = head + `<tbody>${body}</tbody>`;
+  $("matrix").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-i]"); if (!b) return;
+    go(+b.dataset.i, b.dataset.n);
+    $("stage").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+  });
+})();
+
+const start = DATA.screens.findIndex((s) => "#" + s.id === location.hash);
+go(start >= 0 ? start : 0);
+</script>

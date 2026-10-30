@@ -1,0 +1,23 @@
+web: one Who for a face and a name, Unassigned for nobody
+
+Six screens drew someone's face and name their own way: "Nobody" here,
+"Unassigned" there, a full name in one cell and a first in the next, the
+name read twice where the face wasn't `beside`, no glyph for a run.
+`Who` (patterns/who.tsx) draws them all from a `Someone` that
+domain/format builds from a person, an author or a Jira assignee: in a
+list's cell the face and the first name (the full one on hover), nobody
+a dashed ring and Unassigned; in a fact the full name, nobody the word
+alone; a run's starter on the small face; a run the agents glyph.
+authorName now says a name through the same `nameOf`.
+
+Screenshots, the decided drift only:
+- all-teams: SUP-231's owner reads Unassigned, not Nobody.
+- intake: assignees by first name (Bea, Cy, Dee).
+- ticket-runs: the open run's starter line, the face 4 from the name
+  (was 3) and the sentence a gap after it.
+The peek, the skill editor and the agents list draw the same as before
+(the owner and the history are facts, unchanged; the Changed column is
+only on the workflows list, which has no screenshot).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

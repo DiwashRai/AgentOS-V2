@@ -1,0 +1,20 @@
+web: useParam and usePeek for a list's URL state; Intake's ?only=
+
+Compact, All teams, My queue and Intake each wrote their filter chip's
+URL key by hand, and Compact, All teams, My queue and the peek each
+opened or closed the peek the same way. Two hooks in
+features/shared/useParam.ts now do it:
+- useParam(key): one query key's value and its setter (null takes it
+  out), keeping the rest of the URL. The chips (`?f=`, `?z=`), and
+  Compact's open row and repo, use it.
+- usePeek(): the ticket the peek is open on (an empty `?peek=` is no
+  peek), open and close. The lists open it, the peek closes it;
+  Compact's Esc collapses its row only while no peek is open, now
+  reading the same (an empty `?peek=` no longer holds the row open).
+
+Intake's filter moves from `?q=` to `?only=`: it shared `?q=` with the
+search box, so searching reset the chip and picking a chip filled the
+search. Nothing linked to or tested its `?q=`. No screenshot changes.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

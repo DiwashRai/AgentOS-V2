@@ -1,0 +1,16 @@
+Request changes: the behavior fixes check out, but five architectural bypasses remain despite the current gate passing.
+
+1. **must-fix — JavaScript implementations escape inspection.** `web/tools/reach.mjs:130` reads imports and rendering only from `.ts`/`.tsx`; other files receive empty facts. A pattern can import `domain/hidden.js`, accompanied by `hidden.d.ts` declaring its function, and call it. The JavaScript can import React or another screen and render styled elements. The resolved layer, props and reuse checks all passed this probe with zero TypeScript diagnostics; ESLint's layer rules also exclude JavaScript. This reopens the “move it elsewhere” escape from Opus #2.
+   Fix: reject executable source extensions that are not inspected, or inspect the actual bundled implementations as well as their declarations.
+
+2. **must-fix — Element ownership still depends on expression spelling.** `web/tools/reach.mjs:59` recognizes imported factory aliases, but misses `import React from "react"; const h = React.createElement;` followed by `h("div", { style: { color: "red" } })`. Separately, line 75 tests only `StringLike` flags, missing a union: `const Div: "div" | "span" = condition ? "div" : "span"; return <Div />`. Both probes passed full ESLint and the resolved checks; the raw-tag extractor counted zero elements. Codex #4 therefore remains open.
+   Fix: follow factory bindings through assignments/destructuring and inspect union constituents for intrinsic element types; cover both lint and measurement.
+
+3. **must-fix — Aliasing a kit component hides styling knobs.** `web/tools/uses.mjs:185` compares JSX source text with kit export names. `import { Checklist as List } from "../kit"` and `<List look={look} />`, with `look: "page" | "peek"`, produces no knob finding and no Checklist usage credit. `<Kit.Checklist>` has the same result. Both pass the other gates. A rename thus bypasses Opus #3's new flow check and corrupts the kit's reuse accounting.
+   Fix: resolve JSX tags to their kit export symbols before recording components, variants and forwarded props.
+
+4. **must-fix — Class components skip every prop restriction.** `web/tools/props.mjs:189` reads call signatures only. An exported `class Who extends Component<{ tone: Tone }>` with an `override render()` drawing `<Text tone={this.props.tone} />` is recorded with `props: null`; neither its forbidden kit vocabulary nor its forwarded variant is rejected. It passes ESLint, layers and reuse when two screens use it. Adding nine props also escapes the prop budget.
+   Fix: inspect React class components' props, or explicitly prohibit class components in patterns; do not silently accept unexamined component shapes.
+
+5. **must-fix — Namespace imports restore whole-module reuse credit.** `web/tools/uses.mjs:235` expands a namespace reference into every export. In two screens, `import * as Parts from "../shared/parts"` followed only by `Parts.usesWho` credits `Parts.usesUnused` too, along with its otherwise-unused pattern and kit components. The probe passed all architectural checks with zero TypeScript diagnostics. Opus #4 is closed for named imports but remains bypassable through namespaces.
+   Fix: track the namespace members actually referenced; reserve whole-namespace reach for expressions that really consume the namespace object.

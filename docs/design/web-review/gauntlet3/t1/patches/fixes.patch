@@ -1,0 +1,681 @@
+diff --git a/web/src/features/library/content.tsx b/web/src/features/library/content.tsx
+index 998ad05..4d72915 100644
+--- a/web/src/features/library/content.tsx
++++ b/web/src/features/library/content.tsx
+@@ -144,6 +144,7 @@ function Blocks({
+   return (
+     <Sortable
+       label="AGENTS.md blocks"
++      gap={4}
+       onMove={move}
+       items={blocks.map((b, i) => {
+         const key = keys[i] ?? b.name;
+diff --git a/web/src/features/library/list.tsx b/web/src/features/library/list.tsx
+index 82482c8..cf9e15e 100644
+--- a/web/src/features/library/list.tsx
++++ b/web/src/features/library/list.tsx
+@@ -2,8 +2,8 @@
+ // Library, search, New), then a table out to the sheet's edges with no surface of its own: quiet
+ // column labels, unruled one-line rows (a bare glyph and the name, what it is in a column of its
+ // own, the facts packed at the right) that open the item's editor on a click or Enter, ↑ ↓ (or j k)
+-// moving a selection that Enter opens, and a foot with those keys and the count pinned to the
+-// pane's bottom, the rows scrolling above it. A search that matches nothing says so.
++// moving a selection that Enter opens, and a foot with those keys and the count right under the
++// rows (held at the pane's bottom when they run past it). A search that matches nothing says so.
+ import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
+ import { useNavigate } from "react-router";
+ 
+diff --git a/web/src/features/queue/QueueView.tsx b/web/src/features/queue/QueueView.tsx
+index cea655e..64fa93b 100644
+--- a/web/src/features/queue/QueueView.tsx
++++ b/web/src/features/queue/QueueView.tsx
+@@ -339,7 +339,6 @@ export function QueueView() {
+       counters={[
+         { n: z.yourMove.length, label: "your move", mark: "you" },
+         { n: z.mine, label: "runs yours" },
+-        "|",
+         { n: z.running, label: "running", mark: "run" },
+         { n: z.queued, label: "queued", mark: "queued" },
+       ]}
+diff --git a/web/src/features/sheet/twins/subissues.tsx b/web/src/features/sheet/twins/subissues.tsx
+index 83c03f5..db5f22d 100644
+--- a/web/src/features/sheet/twins/subissues.tsx
++++ b/web/src/features/sheet/twins/subissues.tsx
+@@ -76,19 +76,25 @@ function Head() {
+   );
+ }
+ 
+-/** The rows' leading cells: the status glyph and the placeholder. */
++/** The rows' leading cells: the status glyph and the placeholder, set in past the head's fold as
++ *  Linear's are. */
+ function Rows() {
+   return (
+-    <Table columns={[{ label: "Sub-issue", width: "fill" }]} head={false} scroll={false}>
+-      {ROWS.map((r) => (
+-        <Row key={r.id}>
+-          <Stack dir="row" gap={4} align="center">
+-            <Glyph glyph={r.glyph} />
+-            <Chip tone="fill" label={bar(r.n)} />
+-          </Stack>
+-        </Row>
+-      ))}
+-    </Table>
++    <Stack dir="row" gap={8}>
++      <Stack />
++      <Stack grow>
++        <Table columns={[{ label: "Sub-issue", width: "fill" }]} head={false} scroll={false}>
++          {ROWS.map((r) => (
++            <Row key={r.id}>
++              <Stack dir="row" gap={4} align="center">
++                <Glyph glyph={r.glyph} />
++                <Chip tone="fill" label={bar(r.n)} />
++              </Stack>
++            </Row>
++          ))}
++        </Table>
++      </Stack>
++    </Stack>
+   );
+ }
+ 
+diff --git a/web/src/features/ticket/TicketView.tsx b/web/src/features/ticket/TicketView.tsx
+index 6b6ceb5..1610553 100644
+--- a/web/src/features/ticket/TicketView.tsx
++++ b/web/src/features/ticket/TicketView.tsx
+@@ -67,8 +67,8 @@ interface HeaderProps {
+ function Header({ t, me, now, plan }: HeaderProps) {
+   const lead = t.description.split("\n\n")[0] ?? "";
+   return (
+-    <Stack gap={9}>
+-      <Stack gap={5}>
++    <Stack gap={8}>
++      <Stack gap={4}>
+         <Text variant="display" as="h1">
+           {t.title}
+         </Text>
+@@ -92,7 +92,7 @@ function Overview({
+ }) {
+   const rest = t.description.split("\n\n").slice(1);
+   return (
+-    <Stack gap={10}>
++    <Stack gap={9}>
+       {rest.map((p, i) => (
+         <Text key={i} variant="body" as="p">
+           {p}
+@@ -145,7 +145,7 @@ function Body({ t, me, now }: { t: Ticket; me: Person | null; now: number }) {
+     workflow: <WorkflowTab t={t} />,
+   };
+   return (
+-    <Stack gap={9}>
++    <Stack gap={8}>
+       <Header t={t} me={me} now={now} plan={plan} />
+       <Tabs
+         label="Ticket sections"
+diff --git a/web/src/kit/Checklist.module.css b/web/src/kit/Checklist.module.css
+index f792976..214c211 100644
+--- a/web/src/kit/Checklist.module.css
++++ b/web/src/kit/Checklist.module.css
+@@ -59,8 +59,9 @@
+   margin-top: calc(var(--sp-3) * -1);
+ }
+ .large .section {
+-  min-height: var(--h-control-sm);
++  min-height: var(--h-chip-sm);
+   margin-top: var(--sp-6);
++  margin-bottom: var(--sp-2);
+   font-size: var(--fs-3);
+   color: var(--tk-label);
+ }
+diff --git a/web/src/kit/Composer.module.css b/web/src/kit/Composer.module.css
+index b3d43c7..2e4491b 100644
+--- a/web/src/kit/Composer.module.css
++++ b/web/src/kit/Composer.module.css
+@@ -1,6 +1,6 @@
+ /* the composer: a reply box of tone, no edge, one line of text with Send at its right end, growing
+    as you type; in a full-height column it sits at the foot and stays there while the thread
+-   scrolls. On a rail of tone it is a well of the sheet's own (--well) */
++   scrolls. On a held panel of tone (a Surface sheet) it is a well of the sheet's own (--well) */
+ .compose {
+   position: sticky;
+   bottom: 0;
+diff --git a/web/src/kit/Drag.module.css b/web/src/kit/Drag.module.css
+index b8bccdf..a96c9e7 100644
+--- a/web/src/kit/Drag.module.css
++++ b/web/src/kit/Drag.module.css
+@@ -68,17 +68,6 @@
+   position: relative;
+   min-width: 0;
+ }
+-/* one row parts from the next by a hairline across the list at its top (AGENTS.md's blocks: a
+-   document's sections), so each reads as its own block */
+-.slot + .slot::after {
+-  content: "";
+-  position: absolute;
+-  top: 0;
+-  inset-inline: 0;
+-  height: var(--line-1);
+-  background: var(--rule);
+-  pointer-events: none;
+-}
+ /* the handle: a quiet glyph at its row's head, full strength while its row is hovered */
+ .grip {
+   flex: none;
+diff --git a/web/src/kit/Form.module.css b/web/src/kit/Form.module.css
+index 87e90d4..152e3c5 100644
+--- a/web/src/kit/Form.module.css
++++ b/web/src/kit/Form.module.css
+@@ -131,22 +131,29 @@
+   font-weight: 600;
+ }
+ 
+-/* a sheet (an item editor's content): a section of the document, not a box. Its head strip (a
+-   heading's weight) parts it from the one before by room alone, the text under it on the column's
+-   own edge (a folding block's under its name, past the fold) as tall as its lines; while the text
+-   has the focus a short bar of the accent marks it at the head's start */
++/* a sheet (an item editor's content): one editable object, a quiet panel of tone with no line, its
++   head strip (a heading's weight) over its text (a folding block's under its name, past the fold);
++   it takes the column's free height, all of it a place to click and write. A step firmer under the
++   pointer; while the text has the focus a hairline of the focus colour rings it */
+ .sheet {
+   position: relative;
++  padding: 0 var(--sp-8);
++  border-radius: var(--r-4);
++  background: var(--tone-1);
++  transition:
++    background-color var(--dur-fast) ease,
++    box-shadow var(--dur-fast) ease;
+ }
+-.sheet:has(.leaf:focus)::before {
+-  content: "";
+-  position: absolute;
+-  top: 0;
+-  left: 0;
+-  width: var(--sp-9);
+-  height: var(--line-2);
+-  border-radius: var(--line-2);
+-  background: var(--you);
++.sheet:hover {
++  background: var(--tone-2);
++}
++.sheet:has(.leaf:focus) {
++  background: var(--tone-1);
++  box-shadow: inset 0 0 0 var(--line-1) var(--focus);
++}
++.sheet > .read {
++  flex: 1;
++  align-content: start;
+ }
+ .sheetHead {
+   display: flex;
+diff --git a/web/src/kit/Head.module.css b/web/src/kit/Head.module.css
+index 3512944..e36b8e5 100644
+--- a/web/src/kit/Head.module.css
++++ b/web/src/kit/Head.module.css
+@@ -7,15 +7,15 @@
+ }
+ 
+ /* group: a list's heading, no band: the room above it parts it from the group before, and its
+-   words (two sizes up, a weight up) say it is a head; its glyph hung on the list's column edge,
+-   where tiles and panels stand, so it heads the rows inset under it; its end on the rows' end; a
++   words (two sizes up, a weight up) say it is a head; its glyph on the list's column edge, where
++   the rows' words, tiles and panels stand, so it heads them; its end on the rows' end; a
+    fold's chevron after its count. One look for every group, so the list never stripes; the state
+    is the glyph */
+ .group,
+ .zone {
+   height: var(--h-group);
+   margin-top: var(--group-gap);
+-  padding: 0 var(--list-inset) 0 var(--list-pad);
++  padding: 0 var(--list-inset);
+ }
+ .group:first-child,
+ .zone:first-child {
+@@ -114,7 +114,7 @@
+   z-index: var(--z-sticky);
+   height: var(--h-group);
+   margin-top: var(--group-gap);
+-  padding: 0 var(--list-inset) 0 var(--list-pad);
++  padding: 0 var(--list-inset);
+   background: var(--ground);
+ }
+ .line:first-child {
+diff --git a/web/src/kit/Notice.module.css b/web/src/kit/Notice.module.css
+index 5ddd948..3a1924b 100644
+--- a/web/src/kit/Notice.module.css
++++ b/web/src/kit/Notice.module.css
+@@ -25,7 +25,7 @@
+   align-items: center;
+   gap: var(--sp-4);
+   min-height: var(--h-row);
+-  padding: 0 var(--list-inset) 0 var(--list-pad);
++  padding: 0 var(--list-inset);
+   color: var(--ink-3);
+   font-size: var(--fs-3);
+   white-space: nowrap;
+@@ -112,8 +112,9 @@
+ 
+ /* a line under a query's head (Intake), a row's height, its glyph where the rows' words start: an
+    empty ring; the +N of a capped run on a grey disc, its Show button after it. A problem is the
+-   query's whole answer, so it is a panel: the blocked hue's faint wash on the column edge, its
+-   words inset as a row's, a blocked dot on a halo hung before them on its first line */
++   query's whole answer, so it is a panel: the blocked hue's faint wash standing on the column
++   edge as a tile does, its words inset, a blocked dot on a halo hung before them on its first
++   line */
+ .empty[data-align="item"],
+ .more[data-align="item"] {
+   gap: var(--sp-4);
+@@ -125,7 +126,7 @@
+ }
+ .problem[data-align="item"] {
+   gap: 0;
+-  margin: var(--sp-2) var(--list-pad) 0;
++  margin: var(--sp-2) var(--list-inset) 0;
+   padding: var(--sp-6) var(--list-in) var(--sp-6)
+     calc(var(--list-in) + var(--triage-face) + var(--sp-3));
+   border-radius: var(--r-4);
+diff --git a/web/src/kit/Page.module.css b/web/src/kit/Page.module.css
+index a37018d..8207ca3 100644
+--- a/web/src/kit/Page.module.css
++++ b/web/src/kit/Page.module.css
+@@ -142,15 +142,6 @@
+ .you > b {
+   color: var(--you-text);
+ }
+-/* the separator: a small dot, so the two groups of counters part evenly */
+-.sep {
+-  flex: none;
+-  width: var(--line-3);
+-  height: var(--line-3);
+-  border-radius: 50%;
+-  background: var(--ink-3);
+-  opacity: 0.6;
+-}
+ 
+ /* the bar's search: 240 wide, giving way first when the bar is short */
+ .search {
+@@ -167,10 +158,15 @@
+   display: grid;
+   grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 28vw, var(--w-talk-max));
+ }
+-/* the body: one calm reading column, room under its last line when scrolled to the end */
++/* the body: one calm reading column, close under the bar, room under its last line when scrolled to
++   the end */
+ .split > .body {
++  /* a list in it (a ticket's runs) stands on the column's edge as the run card does, its words
++     inset as the card's are */
++  --list-pad: 0;
++  --list-inset: var(--list-in);
+   margin-right: 0;
+-  padding: var(--sp-10) var(--sp-9) calc(var(--sp-10) * 2) var(--list-bleed);
++  padding: var(--sp-8) var(--sp-9) calc(var(--sp-10) * 2) var(--list-bleed);
+ }
+ /* a document: the reading column centred under the bar, room above and under it */
+ .doc {
+@@ -186,19 +182,15 @@
+   max-width: var(--w-ticket);
+   margin-inline: auto;
+ }
+-/* the column beside: a panel a step of tone off the sheet (no line), on the bar's right edge and
+-   set up off the sheet's foot by the frame's own inset, so the sheet keeps its rounded corners and
+-   the rail reads as its own surface; full height, so what it holds can pin its foot (Talk's reply
+-   box) to the window's bottom */
++/* the column beside: no panel, the sheet itself, parted from the body by one hairline from the bar
++   to the sheet's foot, its words ending on the bar's right edge; full height, so what it holds can
++   pin its foot (Talk's reply box) to the window's bottom */
+ .side {
+   min-height: 0;
+   display: flex;
+   flex-direction: column;
+-  margin-bottom: var(--inset);
+-  padding: var(--sp-9) var(--sp-9) var(--sp-8);
+-  border-radius: var(--r-4);
+-  --well: var(--page);
+-  background: var(--tk-well);
++  padding: var(--sp-8) 0 var(--sp-8) var(--sp-9);
++  border-left: var(--line-1) solid var(--rule);
+   overflow-y: auto;
+   scrollbar-width: thin;
+ }
+diff --git a/web/src/kit/Page.tsx b/web/src/kit/Page.tsx
+index c5932f4..3e8c308 100644
+--- a/web/src/kit/Page.tsx
++++ b/web/src/kit/Page.tsx
+@@ -27,37 +27,32 @@ export interface PageProps {
+   title: string | readonly [{ label: string; href: string }, string];
+   /** After the title, quiet: the Space, a scope. */
+   context?: string | undefined;
+-  /** The number carries the weight, a zero recedes, a state's glyph leads it; "|" draws a
+-   *  separator dot. */
+-  counters?: readonly (Counter | "|")[];
++  /** The number carries the weight, a zero recedes, a state's glyph leads it. */
++  counters?: readonly Counter[];
+   /** The view's own controls after the counters (filter pills, a crumb). */
+   middle?: ReactNode | undefined;
+   search?: Search;
+   /** The bar's buttons at its right end (New ticket; a ticket's actions). */
+   action?: ReactNode;
+-  /** column: a full-height reading column beside the body, a rounded panel of tone with no line
++  /** column: a full-height reading column beside the body, the sheet itself past one hairline
+    *  (the ticket's Talk, the workflow editor's library); doc: none, what would sit there (an item
+    *  editor's properties) is in the body, one centred document, as Linear's project page. */
+   side?: { look?: "column"; content: ReactNode } | { look: "doc"; content?: never };
+   children: ReactNode;
+ }
+ 
+-function Counters({ items }: { items: readonly (Counter | "|")[] }) {
++function Counters({ items }: { items: readonly Counter[] }) {
+   return (
+     <span className={s.counters} aria-live="polite">
+-      {items.map((c, i) =>
+-        c === "|" ? (
+-          <span key={`sep${String(i)}`} className={s.sep} />
+-        ) : (
+-          <span
+-            key={c.label}
+-            className={cx(s.counter, c.n === 0 && s.zero, c.n > 0 && c.mark === "you" && s.you)}
+-          >
+-            {c.mark ? <Mark kind={c.mark} glyph small name={false} /> : null}
+-            <b>{c.n}</b> {c.label}
+-          </span>
+-        ),
+-      )}
++      {items.map((c) => (
++        <span
++          key={c.label}
++          className={cx(s.counter, c.n === 0 && s.zero, c.n > 0 && c.mark === "you" && s.you)}
++        >
++          {c.mark ? <Mark kind={c.mark} glyph small name={false} /> : null}
++          <b>{c.n}</b> {c.label}
++        </span>
++      ))}
+     </span>
+   );
+ }
+diff --git a/web/src/kit/Row.module.css b/web/src/kit/Row.module.css
+index 8bc016d..96d34ee 100644
+--- a/web/src/kit/Row.module.css
++++ b/web/src/kit/Row.module.css
+@@ -9,8 +9,8 @@
+ }
+ 
+ /* lists: a line, an item and a triage row are flat: the rhythm and the room above each group part
+-   the rows. Their wash (hover, open) is a rounded patch on the list's column edge, the words
+-   --list-in inside it, so an open row's panel stands where a tile does. No card, nothing moves */
++   the rows. Their words stand on the list's column edge; their wash (hover, open) is a rounded
++   patch reaching --list-in past it. No card, nothing moves */
+ .line,
+ .item,
+ .triage {
+@@ -97,7 +97,7 @@
+   column-gap: var(--sp-6);
+   border-radius: 0;
+ }
+-/* a list row's first cell starts at the inset, under its group head's glyph; its cells sit a
++/* a list row's first cell starts on the column edge, under its group head's glyph; its cells sit a
+    step closer, as Linear packs a row's end */
+ .line > .inner {
+   column-gap: var(--sp-5);
+@@ -177,7 +177,7 @@
+ .band > .inner {
+   align-items: stretch;
+   column-gap: var(--sp-6);
+-  padding: 0 var(--list-pad);
++  padding: 0 var(--list-inset);
+   border-radius: 0;
+ }
+ .band .cell {
+diff --git a/web/src/kit/Stepper.module.css b/web/src/kit/Stepper.module.css
+index c1bc5be..613bfd1 100644
+--- a/web/src/kit/Stepper.module.css
++++ b/web/src/kit/Stepper.module.css
+@@ -199,7 +199,7 @@
+ .now {
+   grid-column: 1 / -1;
+   min-width: 0;
+-  margin: var(--sp-7) calc(var(--sp-8) * -1) 0;
++  margin: var(--sp-6) calc(var(--sp-8) * -1) 0;
+   padding: var(--sp-6) var(--sp-8);
+   border-radius: 0 0 var(--r-5) var(--r-5);
+   background: var(--fill-1);
+diff --git a/web/src/kit/Surface.module.css b/web/src/kit/Surface.module.css
+index 299ccb8..71dae45 100644
+--- a/web/src/kit/Surface.module.css
++++ b/web/src/kit/Surface.module.css
+@@ -1,4 +1,5 @@
+-/* --ground: the surface's own fill, for what paints an opaque copy of it (a sticky head) */
++/* --ground: the surface's own fill, for what paints an opaque copy of it (a sticky head); --well:
++   what a box sunk into it fills with (a reply box) */
+ .surface {
+   min-width: 0;
+   padding: var(--pad);
+@@ -13,6 +14,7 @@
+    on the popover's hairline and soft shadow, the kit's one lifted look */
+ .sheet {
+   --ground: var(--tone-2);
++  --well: var(--page);
+   background: var(--tone-2);
+   border-radius: var(--r-4);
+   box-shadow:
+@@ -33,7 +35,7 @@
+   content: "";
+   position: absolute;
+   top: 0;
+-  inset-inline: var(--list-pad);
++  inset-inline: var(--list-inset);
+   height: var(--line-1);
+   background: var(--rule);
+ }
+diff --git a/web/src/kit/Table.module.css b/web/src/kit/Table.module.css
+index 92eb918..5e3446a 100644
+--- a/web/src/kit/Table.module.css
++++ b/web/src/kit/Table.module.css
+@@ -37,8 +37,9 @@
+ .list {
+   min-height: 0;
+ }
++/* only as tall as its rows, so the foot stays under the last one; a longer list scrolls over it */
+ .scroll > .list {
+-  flex: 1;
++  flex: 0 1 auto;
+   overflow: hidden auto;
+   /* room under the last row when scrolled to the end, so it doesn't sit on the surface's foot */
+   padding: 0 0 var(--sp-8);
+@@ -53,20 +54,19 @@
+   --group-gap: var(--group-gap-dense);
+   --fs-group: var(--fs-5);
+ }
+-/* a list on a surface keeps room at its sides for a focus ring; at its right the scrollbar's own
+-   gutter is that room, so the rows' column edge (and the head's, over them) stays the surface's */
+-.scroll:not(.edge) > .list {
+-  margin-inline: calc(var(--list-bleed) * -1);
+-  padding-left: var(--list-bleed);
+-}
+-.scroll:not(.edge) > .head {
++/* a list on a surface keeps room at its sides for its rows' wash, so the rows' words (and the
++   head's, over them) stay on the surface's edge; at its right the scrollbar's gutter is part of
++   that room */
++.scroll:not(.edge) > :is(.list, .head) {
+   margin-inline: calc(var(--list-bleed) * -1);
+-  padding-left: calc(var(--list-bleed) + var(--list-inset));
++  padding-inline: var(--list-bleed) calc(var(--list-bleed) - var(--bar-thin));
+ }
+-/* the foot: its words on the rows' edges, under the list; it keeps the list's scrollbar gutter, so
+-   its far end lines up with the rows'. Under a list that scrolls it is held at the sheet's foot, a
+-   strip of tone (no rule) the rows fade out over */
++/* the foot: its words on the rows' edges, right under the list; it keeps the list's scrollbar
++   gutter, so its far end lines up with the rows'. Under a list that scrolls it is the list's last
++   line, one hairline over it on the column edges, held at the sheet's foot when the rows run past
++   it, which fade out over it */
+ .foot {
++  position: relative;
+   flex: none;
+   display: flex;
+   align-items: center;
+@@ -81,19 +81,24 @@
+   white-space: nowrap;
+ }
+ .scroll > .foot {
+-  margin: 0 var(--list-pad) var(--sp-4);
+-  padding: 0 var(--list-in);
+-  border-radius: var(--r-3);
+-  background: var(--tone-1);
++  min-height: var(--h-list-head);
++  margin-bottom: var(--sp-4);
+   scrollbar-gutter: auto;
+ }
++.scroll > .foot::before {
++  content: "";
++  position: absolute;
++  top: 0;
++  inset-inline: var(--list-inset);
++  height: var(--line-1);
++  background: var(--rule);
++}
+ /* edge: out through the sheet's gutter, no surface; its column edge the bar's title's, the head its
+    quiet labels over the rows' words with no band and no rule, the rows ruled apart under their
+-   words, the foot flush with the sheet's foot, or right under the last row when the list doesn't
+-   fill the page */
++   words */
+ .edge {
+-  --list-pad: var(--gutter);
+-  --list-inset: calc(var(--gutter) + var(--list-in));
++  --list-pad: calc(var(--gutter) - var(--list-in));
++  --list-inset: var(--gutter);
+   --row-rule: var(--list-rule);
+ }
+ /* no gutter kept for a scrollbar a short list never shows */
+diff --git a/web/src/kit/Tabs.module.css b/web/src/kit/Tabs.module.css
+index a7fb942..dbe19d0 100644
+--- a/web/src/kit/Tabs.module.css
++++ b/web/src/kit/Tabs.module.css
+@@ -43,6 +43,6 @@
+   font-variant-numeric: tabular-nums;
+ }
+ .panel {
+-  padding-top: var(--sp-9);
++  padding-top: var(--sp-8);
+   outline: none;
+ }
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index dafcd43..5e62c40 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -587,7 +587,7 @@
+         "align": {
+           "why": "Where it sits: standing for a group (the default, its glyph on the column edge as a head's), or a line under a query's head (Intake's).",
+           "values": {
+-            "item": "A line under a query's head (Intake's): an empty ring or the +N on a grey disc where the rows' words start; a problem as a panel of the blocked hue's wash on the column edge, its blocked dot on a halo before its words, so a query that didn't answer stands apart."
++            "item": "A line under a query's head (Intake's): an empty ring or the +N on a grey disc where the rows' words start; a problem as a panel of the blocked hue's wash standing on the column edge as a tile does, its blocked dot on a halo before its words, so a query that didn't answer stands apart."
+           }
+         },
+         "fix": {
+@@ -661,7 +661,7 @@
+           "why": "The bar's buttons at its right end (New ticket; the ticket's actions)."
+         },
+         "side": {
+-          "why": "A full-height column beside the body, as Linear's issue sidebar: a rounded panel a step of tone off the sheet, no line, on the bar's right edge and inset from the sheet's foot, so the sheet keeps its corners; or, its look doc, none, and the body one centred document.",
++          "why": "A full-height column beside the body, as Linear's issue sidebar: no panel, the sheet itself parted from the body by one hairline from the bar to the sheet's foot, its words ending on the bar's right edge; or, its look doc, none, and the body one centred document.",
+           "items": {
+             "look": {
+               "why": "Whether the column is there.",
+@@ -678,7 +678,7 @@
+       }
+     },
+     "Row": {
+-      "why": "One item of a list: its cells on the table's columns; a flat row (Linear's list) on the list's column edge with its words inset, a card or a swimlane.",
++      "why": "One item of a list: its cells on the table's columns; a flat row (Linear's list) with its words on the list's column edge and its wash reaching past it, a card or a swimlane.",
+       "props": {
+         "children": {
+           "why": "The cells."
+@@ -686,7 +686,7 @@
+         "kind": {
+           "why": "The shapes the app's lists take.",
+           "values": {
+-            "line": "A list's row (Compact, My queue, Intake, the library's four lists): one dense line, its rhythm and the room above each heading parting the rows (a faint hairline under its words in a list out at the sheet's edges); its words inset from the column edge the group head's glyph hangs on; hover and open wash a rounded patch on that edge, so an open row's panel stands where a tile does.",
++            "line": "A list's row (Compact, My queue, Intake, the library's four lists): one dense line, its rhythm and the room above each heading parting the rows (a faint hairline under its words in a list out at the sheet's edges); its words on the column edge the group head's glyph and the bar's title stand on; hover and open wash a rounded patch reaching a little past that edge, so the words keep it.",
+             "item": "A two-line row (a ticket's context): roomy, unruled, washed on hover.",
+             "triage": "A triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; washed on hover.",
+             "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
+@@ -964,7 +964,7 @@
+           "why": "Fill the surface and scroll inside it, a step denser (its lines, heads and the room above them) so a whole board of groups stands over its foot; or sit in a longer page."
+         },
+         "foot": {
+-          "why": "The bar under the list: key hints, a summary; under a list that scrolls, a strip of tone held at the sheet's foot."
++          "why": "The line under the list: key hints, a summary; under a list that scrolls, right under its last row on one hairline, held at the sheet's foot when the rows run past it."
+         },
+         "children": {
+           "why": "The groups and rows."
+@@ -1066,7 +1066,7 @@
+           "why": "Its least height in lines (a prompt's few, an editor's many)."
+         },
+         "head": {
+-          "why": "An item editor's content is a section of its document, as Linear writes a description under its properties: a head strip parted from the one before by room (its title and length; a block's fold and name), the text under it as tall as its lines, read at rest as a document (paragraphs, lists, `code` chips, front matter and a fenced block in mono) over its hidden source, which a click edits in place, a short bar of the accent at its head while it has the focus; popped out, it is the plain box at a readable measure."
++          "why": "An item editor's content is a section of its document, as Linear writes a description under its properties: a head strip parted from the one before by room (its title and length; a block's fold and name), the text under it as tall as its lines, read at rest as a document (paragraphs, lists, `code` chips, front matter and a fenced block in mono) over its hidden source, which a click edits in place, the whole of it one quiet panel of tone taking the column's free height (a click anywhere in it writes), ringed by a hairline of the focus colour while it has the focus; popped out, it is the plain box at a readable measure."
+         },
+         "tools": {
+           "why": "A block's controls at its head's end (its moves, then its handle): the moves show while the block is in use, so a head at rest is its name and its handle."
+@@ -1106,7 +1106,7 @@
+       }
+     },
+     "Composer": {
+-      "why": "The reply box under a conversation (the ticket's Talk, the peek's foot): one line growing as you type, Send at its end, pinned at a full-height column's foot; on that column's panel of tone, a well of the sheet's own.",
++      "why": "The reply box under a conversation (the ticket's Talk, the peek's foot): one line growing as you type, Send at its end, pinned at a full-height column's foot; on a held panel of tone, a well of the sheet's own.",
+       "props": {
+         "label": {
+           "why": "Its accessible name and placeholder (\"Say something to Bea and Cy\")."
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index d827193..007ccb0 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -266,12 +266,11 @@
+   --pop-edge: var(--edge);
+   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
+   /* surfaces on the sheet: an agent's tile and a board's card one tone, a step more under the
+-     pointer; the run card, the Talk column and the peek's ground */
++     pointer; the run card and the peek's ground */
+   --tile: var(--tone-2);
+   --tile-hover: var(--tone-3);
+   --teams-card: var(--tone-2);
+   --tk-card: var(--tone-2);
+-  --tk-well: var(--tone-1);
+   --tk-side: var(--page);
+   --tk-hover: var(--fill-1);
+   --tk-mine: var(--fill-2);
+@@ -369,18 +368,20 @@
+   --h-group: 36px;
+   --h-list-head: 32px;
+   --h-list-chip: 20px;
+-  /* rows: one column edge for every shape (a list's own edge: the sheet's gutter, or a surface's):
+-     a row's wash, an open row's panel, a tile and a foot strip all stand on it, and a row's words
+-     sit --list-in inside it, as a tile's do; a group's heading hangs on the edge itself, so it
+-     heads its rows. The bleed is the room a scroller keeps at its sides for a ring */
+-  --list-pad: 0px;
++  /* rows: one column edge for every shape (the sheet's gutter, where the bar's title and buttons
++     end): a row's words, a group's glyph, a column head, a foot's words and a tile's side all
++     stand on it; a row's wash, an open row's panel and a foot strip reach --list-in past it, so
++     the words keep the edge and the wash still has room round them. The bleed is that room, kept
++     by a scroller at its sides */
+   --list-in: 16px;
+-  --list-inset: calc(var(--list-pad) + var(--list-in));
+-  --list-bleed: 10px;
++  --list-pad: calc(var(--list-in) * -1);
++  --list-inset: 0px;
++  --list-bleed: var(--list-in);
++  --bar-thin: 10px; /* a thin scrollbar's gutter, which a scroller keeps at its right */
+   /* the room above a group's heading: groups part by room, not by a band; a section (My queue's
+      zones, Intake's queries) parts from the one before by more room and one hairline */
+   --group-gap: 20px;
+-  --section-gap: 18px;
++  --section-gap: 12px;
+   /* a list that scrolls in its own surface (Compact): the same parts a step tighter, so a whole
+      board of groups fits the window over its foot */
+   --h-line-dense: 32px;
+@@ -458,7 +459,7 @@
+   --fs-tk: 14px; /* the page's body: a property, a stage, a plan item, a message */
+   --w-fact-label: 104px; /* the properties row's head column */
+   --h-fact: 30px; /* a property row */
+-  --h-check: 34px; /* a plan row */
++  --h-check: 32px; /* a plan row */
+   --h-check-sm: 30px; /* a plan row in the peek */
+   --h-compose: 24px; /* the composer's text, one line beside Send; it grows as you type */
+   --w-ticket: 760px; /* the ticket body's reading width */

@@ -1,0 +1,33 @@
+// One-off: where the toast regions are, and where a toast raised in the peek lands. Vite on 5191.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, permissions: ["clipboard-read", "clipboard-write"] });
+  const page = await ctx.newPage();
+  page.on("response", (r) => { if (r.status() >= 400) console.log("HTTP", r.status(), r.url()); });
+  await page.goto(base + "/?peek=NW-17");
+  await page.waitForTimeout(600);
+  const regions = () => page.evaluate(() => [...document.querySelectorAll("[class*=_region_]")].map((e) => ({ parent: e.parentElement?.tagName + "." + (e.parentElement?.parentElement?.tagName ?? ""), inDialog: !!e.closest("dialog"), kids: e.children.length })));
+  say("regions", await regions());
+  await page.locator("dialog").getByRole("button", { name: "More on NW-17" }).click();
+  await page.waitForTimeout(300);
+  await page.getByRole("menuitem", { name: "Copy key" }).click();
+  await page.waitForTimeout(400);
+  say("regions after", await regions());
+  await browser.close();
+} finally {
+  vite.kill();
+}

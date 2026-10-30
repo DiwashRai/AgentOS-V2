@@ -1,0 +1,12 @@
+web: Graphite, a flatter and more neutral kit look (design spike)
+
+The starting point for the restyle gauntlet. Zinc greys with one indigo for
+your move and focus; ink as the accent; rows and panels on hairlines with at
+most a 1-2px shadow; rows light up instead of lifting; the status edge only for
+your move, running and blocked; neutral mono project keys; a light rail ruled
+off with a hairline. Only tokens.css and the Row, Button, Badge and Frame
+modules change; no screen code. The kit is 26 lines smaller.
+
+The screenshot baselines are not updated: this look is a proposal.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

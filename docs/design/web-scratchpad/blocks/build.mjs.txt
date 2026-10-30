@@ -1,0 +1,9 @@
+// Inject the captured data and the notes into the template.
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const dir = process.argv[2];
+const t = readFileSync(join(dir, "template.html"), "utf8");
+const data = readFileSync(join(dir, "blocks.json"), "utf8").replace(/</g, "\\u003c");
+const notes = readFileSync(join(dir, "notes.html"), "utf8");
+writeFileSync(join(dir, "kit-map.html"), t.replace("/*DATA*/", () => data).replace("<!--NOTES-->", () => notes));

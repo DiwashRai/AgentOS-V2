@@ -1,0 +1,22 @@
+gauntlet: softer dark inks, a tinted open row, editors that fit
+
+Round two's eight judges: dark titles read bright white and the
+metadata sat nearly as bright; selected rows were parted by heavy
+lines; the editors carried empty boxes and too many devices.
+
+- Carbon's inks soften and step further apart (#e2e4ea, #a9adb9,
+  #8b909d; the quiet one about 5.9:1 on the sheet); a property's head
+  takes the quiet ink. A document's title 26px, clearly over its body.
+- An open or selected row is one soft band of the accent (14% on
+  Carbon, 7% on Paper), no edge, so rows open together read as one.
+- An editor's text sheet is as tall as its text; History names the
+  latest two versions, then "+N earlier".
+- A stage card's phase is a quiet word, not a filled tag; its prompt
+  line quiet text, not mono; a drag handle shows on hover or focus.
+- All teams' state words in one plain ink; the glyph says the state.
+
+A lighter medium on dark (450) was tried and dropped: the style lint
+allows 400, 500 and 600 only.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

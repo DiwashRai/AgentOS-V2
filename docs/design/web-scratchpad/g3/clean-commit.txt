@@ -1,0 +1,31 @@
+kit: names that say what they draw, one place per theme
+
+The restyle rounds changed looks without the names, comments and
+reasons round them. No product screen changes (the 20 product
+screenshots match their old baselines); the kit sheet loses the count
+tones and shows Button's new name.
+
+- Button: `ink` is `strong`, `outline` is `inline` (it draws no
+  outline); ActionButton says where it stands (`place`), not a size
+  that implied it.
+- Chip: `fill` gone (no caller, no fill), `edge` is `pill`; its
+  comments and reasons say it sits on a hairline.
+- Avatar: a row's face is one slate (`--face-row`); the four aliased
+  hue tokens and the docs that promised hues gone.
+- Gone with no caller: Badge's count tone, Row's triage kind, the
+  sort icon.
+- Select reads its context's --select-* (a properties row's plain
+  rest, a form row's width and pull) instead of Facts and Form
+  restyling its internals through [role="combobox"].
+- TextArea: one `sheet` prop (head, tools, fold), so tools or a fold
+  can't come without a head; a list item keyed by place (two equal
+  lines shared a key); the sheet drawn by its own part.
+- tokens.css: each theme's block holds every value that differs, the
+  shared block the rest; overridden defaults, --hair (= --wash),
+  --edge, --recess (= --page), --you-edge, --list-bleed, --h-triage and
+  --chip-firm* gone. 424 lines to 380.
+- Stale words: Carbon's edges, counters, Frame's rim, Text's medium
+  on Carbon.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

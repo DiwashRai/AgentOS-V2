@@ -1,0 +1,11 @@
+web: the raw-tag measure reads only a tag type's own alternatives
+
+The measure called a tag "may be a string" when its annotation held a
+string anywhere, so `const Label: (p: { name: string }) => ReactNode`
+counted as a raw element and failed the zero-tags gate. A type now may
+be a string only through its own alternatives: `string`, a string
+literal or template, a union with one of them; a function's or an
+object's type isn't, whatever its parameters or fields hold. Tested both
+ways.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

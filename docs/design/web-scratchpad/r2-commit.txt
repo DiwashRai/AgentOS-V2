@@ -1,0 +1,24 @@
+kit: the consolidation's review round 2
+
+No must-fix in either review; every should-fix is fixed and checked in Chrome
+(.review/consolidation-r2-fixes.md).
+
+- A card's button is the summary's whole box again, unseen and out of the
+  pointer's way, so Tab brings the whole card into view.
+- A draft is one ticket's: Talk and the peek's reply are keyed by the ticket.
+- A popped-out text area keeps its row's help and error: it draws its own
+  copies, since the row's are inert under the window.
+- The gate's walker merges a prop the same way at every level, nested fields
+  included, and walks intersections of kit shapes only.
+- Segmented's group takes its FormRow's description, as its overflow does.
+- A `Length` vocabulary types the column widths that a track wraps, so a
+  column can't name a whole track there.
+- Chip's trailing forms and Card's looks exclude each other's props.
+- Smaller: Composer's label wraps only its text; the sheet's lane says the
+  gate rule; the gate rule and the problems share one loop span; the ledger
+  says FormRow's contract, Head's note and Avatar's md truly.
+
+The kit is 40 of 40 components and 7,322 lines.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

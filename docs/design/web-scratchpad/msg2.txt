@@ -1,0 +1,24 @@
+web: credit by the names a screen uses, props checked through types
+
+A screen was credited with every pattern a shared file imported, and a
+type-only import or a stray re-export counted as a use; features/shared
+had no reuse rule at all. Lowercase exports skipped the props check, and
+a kit type renamed through an alias, an interface, an indexed access or
+`typeof Checklist` passed it.
+
+Now a module's top-level names are its units (tools/uses.mjs): a screen
+reaches a shared or pattern unit only by naming it in code that runs,
+and is credited with what those units are and draw (the kit's reuse
+count too). Type-only imports, `typeof` in types and re-exports give no
+reach. Every function a pattern exports is checked, its parameters'
+types followed to the kit's declarations, cycle-safe (tools/props.mjs),
+and a prop handed unchanged to a kit variant fails as a styling knob.
+features/shared exports need two screens as patterns do.
+
+The code it caught: PlanSection's `place` went straight into Checklist's
+`look` (now chosen from it by a map); Actions' three per-screen filters
+are one actionsAt(actions, place); sizeText (the library's alone) goes
+to domain/format, and the item editor's model says what it holds.
+Tested through the real extractor on a tree with the reviewers' cases.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

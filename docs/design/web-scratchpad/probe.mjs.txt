@@ -1,0 +1,62 @@
+import { rmSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+
+const T = "C:/code/AgentOS-V2-web/web/tools/";
+const imp = (f) => import(pathToFileURL(T + f).href);
+const { tree } = await imp("tree.mjs");
+const { layerProblems } = await imp("layers.mjs");
+const { open, readModules } = await imp("reach.mjs");
+const { readWeb } = await imp("uses.mjs");
+const { patternProblems, knobProblems, sharedProblems } = await imp("patterns.mjs");
+
+const FILES = {
+  "main.tsx": `import { App } from "./app/App";\nexport { App };\n`,
+  "app/App.tsx": `import { E } from "../features/e/E";\nimport { F } from "../features/f/F";\nexport const App = () => [E, F];\n`,
+  "kit/index.ts": [
+    `export type Tone = "1" | "2";`,
+    `export function Text(p: { tone?: Tone }) { return p.tone ?? null; }`,
+    `export function Avatar(p: { name: string }) { return p.name; }`,
+    ``,
+  ].join("\n"),
+  "api/types.ts": `export type Iso = string;\n`,
+  "features/compact/model.ts": `export const nowLine = 1;\n`,
+  // 1. Vite's root-absolute glob
+  "features/ticket/RunsTab.tsx": [
+    `const mods = import.meta.glob("/src/features/compact/*.ts", { eager: true });`,
+    `export const RunsTab = () => mods;`,
+    ``,
+  ].join("\n"),
+  // 2. a stylesheet Vite reads that isn't .css, in a pattern; 3. .css in a screen
+  "patterns/skin.pcss": `.x { color: red; }\n`,
+  "patterns/styled.tsx": `import "./skin.pcss";\nexport const styled = 1;\n`,
+  "features/queue/q.css": `.x { color: red; }\n`,
+  "features/queue/Q.tsx": `import "./q.css";\nexport const Q = 1;\n`,
+  // 4. a .js module with its .d.ts
+  "features/intake/helper.js": `import { nowLine } from "../compact/model";\nimport { createElement } from "react";\nexport const h = () => [nowLine, createElement("div", { style: { color: "red" } })];\n`,
+  "features/intake/helper.d.ts": `export declare const h: () => unknown;\n`,
+  "features/intake/I.tsx": `import { h } from "./helper";\nexport const I = h;\n`,
+  // 5. a generic prop constrained by a kit vocabulary, handed on through a function
+  "patterns/gen.tsx": [
+    `import { Text, type Tone } from "../kit";`,
+    `const pick = (x: Tone) => x;`,
+    `export function G<T extends Tone>({ tone }: { tone: T }) { return <Text tone={pick(tone)} />; }`,
+    ``,
+  ].join("\n"),
+  "patterns/who.tsx": `import { Avatar } from "../kit";\nexport function Who({ name }: { name: string }) { return <Avatar name={name} />; }\n`,
+  // 7. credit by naming in code no one runs
+  "features/e/E.tsx": `import { Who } from "../../patterns/who";\nimport { G } from "../../patterns/gen";\nimport { styled } from "../../patterns/styled";\nexport const keep = [Who, G, styled];\nexport const E = 1;\n`,
+  "features/f/F.tsx": `import { Who } from "../../patterns/who";\nimport { G } from "../../patterns/gen";\nimport { styled } from "../../patterns/styled";\nexport const keep = [Who, G, styled];\nexport const F = 1;\n`,
+};
+
+const root = tree(FILES);
+try {
+  console.log("LAYERS:\n" + layerProblems(readModules(open(root))).join("\n"));
+  const web = readWeb(root);
+  console.log("PATTERNS:\n" + patternProblems(web.patterns, 8).join("\n"));
+  console.log("KNOBS:\n" + knobProblems(web.knobs).join("\n"));
+  console.log("SHARED:\n" + sharedProblems(web.shared).join("\n"));
+  console.log("CREDIT:", web.patterns.map((p) => `${p.name}=${p.screens.join(",")}`).join(" "));
+  console.log("AVATAR:", [...(web.used.get("Avatar") ?? [])].join(","));
+} finally {
+  rmSync(root, { recursive: true, force: true });
+}

@@ -1,0 +1,18 @@
+kit: tooltips, menus, toasts, checkboxes and radios on Base UI
+
+The owner raised the kit's budget to 45 components and 9,000 lines for these (2026-10-21).
+
+- Tooltips: every title the kit takes is drawn as Linear's tooltip (Base UI's), one per frame and
+  one per dialog. The words stay in the accessibility tree as a description, or not at all where
+  they are the name already; a tip that repeats words on screen opens only while they are cut
+  short. Esc closes a tooltip and still reaches the menu or dialog under it.
+- Menu: a "..." button with a menu of actions; the ticket page and the peek use it to copy the
+  ticket's link and key and to open its Jira issue and pull request.
+- Toasts: useToast raises a short word that something was done (the copies); the frame and each
+  dialog have their own region, so a toast raised in the peek shows over it.
+- Checkbox and Radio: for the admin's intake settings (Settings, W8); the kit sheet shows them.
+
+Tooltips and toasts take no slots (the frame draws them); Menu, Checkbox and Radio do: 43/45
+components, 8,139 of 9,000 lines.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

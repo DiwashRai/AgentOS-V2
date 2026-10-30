@@ -1,0 +1,850 @@
+diff --git a/web/src/features/teams/TeamsView.tsx b/web/src/features/teams/TeamsView.tsx
+index bc2624a..c7ff88f 100644
+--- a/web/src/features/teams/TeamsView.tsx
++++ b/web/src/features/teams/TeamsView.tsx
+@@ -1,8 +1,11 @@
+-// All teams (new in V2): every repo by stage, as Linear's board grouped by team. The stages are the
+-// board's columns, Plan · Build · Verify · Review; each repo is a swimlane across them, its head one
+-// line (the repo, who works there, how much is in flight, a way to its list) over a column per stage
+-// holding its tickets' cards (an empty stage across the board folds narrow; a repo with nothing in
+-// flight is its head alone). Inbox and done work live in each repo's list. Click an item to peek.
++// All teams (new in V2): every ticket in flight across the org, as one board. The stages are its
++// columns, Plan · Build · Verify · Review, each head its name, how many it holds and a strip of
++// them in their states' hues, worst first, so where work piles up and what is stuck there read at a
++// glance; a stage with nothing in it folds to a narrow rail. Each repo is a swimlane, its head in
++// the board's first column (the repo, who works there, how much is in flight, a way to its list),
++// its tickets as compact cards in their stage's column, the one waiting on you or blocked washed in
++// that hue; a repo with nothing in flight folds to one quiet line under the rest. Inbox and done
++// work live in each repo's list. Click a card to peek.
+ import { useState } from "react";
+ import { useSearchParams } from "react-router";
+ 
+@@ -12,20 +15,20 @@ import { groupOf, isMyMove, markOf, STATE_WORD, stepText } from "../../domain/bo
+ import { firstName, plural, repoShort } from "../../domain/format";
+ import {
+   Badge,
+-  Card,
+   Button,
+-  Chip,
+-  type ChipDot,
++  Card,
+   type Column,
+   Icon,
+   Mark,
+   type MarkKind,
++  Meter,
+   Notice,
+   Page,
+   Row,
+   Stack,
+   Table,
+   Text,
++  type Tone,
+ } from "../../kit";
+ import { contextOf, useBoard, useSpace } from "../shared/board";
+ import { NewTicket } from "../shared/NewTicket";
+@@ -38,38 +41,61 @@ const STAGES: readonly { phase: Phase; name: string }[] = [
+   { phase: "review", name: "Review" },
+ ];
+ 
+-/** How many in-flight cards each stage holds, across the board. */
+-function countsOf(work: readonly TicketRow[]): Record<Phase, number> {
+-  const n: Record<Phase, number> = { inbox: 0, plan: 0, build: 0, verify: 0, review: 0, done: 0 };
+-  for (const t of work) n[t.phase] += 1;
+-  return n;
++/** The board's first column holds each lane's head; then a column per stage in order: a stage
++ *  holding cards takes an equal share of the width, an empty one folds to a narrow rail, so its
++ *  neighbours' cards get the room. */
++function columnsOf(work: readonly TicketRow[]): readonly Column[] {
++  return [
++    { label: "Repo", width: "lg" },
++    ...STAGES.map((st): Column =>
++      work.some((t) => t.phase === st.phase)
++        ? { label: st.name, width: "fill" }
++        : { label: st.name, width: "sm", fold: true },
++    ),
++  ];
+ }
+ 
+-/** A column per stage in order: a stage holding cards takes an equal share of the board's width
+- *  (Linear's board columns); an empty one folds to a narrow lane, as Linear folds an empty column,
+- *  so its neighbours' cards get the room. */
+-function columnsOf(counts: Record<Phase, number>): readonly Column[] {
+-  return STAGES.map((st): Column => ({
+-    label: st.name,
+-    width: counts[st.phase] > 0 ? "fill" : "md",
+-  }));
++/** Worst first: what waits on you, what is stuck, what runs, what waits on others, the queue. */
++const RANK: Record<MarkKind, number> = {
++  you: 0,
++  blk: 1,
++  run: 2,
++  wait: 3,
++  queued: 4,
++  idle: 5,
++  done: 6,
++  abandoned: 7,
++};
++
++function worstFirst(work: readonly TicketRow[], me: Person | null): TicketRow[] {
++  return [...work].sort((a, b) => RANK[itemBadge(a, me).kind] - RANK[itemBadge(b, me).kind]);
+ }
+ 
+-/** The board's column head, on the lanes' own grid: each stage's name and how many cards it holds
+- *  (Linear's board heads); an empty stage's name muted over its folded lane. */
+-function Head({ counts }: { counts: Record<Phase, number> }) {
++/** The board's column head, on the lanes' own grid: each stage's name, how many cards it holds and
++ *  their states as a strip, worst first; an empty stage's name muted over its folded rail. */
++function Head({ work, me }: { work: readonly TicketRow[]; me: Person | null }) {
+   return (
+     <Row kind="columns">
+-      {STAGES.map((st) => (
+-        <Stack key={st.phase} dir="row" gap={3} align="center">
+-          <Text weight={500} tone={counts[st.phase] > 0 ? "1" : "3"}>
+-            {st.name}
+-          </Text>
+-          <Text tone="3" tabular>
+-            {String(counts[st.phase])}
+-          </Text>
+-        </Stack>
+-      ))}
++      <Text weight={500} tone="3">
++        Repo
++      </Text>
++      {STAGES.map((st) => {
++        const here = worstFirst(
++          work.filter((t) => t.phase === st.phase),
++          me,
++        );
++        return (
++          <Stack key={st.phase} dir="row" gap={4} align="center">
++            <Text weight={500} tone={here.length > 0 ? "1" : "3"}>
++              {st.name}
++            </Text>
++            <Text tone="3" tabular>
++              {String(here.length)}
++            </Text>
++            {here.length > 0 ? <Meter load={here.map((t) => itemBadge(t, me).kind)} /> : null}
++          </Stack>
++        );
++      })}
+     </Row>
+   );
+ }
+@@ -112,17 +138,17 @@ function parkedAt(t: TicketRow, ask: string): string {
+   return t.rail.find((s) => s.gate?.state === "waiting")?.gate?.short ?? ask;
+ }
+ 
+-/** An item's pill: the live agent and its progress, or what it waits on. */
++/** An item's state line: the live agent and its progress, or what it waits on. */
+ interface ItemBadge {
+   kind: MarkKind;
+   text: string;
+-  /** A running agent's steps, for its glyph's pie and the pill's quieter count. */
++  /** A running agent's steps, for its glyph's pie and the line's quieter count. */
+   progress?: { done: number; total: number } | null;
+ }
+ 
+ type Waiting = Extract<TicketRow["attention"], { kind: "waiting" }>;
+ 
+-/** A waiting item's pill: on you, its gate and You (else the ask); on someone else, where it is
++/** A waiting item's state: on you, its gate and You (else the ask); on someone else, where it is
+  *  parked and who. */
+ function waitingBadge(t: TicketRow, a: Waiting, me: Person | null): ItemBadge {
+   if (isMyMove(a.on, me)) {
+@@ -133,8 +159,8 @@ function waitingBadge(t: TicketRow, a: Waiting, me: Person | null): ItemBadge {
+   return { kind: "wait", text: `${parkedAt(t, a.ask)} · ${who}` };
+ }
+ 
+-/** The glyph's name: a running or waiting item's pill names who, so its glyph says the state;
+- *  any other pill says the state itself, and its glyph is drawing alone. */
++/** The glyph's name: a running or waiting item's line names who, so its glyph says the state;
++ *  any other line says the state itself, and its glyph is drawing alone. */
+ function badgeSays(badge: ItemBadge): string | false {
+   return badge.kind === "run" || badge.kind === "wait" ? STATE_WORD[badge.kind] : false;
+ }
+@@ -150,27 +176,41 @@ function itemBadge(t: TicketRow, me: Person | null): ItemBadge {
+   return { kind: m.kind, text: m.kind === "you" ? "" : m.name };
+ }
+ 
+-/** A pill's dot: the state's hue, so the pill says it as the glyph does. */
+-const DOT: Partial<Record<MarkKind, ChipDot>> = {
+-  run: "live",
+-  you: "you",
+-  blk: "blocked",
+-  done: "done",
+-};
++/** The state's words in its ink: your move in the accent's, blocked in the blocked ink (both a
++ *  step heavier), the queue receding; everyone else's in the second ink. */
++const SAYS: Partial<Record<MarkKind, Tone>> = { you: "you", blk: "blocked", queued: "3" };
++
++/** A card's look: one that waits on you, or is blocked, washed in that hue. */
++function lookOf(kind: MarkKind): "ticket" | "you" | "blocked" {
++  if (kind === "you") return "you";
++  return kind === "blk" ? "blocked" : "ticket";
++}
+ 
+-/** The pill on the key's line, its state's words after its dot (Linear's "Working…" pill): a
+- *  running agent's name, its step a quieter count after it. */
+-function Pill({ badge }: { badge: ItemBadge }) {
+-  if (badge.text === "") return null;
+-  const dot = DOT[badge.kind] ?? "neutral";
++/** The key's line: the key, then the state's words (a running agent's step a quieter count). */
++function StateLine({ t, badge }: { t: TicketRow; badge: ItemBadge }) {
+   const p = badge.progress;
+-  if (p) return <Chip tone="edge" dot={dot} label={badge.text} after={{ text: stepText(p) }} />;
+-  return <Chip tone="edge" dot={dot} label={badge.text} />;
++  const loud = badge.kind === "you" || badge.kind === "blk";
++  return (
++    <Stack dir="row" gap={3} align="baseline">
++      <Badge kind="key" size="sm">
++        {t.key}
++      </Badge>
++      {badge.text === "" ? null : (
++        <Text variant="meta" tone={SAYS[badge.kind] ?? "2"} weight={loud ? 500 : 400} truncate>
++          {badge.text}
++        </Text>
++      )}
++      {p ? (
++        <Text variant="meta" tabular>
++          {stepText(p)}
++        </Text>
++      ) : null}
++    </Stack>
++  );
+ }
+ 
+-/** One item, two lines (Linear's board card): its key (12px, muted) with its state's pill at the
+- *  line's end; then the state's glyph (Linear's status circle, a running agent's pie showing its
+- *  progress) and the title (14px, regular, up to two lines). */
++/** One item, compact (a board card): the state's glyph (a running agent's pie showing its
++ *  progress) and the title, then under the title its key and the state in words. */
+ function Item({
+   t,
+   me,
+@@ -183,23 +223,20 @@ function Item({
+   const badge = itemBadge(t, me);
+   return (
+     <Card
+-      look="ticket"
++      look={lookOf(badge.kind)}
+       label={`Peek at ${t.key}: ${t.title}`}
+       onOpen={() => {
+         onOpen(t.key);
+       }}
+     >
+-      <Stack dir="row" gap={4} align="center" justify="between">
+-        <Badge kind="key" size="sm">
+-          {t.key}
+-        </Badge>
+-        <Pill badge={badge} />
+-      </Stack>
+       <Stack dir="row" gap={4} align="baseline">
+         <Mark kind={badge.kind} glyph still name={badgeSays(badge)} progress={badge.progress} />
+-        <Text variant="label" weight={400} tone="1" truncate={2} title={t.title}>
+-          {t.title}
+-        </Text>
++        <Stack gap={1}>
++          <Text variant="label" weight={400} tone="1" truncate={2} title={t.title}>
++            {t.title}
++          </Text>
++          <StateLine t={t} badge={badge} />
++        </Stack>
+       </Stack>
+     </Card>
+   );
+@@ -238,37 +275,74 @@ function Cell({
+   );
+ }
+ 
+-/** A swimlane's head, one line across the board (Linear's group head): the repo's glyph and name,
+- *  then one quiet line of its full name, who works there (first names, read at a glance where a
+- *  row of tiny faces isn't) and how many of its tickets are in flight (or that none are); its list
+- *  at the line's end. */
+-function LaneHead({ repo, people, n }: { repo: string; people: readonly Person[]; n: number }) {
+-  const team = people.map((p) => firstName(p.name)).join(", ");
+-  const flight = n > 0 ? `${String(n)} in flight` : "Nothing in flight";
++/** The way to a repo's list. */
++function OpenList({ repo }: { repo: string }) {
++  return (
++    <Button variant="link" icon="compact" href={`/compact?repo=${encodeURIComponent(repo)}`}>
++      Open list
++    </Button>
++  );
++}
++
++/** The repo's glyph and short name. */
++function RepoName({ repo, quiet }: { repo: string; quiet: boolean }) {
+   return (
+-    <Stack dir="row" gap={4} align="center">
++    <Stack dir="row" gap={3} align="center">
+       <Text variant="meta">
+         <Icon name="repo" />
+       </Text>
+-      <Text variant="label" weight={600} as="h2" truncate>
++      <Text variant={quiet ? "label" : "heading"} tone={quiet ? "2" : "1"} as="h2" truncate>
+         {repoShort(repo)}
+       </Text>
+-      <Text variant="meta" truncate tabular>
+-        {[repo, team, flight].filter(Boolean).join(" · ")}
+-      </Text>
+-      <Stack grow />
+-      <Button
+-        variant="quiet"
+-        size="xs"
+-        icon="compact"
+-        href={`/compact?repo=${encodeURIComponent(repo)}`}
+-      >
+-        Open list
+-      </Button>
+     </Stack>
+   );
+ }
+ 
++/** A swimlane's head, in the board's first column: the repo's glyph and name with how many of its
++ *  tickets are in flight, then quietly its full name and who works there (first names, read at a
++ *  glance where a row of tiny faces isn't), and its list. */
++function LaneHead({ repo, team, n }: { repo: string; team: string; n: number }) {
++  return (
++    <Stack gap={3}>
++      <Stack dir="row" gap={4} align="center">
++        <RepoName repo={repo} quiet={false} />
++        <Text tone="3" tabular>
++          {String(n)}
++        </Text>
++      </Stack>
++      <Stack gap={1}>
++        <Text variant="meta" truncate>
++          {repo}
++        </Text>
++        {team ? (
++          <Text variant="meta" truncate>
++            {team}
++          </Text>
++        ) : null}
++      </Stack>
++      <Stack dir="row">
++        <OpenList repo={repo} />
++      </Stack>
++    </Stack>
++  );
++}
++
++/** A repo with nothing in flight, one quiet line across the board: its name, then its full name,
++ *  who works there and that nothing is in flight, and its list. */
++function QuietLane({ repo, team }: { repo: string; team: string }) {
++  return (
++    <Row kind="band">
++      <RepoName repo={repo} quiet />
++      <Stack dir="row" gap={7} align="center">
++        <Text variant="meta" truncate tabular>
++          {[repo, team, "Nothing in flight"].filter(Boolean).join(" · ")}
++        </Text>
++        <OpenList repo={repo} />
++      </Stack>
++    </Row>
++  );
++}
++
+ export function TeamsView() {
+   const board = useBoard();
+   const { rows, me } = board;
+@@ -289,7 +363,16 @@ export function TeamsView() {
+   const shown = rows.filter((t) =>
+     query.every((q) => `${t.key} ${t.title}`.toLowerCase().includes(q)),
+   );
+-  const counts = countsOf(shown.filter(inFlight));
++  const work = shown.filter(inFlight);
++  const lanes = repos.map((repo) => {
++    const owners = rows.flatMap((t) => (t.repo === repo.name && t.owner ? [t.owner] : []));
++    const people = [...new Map(owners.map((p) => [p.id, p])).values()];
++    return {
++      repo: repo.name,
++      team: people.map((p) => firstName(p.name)).join(", "),
++      work: work.filter((t) => t.repo === repo.name),
++    };
++  });
+   return (
+     <Page
+       title="All teams"
+@@ -306,28 +389,31 @@ export function TeamsView() {
+       {board.error ? (
+         <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
+       ) : null}
+-      <Table columns={columnsOf(counts)} head={false} edge foot={<Legend />}>
+-        <Head counts={counts} />
+-        {repos.map((repo) => {
+-          const work = shown.filter((t) => t.repo === repo.name && inFlight(t));
+-          const owners = rows.flatMap((t) => (t.repo === repo.name && t.owner ? [t.owner] : []));
+-          const people = [...new Map(owners.map((p) => [p.id, p])).values()];
+-          return (
+-            <Row key={repo.name} kind="band">
+-              <LaneHead repo={repo.name} people={people} n={work.length} />
+-              {work.length === 0
+-                ? null
+-                : STAGES.map((st) => (
+-                    <Cell
+-                      key={st.phase}
+-                      items={work.filter((t) => t.phase === st.phase)}
+-                      me={me}
+-                      onOpen={open}
+-                    />
+-                  ))}
++      <Table columns={columnsOf(work)} head={false} edge foot={<Legend />}>
++        <Head work={work} me={me} />
++        {lanes
++          .filter((l) => l.work.length > 0)
++          .map((l) => (
++            <Row key={l.repo} kind="band">
++              <LaneHead repo={l.repo} team={l.team} n={l.work.length} />
++              {STAGES.map((st) => (
++                <Cell
++                  key={st.phase}
++                  items={worstFirst(
++                    l.work.filter((t) => t.phase === st.phase),
++                    me,
++                  )}
++                  me={me}
++                  onOpen={open}
++                />
++              ))}
+             </Row>
+-          );
+-        })}
++          ))}
++        {lanes
++          .filter((l) => l.work.length === 0)
++          .map((l) => (
++            <QuietLane key={l.repo} repo={l.repo} team={l.team} />
++          ))}
+       </Table>
+     </Page>
+   );
+diff --git a/web/src/kit/Card.module.css b/web/src/kit/Card.module.css
+index 4890272..1a25ec2 100644
+--- a/web/src/kit/Card.module.css
++++ b/web/src/kit/Card.module.css
+@@ -112,16 +112,37 @@
+   background: var(--page);
+ }
+ 
+-/* ticket: a ticket on a board, its two lines under one another, each the card's width */
+-.card[data-look="ticket"] {
++/* ticket: a ticket on a board, its two lines under one another, each the card's width; one that
++   waits on you, or is blocked, on a faint wash of that hue (a step firmer under the pointer) */
++.card:not([data-look="stage"]) {
+   border-radius: var(--r-3);
+ }
+-.card[data-look="ticket"] .summary {
++.card:not([data-look="stage"]) .summary {
+   padding: var(--sp-5) var(--sp-6) var(--sp-6);
+   border-radius: var(--r-3);
+ }
+-.card[data-look="ticket"] .main {
++.card:not([data-look="stage"]) .main {
+   display: flex;
+   flex-direction: column;
+   gap: var(--sp-3);
+ }
++.card[data-look="you"] {
++  --ground: var(--card-you);
++  background: var(--card-you);
++}
++.card[data-look="blocked"] {
++  --ground: var(--card-blocked);
++  background: var(--card-blocked);
++}
++.card[data-look="you"][data-edit]:hover {
++  --ground: var(--card-you-hover);
++  background: var(--card-you-hover);
++}
++.card[data-look="blocked"][data-edit]:hover {
++  --ground: var(--card-blocked-hover);
++  background: var(--card-blocked-hover);
++}
++/* on a board's lane (a Row's band) a step tighter, so a lane of them stays short */
++:where([data-row]) .card:not([data-look="stage"]) .summary {
++  padding: var(--sp-4) var(--sp-5) var(--sp-5);
++}
+diff --git a/web/src/kit/Card.tsx b/web/src/kit/Card.tsx
+index 800c617..d038320 100644
+--- a/web/src/kit/Card.tsx
++++ b/web/src/kit/Card.tsx
+@@ -1,9 +1,11 @@
+-// A card: one object on its own surface, the whole of it one button. Two looks, one surface and
++// A card: one object on its own surface, the whole of it one button. Two kinds, one surface and
+ // one activation:
+ // - stage: a workflow stage on the lane: its face in the slot the lane's axis runs through, its
+ //   summary beside it; the summary selects it, and selected it opens in place to its settings (no
+ //   dialog). A disabled stage is dimmed; a problem with it is said at its foot.
+-// - ticket: a ticket on a board (All teams): two tight lines on a card lifted off its lane by tone.
++// - ticket: a ticket on a board (All teams): two tight lines on a card lifted off its lane by tone,
++//   a step tighter in a board's lane; one that waits on you (you) or is blocked (blocked) on a faint
++//   wash of that state's hue, so a board says where to act and what is stuck before a word is read.
+ // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
+ // ring round the card, and a click anywhere on it for a pointer. What the lines say is the
+ // screen's.
+@@ -36,7 +38,8 @@ export type CardProps = Common &
+         problem?: string;
+       }
+     | {
+-        look: "ticket";
++        /** A ticket on a board; one that waits on you, or is blocked, washed in its state's hue. */
++        look: "ticket" | "you" | "blocked";
+         /** A click (or Enter) opens what the card is of (a peek). */
+         onOpen: () => void;
+         face?: never;
+@@ -65,7 +68,7 @@ const flag = (on: boolean) => on || undefined;
+ 
+ /** What a card draws, by its case: a stage's face, settings and problem, and its button's words. */
+ function caseOf(props: CardProps) {
+-  if (props.look === "ticket")
++  if (props.look !== undefined && props.look !== "stage")
+     return { face: undefined, open: undefined, off: false, problem: undefined, say: props.label };
+   const opened = props.open !== undefined;
+   return {
+diff --git a/web/src/kit/Meter.module.css b/web/src/kit/Meter.module.css
+index 99996a8..b775345 100644
+--- a/web/src/kit/Meter.module.css
++++ b/web/src/kit/Meter.module.css
+@@ -68,3 +68,23 @@
+ .list .seg[data-seg="now"]::after {
+   content: none;
+ }
++/* load: a stage's tickets on a board, a short segment each in its state's hue (narrower when a
++   stage holds more than its head has room for); waiting on someone a firm grey, queued the bare
++   track (nothing moving yet) */
++.load > .seg {
++  flex: 0 1 auto;
++  width: var(--sp-8);
++  min-width: var(--sp-1);
++}
++.seg[data-kind="you"] {
++  background: var(--you);
++}
++.seg[data-kind="blk"] {
++  background: var(--blocked);
++}
++.seg[data-kind="run"] {
++  background: var(--live);
++}
++.seg[data-kind="wait"] {
++  background: var(--prop-mark);
++}
+diff --git a/web/src/kit/Meter.tsx b/web/src/kit/Meter.tsx
+index 91dabb0..e2d6c48 100644
+--- a/web/src/kit/Meter.tsx
++++ b/web/src/kit/Meter.tsx
+@@ -1,7 +1,10 @@
+ // A run's progress: one segment per step. Two looks: in a row beside its step (the default), the
+ // step in progress sweeping; and still in a list of runs (a column of meters would sweep all at
+ // once), each finished step solid and the one under way a soft step of it. A queued run has no
+-// steps yet: its track is dashed, so a list of runs keeps its column.
++// steps yet: its track is dashed, so a list of runs keeps its column. A stage's load on a board is
++// the same track cut per ticket instead: a short segment each in its state's hue, so a longer one
++// is a stage piling up and its red is what's stuck there.
++import type { MarkKind } from "./Mark";
+ import s from "./Meter.module.css";
+ import { cx } from "./vars";
+ 
+@@ -11,12 +14,22 @@ export type MeterProps = { size?: "row" | "list" } & (
+       done: number;
+       total: number;
+       queued?: never;
++      load?: never;
+     }
+   | {
+       /** Waiting for a runner: no steps yet, the track dashed; the words beside it say so. */
+       queued: true;
+       done?: never;
+       total?: never;
++      load?: never;
++    }
++  | {
++      /** A stage's tickets, one segment each in its state's hue, in the order given (the screen's
++       *  worst first); the count beside it and the cards under it say it in words. */
++      load: readonly MarkKind[];
++      done?: never;
++      total?: never;
++      queued?: never;
+     }
+ );
+ 
+@@ -31,6 +44,14 @@ function segments(done: number, total: number): Seg[] {
+ export function Meter(props: MeterProps) {
+   const size = props.size ?? "row";
+   if (props.queued) return <span className={cx(s.meter, s[size], s.queued)} aria-hidden="true" />;
++  if (props.load)
++    return (
++      <span className={cx(s.meter, s.load)} aria-hidden="true">
++        {props.load.map((kind, i) => (
++          <i key={i} className={s.seg} data-kind={kind} />
++        ))}
++      </span>
++    );
+   const { done, total } = props;
+   return (
+     <span
+diff --git a/web/src/kit/Row.module.css b/web/src/kit/Row.module.css
+index 96d34ee..dcb6819 100644
+--- a/web/src/kit/Row.module.css
++++ b/web/src/kit/Row.module.css
+@@ -166,10 +166,11 @@
+   min-height: calc(var(--h-row) + var(--line-2));
+ }
+ 
+-/* band: a board's swimlane, out to the sheet's edges. Its first cell is its head, a heading line
+-   across the board with room above it (no band); under it each stage's cell is a column of its
+-   items' cards straight on the sheet, tiles of tone (no lane, no line), the stages parted by room,
+-   so an empty one is bare sheet. columns: the board's column head, the stage names on the same
++/* band: a board's swimlane, out to the sheet's edges, one hairline over it on the column edges.
++   Its first cell is its head (the repo, who works there, its list) in the board's first column;
++   then each stage's cell, a column of its items' cards straight on the sheet, tiles of tone (no
++   lane box), the stages parted by room, so an empty one is bare sheet. A folded stage's cell is a
++   dashed rail down its middle. columns: the board's column head, each stage's head on the same
+    grid over the cards' own text, held at the board's top. */
+ .band {
+   border-radius: 0;
+@@ -177,20 +178,43 @@
+ .band > .inner {
+   align-items: stretch;
+   column-gap: var(--sp-6);
+-  padding: 0 var(--list-inset);
++  padding: var(--sp-8) var(--list-inset);
+   border-radius: 0;
+ }
++.band:not(.columns)::before {
++  content: "";
++  position: absolute;
++  top: 0;
++  inset-inline: var(--list-inset);
++  height: var(--line-1);
++  background: var(--rule);
++}
+ .band .cell {
+   flex-direction: column;
+   align-items: stretch;
+   justify-content: flex-start;
+   gap: var(--sp-4);
+ }
+-.band:not(.columns) .cell:first-child {
+-  grid-column: 1 / -1;
+-  justify-content: center;
+-  min-height: var(--h-group);
+-  margin-top: var(--group-gap);
++/* a lane's head on its first card's title line; a lane with nothing in flight is its head, then
++   one line across every stage */
++.band:not(.columns, :has(.rest)) .cell:first-child {
++  padding-top: var(--sp-4);
++}
++.band:has(.rest) > .inner {
++  padding-block: var(--sp-6);
++}
++.band:not(.columns) .rest {
++  grid-column-start: 2;
++}
++/* a folded stage's rail runs through the lanes' room, unbroken from lane to lane */
++.band .cell[data-fold="true"] {
++  align-items: center;
++  margin-block: calc(var(--sp-8) * -1);
++  background: repeating-linear-gradient(
++      var(--track) 0 var(--sp-2),
++      transparent var(--sp-2) calc(var(--sp-2) + var(--line-3))
++    )
++    center / var(--line-1) 100% no-repeat;
+ }
+ .band.columns {
+   position: sticky;
+@@ -200,8 +224,15 @@
+ }
+ .band.columns > .inner {
+   min-height: var(--h-list-head);
++  padding-block: 0;
+ }
+ .band.columns .cell {
+   justify-content: center;
+-  padding: 0 var(--sp-6);
++}
++.band.columns .cell:not(:first-child, [data-fold="true"]) {
++  padding: 0 var(--sp-5);
++}
++.band.columns .cell[data-fold="true"] {
++  margin-block: 0;
++  background: none;
+ }
+diff --git a/web/src/kit/Row.tsx b/web/src/kit/Row.tsx
+index e201051..b4ecbd1 100644
+--- a/web/src/kit/Row.tsx
++++ b/web/src/kit/Row.tsx
+@@ -1,7 +1,8 @@
+ // One item of a list: its cells on the Table's columns. A line, an item and a triage row are flat,
+ // a rounded patch on the list's column edge (its words inset) washed on hover, focus and open; a
+ // list out at the sheet's edges rules them apart faintly. A rack is a bare entry; a band a board's
+-// swimlane (its head, then its lanes). A card on its own surface is a Card. Nothing changes size.
++// swimlane (its head in the first column, then a lane per stage). A card on its own surface is a
++// Card. Nothing changes size.
+ import { Children, type ReactNode } from "react";
+ 
+ import { Opener, openOnClick } from "./opener";
+@@ -21,9 +22,9 @@ export interface RowProps {
+   children: ReactNode;
+   /** line: a list's one-line row (Compact, My queue, the library); item: a roomy two-line row (a
+    *  ticket's context); triage: a tight two-line row led by a face (Intake); rack: a bare entry (a
+-   *  run's stage); band: a board's swimlane, its first cell a head line across the board and then
+-   *  a lane per column; columns: the board's column head,
+-   *  one short line of stage names over the swimlanes, on the same grid. */
++   *  run's stage); band: a board's swimlane, one hairline over it, its first cell the lane's head
++   *  and then a lane per column; columns: the board's column head, one short line of stage heads
++   *  over the swimlanes, on the same grid. */
+   kind?: "line" | "item" | "triage" | "rack" | "band" | "columns";
+   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
+    *  names what it opens, for assistive tech. */
+@@ -35,20 +36,20 @@ export interface RowProps {
+   alert?: string;
+ }
+ 
+-/** `lead`: a band's head, a line of its own across every column before the cells that sit on them. */
+-function useCells(children: ReactNode, stack: boolean, lead: number): ReactNode[] {
++function useCells(children: ReactNode, stack: boolean): ReactNode[] {
+   const columns = useColumns();
+   const cells = Children.toArray(children);
+   if (stack) return cells;
+-  return cells.slice(0, columns.length + lead).map((cell, i) => {
+-    const last = i === cells.length - 1 && i - lead < columns.length - 1;
+-    const column = last ? columns[columns.length - 1] : columns[i - lead];
++  return cells.slice(0, columns.length).map((cell, i) => {
++    const last = i === cells.length - 1 && i < columns.length - 1;
++    const column = last ? columns[columns.length - 1] : columns[i];
+     return (
+       <span
+         key={i}
+         className={cx(s.cell, last && s.rest)}
+         data-end={column?.end}
+         data-keep={column?.keep}
++        data-fold={last ? undefined : column?.fold}
+       >
+         {cell}
+       </span>
+@@ -110,7 +111,7 @@ export function Row(props: RowProps) {
+   const { children, kind = "line", action, open = false, more, alert } = props;
+   const columns = useColumns();
+   const stack = columns.length === 0;
+-  const cells = useCells(children, stack, kind === "band" ? 1 : 0);
++  const cells = useCells(children, stack);
+   return (
+     <div
+       className={cx(
+diff --git a/web/src/kit/Table.tsx b/web/src/kit/Table.tsx
+index 496978d..14078be 100644
+--- a/web/src/kit/Table.tsx
++++ b/web/src/kit/Table.tsx
+@@ -31,6 +31,9 @@ export type Column = Track & {
+   /** Never narrower than its content (a row's buttons): when the list is narrow, the chips give
+    *  way, not the buttons. */
+   keep?: boolean;
++  /** Folded: a board's empty stage, its head over a dashed rail down each lane (the kit's "not
++   *  here now"), so a narrow column still reads as the stage between its neighbours. */
++  fold?: boolean;
+ };
+ 
+ function track(c: Column): string {
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 63ed0e7..88ad940 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -157,7 +157,7 @@
+       }
+     },
+     "Card": {
+-      "why": "A card: one object on its own surface, the whole of it one button. Two looks on one surface and one activation (a workflow stage, a ticket on a board).",
++      "why": "A card: one object on its own surface, the whole of it one button. Two kinds on one surface and one activation (a workflow stage, a ticket on a board, washed in its state's hue where it waits on you or is blocked).",
+       "props": {
+         "label": {
+           "why": "What it is: a stage's button says Edit Implement or Close Implement; a ticket's says what it opens (Peek at NW-17: …)."
+@@ -184,7 +184,9 @@
+           "why": "Stages and board tickets are cards in two places.",
+           "values": {
+             "stage": "A workflow stage on the lane: a card of tone over the axis (its tone parts it from the next, inside a loop's bracket too; a disabled one no tone, a dashed outline alone), its face on the axis, ringed in the accent as it opens in place to its settings (the default).",
+-            "ticket": "A ticket on a board (All teams): two tight lines on a tile of tone straight on the sheet (no lane under it), its key with its state's pill at the line's end, then its title (Linear's board card)."
++            "ticket": "A ticket on a board: two tight lines on a tile of tone straight on the sheet (no lane under it), what they say the screen's (Linear's board card in the twins; All teams' compact card, its glyph and title over its key and state); in a board's lane (a Row's band) a step tighter, so a lane of them stays short.",
++            "you": "A ticket on All teams' board that waits on you: the same card on a faint wash of the accent, so where to act stands out of the board before a word is read.",
++            "blocked": "A blocked ticket on All teams' board: the same card on a faint wash of the blocked hue, so what is stuck stands out of the board before a word is read."
+           }
+         }
+       }
+@@ -205,7 +207,7 @@
+           "why": "A small glyph before the words (skills, files, the repo, the clock, a version); one or the other with a dot."
+         },
+         "dot": {
+-          "why": "A dot in a state's hue before the words, instead of a glyph: a board card's state, a verdict, drift.",
++          "why": "A dot in a state's hue before the words, instead of a glyph: a run's state, a verdict, drift, a label's hue.",
+           "values": {
+             "neutral": "No state of its own.",
+             "live": "Running.",
+@@ -219,7 +221,7 @@
+           "values": {
+             "line": "A faint fill, no outline: the default; in a list's row, the same fill as a pill.",
+             "fill": "A firmer fill: a stage's phase, and a list line's one tag (Compact's Now: the agent and its step, who it waits on).",
+-            "edge": "A round pill of the same faint fill: a board card's state on its key's line (Linear's card pill), a step over the card in every theme.",
++            "edge": "A round pill of the same faint fill (Linear's card pill): a board card's agent, labels and pull requests, a property's value, a step over the card in every theme (the twins' Linear layouts).",
+             "blocked": "The words in the blocked ink: a conflict."
+           }
+         },
+@@ -227,7 +229,7 @@
+           "why": "The full text on hover, when it says more than the words."
+         },
+         "after": {
+-          "why": "Quieter, after the words: a step count (a running board card's agent, Compact's Now tag)."
++          "why": "Quieter, after the words: a step count (Compact's Now tag), a picker's caret or a link's arrow."
+         }
+       }
+     },
+@@ -544,8 +546,11 @@
+       }
+     },
+     "Meter": {
+-      "why": "A run's progress, one segment per step (V1's RunMeter).",
++      "why": "A run's progress, one segment per step (V1's RunMeter); the same track cut per ticket is a stage's load on All teams' board.",
+       "props": {
++        "load": {
++          "why": "A stage's load on All teams' board, in its column head after the count: a short segment per ticket in its state's hue, worst first, so a longer strip is a stage piling up and its red is what is stuck there; the count and the cards say it in words, so it is unseen to assistive tech."
++        },
+         "done": {
+           "why": "Steps finished."
+         },
+@@ -691,8 +696,8 @@
+             "item": "A two-line row (a ticket's context): roomy, unruled, washed on hover.",
+             "triage": "A triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; washed on hover.",
+             "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
+-            "band": "A board's swimlane (All teams), out to the sheet's edges: its head, a heading across the board (the repo, its team, what is in flight), then a cell per stage, a column of ticket Cards straight on the sheet, the stages parted by room, so an empty stage is bare sheet.",
+-            "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid, held at the board's top."
++            "band": "A board's swimlane (All teams), out to the sheet's edges, one hairline over it: its head in the board's first column (the repo, what is in flight, its team, its list), on its first card's title line, then a cell per stage, a column of ticket Cards straight on the sheet, the stages parted by room, so an empty stage is bare sheet and a folded one a dashed rail running unbroken from lane to lane; with only a head and one more cell, a lane with nothing in flight, one line across the stages.",
++            "columns": "A board's column head: one short line of stage heads (a name, a count, its load) over the swimlanes, on their grid, a folded stage's name over its rail, held at the board's top."
+           }
+         },
+         "action": {
+@@ -948,7 +953,7 @@
+       "why": "A dense list on one grid: column head, rows in groups, a foot; rows line up across groups.",
+       "props": {
+         "columns": {
+-          "why": "The grid: widths as tokens, which align right, which hug their content (a list without a head).",
++          "why": "The grid: widths as tokens, which align right, which hug their content (a list without a head), which is a board's folded stage (an empty one, narrow, its cells a dashed rail).",
+           "items": {
+             "width": {
+               "why": "A column's width, a width token (Width)."
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index bfffe98..3560976 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -269,6 +269,11 @@
+      and the peek's ground */
+   --tile-hover: var(--tone-3);
+   --teams-card: var(--tone-2);
++  /* a board's card that waits on you, or is blocked: the card's tone washed in that hue */
++  --card-you: color-mix(in srgb, var(--you) 10%, var(--teams-card));
++  --card-you-hover: color-mix(in srgb, var(--you) 14%, var(--teams-card));
++  --card-blocked: color-mix(in srgb, var(--blocked) 9%, var(--teams-card));
++  --card-blocked-hover: color-mix(in srgb, var(--blocked) 13%, var(--teams-card));
+   --tk-card: var(--tone-2);
+   --tk-side: var(--page);
+   --tk-hover: var(--fill-1);

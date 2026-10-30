@@ -1,0 +1,38 @@
+// Head-to-head prep for the exploration rounds: copies one match's two image sets into one folder per
+// judge under neutral names (A-n.png, B-n.png); judges 1 and 2 see X as A, 3 and 4 see X as B.
+// Usage: node xprep.mjs <out dir> <match id> <X root> <Y root> <screens|twins|linear>
+//   screens: the fixed set of our screens below, <root>\<piece>\<shot>.png on both sides
+//   twins:   <root>\<name>\twin.png on both sides
+//   linear:  X <root>\<name>\twin.png against Y <root>\<name>\linear.png (Linear's own crop)
+// Writes <out>\<id>\j<k>\{A,B}-n.png and prints the match's size.
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
+
+const SCREENS = [
+  "frame/1-my-queue-light", "frame/2-my-queue-dark", "lists/2-compact-open-dark", "intake/1-intake-light",
+  "ticket/1-ticket-light", "ticket/2-ticket-runs-dark", "overlays/3-item-overlay-light",
+  "controls/2-owner-picker-dark", "library/2-skills-dark", "editors/1-agent-editor-light",
+];
+const TWINS = ["home", "issues", "triage", "subissues", "project", "display", "board"];
+
+// or: shots <comma-separated list like lists/1-my-queue-light,teams/2-all-teams-dark> (screens, a chosen set)
+const [out, id, xRoot, yRoot, kind, list] = process.argv.slice(2);
+const chosen = (list ?? "").split(",").filter(Boolean);
+const sides = {
+  screens: [SCREENS.map((s) => join(xRoot, `${s}.png`)), SCREENS.map((s) => join(yRoot, `${s}.png`))],
+  shots: [chosen.map((s) => join(xRoot, `${s}.png`)), chosen.map((s) => join(yRoot, `${s}.png`))],
+  twins: [TWINS.map((n) => join(xRoot, n, "twin.png")), TWINS.map((n) => join(yRoot, n, "twin.png"))],
+  linear: [TWINS.map((n) => join(xRoot, n, "twin.png")), TWINS.map((n) => join(yRoot, n, "linear.png"))],
+}[kind];
+if (!sides) throw new Error(`unknown kind ${kind}`);
+const missing = sides.flat().filter((p) => !existsSync(p));
+if (missing.length) throw new Error(`missing:\n${missing.join("\n")}`);
+const [X, Y] = sides;
+for (let k = 1; k <= 4; k++) {
+  const dir = join(out, id, `j${k}`);
+  mkdirSync(dir, { recursive: true });
+  const [a, b] = k <= 2 ? [X, Y] : [Y, X];
+  a.forEach((p, i) => copyFileSync(p, join(dir, `A-${i + 1}.png`)));
+  b.forEach((p, i) => copyFileSync(p, join(dir, `B-${i + 1}.png`)));
+}
+console.log(`${id}: ${X.length} per side, 4 judges -> ${join(out, id)}`);

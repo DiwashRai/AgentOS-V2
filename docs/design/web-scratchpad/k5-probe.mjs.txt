@@ -1,0 +1,80 @@
+// One-off: check the kit2 round-1 fixes in Chrome. Vite on 5191, stopped at the end.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, permissions: ["clipboard-read", "clipboard-write"] });
+  await ctx.addInitScript(() => localStorage.setItem("agentos-theme", "light"));
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const go = async (path) => { await page.goto(base + path); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(400); };
+  const focus = () => page.evaluate(() => [document.activeElement?.tagName, document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.textContent?.slice(0, 30)]);
+
+  // 1: a peek opened by a click starts on the dialog; Tab goes to its head
+  await go("/");
+  await page.getByText("Show the run's stage on the board").click();
+  await page.waitForTimeout(500);
+  say("1 peek opened by click, focus", await focus());
+  await page.keyboard.press("Tab");
+  say("1 then Tab", await focus());
+  say("1 regions in dialog", await page.evaluate(() => [...document.querySelectorAll("dialog [class*=_region_]")].length));
+
+  // 4: chips whose title was their label say nothing twice
+  await go("/");
+  say("4 queue: description equal to own text", await page.evaluate(() => [...document.querySelectorAll("[aria-description]")].filter((e) => e.getAttribute("aria-description") === e.textContent.trim()).length));
+  await go("/teams");
+  say("4 teams: description equal to own text", await page.evaluate(() => [...document.querySelectorAll("[aria-description]")].filter((e) => e.getAttribute("aria-description") === e.textContent.trim()).length));
+
+  // 2, 3: an in-app menu link keeps the app; the held look follows the menu
+  await go("/kit");
+  await page.evaluate(() => { window.__marker = 1; });
+  const small = page.getByRole("button", { name: "More, small" });
+  await small.hover();
+  await page.waitForTimeout(900);
+  say("3 tip open, menu closed: held fill", await small.evaluate((e) => [e.getAttribute("aria-expanded"), e.hasAttribute("data-popup-open"), getComputedStyle(e).backgroundColor]));
+  await small.click();
+  await page.waitForTimeout(300);
+  say("3 menu open: held fill", await small.evaluate((e) => [e.getAttribute("aria-expanded"), getComputedStyle(e).backgroundColor]));
+  await page.getByRole("menuitem", { name: "Open ticket" }).click();
+  await page.waitForTimeout(600);
+  say("2 in-app link: url, marker kept", [page.url(), await page.evaluate(() => window.__marker === 1)]);
+
+  // 5, 9: checkbox and radio names; a checked one keeps its edge under the pointer
+  await go("/kit");
+  const snap = (await page.locator("main").ariaSnapshot()).split("\n").filter((l) => /checkbox|radio "/.test(l)).map((l) => l.trim());
+  say("5 names", snap);
+  say("5 description", await page.getByRole("checkbox").evaluate((e) => document.getElementById(e.getAttribute("aria-describedby"))?.textContent));
+  const ask = page.getByRole("radio", { name: "Ask first" });
+  await page.getByText("Ask first", { exact: true }).hover();
+  say("9 checked radio under pointer: border", await ask.evaluate((e) => [e.getAttribute("aria-checked"), getComputedStyle(e).borderColor]));
+
+  // 6: toasts sit clear of the reply box and the Talk column
+  await go("/t/NW-17");
+  await page.getByRole("button", { name: "More on NW-17" }).click();
+  await page.getByRole("menuitem", { name: "Copy link" }).click();
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: join(out, "k5-ticket-toast.png") });
+  await go("/?peek=NW-17");
+  await page.locator("dialog").getByRole("button", { name: "More on NW-17" }).click();
+  await page.getByRole("menuitem", { name: "Copy key" }).click();
+  await page.waitForTimeout(500);
+  say("6 peek toast: in dialog, box", await page.evaluate(() => { const t = document.querySelector("dialog [class*=_toast_]"); const r = t?.getBoundingClientRect(); return t ? [r.x, r.y, r.width] : null; }));
+  await page.screenshot({ path: join(out, "k5-peek-toast.png") });
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

@@ -1,0 +1,19 @@
+web: an unowned face says Unassigned, a run no one started AgentOS
+
+Who's face alone (a line's owner column) drew nobody as an aria-hidden
+dashed ring, so an unowned row's owner said nothing to a screen reader.
+The kit's dashed Avatar takes a `label` (its ledger reason given; 7
+props, no budget raise) and Who passes Unassigned there, on hover too.
+
+A run's `by: null` isn't an empty owner: no person started it, so
+AgentOS did (V1's null creator meant the system's own). fromStarter says
+so, with the agents glyph: "AgentOS queued it", not "Unassigned queued
+it"; a gate's sign-off says it the same way, not "Someone".
+
+An age's tooltip is in full words ("Updated 3 hours 10 minutes ago",
+agoInWords), as settled; the cell stays "3h 10m". authorText and the
+Context tab's author go through nameOf(fromAuthor(...)), the one rule
+("Run #42 on NW-17", "Run #42"). No screenshot changes: tooltips, names
+for assistive tech and run authors aren't in them.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

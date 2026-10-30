@@ -1,0 +1,16 @@
+web: follow a star barrel and lazy() without a crash; say an any tag
+
+The module record dropped `stars`, so `export * from "./A"` in a barrel,
+and `lazy(() => import("…"))` (whose "all of them" walks the stars),
+threw "target.stars is not iterable". The record keeps them now. And
+`import("…").then((m) => m.A)` was taken as asking for an export named
+`then`: a `.then` callback now takes the names it reads off the module
+(`m.A`, `({ A })`), and all of them when it hands the module on whole.
+Tested through the whole extractor: a screen's default export loaded by
+lazy(), a star barrel, and a .then() that takes one export and leaves
+the module's other one uncredited.
+
+A tag whose type is `any` was said to be "a tag that may be a string";
+it is now "a tag whose type didn't resolve", which is what went wrong.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

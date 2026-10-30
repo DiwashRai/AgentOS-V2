@@ -1,0 +1,464 @@
+diff --git a/web/src/kit/Frame.module.css b/web/src/kit/Frame.module.css
+index 7f11ee9..8ae4050 100644
+--- a/web/src/kit/Frame.module.css
++++ b/web/src/kit/Frame.module.css
+@@ -1,6 +1,6 @@
+-/* the ground: the sidebar sits on it, the main column is an inset sheet ringed off it; the sheet
+-   is a sized flex column with no foot padding, so a screen that fills it (flex: 1) scrolls to its
+-   rounded edge, as Linear's does */
++/* flush, as Linear's lists are: the sidebar on its ground and the main column full height beside
++   it, parted by one hairline, no inset card and no shadow; the main column is a sized flex column
++   with no foot padding, so a screen that fills it (flex: 1) scrolls to the window's edge */
+ .app {
+   display: grid;
+   grid-template-columns: var(--w-side) minmax(0, 1fr);
+@@ -11,17 +11,14 @@
+   display: flex;
+   flex-direction: column;
+   min-width: 0;
+-  height: calc(100dvh - var(--sp-4) * 2);
+-  margin: var(--sp-4) var(--sp-4) var(--sp-4) 0;
++  height: 100dvh;
+   padding: 0 var(--gutter);
+   overflow-y: auto;
+-  border-radius: var(--r-4);
+   background: var(--page);
+-  box-shadow: var(--panel-ring);
+ }
+ 
+-/* the sidebar: Linear's labelled list on the ground; 14px medium labels on 32px rows, 16px icons in the
+-   label's ink, the current view a filled pill */
++/* the sidebar: Linear's dense labelled list on the ground; 13px medium labels on 28px rows, 16px
++   icons a step under the label, the current view a filled pill */
+ .side {
+   position: sticky;
+   top: 0;
+@@ -30,7 +27,8 @@
+   flex-direction: column;
+   gap: var(--side-gap);
+   min-width: 0;
+-  padding: var(--sp-4) var(--sp-6);
++  padding: 0 var(--sp-5) var(--sp-5);
++  border-right: var(--line-1) solid var(--side-edge);
+   overflow-y: auto;
+   scrollbar-width: none;
+   color: var(--side-ink);
+@@ -136,7 +134,7 @@
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+-  font-size: var(--fs-4);
++  font-size: var(--fs-3);
+   font-weight: 600;
+   letter-spacing: var(--track-snug);
+ }
+@@ -173,7 +171,7 @@
+   gap: var(--sp-1);
+ }
+ 
+-/* a section's heading: Linear's muted 13px label with its caret; its text sits low, so it hugs its
++/* a section's heading: Linear's muted 12px label with its caret; its text sits low, so it hugs its
+    entries and the open space falls above it. It folds the section away */
+ .title {
+   display: flex;
+@@ -186,7 +184,7 @@
+   border-radius: var(--r-2);
+   background: none;
+   font: inherit;
+-  font-size: var(--fs-3);
++  font-size: var(--fs-2);
+   font-weight: 500;
+   letter-spacing: 0;
+   color: var(--side-title);
+@@ -205,12 +203,12 @@
+ .item {
+   display: flex;
+   align-items: center;
+-  gap: var(--sp-5);
++  gap: var(--sp-4);
+   min-width: 0;
+   height: var(--h-side-item);
+   padding: 0 var(--sp-3) 0 var(--sp-4);
+-  border-radius: var(--r-3);
+-  font-size: var(--fs-4);
++  border-radius: var(--r-2);
++  font-size: var(--fs-3);
+   font-weight: 500;
+   letter-spacing: var(--track-snug);
+   color: var(--side-ink);
+@@ -252,19 +250,11 @@
+   text-overflow: ellipsis;
+   white-space: nowrap;
+ }
+-/* a count: Linear's small badge at the row's end, tabular numerals centred on a rounded pill at
+-   least as wide as it is tall, lifted off the ground on a hairline (in light, the page's white on
+-   the grey); on the current row it takes the label's ink */
++/* a count: bare tabular numerals at the row's end, muted, with no badge (passive metadata takes no
++   edge); on the current row it takes the label's ink */
+ .count {
+   flex: none;
+-  display: grid;
+-  place-items: center;
+-  min-width: var(--side-count-h);
+-  height: var(--side-count-h);
+-  padding: 0 var(--sp-2);
+-  border-radius: var(--r-2);
+-  background: var(--side-count-fill);
+-  box-shadow: inset 0 0 0 var(--line-1) var(--side-count-ring);
++  padding-right: var(--sp-2);
+   font-size: var(--fs-2);
+   font-weight: 500;
+   font-variant-numeric: tabular-nums;
+diff --git a/web/src/kit/Page.module.css b/web/src/kit/Page.module.css
+index 9226d3d..ef2fe31 100644
+--- a/web/src/kit/Page.module.css
++++ b/web/src/kit/Page.module.css
+@@ -5,6 +5,8 @@
+   min-width: 0;
+   min-height: 0;
+ }
++/* the top bar: ruled off from the view by one hairline run out through the sheet's gutter to the
++   sidebar's, as Linear's header is */
+ .top {
+   flex: none;
+   display: flex;
+@@ -12,6 +14,9 @@
+   gap: var(--sp-8);
+   height: var(--h-top);
+   min-width: 0;
++  margin-inline: calc(var(--gutter) * -1);
++  padding-inline: var(--gutter);
++  border-bottom: var(--line-1) solid var(--side-edge);
+ }
+ .title {
+   flex: none;
+@@ -80,12 +85,15 @@
+   min-height: 0;
+   display: flex;
+   flex-direction: column;
++  padding-top: var(--sp-8);
+   overflow-y: auto;
+   scrollbar-width: thin;
+ }
+-/* a body that is an edge Table (the library's lists) runs out through the sheet's gutter */
++/* a body that is an edge (the library's lists, a view's zone) runs out through the sheet's gutter,
++   flush under the top bar */
+ .body:has(> [data-edge="true"]) {
+   margin-inline: calc(var(--gutter) * -1);
++  padding-top: 0;
+ }
+ 
+ /* counters: the number carries the weight; a zero recedes; a non-zero "need you" takes the accent's
+@@ -152,7 +160,6 @@
+   display: grid;
+   grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 30vw, var(--w-talk-max));
+   margin-right: calc(var(--gutter) * -1);
+-  border-top: var(--line-1) solid var(--tk-card-edge);
+ }
+ /* a rail of settings (an item editor's properties) is narrower than a reading column, so the
+    content beside it keeps the width */
+diff --git a/web/src/kit/Select.module.css b/web/src/kit/Select.module.css
+index e07e92b..3248a2e 100644
+--- a/web/src/kit/Select.module.css
++++ b/web/src/kit/Select.module.css
+@@ -59,10 +59,10 @@
+   height: var(--h-side-item);
+   padding: 0 var(--sp-3) 0 var(--sp-4);
+   border: 0;
+-  border-radius: var(--r-3);
++  border-radius: var(--r-2);
+   background: none;
+   color: var(--side-ink);
+-  font-size: var(--fs-4);
++  font-size: var(--fs-3);
+   font-weight: 500;
+   letter-spacing: var(--track-snug);
+   transition:
+@@ -88,10 +88,10 @@
+ }
+ .now {
+   flex: none;
+-  font-size: var(--fs-3);
++  font-size: var(--fs-2);
+   font-weight: 400;
+   letter-spacing: 0;
+-  color: var(--ink-3);
++  color: var(--side-title);
+ }
+ /* it points the way the list opens: up, from the sidebar's foot */
+ .up {
+diff --git a/web/src/kit/Surface.module.css b/web/src/kit/Surface.module.css
+index bb8503b..9ecb0a5 100644
+--- a/web/src/kit/Surface.module.css
++++ b/web/src/kit/Surface.module.css
+@@ -3,11 +3,13 @@
+   min-width: 0;
+   padding: var(--pad);
+ }
++/* the view's zone runs flush, as Linear's lists do: an edge (Page runs it out through the
++   sheet's gutter to the sidebar's hairline and the window's edge), under the top bar's hairline and
++   on down to the window's foot */
+ .recess {
+   --ground: var(--recess);
++  flex: 1 0 auto;
+   background: var(--recess);
+-  box-shadow: var(--shadow-recess);
+-  border-radius: var(--r-5);
+ }
+ /* a sheet is Linear's card: one hairline, a near-flat fill, no lift */
+ .sheet {
+diff --git a/web/src/kit/Surface.tsx b/web/src/kit/Surface.tsx
+index 0143939..be1986b 100644
+--- a/web/src/kit/Surface.tsx
++++ b/web/src/kit/Surface.tsx
+@@ -20,6 +20,7 @@ export function Surface({ children, level = "recess", fill, pad = 0, label }: Su
+       className={cx(s.surface, s[level], fill && s.fill)}
+       style={vars({ "--pad": space(pad) })}
+       aria-label={label}
++      data-edge={level === "recess"}
+     >
+       {children}
+     </section>
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 1edf31c..0a90355 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -408,14 +408,14 @@
+       }
+     },
+     "Frame": {
+-      "why": "The app's frame: the labelled sidebar in three groups (the views; the headed sections; Settings and the theme at the foot) under its head (the Space's switcher, then search, which takes you to the view's search field, and new ticket, inert until W4 as the page's own button is, as Linear's two icon buttons), and the main column as an inset sheet. It holds the app's one tooltip (every title the kit takes is drawn as Linear's tooltip, Base UI's) and its toasts (useToast: a short word that something was done, Base UI's); a Dialog holds its own of each, in the top layer with it.",
++      "why": "The app's frame: the labelled sidebar in three groups (the views; the headed sections; Settings and the theme at the foot) under its head (the Space's switcher, then search, which takes you to the view's search field, and new ticket, inert until W4 as the page's own button is, as Linear's two icon buttons), and the main column flush beside it, parted by one hairline (Linear's list frame). It holds the app's one tooltip (every title the kit takes is drawn as Linear's tooltip, Base UI's) and its toasts (useToast: a short word that something was done, Base UI's); a Dialog holds its own of each, in the top layer with it.",
+       "single": "There is one frame: the app's layout draws it around every screen.",
+       "props": {
+         "space": {
+           "why": "The Space's name and initial on the head's switcher, the sidebar's one menu, as Linear's workspace name."
+         },
+         "nav": {
+-          "why": "The views at the top of the sidebar, each labelled, with the count of what waits on you there on a small muted badge at the row's end, as Linear's.",
++          "why": "The views at the top of the sidebar, each labelled, with the count of what waits on you there in bare muted numerals at the row's end, as Linear's.",
+           "items": {
+             "icon": {
+               "why": "The view's glyph (IconName)."
+@@ -913,15 +913,15 @@
+       }
+     },
+     "Surface": {
+-      "why": "The one recessed zone per view, and the sheets that rest on it.",
++      "why": "The one zone per view, run flush under the top bar, and the sheets that rest on it.",
+       "props": {
+         "children": {
+           "why": "What it holds."
+         },
+         "level": {
+-          "why": "Sunken zone or raised panel.",
++          "why": "The view's flush zone or a panel on it.",
+           "values": {
+-            "recess": "The view's sunken zone.",
++            "recess": "The view's zone: an edge out to the sidebar's hairline and the window's edges, on down to its foot.",
+             "sheet": "A hairline card, as Linear's latest-update card.",
+             "list": "A card holding a list's rows edge to edge (an Intake query): bordered so the page's scroller never clips it, the rows clipped to its corners, the last on its edge."
+           }
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index c3c885b..c83fc94 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -4,7 +4,7 @@
+    step. Themes are plain attribute selectors, so a subtree can carry its own theme (the kit sheet
+    and the theme menu's swatches do). index.html sets the attribute on <html> before first paint.
+    Hue rules: --you is the theme's own accent (your move, the open row, the current step, focus:
+-   indigo on Paper, Mist and Carbon, orchid on Plum, teal on Harbour, royal blue on Midnight,
++   indigo on Paper, Mist and Carbon, orchid on Plum, teal on Harbour, a blue indigo on Midnight,
+    each with white on it), orange = running, red = blocked, green = done, amber = a warning. The
+    ink button is ink: only Dispatch run and the logo. The --id-* hues are people's faces; project
+    keys are neutral. Metadata chips (a row's stage, repo, status) carry no outline: borders are
+@@ -49,9 +49,9 @@
+   --list-rule: color-mix(in srgb, var(--ink-1) 6.5%, transparent);
+   --list-hover: color-mix(in srgb, var(--ink-1) 4%, transparent);
+   --list-open: color-mix(in srgb, var(--you) 7%, transparent);
+-  --list-band: color-mix(in srgb, var(--ink-1) 5.5%, transparent);
++  --list-band: color-mix(in srgb, var(--ink-1) 3.5%, transparent);
+   --list-band-ink: color-mix(in srgb, var(--ink-1) 80%, var(--page));
+-  --band-tint: 6%; /* how much of its state's hue a group's band takes */
++  --band-tint: 4%; /* how much of its state's hue a group's band takes */
+   /* themes · a metadata chip's edge: none, so the chip reads as quiet text and the ladder parts
+      the rows (a keycap keeps its field) */
+   --list-chip-edge: transparent;
+@@ -83,20 +83,15 @@
+   --done-text: #137337;
+   --progress: #16a34a;
+   /* ticket types and priority */
+-  /* sidebar: a grey ground a clear step (about 4 L*) under the page, so the main column reads as an
+-     inset sheet on it, as Linear's light sidebar does; labels near the ink, the nav's weight */
++  /* sidebar: a grey ground a clear step (about 4 L*) under the page, the main column flush beside
++     it on one hairline, as Linear's light sidebar is; labels near the ink, the nav's weight */
+   --side: color-mix(in srgb, var(--ink-1) 5%, var(--page));
+   --side-ink: color-mix(in srgb, var(--ink-1) 88%, var(--side));
+   --side-hover: color-mix(in srgb, var(--ink-1) 4%, transparent);
+   --side-on: color-mix(in srgb, var(--ink-1) 7.5%, transparent);
+   --side-on-ink: var(--ink-1);
+-  /* sidebar: a view's count on the page's white, ringed to lift off the grey; new ticket's ring */
+-  --side-count-fill: var(--page);
+-  --side-count-ring: color-mix(in srgb, var(--ink-1) 10%, transparent);
++  /* sidebar: new ticket's ring */
+   --side-tool-ring: color-mix(in srgb, var(--ink-1) 14%, transparent);
+-  /* themes · the main sheet stands off the ground by its tone and a soft shadow, no ring: one
+-     container (the panel inside) carries a hairline, not two */
+-  --panel-ring: 0 1px 3px rgba(9, 9, 11, 0.06), 0 0 0 1px rgba(9, 9, 11, 0.045);
+   /* ticket: the ticket page and the peek (Linear's issue page), mixed from the theme's own hues */
+   --tk-hover: color-mix(in srgb, var(--ink-1) 4.5%, transparent);
+   --tk-card: var(--surface);
+@@ -111,7 +106,6 @@
+   --tk-well: color-mix(in srgb, var(--ink-1) 4.5%, var(--surface)); /* the rail: Linear's sidebar */
+   --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
+   /* depth: hairlines, almost no shadow */
+-  --shadow-recess: inset 0 0 0 1px rgba(9, 9, 11, 0.06);
+   --shadow-float: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 24px 64px -24px rgba(9, 9, 11, 0.35);
+   --shadow-dock: -16px 0 48px -24px rgba(9, 9, 11, 0.22); /* the peek's long shadow on the list */
+   --shadow-accent: none;
+@@ -176,9 +170,9 @@
+   --list-rule: color-mix(in srgb, var(--hair) 11%, transparent);
+   --list-hover: color-mix(in srgb, var(--wash) 3.8%, transparent);
+   --list-open: color-mix(in srgb, var(--you) 14%, transparent);
+-  --list-band: color-mix(in srgb, var(--wash) 5.8%, transparent);
++  --list-band: color-mix(in srgb, var(--wash) 4.2%, transparent);
+   --list-band-ink: color-mix(in srgb, var(--ink-1) 88%, var(--page));
+-  --band-tint: 8%;
++  --band-tint: 5%;
+   --list-chip-edge: transparent;
+   /* rows: a label chip's fill, the neutral face */
+   --list-chip-fill: color-mix(in srgb, var(--ink-1) 7%, transparent);
+@@ -205,17 +199,13 @@
+   --done-ink: #052e14;
+   --done-text: #86efac;
+   --progress: #4ade80;
+-  /* sidebar: the ground a shade under the page; the sheet stands off it by tone alone */
++  /* sidebar: the ground a shade under the page, the main column flush beside it on one hairline */
+   --side: color-mix(in srgb, #000000 30%, var(--page));
+   --side-ink: color-mix(in srgb, var(--ink-1) 85%, var(--side));
+   --side-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
+   --side-on: color-mix(in srgb, var(--ink-1) 9%, transparent);
+   --side-on-ink: var(--ink-1);
+-  /* sidebar: a view's count on a lit tint, a faint ring round it; new ticket's ring */
+-  --side-count-fill: color-mix(in srgb, var(--ink-1) 10%, transparent);
+-  --side-count-ring: color-mix(in srgb, var(--ink-1) 5%, transparent);
+   --side-tool-ring: color-mix(in srgb, var(--ink-1) 16%, transparent);
+-  --panel-ring: 0 0 0 1px rgba(0, 0, 0, 0.5);
+   /* ticket */
+   --tk-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
+   --tk-card: color-mix(in srgb, var(--ink-1) 2.5%, var(--page));
+@@ -229,7 +219,6 @@
+   --tk-label: color-mix(in srgb, var(--ink-3) 70%, var(--page)); /* dark ink-3 sits near ink-2 */
+   /* light on dark reads a weight heavier */
+   --tk-ink: color-mix(in srgb, var(--ink-1) 55%, var(--ink-2));
+-  --shadow-recess: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+   --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 64px -24px rgba(0, 0, 0, 0.9);
+   --shadow-dock: -16px 0 48px -16px rgba(0, 0, 0, 0.7);
+   --shadow-accent: none;
+@@ -283,14 +272,14 @@
+   --blocked: #b42323;
+   --side: color-mix(in srgb, var(--ink-1) 4%, var(--page));
+   /* the white panel needs its band a step firmer to read off the rows (about 4 L* under them) */
+-  --list-band: color-mix(in srgb, var(--ink-1) 5.5%, transparent);
++  --list-band: color-mix(in srgb, var(--ink-1) 4%, transparent);
+   --list-hover: color-mix(in srgb, var(--ink-1) 3.8%, transparent);
+ }
+ 
+ /* themes · Midnight · dark: a cool blue-black, the deepest theme. A black sheet (L* 2.5) set
+    into a slate ground a shade lighter than it (the reverse of Carbon), the panel 4.5, then hover
+    8, band and cards 10, hairline 14, all leaning blue (hue about 250°) and washed with a cold
+-   steel; inks run whiter. Your move is a royal blue with white on it. */
++   steel; inks run whiter. Your move is a blue indigo with white on it, kin to the others' indigo. */
+ [data-theme="midnight"] {
+   --side: #13161c;
+   --page: #08090b;
+@@ -304,16 +293,15 @@
+   --wash: #c8d4ec;
+   --hair: #c8d4ec;
+   --list-rule: color-mix(in srgb, var(--hair) 11%, transparent);
+-  --list-band: color-mix(in srgb, var(--wash) 6%, transparent);
++  --list-band: color-mix(in srgb, var(--wash) 4.5%, transparent);
+   --list-hover: color-mix(in srgb, var(--wash) 4.2%, transparent);
+   --list-open: color-mix(in srgb, var(--you) 14%, transparent);
+   --tile: color-mix(in srgb, var(--wash) 6%, var(--recess));
+   --tile-edge: color-mix(in srgb, var(--hair) 12%, transparent);
+   --tile-hover: color-mix(in srgb, var(--wash) 9%, var(--recess));
+-  --panel-ring: 0 0 0 1px color-mix(in srgb, var(--hair) 7%, transparent);
+-  --you: #2563eb;
+-  --you-text: #9db9ff;
+-  --focus: #5b8cff;
++  --you: #4c5bd4;
++  --you-text: #aab4ff;
++  --focus: #7d8bf0;
+ }
+ 
+ /* themes · Harbour · dark: a lifted navy, the lightest dark theme. Every step a navy (hue about
+@@ -333,12 +321,11 @@
+   --wash: #b7d8fb;
+   --hair: #b7d8fb;
+   --list-rule: color-mix(in srgb, var(--hair) 13%, transparent);
+-  --list-band: color-mix(in srgb, var(--wash) 7.2%, transparent);
++  --list-band: color-mix(in srgb, var(--wash) 5.4%, transparent);
+   --list-hover: color-mix(in srgb, var(--wash) 4.8%, transparent);
+   --tile: color-mix(in srgb, var(--wash) 7.2%, var(--recess));
+   --tile-edge: color-mix(in srgb, var(--hair) 14%, transparent);
+   --tile-hover: color-mix(in srgb, var(--wash) 10.5%, var(--recess));
+-  --panel-ring: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 12px 32px -18px rgba(0, 0, 0, 0.55);
+   /* the lifted navy needs blocked's red a step lighter on a popover */
+   --blocked: #ffa0a0;
+   --you: #0e7c7b;
+@@ -363,13 +350,12 @@
+   --wash: #f2c7ed;
+   --hair: #f2c7ed;
+   --list-rule: color-mix(in srgb, var(--hair) 12.5%, transparent);
+-  --list-band: color-mix(in srgb, var(--wash) 6.2%, transparent);
++  --list-band: color-mix(in srgb, var(--wash) 4.6%, transparent);
+   --list-hover: color-mix(in srgb, var(--wash) 4%, transparent);
+   --tile: color-mix(in srgb, var(--wash) 8%, var(--recess));
+   --tile-edge: color-mix(in srgb, var(--hair) 10%, transparent);
+   --tile-hover: color-mix(in srgb, var(--wash) 12%, var(--recess));
+   --list-open: color-mix(in srgb, var(--you) 11%, transparent);
+-  --panel-ring: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 24px 60px -24px rgba(0, 0, 0, 0.9);
+   --you: #9333c0;
+   --you-text: #e3b0f5;
+   --focus: #d08cf0;
+@@ -382,6 +368,8 @@
+   --ring-you: color-mix(in srgb, var(--you) 20%, transparent);
+   --sweep-live: color-mix(in srgb, var(--live) 30%, transparent);
+   --ring-ink: color-mix(in srgb, var(--ink-1) 22%, transparent);
++  /* sidebar: the one hairline that parts the sidebar from the main column (the frame is flush) */
++  --side-edge: color-mix(in srgb, var(--ink-1) 9%, transparent);
+   /* rows: a row's Chip, its grey dot or glyph; Unassigned's dashed ring */
+   --prop-mark: color-mix(in srgb, var(--ink-3) 72%, transparent);
+   --face-dashed: color-mix(in srgb, var(--ink-3) 75%, transparent);
+@@ -557,21 +545,21 @@
+   --dur-sweep: 1.7s; /* a running meter's sweep */
+   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+ 
+-  /* sidebar: Linear's labelled sidebar: 240px wide, items 32px tall 2px apart (a 34px pitch), three
+-     groups (the views, the sections, the foot) 24px apart, a section's label hugging its entries */
+-  --w-side: 240px;
+-  --h-side-item: 32px;
+-  --h-side-title: 32px; /* a section's heading, 8px of it open above the label */
++  /* sidebar: Linear's dense labelled sidebar: 224px wide, items 28px tall 2px apart (a 30px pitch),
++     three groups (the views, the sections, the foot) 20px apart, a section's label hugging its
++     entries */
++  --w-side: 224px;
++  --h-side-item: 28px;
++  --h-side-title: 28px; /* a section's heading, 8px of it open above the label */
+   --side-title-open: 8px;
+   --side-tile: 20px; /* the Space's tile */
+-  --side-gap: 24px;
+-  --side-head-pull: -18px;
++  --side-gap: 20px;
++  --side-head-pull: -14px;
+   /* the muted step: a section's label, quieter than the labels (AA on --side) */
+   --side-title: color-mix(in srgb, var(--side-ink) 80%, var(--side));
+   --side-icon: color-mix(in srgb, var(--side-ink) 78%, var(--side)); /* a glyph, under its label */
+-  --side-count: var(--side-ink); /* a view's count, in the labels' ink on its pill */
++  --side-count: var(--side-title); /* a view's count, bare and muted */
+   --side-count-on: var(--side-on-ink); /* the current row's count */
+-  --side-count-h: 20px; /* a count's badge: its height and least width */
+   --side-tool: 26px; /* the head's search and new-ticket buttons */
+   --side-account-w: 224px; /* the switcher's sheet */
+   /* sidebar · Icon: grey, as Linear's: a priority's lit and unlit bars, a type's faint square and

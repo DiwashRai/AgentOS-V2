@@ -1,0 +1,41 @@
+// Folds the bracket's judges' notes into one feedback file per named direction: every game it
+// played (on our screens, and on the twins where a game split) and its confirmation against the
+// current screens, each judge's reasons attributed to the direction or its opponent, never A or B.
+// Usage: node bfeedback.mjs <bracket output file> <out dir> <key> [<key> ...]
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const [file, out, ...keys] = process.argv.slice(2);
+const run = JSON.parse(readFileSync(file, "utf8"));
+const { games, confirm } = run.result ?? run;
+mkdirSync(out, { recursive: true });
+
+// m: a match whose X side is `mine` when mineIsX
+function section(title, m, mineIsX, other) {
+  const mine = "your direction";
+  const xl = mineIsX ? mine : other, yl = mineIsX ? other : mine;
+  const lines = [`## ${title}: ${xl} ${m.X}, ${yl} ${m.Y}, same ${m.same}`, ""];
+  for (const j of m.judges.sort((a, b) => a.judge - b.judge)) {
+    const who = (side) => (side === j.xIs ? xl : yl);
+    const winner = j.pick === "same" ? "same" : who(j.pick);
+    const loser = j.pick === "same" ? "both" : winner === xl ? yl : xl;
+    lines.push(`- **Judge ${j.judge}** (A was ${who("A")}) picked ${winner}. ${j.why}`);
+    lines.push(`  - ${loser === "both" ? "Shared flaw" : `${loser}'s gap`}: ${j.loserGap}`);
+    lines.push(`  - ${winner === "same" ? "Also" : `${winner}'s flaw`}: ${j.winnerFlaw}`);
+    if (j.broken) lines.push(`  - Broken: ${j.broken}`);
+  }
+  return [...lines, ""];
+}
+
+for (const key of keys) {
+  const md = [`# ${key}: the bracket judges' notes`, "", "In each judge's text, A and B are the images as that judge saw them; the line before says which was yours.", ""];
+  for (const g of games.filter((g) => g && (g.x === key || g.y === key))) {
+    const mineIsX = g.x === key, other = mineIsX ? g.y : g.x;
+    md.push(...section(`Against ${other}, our screens`, g.screens, mineIsX, other));
+    if (g.twins) md.push(...section(`Against ${other}, the twins (the tie-break)`, g.twins, mineIsX, other));
+  }
+  const c = confirm.find((c) => c.key === key);
+  if (c && c.judges) md.push(...section("Against the current screens", c, true, "the current screens"));
+  writeFileSync(join(out, `${key}.md`), md.join("\n"));
+  console.log(join(out, `${key}.md`));
+}

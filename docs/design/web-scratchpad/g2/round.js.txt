@@ -1,0 +1,162 @@
+export const meta = {
+  name: 'gauntlet2-round',
+  description: 'One gauntlet round: a challenger per piece in its own worktree, a blind critic scoring Linear, the best and the challenger out of 10, then one integrator keeps the winners and commits',
+  phases: [
+    { title: 'Build', detail: 'one challenger per piece, in an isolated worktree, saved as a patch' },
+    { title: 'Judge', detail: 'a fresh blind critic per piece: Linear, current best, challenger, each out of 10' },
+    { title: 'Integrate', detail: 'apply the winning patches, all checks, commit, shoot the new best' },
+  ],
+}
+
+// args: { round, mode: 'explore'|'polish', base: '<commit>', pieces: [{ key, best: [paths], note }] }
+const ROOT = 'C:\\code\\AgentOS-V2-web'
+const REF = ROOT + '\\.review\\linear-bar\\'
+const OUT = ROOT + '\\.review\\gauntlet2\\'
+const SHOTS = 'C:\\Users\\diwash\\AppData\\Local\\Temp\\claude\\C--code-AgentOS-V2-web\\6d0fdab0-5ae2-4898-99b9-b3d2c29ccdad\\scratchpad\\g2\\gshots.mjs'
+const { round, mode, base } = args
+
+const PIECES = {
+  frame: { refs: ['05-home-f0.png', '01-theme-ash.png', '03-theme-midnight.png'],
+    focus: 'the app frame and the themes: Frame (sidebar, its head, sections, foot, the theme menu and swatches), the main sheet around every view, and the colour tokens of every theme in tokens.css',
+    what: 'the frame around every screen (sidebar, main sheet) and the colour themes, light and dark' },
+  lists: { refs: ['06-docs-07-select-issues.png', '01-theme-ash.png'],
+    focus: 'the lists: Row, Table, Head, Badge, Mark, Age, Avatar, Chip and Meter, and features/queue and features/compact',
+    what: 'My queue and Compact: list density, group heads, row separation, status glyphs and chips, the agents-at-work tiles' },
+  intake: { refs: ['08-docs-09-triage.png'],
+    focus: 'Intake: features/intake, Notice, Swap',
+    what: 'Intake, a triage inbox of Jira issues grouped by saved query' },
+  teams: { refs: ['20-ai-f4.png', '12-docs-01-projects.png'],
+    focus: 'All teams: features/teams and the band look of Row',
+    what: 'All teams, a board of every repo\'s tickets by stage' },
+  ticket: { refs: ['12-docs-01-projects.png', '10-docs-13-parent-and-sub-issues.png'],
+    focus: 'the ticket page: features/ticket (not its overlays), Page, Facts, Stepper, Tabs, Checklist, Thread, Composer, Section, Text',
+    what: 'the ticket page: title block, properties, the stage stepper and run line, tabs, plan, Talk' },
+  overlays: { refs: ['12-docs-01-projects.png', '13-docs-02-projects.png'],
+    focus: 'the peek and the full-window editors: features/peek, the overlays in features/ticket (WorkflowOverlay, itemOverlay), Dialog',
+    what: 'the peek side panel and the full-window editors over the ticket' },
+  library: { refs: ['12-docs-01-projects.png', '06-docs-07-select-issues.png'],
+    focus: 'the library lists: features/library list screens (WorkflowsView, AgentsView, SkillsView, FilesView, list.tsx), Strip',
+    what: 'the library lists of workflows, agents, skills and files' },
+  editors: { refs: ['13-docs-02-projects.png', '14-docs-08-display-options.png'],
+    focus: 'the editors: features/library editors (ItemEditor, side.tsx, content.tsx), features/workflow, Lane, Card, Drag, Sortable, FormRow, Field, TextArea, NumberField, Toggle, Override',
+    what: 'the agent, skill and file editors and the workflow editor' },
+  controls: { refs: ['13-docs-02-projects.png', '14-docs-08-display-options.png', '06-docs-07-select-issues.png'],
+    focus: 'the controls and popovers: Button, Menu, Select (and choice.tsx), Segmented, Popover.module.css, the tooltip (Tip.module.css) and the toasts (Toast.module.css), Checkbox, Radio',
+    what: 'buttons, menus, pickers, filter chips, tooltips and toasts' },
+}
+
+const BUILD_SCHEMA = { type: 'object', required: ['summary', 'patch', 'shots', 'checks'], properties: {
+  summary: { type: 'string', description: 'What the challenger changes, in a few lines' },
+  patch: { type: 'string', description: 'Absolute path of the saved patch (empty if nothing changed)' },
+  shots: { type: 'array', items: { type: 'string' }, description: 'Absolute paths of the challenger shots, in the camera\'s order' },
+  checks: { type: 'string', description: 'Each check and its result' },
+  kitLines: { type: 'string', description: 'The kit gate\'s line count after your change' },
+} }
+
+const VERDICT_SCHEMA = { type: 'object', required: ['sets'], properties: {
+  sets: { type: 'array', items: { type: 'object', required: ['set', 'score', 'gap'], properties: {
+    set: { type: 'string' },
+    score: { type: 'number', description: 'Out of 10, one decimal' },
+    gap: { type: 'string', description: 'This set\'s single biggest design gap, as one concrete instruction' },
+    problems: { type: 'string', description: 'Anything broken: clipped or overlapping text, missing content, broken layout, unreadable contrast' },
+  } } },
+} }
+
+const MODE = {
+  explore: `This is an EXPLORE round. Build one bold, coherent direction for your piece that is visibly different from the current best: try a different density, type scale, surface and separation scheme, use of colour, or chrome, whatever you judge could beat Linear. Don't make a timid tweak.`,
+  polish: `This is a POLISH round. Make one focused change that closes the gap named below, and keep everything else as it is.`,
+}
+
+function buildPrompt(p, spec, port) {
+  const dir = `${OUT}r${round}\\cand\\${p.key}`
+  return `You build one challenger for one piece of a gauntlet that restyles the AgentOS V2 web app in Linear's design language: its look, not its features. Add no screen, feature or data the app doesn't have.
+
+You are in your own git worktree (your current directory), a copy of ${ROOT}. Set it up first:
+1. \`git rev-parse HEAD\` must be ${base}; if it isn't, run \`git checkout --detach ${base}\` (in this worktree only).
+2. Link the installed packages, one junction per package, with the fonts copied for real (Vite refuses to serve files through a junction that leads outside the worktree, and the page then falls back to another font), in PowerShell from the worktree root:
+   \`New-Item -ItemType Directory web\\node_modules | Out-Null; Get-ChildItem ${ROOT}\\web\\node_modules -Force | Where-Object { $_.Name -ne '.vite' } | ForEach-Object { if ($_.Name -eq '@fontsource') { Copy-Item $_.FullName web\\node_modules\\@fontsource -Recurse } else { New-Item -ItemType Junction -Path ('web\\node_modules\\' + $_.Name) -Target $_.FullName | Out-Null } }\`
+   The camera fails if the Geist font didn't load: then fix the setup, never shoot without it.
+Never commit, push, stash, or touch ${ROOT} itself except to write under ${OUT}.
+
+Your piece: ${p.key}, ${spec.what}. Focus your edits on ${spec.focus}; touch other files only when your piece needs it.
+${MODE[mode]}
+${p.note ? `\nThe critic's notes on the current best are in ${p.note}: read them first.\n` : ''}
+The reference: Linear's own screens, ${spec.refs.map((r) => REF + r).join(', ')}. Open and study them. The current best for your piece is ${p.best.join(', ')}: open those too.
+
+The rules of the repo (AGENTS.md) hold:
+- Only web/src/kit renders elements or holds CSS. Raw values live only in tokens.css; a new colour is a token, written from the base tokens (color-mix of --page, --ink-1, --you and so on) so every theme gets it.
+- Every kit component, prop and variant has a reason in web/src/kit/ledger.json. Keep the entries you touch true.
+- The budget is 45 components (44 used) and 9,000 lines (about 8,360 used), shared by 9 builders this round: add at most 60 kit lines net. Replace rather than add. Never change "budget" or "raises".
+- Never weaken a check or a gate.
+
+See your work: \`node ${SHOTS} <worktree>\\web ${port} ${dir} ${p.key}\` starts Vite on port ${port}, shoots your piece's states exactly as the critic will see them, and stops Vite. Look at every shot, compare with Linear's, and iterate as much as you need.
+
+Before you finish, from web/: \`npx tsc -p . --noEmit\`, \`npx eslint src\`, \`node node_modules/stylelint/bin/stylelint.mjs "src/**/*.css"\`, \`npx prettier --write src\`, then \`node tools/kit.mjs --check\` (all must pass). Shoot your final state into ${dir}. Save your change as a patch: from the worktree root, \`git add -A -- web/src\` then \`git diff --cached --binary ${base} -- web/src > ${OUT}r${round}\\patches\\${p.key}.patch\` (create the folder). Return the patch path, your shots and the checks.`
+}
+
+function shuffle(arr, salt) {
+  const out = arr.slice()
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = (i * 7 + salt * 13 + round * 5) % (i + 1)
+    const t = out[i]; out[i] = out[j]; out[j] = t
+  }
+  return out
+}
+
+async function judge(p, spec, built, idx) {
+  if (!built || !built.patch || !(built.shots || []).length) return { key: p.key, kept: false, reason: 'no challenger' }
+  const sets = shuffle([
+    { who: 'linear', images: spec.refs.map((r) => REF + r) },
+    { who: 'best', images: p.best },
+    { who: 'cand', images: built.shots },
+  ], idx)
+  const names = ['X', 'Y', 'Z']
+  sets.forEach((s, i) => { s.name = names[i] })
+  const v = await agent(`You are a harsh design critic. Praise is not useful. Below are three sets of product screenshots, labels stripped. Some may come from different products, with different content and framing (some are close crops); judge the design, not the content or the crop: visual hierarchy, typography, colour and contrast, density, separation, alignment, consistency, polish and craft, as a modern product UI.
+
+${sets.map((s) => `Set ${s.name}: ${s.images.join(', ')}`).join('\n')}
+
+Open every image. Score each set out of 10, to one decimal, on the same scale, as strictly as you would score a shipped product. Two sets may look alike: score each on its own merits, and don't split the difference. For each set name its single biggest design gap, as one concrete instruction a designer can act on, and list anything broken (clipped or overlapping text, missing content, broken layout, unreadable contrast). Do not edit any file.`,
+    { label: `judge:${p.key}:r${round}`, phase: 'Judge', schema: VERDICT_SCHEMA })
+  if (!v) return { key: p.key, kept: false, reason: 'critic failed' }
+  const score = (who) => v.sets.find((x) => x.set.includes(sets.find((s) => s.who === who).name)) || {}
+  const L = score('linear'), B = score('best'), C = score('cand')
+  const kept = typeof C.score === 'number' && typeof B.score === 'number' && C.score > B.score
+  return {
+    key: p.key, kept, linear: L.score, best: B.score, cand: C.score,
+    gap: (kept ? C : B).gap, problems: (kept ? C : B).problems || '', linearGap: L.gap,
+    patch: built.patch, shots: built.shots, summary: built.summary, checks: built.checks,
+  }
+}
+
+phase('Build')
+const results = await pipeline(
+  args.pieces,
+  (p, _, i) => agent(buildPrompt(p, PIECES[p.key], 5241 + i), { label: `build:${p.key}:r${round}`, phase: 'Build', schema: BUILD_SCHEMA, isolation: 'worktree' }),
+  (built, p, i) => judge(p, PIECES[p.key], built, i),
+)
+
+const verdicts = results.filter(Boolean)
+for (const r of verdicts) log(`${r.key}: Linear ${r.linear}, best ${r.best}, challenger ${r.cand}${r.kept ? ' KEPT' : ''}`)
+const winners = verdicts.filter((r) => r.kept).sort((a, b) => (b.cand - b.best) - (a.cand - a.best))
+
+phase('Integrate')
+const active = args.pieces.map((p) => p.key)
+const integ = await agent(`You integrate one round of a gauntlet restyling the AgentOS V2 web app, in ${ROOT} (branch web-restyle, at ${base}). Do not push, switch branches or stash.
+
+Apply these winning patches, in this order (the biggest win first), each with \`git apply --3way <patch>\` from the repo root:
+${winners.map((w) => `- ${w.key}: ${w.patch} (${w.summary.replace(/\n/g, ' ')})`).join('\n') || '(none: nothing won this round)'}
+
+Where two patches touch the same thing (tokens.css, a shared component, the ledger), resolve it so both designs hold. If a patch can't be made to fit, drop it, say which and why. Keep the screens' content and behaviour.
+
+Then make the tree sound, never by weakening a check: from the repo root, \`just check\`, \`just test\` and \`just gates\` all pass. The kit must stay within its budget (45 components, 9,000 lines): if the kept patches go over, trim the least important additions, and say what you trimmed. Make every ledger reason true to the code.
+
+Then \`just shots --update-snapshots\` (the screens changed on purpose; look at a few of the new baselines to be sure none is broken), and commit everything with a message file (\`git commit -F <file>\`): a subject "gauntlet: round ${round}", a line per kept piece, and the trailer "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>". The pre-commit hook runs the checks: if it fails, fix and commit again. Never use --no-verify.
+
+Finally shoot the new best for every piece: \`node ${SHOTS} ${ROOT}\\web 5250 ${OUT}r${round}\\best ${active.join(',')}\`. Return the commit, what was applied or dropped, the checks, and the kit's numbers.`,
+  { label: `integrate:r${round}`, phase: 'Integrate', schema: { type: 'object', required: ['commit', 'applied', 'dropped', 'checks'], properties: {
+    commit: { type: 'string' }, applied: { type: 'array', items: { type: 'string' } }, dropped: { type: 'string' },
+    checks: { type: 'string' }, kit: { type: 'string' }, notes: { type: 'string' },
+  } } })
+
+return { round, mode, verdicts, integration: integ }

@@ -1,0 +1,13 @@
+gauntlet: a pitch-black Carbon, cards laid flat
+
+Measured on Linear's dark screenshots: its sheet is #0f1011 and its
+cards sit 0 to 3 levels over it, told apart by a hairline, with no
+shadow.
+
+- Carbon: the sheet #0f1012 (was #16171b), its surfaces and the
+  sidebar under it to match; card tones about 3 levels over the sheet.
+- Surface sheet: a card on the page, its tone inside the card hairline,
+  no drop shadow (only popovers and dialogs, which float, cast one).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

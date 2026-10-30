@@ -1,0 +1,395 @@
+diff --git a/web/src/features/library/AgentsView.tsx b/web/src/features/library/AgentsView.tsx
+index dd25f50..04b1b37 100644
+--- a/web/src/features/library/AgentsView.tsx
++++ b/web/src/features/library/AgentsView.tsx
+@@ -1,5 +1,6 @@
+-// The library's agents (/library/agents): each agent's face and name, how it runs (runtime, model,
+-// effort) and what uses it (how many workflows, and tickets on them). A row opens the agent's editor.
++// The library's agents (/library/agents): each agent's face, name and what it is for, how it runs
++// (runtime, model, effort) and what uses it (how many workflows, and tickets on them). A row opens
++// the agent's editor.
+ import { useAgents, useRuntimes } from "../../api/queries";
+ import type { Agent } from "../../api/types";
+ import { matches } from "../../domain/format";
+@@ -10,9 +11,9 @@ import { runtimeName } from "./model";
+ 
+ const COLUMNS: readonly Column[] = [
+   { label: "Agent", width: "fill", min: "xl" },
+-  { label: "Runtime", width: "lg" },
+-  { label: "Model", width: "md" },
+-  { label: "Effort", width: "md" },
++  { label: "Runtime", width: "md" },
++  { label: "Model", width: "sm" },
++  { label: "Effort", width: "sm" },
+   ...USED,
+ ];
+ 
+@@ -35,7 +36,11 @@ export function AgentsView() {
+     >
+       {shown.map((a) => (
+         <LibraryRow key={a.id} name={a.name} href={href(a)}>
+-          <NameCell lead={<Avatar name={a.name} seed={`agent:${a.id}`} beside />} name={a.name} />
++          <NameCell
++            lead={<Avatar size="tile" name={a.name} seed={`agent:${a.id}`} beside />}
++            name={a.name}
++            under={a.description}
++          />
+           <Text tone="2">{runtimeName(runtimes, a.runtime)}</Text>
+           <Text tone="2">{a.model}</Text>
+           <Text tone="2">{a.effort}</Text>
+diff --git a/web/src/features/library/FilesView.tsx b/web/src/features/library/FilesView.tsx
+index 949f305..4078060 100644
+--- a/web/src/features/library/FilesView.tsx
++++ b/web/src/features/library/FilesView.tsx
+@@ -1,6 +1,6 @@
+-// The library's files (/library/files), AGENTS.md first: each file's path, its size, and what uses
+-// it (how many workflows, and tickets on them or that added it). A row opens the file's editor
+-// (AGENTS.md as its named blocks).
++// The library's files (/library/files), AGENTS.md first: each file's path over its opening line (or
++// AGENTS.md's block names), its size, and what uses it (how many workflows, and tickets on them or
++// that added it). A row opens the file's editor (AGENTS.md as its named blocks).
+ import { useFiles } from "../../api/queries";
+ import type { LibraryFile } from "../../api/types";
+ import { matches } from "../../domain/format";
+@@ -15,6 +15,13 @@ const COLUMNS: readonly Column[] = [
+   ...USED,
+ ];
+ 
++/** The line under a file's path: AGENTS.md's block names, else its first line of text. */
++function underOf(f: LibraryFile): string {
++  if (f.body.kind === "blocks") return f.body.blocks.map((b) => b.name).join(" · ");
++  const first = f.body.text.split("\n").find((l) => l.trim() !== "") ?? "";
++  return first.replace(/^#+\s*/, "");
++}
++
+ export function FilesView() {
+   const all = useFiles().data?.items ?? [];
+   const { query, search } = useSearch("Search files");
+@@ -31,13 +38,7 @@ export function FilesView() {
+     >
+       {shown.map((f) => (
+         <LibraryRow key={f.id} name={f.path} href={href(f)}>
+-          <NameCell
+-            lead={<Icon name="files" tile />}
+-            name={f.path}
+-            {...(f.body.kind === "blocks"
+-              ? { after: `${String(f.body.blocks.length)} blocks` }
+-              : {})}
+-          />
++          <NameCell lead={<Icon name="files" tile />} name={f.path} under={underOf(f)} />
+           <Text tone="2" tabular>
+             {sizeText(f.size)}
+           </Text>
+diff --git a/web/src/features/library/SkillsView.tsx b/web/src/features/library/SkillsView.tsx
+index e241d69..e468658 100644
+--- a/web/src/features/library/SkillsView.tsx
++++ b/web/src/features/library/SkillsView.tsx
+@@ -25,7 +25,7 @@ export function SkillsView() {
+     >
+       {shown.map((s) => (
+         <LibraryRow key={s.id} name={s.name} href={href(s)}>
+-          <NameCell lead={<Icon name="skills" tile />} name={s.name} after={s.description} />
++          <NameCell lead={<Icon name="skills" tile />} name={s.name} under={s.description} />
+           {usedCells(s.used_by)}
+         </LibraryRow>
+       ))}
+diff --git a/web/src/features/library/WorkflowsView.tsx b/web/src/features/library/WorkflowsView.tsx
+index 5341459..adb9c3e 100644
+--- a/web/src/features/library/WorkflowsView.tsx
++++ b/web/src/features/library/WorkflowsView.tsx
+@@ -1,8 +1,8 @@
+ // The library's workflows (/library/workflows): each workflow's name (the default marked; what it is
+-// for on hover), its stages as a strip at the stepper's scale (a segment a stage in its phase's hue,
+-// a diamond a gate, a bracket a loop, a turned-off stage dashed), its version, its last change and
+-// how many tickets use it. A row opens the workflow editor. The columns fit a 1024px window; the
+-// stage strip's words give way first.
++// for on hover) over its stages as a strip at the stepper's scale (a segment a stage in its phase's
++// hue, a diamond a gate, a bracket a loop, a turned-off stage dashed), then its version, its last
++// change and how many tickets use it, packed at the right. A row opens the workflow editor. The
++// columns fit a 1024px window; the stage strip's words give way first.
+ import { useWorkflows } from "../../api/queries";
+ import type { Workflow } from "../../api/types";
+ import { matches, plural } from "../../domain/format";
+@@ -11,8 +11,7 @@ import { useSearch } from "../shared/useSearch";
+ import { ChangedCell, CountCell, LibraryList, LibraryRow, NameCell, VersionCell } from "./list";
+ 
+ const COLUMNS: readonly Column[] = [
+-  { label: "Workflow", width: "xl" },
+-  { label: "Stages", width: "fill", min: "2xl" },
++  { label: "Workflow", width: "fill", min: "2xl" },
+   { label: "Version", width: "xs" },
+   { label: "Changed", width: "md" },
+   { label: "Tickets", width: "sm", end: true },
+@@ -68,8 +67,8 @@ export function WorkflowsView() {
+                 <Chip label={"Default"} title="New tickets start from it" />
+               ) : undefined
+             }
++            under={<StagesCell w={w} />}
+           />
+-          <StagesCell w={w} />
+           <VersionCell version={w.version} />
+           <ChangedCell by={w.updated_by} at={w.updated_at} />
+           <CountCell n={w.tickets.length} />
+diff --git a/web/src/features/library/list.tsx b/web/src/features/library/list.tsx
+index 8b84796..589386f 100644
+--- a/web/src/features/library/list.tsx
++++ b/web/src/features/library/list.tsx
+@@ -1,8 +1,9 @@
+ // What the four library lists share, as Linear's index: the bar (the list's name, the Space's
+ // Library, search, New), then a table out to the sheet's edges with no surface of its own: a column
+-// head ruled off the bar, rows that open the item's editor on a click or Enter, ↑ ↓ (or j k) moving
+-// a selection that Enter opens, what uses each item as two counts, and a foot with those keys and the
+-// count. A search that matches nothing says so.
++// head ruled off the bar, two-line rows on hairlines (a tile, the name over what it is, the facts
++// packed at the right) that open the item's editor on a click or Enter, ↑ ↓ (or j k) moving a
++// selection that Enter opens, and a foot with those keys and the count. A search that matches
++// nothing says so.
+ import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from "react";
+ import { useNavigate } from "react-router";
+ 
+@@ -138,6 +139,7 @@ export function LibraryRow({
+   const selected = useContext(Selected);
+   return (
+     <Row
++      kind="item"
+       open={selected === href}
+       action={{
+         label: `Open ${name}`,
+@@ -151,32 +153,41 @@ export function LibraryRow({
+   );
+ }
+ 
+-/** A row's lead: an optional glyph or face, the name, and quiet words after it on the same line
+- *  (Compact's title cell), cut at the end so the words give way first. */
++/** A row's lead, as Linear's project rows: a tile (a glyph, or an agent's face), the name, and
++ *  under it a second line (what it is for, or the workflow's stages), each cut at its end. */
+ export function NameCell({
+   lead,
+   name,
+-  after,
++  under,
+   mark,
+   title,
+ }: {
+-  lead?: ReactNode;
++  lead: ReactNode;
+   name: string;
+-  after?: string;
++  under: ReactNode;
+   /** A chip after the name (the default workflow's). */
+   mark?: ReactNode;
+-  /** On hover, in place of the name and the words (a workflow's description). */
++  /** On hover over the name (a workflow's description). */
+   title?: string;
+ }) {
+   return (
+-    <Stack dir="row" gap={4} align="center">
++    <Stack dir="row" gap={6} align="center">
+       {lead}
+-      <Text tone="3" truncate title={title ?? (after ? `${name} ${after}` : name)}>
+-        <Text variant="label">{name}</Text>
+-        {mark ? "\u2002" : null}
+-        {mark}
+-        {after ? `\u2002${after}` : null}
+-      </Text>
++      <Stack gap={1}>
++        <Stack dir="row" gap={4} align="center">
++          <Text variant="label" truncate title={title ?? name}>
++            {name}
++          </Text>
++          {mark}
++        </Stack>
++        {typeof under === "string" ? (
++          <Text tone="3" truncate title={under}>
++            {under}
++          </Text>
++        ) : (
++          under
++        )}
++      </Stack>
+     </Stack>
+   );
+ }
+@@ -187,7 +198,9 @@ export function ChangedCell({ by, at }: { by: Author; at: Iso }) {
+   const who = by.kind === "person" ? firstName(by.person.name) : `Run #${String(by.run_id)}`;
+   return (
+     <Stack dir="row" gap={3} align="center">
+-      {by.kind === "person" ? <Avatar name={by.person.name} seed={String(by.person.id)} /> : null}
++      {by.kind === "person" ? (
++        <Avatar size="talk" name={by.person.name} seed={String(by.person.id)} />
++      ) : null}
+       <Text tone="2" truncate>
+         {who}
+       </Text>
+diff --git a/web/src/kit/Avatar.module.css b/web/src/kit/Avatar.module.css
+index 79551a2..5332b3d 100644
+--- a/web/src/kit/Avatar.module.css
++++ b/web/src/kit/Avatar.module.css
+@@ -44,6 +44,14 @@
+   height: var(--h-avatar-lg);
+   font-size: var(--fs-2);
+ }
++/* tile: a library row's lead, the agent's hue on the rounded square the other lists' glyphs sit on */
++.tile {
++  width: var(--h-tile);
++  height: var(--h-tile);
++  border-radius: var(--r-3);
++  background: var(--id-row);
++  font-size: var(--fs-2);
++}
+ .slot {
+   background: none;
+ }
+diff --git a/web/src/kit/Avatar.tsx b/web/src/kit/Avatar.tsx
+index c6377e3..8570fff 100644
+--- a/web/src/kit/Avatar.tsx
++++ b/web/src/kit/Avatar.tsx
+@@ -3,12 +3,12 @@ import { hueOf, initials } from "./identity";
+ import { Tip } from "./tip";
+ import { cx } from "./vars";
+ 
+-type Size = "sm" | "md" | "mid" | "lg" | "talk";
++type Size = "sm" | "md" | "mid" | "lg" | "talk" | "tile";
+ 
+ /** One of: a person's face; a row of faces; or an empty slot. */
+ export type AvatarProps = {
+   /** sm and mid are a neutral disc (in a pill, on a team); md (rows, pickers), talk and lg keep the
+-   *  person's hue. */
++   *  person's hue; tile is a rounded square in it (an agent leading a library row). */
+   size?: Size;
+ } & (
+   | {
+diff --git a/web/src/kit/Icon.module.css b/web/src/kit/Icon.module.css
+index 9ab2b05..7d05feb 100644
+--- a/web/src/kit/Icon.module.css
++++ b/web/src/kit/Icon.module.css
+@@ -6,14 +6,16 @@
+ .icon > svg {
+   display: block;
+ }
+-/* tile: the glyph on a faint square in the quiet ink, a row's lead (Linear's project icon) */
++/* tile: the glyph on a faint rounded square in the quiet ink, a library row's lead (Linear's
++   project icon), the size and shape of an agent's face beside it */
+ .tile {
+   align-items: center;
+   justify-content: center;
+-  width: var(--h-list-chip);
+-  height: var(--h-list-chip);
+-  border-radius: var(--r-2);
++  width: var(--h-tile);
++  height: var(--h-tile);
++  border-radius: var(--r-3);
+   background: var(--list-chip-fill);
++  box-shadow: inset 0 0 0 var(--line-1) var(--list-rule);
+   color: var(--ink-2);
+ }
+ .line {
+diff --git a/web/src/kit/Strip.module.css b/web/src/kit/Strip.module.css
+index c49a078..80e5fa5 100644
+--- a/web/src/kit/Strip.module.css
++++ b/web/src/kit/Strip.module.css
+@@ -16,10 +16,10 @@
+   grid-template-rows: auto var(--strip-loop);
+   align-items: center;
+   column-gap: var(--sp-1);
+-  row-gap: var(--sp-1);
++  row-gap: var(--sp-2);
+   width: var(--w-strip);
+   /* the bracket's row under the segments: centre the segments on the row's text */
+-  padding-top: calc(var(--strip-loop) + var(--sp-1));
++  padding-top: calc(var(--strip-loop) + var(--sp-2));
+ }
+ .track > i {
+   display: block;
+@@ -59,7 +59,7 @@
+   grid-row: 2;
+   grid-column: var(--from) / var(--to);
+   align-self: stretch;
+-  border: var(--line-mark) solid var(--strip-loop-ink);
++  border: var(--line-2) solid var(--strip-loop-ink);
+   border-top: 0;
+   border-radius: 0 0 var(--line-2) var(--line-2);
+ }
+diff --git a/web/src/kit/Table.module.css b/web/src/kit/Table.module.css
+index 9b04608..992c4d6 100644
+--- a/web/src/kit/Table.module.css
++++ b/web/src/kit/Table.module.css
+@@ -72,7 +72,8 @@
+   margin-bottom: calc(var(--pad) * -1);
+ }
+ /* edge: out through the sheet's gutter, no surface; each row's first cell under the bar's title, the
+-   head a faint band ruled off the bar, the foot flush with the sheet's rounded foot */
++   head bare labels between two rules (no band), spaced as its two-line item rows, the foot flush
++   with the sheet's rounded foot */
+ .edge {
+   --list-pad: var(--gutter);
+   --list-inset: var(--gutter);
+@@ -82,7 +83,7 @@
+   scrollbar-gutter: auto;
+ }
+ .edge > .head {
+-  background: var(--list-band);
++  column-gap: var(--sp-6);
+   box-shadow:
+     inset 0 var(--line-1) 0 var(--list-rule),
+     inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 1edf31c..66bf8b8 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -58,13 +58,14 @@
+           "why": "A stable hue per person (an id, or a Jira assignee's name), for the faces drawn in the person's hue (rows, pickers, the conversation)."
+         },
+         "size": {
+-          "why": "Five places draw faces at five sizes.",
++          "why": "Six places draw faces at six sizes and shapes.",
+           "values": {
+             "sm": "16px: a face in a pill (an agent card's state chip), a run's starter.",
+             "md": "Rows, heads and pickers (18px): Linear's small face, a disc in the person's own hue.",
+             "mid": "A neutral face whose initials must read (24px): All teams' team faces.",
+             "lg": "The signed-in face in the sidebar's account popover (30px).",
+-            "talk": "The conversation, the sidebar head's signed-in face and the face that leads an Intake row (24px), on the person's hue."
++            "talk": "The conversation, the sidebar head's signed-in face, the face that leads an Intake row and who last changed a library item (24px), on the person's hue.",
++            "tile": "An agent leading its library row (32px): a rounded square in its hue, the shape and size of the glyph tiles that lead the other library lists, so the four read as one family."
+           }
+         },
+         "dashed": {
+@@ -502,7 +503,7 @@
+           "why": "Its accessible name when nothing beside it says what it is."
+         },
+         "tile": {
+-          "why": "On a faint grey square, as Linear's project icons lead a row: the library lists' workflows, skills and files, level with the agents' faces."
++          "why": "On a faint grey rounded square, as Linear's project icons lead a row: the library lists' workflows, skills and files, the shape and size of the agents' face tiles."
+         }
+       }
+     },
+@@ -692,7 +693,7 @@
+           "why": "The shapes the app's lists take.",
+           "values": {
+             "line": "A list's row (Compact, My queue): one line with no hairline (its group's band parts the runs), its first cell under the group head's glyph; hover and open wash it as a rounded slab held a step in from the edges.",
+-            "item": "A two-line row (Intake): roomy, on a hairline, washed on hover.",
++            "item": "A two-line row (Intake, the library's lists): roomy, on a hairline, washed on hover.",
+             "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
+             "band": "A board's swimlane (All teams): the team, then its stage lanes to the board's edge, each holding ticket Cards.",
+             "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid."
+@@ -979,7 +980,7 @@
+           "why": "Run through the padding of the surface it sits in, edge to edge, flush at its top and foot (My queue's lists, whose surface pads the agents' cards)."
+         },
+         "edge": {
+-          "why": "Out to the main sheet's edges with no surface of its own, as Linear's index runs: a head band ruled off the bar, each row's first cell under the bar's title (the library's four lists)."
++          "why": "Out to the main sheet's edges with no surface of its own, as Linear's index runs: bare column labels between two rules, spaced for its two-line item rows, each row's first cell under the bar's title (the library's four lists)."
+         }
+       }
+     },
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index c3c885b..194f9b1 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -499,6 +499,7 @@
+   --h-group: 36px;
+   --h-list-head: 32px;
+   --h-list-chip: 20px;
++  --h-tile: 32px; /* a library row's lead: an item's glyph tile, an agent's face */
+   --list-pad: 24px; /* a list row's inset from the surface edge */
+   --list-inset: calc(var(--list-pad) + var(--sp-4)); /* where a row's first cell starts */
+   --gutter: var(--sp-9); /* the main sheet's sides (an edge Table runs out through it) */

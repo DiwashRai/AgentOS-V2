@@ -1,0 +1,53 @@
+// Reflow the comment block that holds each given line, as one paragraph at 100 columns.
+// Usage: node reflow.cjs <file> <line>...   (lines 1-based; a JSDoc or a run of // lines)
+const fs = require("fs");
+const [file, ...at] = process.argv.slice(2);
+let lines = fs.readFileSync(file, "utf8").split("\n");
+
+function wrap(words, first, cont, end) {
+  const out = [];
+  let cur = first;
+  let fresh = true;
+  for (const w of words) {
+    if (!fresh && cur.length + 1 + w.length > 100) {
+      out.push(cur);
+      cur = cont + w;
+    } else cur += (fresh ? "" : " ") + w;
+    fresh = false;
+  }
+  if (end) {
+    if (cur.length + end.length <= 100) cur += end;
+    else {
+      // keep the closer with the last word
+      const i = cur.lastIndexOf(" ");
+      out.push(cur.slice(0, i));
+      cur = cont + cur.slice(i + 1) + end;
+    }
+  }
+  out.push(cur);
+  return out;
+}
+
+// from the bottom up, so earlier line numbers stay put
+for (const n of at.map(Number).sort((a, b) => b - a)) {
+  const i = n - 1;
+  if (/^\s*\/\//.test(lines[i])) {
+    let a = i, b = i;
+    const ind = /^(\s*)/.exec(lines[i])[1];
+    while (a > 0 && lines[a - 1].startsWith(ind + "//")) a--;
+    while (b < lines.length - 1 && lines[b + 1].startsWith(ind + "//")) b++;
+    const words = lines.slice(a, b + 1).map((l) => l.trim().replace(/^\/\/\s?/, "")).join(" ").split(/\s+/).filter(Boolean);
+    lines.splice(a, b - a + 1, ...wrap(words, ind + "// ", ind + "// ", ""));
+  } else {
+    let a = i, b = i;
+    while (!lines[a].includes("/**") && !lines[a].includes("/*")) a--;
+    while (!lines[b].includes("*/")) b++;
+    const ind = /^(\s*)/.exec(lines[a])[1];
+    const jsdoc = lines[a].includes("/**");
+    const open = jsdoc ? "/** " : "/* ";
+    const body = lines.slice(a, b + 1).join(" ").replace(/^\s*\/\*\*?/, "").replace(/\*\/\s*$/, "");
+    const words = body.split(/\s+/).filter((w) => w && w !== "*");
+    lines.splice(a, b - a + 1, ...wrap(words, ind + open, ind + (jsdoc ? " *  " : "   "), " */"));
+  }
+}
+fs.writeFileSync(file, lines.join("\n"));

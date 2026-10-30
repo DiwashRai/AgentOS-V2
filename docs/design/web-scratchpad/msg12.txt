@@ -1,0 +1,14 @@
+web: credit through a used re-export and the app's lazy imports
+
+Since credit starts from what the app reaches, a screen behind its own
+index.ts barrel, or one the app loads with import() (App.tsx's twins
+route is one), lost its credit: a re-export was a dead end and a lazy
+import no reference at all. A re-export (`export { X } from`, `export
+*`, an import handed on by `export { X }`) now hands on the names a
+reference takes through it, and an allowed import() references the name
+it takes (`(await import("…")).Twins`), else all of them. An unused
+re-export still earns nothing. The real web's credits are unchanged;
+the tree test has a barrel, a shared re-export used and unused, and a
+lazily loaded screen.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

@@ -1,0 +1,17 @@
+gauntlet: group bands, edged text sheets, kind colours, smaller titles
+
+The owner's picks, back from before the flat direction and from the
+Linear comparison.
+
+- Head: a group's or a query's head is a light grey band again, the
+  rows straight under it, its name at the rows' size (Compact, Intake,
+  My queue, All teams). The hairline between Intake's sections goes:
+  the band starts each one.
+- TextArea sheet: a hairline round a shade barely off the page, as
+  Linear draws a document's block, instead of a slab of grey.
+- Icon: a workflow, an agent, a skill and a file each wear their
+  kind's hue, in the sidebar and wherever they name one.
+- Titles: a view's title 20px (was 24), a document's 22px (was 28).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

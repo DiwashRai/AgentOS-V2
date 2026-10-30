@@ -1,0 +1,83 @@
+// One-off: check the kit2 round-2 fixes in Chrome. Vite on 5191, stopped at the end.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, permissions: ["clipboard-read", "clipboard-write"] });
+  await ctx.addInitScript(() => localStorage.setItem("agentos-theme", "light"));
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const go = async (path) => { await page.goto(base + path); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(400); };
+  const tip = () => page.evaluate(() => [...document.querySelectorAll("[class*=_tip_]")].filter((e) => e.checkVisibility()).map((e) => e.textContent));
+
+  // 1: the plan's rows keep their height
+  await go("/t/NW-17");
+  say("1 plan line heights", await page.evaluate(() => [...document.querySelectorAll("main li [class*=_line_]")].slice(0, 3).map((e) => Math.round(e.getBoundingClientRect().height))));
+
+  // 4: no line on the library lists says its own words twice
+  for (const p of ["/library/agents", "/library/files", "/library/skills", "/library/workflows", "/library/workflows/standard"]) {
+    await go(p);
+    say(`4 ${p}: repeated`, await page.evaluate(() => [...document.querySelectorAll("[aria-description]")].filter((e) => e.getAttribute("aria-description").replace(/\s+/g, " ").trim() === e.textContent.replace(/\s+/g, " ").trim()).map((e) => e.textContent.slice(0, 30))));
+  }
+
+  // 3: a link out closes the menu
+  await go("/kit");
+  await page.getByRole("button", { name: "More on NW-17" }).click();
+  await page.waitForTimeout(200);
+  const [tab] = await Promise.all([ctx.waitForEvent("page"), page.getByRole("menuitem", { name: "Open NW-17 in Jira" }).click()]);
+  await tab.close();
+  await page.waitForTimeout(300);
+  say("3 after a link out: menus, expanded", [await page.getByRole("menu").count(), await page.getByRole("button", { name: "More on NW-17" }).getAttribute("aria-expanded")]);
+
+  // 6: the tooltip doesn't come back with focus after the menu closes; it does once left and back
+  await go("/?peek=NW-17");
+  const more = page.locator("dialog").getByRole("button", { name: "More on NW-17" });
+  await more.focus();
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(300);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(900);
+  say("6 after Esc on the menu: focus, tip", [await page.evaluate(() => document.activeElement?.getAttribute("aria-label")), await tip()]);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await page.waitForTimeout(900);
+  say("6 left and back: tip", await tip());
+
+  // 2: in a narrow window, the peek's toast docks inside the panel, clear of the reply box
+  await page.setViewportSize({ width: 1000, height: 800 });
+  await go("/?peek=NW-17");
+  await page.locator("dialog").getByRole("button", { name: "More on NW-17" }).click();
+  await page.getByRole("menuitem", { name: "Copy key" }).click();
+  await page.waitForTimeout(500);
+  say("2 toast, foot, panel", await page.evaluate(() => {
+    const r = (sel) => { const b = document.querySelector(sel)?.getBoundingClientRect(); return b ? [Math.round(b.left), Math.round(b.top), Math.round(b.right), Math.round(b.bottom)] : null; };
+    return [r("dialog [class*=_toast_]"), r("dialog [class*=_foot_]"), r("dialog")];
+  }));
+  await page.screenshot({ path: join(out, "k6-peek-narrow.png") });
+
+  // held: a full dialog's region is inert while it asks
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await go("/kit");
+  await page.getByRole("button", { name: "Open the full-window overlay" }).click();
+  await page.waitForTimeout(300);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(300);
+  say("held: asking, region inert", await page.evaluate(() => [!!document.querySelector("[role=alertdialog]"), [...document.querySelectorAll("dialog [class*=_region_]")].map((e) => e.inert)]));
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

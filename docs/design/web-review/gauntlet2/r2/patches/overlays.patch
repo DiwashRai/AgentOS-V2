@@ -1,0 +1,1033 @@
+diff --git a/web/src/features/library/ItemEditor.tsx b/web/src/features/library/ItemEditor.tsx
+index f8fcc24..bb5de9b 100644
+--- a/web/src/features/library/ItemEditor.tsx
++++ b/web/src/features/library/ItemEditor.tsx
+@@ -10,13 +10,13 @@ import { type ReactNode, useEffect, useRef } from "react";
+ import { useNow, useSession } from "../../api/queries";
+ import type { ItemBody, UsedBy } from "../../api/types";
+ import { age } from "../../domain/format";
+-import { Button, Chip, Field, Page, type PageProps, Stack } from "../../kit";
++import { Button, Chip, Field, Page, type PageProps, Stack, Text } from "../../kit";
+ import { Conflict } from "./conflict";
+ import { Content } from "./content";
+ import type { Draft } from "./draft";
+ import { authorName } from "./model";
+ import { type Siblings, SiblingNav } from "./nav";
+-import { type Fact, History, Properties, UsedBySection, UsedInSection } from "./side";
++import { type Fact, PropertyRows } from "./side";
+ import { type Editor, useEditor, type Versioned } from "./useEditor";
+ 
+ export interface EditorItem extends Versioned {
+@@ -33,6 +33,8 @@ export interface ItemEditorProps {
+   name?: { label: string; value: string; mono: boolean };
+   /** A library item's description to edit, under its name. */
+   description?: string;
++  /** The document's title when it has no name to edit (a ticket's copy: AGENTS.md, Builder). */
++  heading?: string;
+   /** Read-only properties (a skill's path, a file's size, a ticket copy's origin). */
+   facts?: readonly Fact[];
+   /** The library's: the workflows and tickets that use it. */
+@@ -90,36 +92,39 @@ function State({ e }: { e: Editor }) {
+   return e.dirty ? <Chip label={"Unsaved changes"} /> : null;
+ }
+ 
+-function Side({ e, props }: { e: Editor; props: ItemEditorProps }) {
+-  const { facts = [], usedBy, usedIn } = props;
++/** Its properties, what uses it and its versions: Linear's labelled rows, over the content. */
++function Rows({ e, props }: { e: Editor; props: ItemEditorProps }) {
+   const body = e.draft.body;
+   return (
+-    <Stack gap={10}>
+-      <Properties
+-        agent={
+-          body.kind === "agent"
+-            ? {
+-                value: body.agent,
+-                onChange: (agent) => {
+-                  e.edit({ body: { kind: "agent", agent } });
+-                },
+-              }
+-            : null
+-        }
+-        facts={facts}
+-      />
+-      {usedBy ? <UsedBySection usedBy={usedBy} /> : null}
+-      {usedIn ? <UsedInSection facts={usedIn} /> : null}
+-      <History versions={e.history} />
+-    </Stack>
++    <PropertyRows
++      agent={
++        body.kind === "agent"
++          ? {
++              value: body.agent,
++              onChange: (agent) => {
++                e.edit({ body: { kind: "agent", agent } });
++              },
++            }
++          : null
++      }
++      facts={props.facts ?? []}
++      usedBy={props.usedBy}
++      usedIn={props.usedIn}
++      versions={e.history}
++    />
+   );
+ }
+ 
+ /** A library item's name and description, the document's title and the lead under it, over its
+  *  content. */
+ function Identity({ e, props }: { e: Editor; props: ItemEditorProps }) {
+-  const { name, description } = props;
+-  if (!name && description === undefined) return null;
++  const { name, description, heading } = props;
++  if (!name && description === undefined)
++    return heading ? (
++      <Text variant="display" as="h2">
++        {heading}
++      </Text>
++    ) : null;
+   return (
+     <Stack gap={2}>
+       {name ? (
+@@ -150,8 +155,9 @@ function Identity({ e, props }: { e: Editor; props: ItemEditorProps }) {
+ }
+ function Main({ e, props }: { e: Editor; props: ItemEditorProps }) {
+   return (
+-    <Stack gap={9} grow>
++    <Stack gap={10} grow>
+       <Identity e={e} props={props} />
++      <Rows e={e} props={props} />
+       <Content
+         body={e.draft.body}
+         title={props.contentTitle}
+@@ -212,9 +218,7 @@ export function ItemEditor(props: ItemEditorProps) {
+           <Actions e={e} />
+         </>
+       }
+-      {...(e.theirs
+-        ? {}
+-        : { side: { look: "rail" as const, content: <Side e={e} props={props} /> } })}
++      {...(e.theirs ? {} : { side: { look: "doc" as const } })}
+     >
+       {e.theirs ? (
+         <Conflict
+diff --git a/web/src/features/library/content.tsx b/web/src/features/library/content.tsx
+index 4f112d2..3a424a3 100644
+--- a/web/src/features/library/content.tsx
++++ b/web/src/features/library/content.tsx
+@@ -125,6 +125,8 @@ function Blocks({
+     <Sortable
+       label="AGENTS.md blocks"
+       gap={6}
++      // the handles hang in the document's margin, so a block's name starts on its left edge
++      gutter={false}
+       onMove={move}
+       items={blocks.map((b, i) => {
+         const key = keys[i] ?? b.name;
+diff --git a/web/src/features/library/side.tsx b/web/src/features/library/side.tsx
+index cb263aa..afd41d6 100644
+--- a/web/src/features/library/side.tsx
++++ b/web/src/features/library/side.tsx
+@@ -1,39 +1,32 @@
+-// The item editor's side column, a narrow rail ruled off beside the content: the properties (an
+-// agent's runtime, model and effort as Linear's property chips; read-only facts as plain text),
+-// what uses the item (its workflows; its tickets as a count and the first few, the rest one click
+-// away), and its latest versions with who wrote each, a person or a ticket's run.
+-import { type ReactNode, useState } from "react";
++// The item editor's properties, as Linear's project page lists them over its document: labelled
++// rows of chips on one left edge with the content under them. Properties (an agent's runtime, model
++// and effort as pickers in place; read-only facts as a muted glyph and their words), what uses the
++// item (its workflows; its tickets as a count and the first few, the rest one click away), and its
++// latest versions with who wrote each, a person or a ticket's run.
++import { useState } from "react";
+ 
+ import { useNow, useRuntimes } from "../../api/queries";
+ import type { AgentSettings, Effort, RuntimeId, UsedBy, Version } from "../../api/types";
+ import { age, plural } from "../../domain/format";
+-import { Age, Avatar, Button, FormRow, Icon, Section, Select, Stack, Text } from "../../kit";
++import { Avatar, Button, type Fact, Facts, Icon, Select, Stack, Text } from "../../kit";
+ import { authorName } from "./model";
+ 
++export type { Fact };
++
+ const EFFORTS: readonly Effort[] = ["low", "medium", "high", "xhigh", "max"];
+ 
+ /** How many tickets "Used by" names before the rest fold into +N. */
+ const FEW = 3;
+ 
+-export interface Fact {
+-  label: string;
+-  value: ReactNode;
+-}
+-
+ /** An agent's runtime, model and effort, each a picker in place; a new runtime starts on its first
+  *  model. */
+-function AgentPickers({
+-  agent,
+-  onChange,
+-}: {
+-  agent: AgentSettings;
+-  onChange: (a: AgentSettings) => void;
+-}) {
++function useAgentPickers(agent: AgentSettings, onChange: (a: AgentSettings) => void): Fact[] {
+   const runtimes = useRuntimes().data ?? [];
+   const models = runtimes.find((r) => r.id === agent.runtime)?.models ?? [agent.model];
+-  return (
+-    <>
+-      <FormRow label="Runtime">
++  return [
++    {
++      label: "Runtime",
++      picker: (
+         <Select
+           label="Runtime"
+           value={agent.runtime}
+@@ -43,8 +36,11 @@ function AgentPickers({
+             if (r) onChange({ ...agent, runtime: id as RuntimeId, model: r.models[0] ?? "" });
+           }}
+         />
+-      </FormRow>
+-      <FormRow label="Model">
++      ),
++    },
++    {
++      label: "Model",
++      picker: (
+         <Select
+           label="Model"
+           value={agent.model}
+@@ -53,8 +49,11 @@ function AgentPickers({
+             onChange({ ...agent, model });
+           }}
+         />
+-      </FormRow>
+-      <FormRow label="Effort">
++      ),
++    },
++    {
++      label: "Effort",
++      picker: (
+         <Select
+           label="Effort"
+           value={agent.effort}
+@@ -63,37 +62,15 @@ function AgentPickers({
+             onChange({ ...agent, effort: effort as Effort });
+           }}
+         />
+-      </FormRow>
+-    </>
+-  );
+-}
+-
+-export interface PropertiesProps {
+-  agent: { value: AgentSettings; onChange: (a: AgentSettings) => void } | null;
+-  /** Read-only, as plain text (a path in monospace), or a ticket copy's own controls. */
+-  facts: readonly Fact[];
+-}
+-
+-export function Properties({ agent, facts }: PropertiesProps) {
+-  if (!agent && facts.length === 0) return null;
+-  return (
+-    <Section title="Properties">
+-      <Stack gap={3}>
+-        {agent ? <AgentPickers agent={agent.value} onChange={agent.onChange} /> : null}
+-        {facts.map((f) => (
+-          <FormRow key={f.label} label={f.label}>
+-            {f.value}
+-          </FormRow>
+-        ))}
+-      </Stack>
+-    </Section>
+-  );
++      ),
++    },
++  ];
+ }
+ 
+ /** The tickets: how many, the first few as links, and the rest behind +N, opened in place. */
+ function Tickets({ keys }: { keys: readonly string[] }) {
+   const [all, setAll] = useState(false);
+-  if (keys.length === 0) return <Text tone="3">None</Text>;
++  if (keys.length === 0) return <Text tone="3">No tickets</Text>;
+   const shown = all ? keys : keys.slice(0, FEW);
+   return (
+     <Stack dir="row" gap={3} align="center" wrap>
+@@ -120,74 +97,72 @@ function Tickets({ keys }: { keys: readonly string[] }) {
+ 
+ /** The workflows that use it, each a link to its editor, and the tickets on them or holding a
+  *  copy of their own. */
+-export function UsedBySection({ usedBy }: { usedBy: UsedBy }) {
+-  return (
+-    <Section title="Used by">
+-      <Stack gap={3}>
+-        <FormRow label="Workflows">
+-          {usedBy.workflows.length ? (
+-            usedBy.workflows.map((w) => (
+-              <Button
+-                key={w.id}
+-                variant="link"
+-                icon="workflows"
+-                href={`/library/workflows/${w.id}`}
+-              >
+-                {w.name}
+-              </Button>
+-            ))
+-          ) : (
+-            <Text tone="3">None</Text>
+-          )}
+-        </FormRow>
+-        <FormRow label="Tickets">
+-          <Tickets keys={usedBy.tickets} />
+-        </FormRow>
+-      </Stack>
+-    </Section>
+-  );
+-}
+-
+-/** A ticket copy's Used by: where it is used on the ticket (its workflow, the stages that get it). */
+-export function UsedInSection({ facts }: { facts: readonly Fact[] }) {
+-  return (
+-    <Section title="Used by">
+-      <Stack gap={3}>
+-        {facts.map((f) => (
+-          <FormRow key={f.label} label={f.label}>
+-            {f.value}
+-          </FormRow>
+-        ))}
+-      </Stack>
+-    </Section>
+-  );
++function usedByFacts(usedBy: UsedBy): Fact[] {
++  const flows: Fact[] = usedBy.workflows.length
++    ? usedBy.workflows.map((w) => ({
++        label: `Workflow ${w.name}`,
++        icon: "workflows",
++        value: (
++          <Button variant="link" href={`/library/workflows/${w.id}`}>
++            {w.name}
++          </Button>
++        ),
++      }))
++    : [{ label: "Workflows", icon: "workflows", value: "No workflows" }];
++  return [...flows, { label: "Tickets", value: <Tickets keys={usedBy.tickets} /> }];
+ }
+ 
+ /** The latest few versions, newest first: the number, who wrote it (a face, or the run's glyph),
+  *  and how long ago. */
+-export function History({ versions }: { versions: readonly Version[] }) {
++function historyFacts(versions: readonly Version[], now: number): Fact[] {
++  return versions.map((v) => ({
++    label: `Version ${String(v.version)}`,
++    value: (
++      <>
++        <Text tone="3" tabular>{`v${String(v.version)}`}</Text>
++        {v.by.kind === "person" ? (
++          <Avatar name={v.by.person.name} seed={String(v.by.person.id)} beside />
++        ) : (
++          <Icon name="agents" />
++        )}
++        {authorName(v.by)}
++      </>
++    ),
++    note: `· ${age(v.at, now)}`,
++  }));
++}
++
++export interface PropertyRowsProps {
++  agent: { value: AgentSettings; onChange: (a: AgentSettings) => void } | null;
++  /** Read-only, or a ticket copy's own (where it came from). */
++  facts: readonly Fact[];
++  /** The library's: the workflows and tickets that use it. */
++  usedBy?: UsedBy | undefined;
++  /** A ticket copy's: where it is used on the ticket (its workflow, the stages that get it). */
++  usedIn?: readonly Fact[] | undefined;
++  versions: readonly Version[];
++}
++
++function AgentRow({
++  agent,
++  facts,
++}: Pick<PropertyRowsProps, "facts"> & { agent: NonNullable<PropertyRowsProps["agent"]> }) {
++  const pickers = useAgentPickers(agent.value, agent.onChange);
++  return <Facts label="Properties" items={[...pickers, ...facts]} />;
++}
++
++export function PropertyRows({ agent, facts, usedBy, usedIn, versions }: PropertyRowsProps) {
+   const now = useNow(60_000);
+   return (
+-    <Section title="History">
+-      <Stack gap={4}>
+-        {versions.map((v) => (
+-          <Stack key={v.version} dir="row" gap={4} align="center">
+-            <Text tone="3" tabular>{`v${String(v.version)}`}</Text>
+-            {v.by.kind === "person" ? (
+-              <Avatar name={v.by.person.name} seed={String(v.by.person.id)} beside />
+-            ) : (
+-              <Icon name="agents" />
+-            )}
+-            <Text tone="2" truncate>
+-              {authorName(v.by)}
+-            </Text>
+-            <Stack grow />
+-            <Text variant="meta" tone="3">
+-              <Age text={age(v.at, now)} />
+-            </Text>
+-          </Stack>
+-        ))}
+-      </Stack>
+-    </Section>
++    <Stack>
++      {agent ? (
++        <AgentRow agent={agent} facts={facts} />
++      ) : facts.length ? (
++        <Facts label="Properties" items={facts} />
++      ) : null}
++      {usedBy ? <Facts label="Used by" items={usedByFacts(usedBy)} /> : null}
++      {usedIn ? <Facts label="Used by" items={usedIn} /> : null}
++      <Facts label="History" items={historyFacts(versions, now)} />
++    </Stack>
+   );
+ }
+diff --git a/web/src/features/peek/Peek.tsx b/web/src/features/peek/Peek.tsx
+index 6c5537e..e82a6ad 100644
+--- a/web/src/features/peek/Peek.tsx
++++ b/web/src/features/peek/Peek.tsx
+@@ -47,11 +47,12 @@ function Bar({ ticketKey, onClose }: { ticketKey: string; onClose: () => void })
+         {t?.source ? `${ticketKey} · Jira ${t.source.ref}` : ticketKey}
+       </Text>
+       <Stack grow />
+-      <Button variant="quiet" size="sm" href={`/t/${ticketKey}`}>
++      {/* the three in one look: the controls' own, each on its hairline */}
++      <Button size="sm" icon="out" href={`/t/${ticketKey}`}>
+         Open ticket
+       </Button>
+       {t ? <TicketMenu t={t} size="sm" /> : null}
+-      <Button variant="quiet" size="sm" icon="close" title="Close peek (Esc)" onClick={onClose} />
++      <Button size="sm" icon="close" title="Close peek (Esc)" onClick={onClose} />
+     </Stack>
+   );
+ }
+diff --git a/web/src/features/ticket/WorkflowOverlay.tsx b/web/src/features/ticket/WorkflowOverlay.tsx
+index 131b2a8..c726698 100644
+--- a/web/src/features/ticket/WorkflowOverlay.tsx
++++ b/web/src/features/ticket/WorkflowOverlay.tsx
+@@ -9,7 +9,7 @@ import { useState } from "react";
+ 
+ import { useNow, useTicketWorkflow, useWorkflow } from "../../api/queries";
+ import type { Ticket, TicketWorkflow, Workflow, WorkflowBody } from "../../api/types";
+-import { Button, Chip, Dialog, Notice, Page, Stack, Text } from "../../kit";
++import { Button, Chip, Dialog, FormRow, Notice, Page, Text } from "../../kit";
+ import { type Draft, useDraft } from "../workflow/draft";
+ import { Editor } from "../workflow/Editor";
+ import { authorText } from "../workflow/who";
+@@ -90,7 +90,7 @@ function Drift({ w, draft }: { w: TicketWorkflow; draft: Draft }) {
+   const taken = lib !== undefined && draft.dirty && same(draft.body, lib);
+   const drifted = w.drift.library !== null || w.drift.changed;
+   return (
+-    <Stack dir="row" gap={4} align="center" wrap>
++    <FormRow label="This copy">
+       {taken ? (
+         <Chip dot="you" label={`Taking library v${String(lib.version)} · unsaved`} />
+       ) : (
+@@ -98,7 +98,7 @@ function Drift({ w, draft }: { w: TicketWorkflow; draft: Draft }) {
+       )}
+       {drifted && !taken ? <Take w={w} lib={lib} draft={draft} /> : null}
+       <Promote w={w} block={promoteBlock(w, lib, taken)} />
+-    </Stack>
++    </FormRow>
+   );
+ }
+ function CopyEditor({ t, w, open, onClose }: OverlayProps & { w: TicketWorkflow }) {
+diff --git a/web/src/features/ticket/itemOverlay.tsx b/web/src/features/ticket/itemOverlay.tsx
+index 16a1858..c01bece 100644
+--- a/web/src/features/ticket/itemOverlay.tsx
++++ b/web/src/features/ticket/itemOverlay.tsx
+@@ -38,26 +38,18 @@ function facts(i: Item): Fact[] {
+   const k = KIND[i.kind];
+   const href = libraryHref(i);
+   return [
+-    {
+-      label: "Kind",
+-      value: (
+-        <Stack dir="row" gap={3} align="center">
+-          <Icon name={k.icon} />
+-          <Text tone="1">{k.word}</Text>
+-        </Stack>
+-      ),
+-    },
+-    {
+-      label: "Copied from",
+-      value:
+-        i.origin.kind === "copy" && href ? (
+-          <Button variant="link" href={href}>
+-            {`${i.origin.of.name} v${String(i.origin.version)}`}
+-          </Button>
+-        ) : (
+-          <Text tone="3">Ticket only</Text>
+-        ),
+-    },
++    { label: "Kind", icon: k.icon, value: k.word },
++    i.origin.kind === "copy" && href
++      ? {
++          label: "Copied from",
++          icon: "out",
++          value: (
++            <Button variant="link" href={href}>
++              {`${i.origin.of.name} v${String(i.origin.version)}`}
++            </Button>
++          ),
++        }
++      : { label: "Copied from", value: "Ticket only" },
+   ];
+ }
+ 
+@@ -68,13 +60,14 @@ function useUsedIn(t: Ticket, i: Item): Fact[] | undefined {
+   return [
+     {
+       label: "Workflow",
++      icon: "workflows",
+       value: (
+-        <Button variant="link" icon="workflows" href={ticketHref(t.key, "workflow")}>
++        <Button variant="link" href={ticketHref(t.key, "workflow")}>
+           {`${w.name} v${String(w.from.version)}`}
+         </Button>
+       ),
+     },
+-    { label: "Stages", value: <Text tone="2">{stagesOf(i, w)}</Text> },
++    { label: "Stages", icon: "gate", value: stagesOf(i, w) },
+   ];
+ }
+ 
+@@ -183,6 +176,7 @@ function Editor({ t, i, onDirty }: { t: Ticket; i: Item; onDirty: OnDirty }) {
+   return (
+     <ItemEditor
+       title={title}
++      heading={labelOf(i)}
+       item={i}
+       contentTitle={contentTitle(i, i.body.kind === "blocks")}
+       facts={facts(i)}
+diff --git a/web/src/features/workflow/Editor.tsx b/web/src/features/workflow/Editor.tsx
+index 2a64567..a6e398e 100644
+--- a/web/src/features/workflow/Editor.tsx
++++ b/web/src/features/workflow/Editor.tsx
+@@ -14,6 +14,7 @@ import {
+   Chip,
+   type DragPayload,
+   Drop,
++  FormRow,
+   Icon,
+   Lane,
+   type LaneLoop,
+@@ -76,8 +77,7 @@ function ContextStrip({ draft, lib, fresh, land }: Lands & { draft: Draft; lib:
+   };
+   return (
+     <Drop accept={["skill", "file"]} onDrop={add} label="Give every stage">
+-      <Stack dir="row" gap={4} align="center" wrap>
+-        <Text tone="3">Every stage gets</Text>
++      <FormRow label="Every stage gets">
+         {(["skills", "files"] as const).flatMap((kind) =>
+           c[kind].map((id) => {
+             const ref = `${kind}:${id}`;
+@@ -96,7 +96,7 @@ function ContextStrip({ draft, lib, fresh, land }: Lands & { draft: Draft; lib:
+           }),
+         )}
+         <Text variant="meta">Drop a skill or a file here</Text>
+-      </Stack>
++      </FormRow>
+     </Drop>
+   );
+ }
+diff --git a/web/src/features/workflow/StageCard.tsx b/web/src/features/workflow/StageCard.tsx
+index 676a7f3..9ffe300 100644
+--- a/web/src/features/workflow/StageCard.tsx
++++ b/web/src/features/workflow/StageCard.tsx
+@@ -162,7 +162,7 @@ export function StageSummary({ stage, lib, show = "all", run, fresh }: SummaryPr
+       <HeadLine stage={stage} run={run ?? null} />
+       <Who stage={stage} lib={lib} />
+       {prompt ? (
+-        <Text variant="code" truncate title={prompt}>
++        <Text variant="code" tone="2" truncate title={prompt}>
+           {firstLine(prompt)}
+         </Text>
+       ) : null}
+diff --git a/web/src/kit/Button.module.css b/web/src/kit/Button.module.css
+index 208faf6..72cd90b 100644
+--- a/web/src/kit/Button.module.css
++++ b/web/src/kit/Button.module.css
+@@ -133,3 +133,9 @@
+   color: var(--ink-3);
+   cursor: not-allowed;
+ }
++/* a quiet one (a glyph among glyphs) has no outline to empty: it only fades */
++.quiet[aria-disabled="true"],
++.quiet[aria-disabled="true"]:hover {
++  border-color: transparent;
++  opacity: 0.45;
++}
+diff --git a/web/src/kit/Dialog.module.css b/web/src/kit/Dialog.module.css
+index 6f75a00..c0247e2 100644
+--- a/web/src/kit/Dialog.module.css
++++ b/web/src/kit/Dialog.module.css
+@@ -1,26 +1,27 @@
+-/* side: the peek, docked full height at the window's right edge, as Linear's issue peek is: one
+-   sheet on a hairline and a long soft shadow, the list beside it only veiled, so it still reads */
++/* side: the peek, a sheet floated at the window's right edge, inset as the full look is, the list
++   under it dimmed by the same scrim, so the one thing lifted is the one thing to read */
+ .side {
+   position: fixed;
+-  inset: 0 0 0 auto;
++  inset: var(--sp-4) var(--sp-4) var(--sp-4) auto;
+   width: min(var(--w-peek), calc(100vw - var(--sp-10)));
+-  height: 100dvh;
++  height: auto;
+   max-height: none;
+   margin: 0;
+   padding: 0;
+   border: 0;
+-  border-left: var(--line-1) solid var(--tk-card-edge);
++  border-radius: var(--r-4);
+   background: var(--tk-side);
+   color: var(--ink-2);
+-  box-shadow: var(--shadow-dock);
++  box-shadow: var(--shadow-float);
+   overflow: hidden;
+ }
+ .side:focus-visible,
+ .full:focus-visible {
+   outline: none;
+ }
+-.side::backdrop {
+-  background: var(--tk-veil);
++.side::backdrop,
++.full::backdrop {
++  background: var(--tk-scrim);
+ }
+ .side[open] {
+   display: flex;
+@@ -38,17 +39,16 @@
+   }
+ }
+ /* the bar: the panel's chrome, pinned over the sections the way the foot is under them (the key,
+-   then its buttons at the end), ruled off from the document it heads on the line the view's own
+-   top bar ends on, so the two read as one bar across the window */
++   then its buttons at the end); no rule: the sections fade out under it and under the foot */
+ .bar {
+   flex: none;
+   display: flex;
+   align-items: center;
+-  height: calc(var(--h-top) + var(--sp-4));
++  height: var(--h-top);
+   padding: 0 var(--sp-6) 0 var(--sp-9);
+-  border-bottom: var(--line-1) solid var(--tk-card-edge);
+ }
+-/* the Sections scroll inside the panel as one document (each draws its own padding) */
++/* the Sections scroll inside the panel as one document (each draws its own padding), faded at
++   both ends, so a line half under the bar or the reply box says there is more */
+ .body {
+   flex: 1;
+   min-height: 0;
+@@ -56,6 +56,13 @@
+   flex-direction: column;
+   overflow-y: auto;
+   scrollbar-width: thin;
++  /* a mask reads only alpha: the ink stands for opaque */
++  mask-image: linear-gradient(
++    transparent,
++    var(--ink-1) var(--sp-6),
++    var(--ink-1) calc(100% - var(--sp-10)),
++    transparent
++  );
+ }
+ /* where the panel's toasts dock: a line between the sections and the foot, the toasts rising from
+    it over the sections' end, inside the panel and clear of the reply box */
+@@ -65,11 +72,10 @@
+   height: 0;
+   z-index: var(--z-pop);
+ }
+-/* the foot: pinned under the sections, ruled off where they scroll away under it */
++/* the foot: pinned under the sections, which fade away under it */
+ .foot {
+   flex: none;
+-  padding: var(--sp-6) var(--sp-9) var(--sp-8);
+-  border-top: var(--line-1) solid var(--tk-card-edge);
++  padding: var(--sp-2) var(--sp-8) var(--sp-8);
+ }
+ .foot:empty {
+   display: none;
+@@ -94,9 +100,6 @@
+   box-shadow: var(--shadow-float);
+   overflow: hidden;
+ }
+-.full::backdrop {
+-  background: var(--tk-scrim);
+-}
+ .full[open] {
+   display: block;
+   animation: rise var(--dur-fast) var(--ease-out);
+@@ -113,8 +116,7 @@
+ }
+ .frame {
+   position: relative;
+-  display: grid;
+-  grid-template-columns: auto minmax(0, 1fr);
++  display: flex;
+   height: 100%;
+ }
+ /* the bar's hairline, under the close as well as the view's top bar */
+@@ -124,25 +126,24 @@
+   inset: var(--h-top) 0 auto;
+   border-top: var(--line-1) solid var(--tk-card-edge);
+ }
++/* the close: at the bar's end, where the peek's is, in the room the view's bar leaves for it */
+ .close {
++  position: absolute;
++  top: 0;
++  right: var(--gutter);
+   display: flex;
+   align-items: center;
+-  gap: var(--sp-6);
+   height: var(--h-top);
+-  padding: 0 var(--sp-8) 0 var(--sp-6);
+-}
+-.close::after {
+-  content: "";
+-  height: var(--sp-9);
+-  border-left: var(--line-1) solid var(--tk-card-edge);
+ }
+ /* the gutter inside the scroller, as the sheet's own, so a rail beside the body runs out through it */
+ .view {
++  --top-end: calc(var(--h-control) + var(--sp-4));
+   display: flex;
++  flex: 1;
+   flex-direction: column;
+   min-width: 0;
+   min-height: 0;
+-  padding-right: var(--gutter);
++  padding-inline: var(--gutter);
+   overflow-y: auto;
+   scrollbar-width: thin;
+ }
+diff --git a/web/src/kit/Dialog.tsx b/web/src/kit/Dialog.tsx
+index 9018f7a..e132ff2 100644
+--- a/web/src/kit/Dialog.tsx
++++ b/web/src/kit/Dialog.tsx
+@@ -96,10 +96,10 @@ function Full({
+           if (e.relatedTarget === e.currentTarget.closest("dialog")) was.current = null;
+         }}
+       >
++        <div className={s.view}>{children}</div>
+         <span className={s.close}>
+-          <Button variant="quiet" icon="close" title="Close (Esc)" onClick={onClose} />
++          <Button icon="close" title="Close (Esc)" onClick={onClose} />
+         </span>
+-        <div className={s.view}>{children}</div>
+       </div>
+       {hasAsk ? (
+         <div className={s.scrim}>
+@@ -168,10 +168,11 @@ export function Dialog(props: DialogProps) {
+     const d = ref.current;
+     if (!d) return;
+     if (open && !d.open) {
+-      d.showModal();
+       // it opens on itself, not on the first thing in it the browser would pick (the full look's
+-      // close, the toast region); Tab goes on from there (not while it asks: the question has the
+-      // focus)
++      // close, whose tooltip a keyboard's open would raise, the toast region); Tab goes on from
++      // there (not while it asks: the question has the focus)
++      d.autofocus = true;
++      d.showModal();
+       if (ask === undefined) d.focus();
+     }
+     if (!open && d.open) d.close();
+diff --git a/web/src/kit/Facts.module.css b/web/src/kit/Facts.module.css
+index 9c98bc8..f94b4d5 100644
+--- a/web/src/kit/Facts.module.css
++++ b/web/src/kit/Facts.module.css
+@@ -55,6 +55,11 @@
+ .value {
+   padding: 0 var(--sp-4);
+ }
++/* a link for a value (where a copy came from) at the row's size and ink, the chip its hover */
++.value a {
++  font-size: inherit;
++  color: inherit;
++}
+ /* the value's muted glyph */
+ .glyph {
+   display: inline-flex;
+diff --git a/web/src/kit/Form.module.css b/web/src/kit/Form.module.css
+index 8488616..79c87bf 100644
+--- a/web/src/kit/Form.module.css
++++ b/web/src/kit/Form.module.css
+@@ -103,7 +103,7 @@
+   resize: none;
+ }
+ /* a document's own words (Field's looks, a bare TextArea): no box, the text flush with the column
+-   (its padding pulled back into the gutter), a faint wash on hover, the ring alone on focus */
++   (its padding pulled back into the gutter); a quiet edge only on hover, the ring on focus */
+ .ghost {
+   width: calc(100% + var(--sp-3) * 2);
+   margin-inline: calc(var(--sp-3) * -1);
+@@ -112,8 +112,13 @@
+   background: none;
+   resize: none;
+ }
+-.ghost:is(:hover, :focus-within) {
+-  border-color: transparent;
++/* a bare area reads as the document's text, not as code */
++.area.ghost {
++  min-height: calc(var(--code-line) * var(--lines) + var(--sp-1) * 2);
++  font-family: var(--font-sans);
++  font-size: var(--fs-tk);
++  line-height: var(--code-line);
++  letter-spacing: var(--track-snug);
+ }
+ .field.ghost:hover:not(:focus) {
+   background: var(--ctl-hover);
+diff --git a/web/src/kit/Lane.module.css b/web/src/kit/Lane.module.css
+index 7de0e41..1ea58b2 100644
+--- a/web/src/kit/Lane.module.css
++++ b/web/src/kit/Lane.module.css
+@@ -48,25 +48,25 @@
+   bottom: calc(100% - var(--lane-face));
+ }
+ 
+-/* a loop's band, one piece per stage: a faint wash with no edge (the stages are words on the page,
+-   so a box round them would be the one box), rounded at its ends; the first piece reaches up past
+-   the joint's diamond, the last stops under the loop's foot */
++/* a loop's band, one piece per stage: a bracket in the gutter in the axis's line, no wash and no
++   box (the stages stay words on the page); the first piece turns in past the joint's diamond, the
++   last under the loop's foot */
+ .band {
+   position: absolute;
+-  inset: 0 calc(var(--sp-5) * -1) 0 calc(var(--out) * -1);
+-  background: var(--loop-fill);
++  inset: 0 auto 0 calc(var(--out) * -1);
++  width: var(--sp-4);
++  border-left: var(--line-2) solid var(--lane-line);
+   pointer-events: none;
+ }
+ .band:is([data-pos="first"], [data-pos="only"]) {
+   top: calc(var(--reach) * -1);
+-  border-radius: var(--r-5) var(--r-5) 0 0;
++  border-top: var(--line-2) solid var(--lane-line);
++  border-top-left-radius: var(--r-3);
+ }
+ .band:is([data-pos="last"], [data-pos="only"]) {
+   bottom: calc(var(--sp-4) * -1);
+-  border-radius: 0 0 var(--r-5) var(--r-5);
+-}
+-.band[data-pos="only"] {
+-  border-radius: var(--r-5);
++  border-bottom: var(--line-2) solid var(--lane-line);
++  border-bottom-left-radius: var(--r-3);
+ }
+ .block:is([data-loop="last"], [data-loop="only"]) {
+   margin-bottom: var(--sp-4);
+diff --git a/web/src/kit/Override.module.css b/web/src/kit/Override.module.css
+index efbb793..fb31f11 100644
+--- a/web/src/kit/Override.module.css
++++ b/web/src/kit/Override.module.css
+@@ -17,7 +17,9 @@
+   color: var(--ink-1);
+   font-weight: 500;
+ }
++/* the agent's own still reads: in the second ink, its strike a thin line in the muted one */
+ .over > s {
+-  color: var(--ink-3);
++  color: var(--ink-2);
+   text-decoration-color: var(--ink-3);
++  text-decoration-thickness: var(--line-1);
+ }
+diff --git a/web/src/kit/Page.module.css b/web/src/kit/Page.module.css
+index 9226d3d..cbcb393 100644
+--- a/web/src/kit/Page.module.css
++++ b/web/src/kit/Page.module.css
+@@ -12,6 +12,8 @@
+   gap: var(--sp-8);
+   height: var(--h-top);
+   min-width: 0;
++  /* room at its end for what sits over it there (a full dialog's close) */
++  padding-right: var(--top-end, 0);
+ }
+ .title {
+   flex: none;
+@@ -154,15 +156,14 @@
+   margin-right: calc(var(--gutter) * -1);
+   border-top: var(--line-1) solid var(--tk-card-edge);
+ }
+-/* a rail of settings (an item editor's properties) is narrower than a reading column, so the
+-   content beside it keeps the width */
+-.split[data-side="rail"] {
+-  grid-template-columns: minmax(0, 1fr) var(--w-rail);
+-}
+ /* the body: one calm reading column, room under its last line when scrolled to the end */
+ .split > .body {
+   padding: var(--sp-10) var(--sp-10) calc(var(--sp-10) * 2) 0;
+ }
++/* a document: the reading column centred under the bar, room above and under it */
++.doc {
++  padding: calc(var(--sp-10) + var(--sp-7)) 0 calc(var(--sp-10) * 2);
++}
+ /* the measure carries the body's column on: at least the body's height, so an editor's growing
+    content (a filled text area) takes the rest of the window */
+ .measure {
+@@ -173,11 +174,6 @@
+   max-width: var(--w-ticket);
+   margin-inline: auto;
+ }
+-/* beside a rail of settings the body is an editor: flush with the title, out to the rail's gutter,
+-   so it lines up the same full window over the ticket as beside the sidebar */
+-.split[data-side="rail"] .measure {
+-  max-width: none;
+-}
+ /* the column beside: Linear's issue sidebar, a tinted rail ruled off by one hairline and run out to
+    the sheet's edge, full height, so what it holds can pin its foot (Talk's reply box) to the
+    window's bottom */
+diff --git a/web/src/kit/Page.tsx b/web/src/kit/Page.tsx
+index 2f83b03..b94f252 100644
+--- a/web/src/kit/Page.tsx
++++ b/web/src/kit/Page.tsx
+@@ -34,10 +34,10 @@ export interface PageProps {
+   search?: Search;
+   /** The bar's buttons at its right end (New ticket; a ticket's actions). */
+   action?: ReactNode;
+-  /** A full-height column beside the body, ruled off by one hairline. column: a reading column (the
+-   *  ticket's Talk, the workflow editor's library); rail: a narrow rail of settings (an item
+-   *  editor's properties), the body beside it an editor out to the rail's gutter. */
+-  side?: { look?: "column" | "rail"; content: ReactNode };
++  /** column: a full-height reading column beside the body, ruled off by one hairline (the
++   *  ticket's Talk, the workflow editor's library); doc: none, what would sit there (an item
++   *  editor's properties) is in the body, one centred document, as Linear's project page. */
++  side?: { look?: "column"; content: ReactNode } | { look: "doc"; content?: never };
+   children: ReactNode;
+ }
+ 
+@@ -107,8 +107,12 @@ export function Page({
+         ) : null}
+         {action ? <span className={s.actions}>{action}</span> : null}
+       </header>
+-      {side ? (
+-        <div className={s.split} data-side={side.look ?? "column"}>
++      {side?.look === "doc" ? (
++        <div className={cx(s.body, s.doc)}>
++          <div className={s.measure}>{children}</div>
++        </div>
++      ) : side ? (
++        <div className={s.split}>
+           <div className={s.body}>
+             <div className={s.measure}>{children}</div>
+           </div>
+diff --git a/web/src/kit/TextArea.tsx b/web/src/kit/TextArea.tsx
+index b422f08..9d9501a 100644
+--- a/web/src/kit/TextArea.tsx
++++ b/web/src/kit/TextArea.tsx
+@@ -21,7 +21,8 @@ export interface TextAreaProps {
+   lines?: number;
+   /** Fill the height of the column it is in and scroll inside (an item editor's body). */
+   fill?: boolean;
+-  /** Unboxed, the page's own text (an item editor's content); popped out, it is boxed. */
++  /** Unboxed, the page's own text in its face (an item editor's content); popped out, it is boxed
++   *  monospace. */
+   bare?: boolean;
+ }
+ 
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 1edf31c..2d3658f 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -291,8 +291,8 @@
+         "look": {
+           "why": "The peek reads beside the list; editing always gets the whole window (the owner's rule).",
+           "values": {
+-            "side": "The peek: a panel docked full height at the right edge, the list beside it veiled, not dimmed; its sections one document between its bar and foot (the default).",
+-            "full": "A full-window editor over the page (a ticket's workflow or item): the app's sheet lifted over the window on a scrim, the close at the top left of its bar, then a Page, so the editor is framed as on its own screen."
++            "side": "The peek: a sheet floated at the right edge on the full look's scrim, so the one thing lifted is the one to read; its sections one document between its bar and foot, fading out under both (the default).",
++            "full": "A full-window editor over the page (a ticket's workflow or item): the app's sheet lifted over the window on a scrim, a Page in it, so the editor is framed as on its own screen, the close at its bar's end where the peek's is."
+           }
+         },
+         "ask": {
+@@ -340,8 +340,7 @@
+       }
+     },
+     "Facts": {
+-      "why": "A ticket's properties as one of Linear's labelled property rows: the values at body size, each a muted glyph and its words, as chips; each label in its tooltip.",
+-      "single": "The ticket page and the peek both draw it, through the one properties composition the ticket feature shares with the peek.",
++      "why": "Properties as one of Linear's labelled property rows (a ticket's; an item editor's Properties, Used by and History over its document): the values at body size, each a muted glyph and its words, a link among them at the same size, as chips; each label in its tooltip.",
+       "props": {
+         "items": {
+           "why": "The facts: a label, then a value (words after a muted glyph, or other content) or a picker that brings its own padding; quiet words after either (main, from the repo).",
+@@ -666,13 +665,13 @@
+           "why": "The bar's buttons at its right end (New ticket; the ticket's actions)."
+         },
+         "side": {
+-          "why": "A full-height column beside the body, as Linear's issue sidebar: a tinted rail ruled off by one hairline, run out to the sheet's edge; its look says how wide.",
++          "why": "A full-height column beside the body, as Linear's issue sidebar: a tinted rail ruled off by one hairline, run out to the sheet's edge; or, its look doc, none, and the body one centred document.",
+           "items": {
+             "look": {
+-              "why": "How wide the column is.",
++              "why": "Whether the column is there.",
+               "values": {
+                 "column": "A reading column (the ticket's properties and Talk, the workflow editor's library): the default.",
+-                "rail": "A narrow rail of settings (an item editor's properties), the body beside it an editor out to its gutter."
++                "doc": "No column: what would sit in it (an item editor's properties) heads the body, one centred document on one left edge, as Linear's project page."
+               }
+             }
+           }
+@@ -1078,7 +1077,7 @@
+           "why": "An item editor's body fills its column and scrolls inside."
+         },
+         "bare": {
+-          "why": "An item editor's content is the document's own text, unboxed under its title or heading (popped out, it is boxed at a readable measure)."
++          "why": "An item editor's content is the document's own text, in the body's face, unboxed under its title or heading, a quiet edge only on hover (popped out, it is boxed monospace at a readable measure)."
+         }
+       }
+     },
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index c3c885b..628cb1f 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -105,7 +105,6 @@
+   --tk-mine-edge: color-mix(in srgb, var(--ink-1) 6%, transparent);
+   --tk-side: var(--surface);
+   --tk-scrim: color-mix(in srgb, var(--ink-1) 24%, transparent);
+-  --tk-veil: color-mix(in srgb, var(--ink-1) 7%, transparent); /* under the peek: the list reads */
+   --tk-ink: var(--ink-1); /* body-size text: a property, a plan item, a message */
+   --tk-label: var(--ink-3); /* a property's head, a section head: clearly under the values */
+   --tk-well: color-mix(in srgb, var(--ink-1) 4.5%, var(--surface)); /* the rail: Linear's sidebar */
+@@ -113,7 +112,6 @@
+   /* depth: hairlines, almost no shadow */
+   --shadow-recess: inset 0 0 0 1px rgba(9, 9, 11, 0.06);
+   --shadow-float: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 24px 64px -24px rgba(9, 9, 11, 0.35);
+-  --shadow-dock: -16px 0 48px -24px rgba(9, 9, 11, 0.22); /* the peek's long shadow on the list */
+   --shadow-accent: none;
+   /* controls: buttons, filter pills, menus and pickers (Linear's quiet filled controls) */
+   --ctl: var(--surface);
+@@ -225,13 +223,11 @@
+   --tk-side: color-mix(in srgb, var(--ink-1) 3%, var(--page));
+   --tk-well: color-mix(in srgb, var(--ink-1) 4%, var(--page));
+   --tk-scrim: color-mix(in srgb, #000000 72%, transparent);
+-  --tk-veil: color-mix(in srgb, #000000 38%, transparent);
+   --tk-label: color-mix(in srgb, var(--ink-3) 70%, var(--page)); /* dark ink-3 sits near ink-2 */
+   /* light on dark reads a weight heavier */
+   --tk-ink: color-mix(in srgb, var(--ink-1) 55%, var(--ink-2));
+   --shadow-recess: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+   --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 64px -24px rgba(0, 0, 0, 0.9);
+-  --shadow-dock: -16px 0 48px -16px rgba(0, 0, 0, 0.7);
+   --shadow-accent: none;
+   /* controls: buttons, filter pills, menus and pickers (Linear's quiet filled controls) */
+   --ctl: color-mix(in srgb, var(--ink-1) 6%, var(--recess));
+@@ -632,7 +628,6 @@
+ :root:not([data-theme]),
+ [data-theme] {
+   --lane-line: color-mix(in srgb, var(--ink-1) 20%, transparent);
+-  --loop-fill: color-mix(in srgb, var(--ink-1) 4%, transparent);
+   --card-open-ring: color-mix(in srgb, var(--you) 22%, transparent);
+   --card-problem: color-mix(in srgb, var(--blocked) 8%, transparent);
+   --card-problem-edge: color-mix(in srgb, var(--blocked) 45%, var(--teams-card-edge));
+@@ -670,5 +665,4 @@
+   --strip-seg: 6px;
+   --strip-dia: 8px;
+   --strip-loop: 5px;
+-  --w-rail: 320px;
+ }

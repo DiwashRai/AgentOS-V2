@@ -1,0 +1,143 @@
+export const meta = {
+  name: 'gauntlet3-explore',
+  description: 'One exploration round: each design direction restyles our real screens in its own worktree; judged head to head against our current screens (the goal), and its twins against Linear (secondary)',
+  phases: [
+    { title: 'Build', detail: 'one designer per direction, in its own worktree, saved as a cumulative patch' },
+    { title: 'Judge', detail: 'four blind judges on our screens against the current ones; four on the twins against Linear' },
+  ],
+}
+
+// args: { round, base: '<commit>', effort: 'xhigh' | 'high', polish: bool,
+//         directions: [{ key, dir: '<neutral dir name>', brief }], resume?: '<dir of partial patches>' }
+// A polish round starts each direction from its patch of the round before, with the judges' notes.
+const ROOT = 'C:\\code\\AgentOS-V2-web'
+const SCR = 'C:\\Users\\diwash\\AppData\\Local\\Temp\\claude\\C--code-AgentOS-V2-web\\6d0fdab0-5ae2-4898-99b9-b3d2c29ccdad\\scratchpad'
+const G3 = SCR + '\\g3'
+const GSHOTS = SCR + '\\g2\\gshots.mjs'
+const REF = ROOT + '\\.review\\linear-bar'
+const G = ROOT + '\\.review\\gauntlet3\\'
+const X = `${G}x${args.round}\\`
+const PREV = `${G}x${args.round - 1}\\`
+const INC = G + 'k1\\qr\\'
+
+const SETUP = (port, patch) => `You are in your own git worktree (your current directory), a copy of ${ROOT}. Set it up first:
+1. \`git rev-parse HEAD\` must be ${args.base}; if it isn't, run \`git checkout --detach ${args.base}\` (in this worktree only).
+2. Link the installed packages, one junction per package, with the fonts copied for real (Vite refuses to serve files through a junction that leads outside the worktree, and the page then falls back to another font), in PowerShell from the worktree root:
+   \`New-Item -ItemType Directory web\\node_modules | Out-Null; Get-ChildItem ${ROOT}\\web\\node_modules -Force | Where-Object { $_.Name -ne '.vite' } | ForEach-Object { if ($_.Name -eq '@fontsource') { Copy-Item $_.FullName web\\node_modules\\@fontsource -Recurse } else { New-Item -ItemType Junction -Path ('web\\node_modules\\' + $_.Name) -Target $_.FullName | Out-Null } }\`
+   The cameras fail if the Geist font didn't load: then fix the setup, never shoot without it.${patch ? `
+3. Apply your direction's work so far: \`git apply --binary ${patch}\` from the worktree root.` : ''}
+Your port for Vite is ${port}; use no other (never 8000, 5173 or 5174). Never commit, push or stash, and never touch ${ROOT} itself except to write under ${X}.`
+
+const BUILD_SCHEMA = { type: 'object', required: ['patch', 'summary', 'checks'], properties: {
+  patch: { type: 'string', description: 'Absolute path of the saved patch' },
+  summary: { type: 'string', description: 'What the direction changes, in a few lines' },
+  checks: { type: 'string', description: 'Each check and its result' },
+  kit: { type: 'string', description: "The kit gate's component and line counts after the change" },
+} }
+
+function buildPrompt(d, port) {
+  const out = X + d.dir + '\\'
+  const prev = PREV + d.dir + '\\'
+  const partial = args.resume ? `  A designer on your direction was cut off part way (a usage limit, not a verdict); their unfinished work is applied in your worktree. Review it critically against the brief: keep what serves the direction, redo what doesn't, and finish it. It wrote no direction.md and shot nothing you can trust, so shoot afresh.` : ''
+  const start = args.polish
+    ? `This is a polish round. Your direction already exists: its language is described in ${prev}direction.md, its screens and twins are in ${prev}screens\\ and ${prev}twins\\, and the judges' notes on it are in ${PREV}feedback\\${d.key}.md (what the current screens still do better, your direction's own biggest flaws, anything broken). Keep to the direction, and make it better: fix what the judges name, then look for what they didn't. Don't hedge back towards the current design; commit further to the direction where that's what it needs.`
+    : `This is the exploration round: go well past a tweak. Three other designers take other directions; make yours distinct and fully committed, not a hedge between the current design and your brief.${partial}`
+  return `You are a product designer in a contest to make the AgentOS V2 web app's design better.
+
+${SETUP(port, args.polish ? `${PREV}patches\\${d.key}.patch` : args.resume ? `${args.resume}\\${d.key}.patch` : '')}
+
+The goal: our screens, with our own content, designed better than they are now. Your direction is judged first and above all on our real screens: four blind judges put your screens next to ${args.polish ? "your direction's screens from the round before (your polish is kept only if it wins; otherwise the earlier version goes on)" : "the current ones"} (the same content and state) and pick the better-designed product; you need 3 of 4 to win. Second, and only informative or to break a tie: the twins, Linear's screens redrawn with our kit in Linear's own layout (web/src/features/sheet/twins/, route /twins/<name>), take your kit's look automatically; judges set them against Linear's real screens, which says how your visual language holds up against Linear's. Don't chase Linear's look: the aim is our own design, as good or better.
+
+Your direction: ${d.key}. ${d.brief}
+
+${start}
+
+What's free:
+- The kit's look: tokens, components, variants, CSS (web/src/kit).
+- The screens' composition: layout, hierarchy, grouping, what's prominent and what recedes, density (web/src/features composes the kit).
+- Every theme (light, mist, dark, midnight, plum, harbour) takes the direction; their colours may change.
+What's fixed:
+- What the app shows and does: every screen keeps its content, controls and behaviour. Add no feature, screen or data.
+- The twins stay Linear's layout: change a twin only where a kit change breaks it (a renamed prop or part), never to redesign it.
+
+The rules of the repo (AGENTS.md) hold:
+- Only web/src/kit renders elements or holds CSS. Raw values live only in tokens.css.
+- Every kit component, prop and variant has a reason in web/src/kit/ledger.json; keep them true.
+- The kit's budget: 45 components (44 used) and 9,000 lines (about 8,570 used). Replace rather than add. Never change "budget" or "raises".
+- Never weaken a check or a gate. A unit test that pins a behaviour still holds; update one only where its wording or structure changed and the behaviour it checks is kept.
+
+The evidence: the current screens are in ${INC}screens\\ (all 25 shots), the current twins and Linear's crops side by side in ${INC}twins\\<name>\\ (twin.png, linear.png). Linear's notes against the current twins: ${G}h2h\\s3\\summary.md. Open them.
+
+See your work, from the worktree root:
+- the screens: \`node ${GSHOTS} <worktree>\\web ${port} ${out}screens all\`
+- the twins: \`node ${G3}\\tshots.mjs <worktree>\\web ${port} ${out}twins ${REF} all\`
+Look at every shot against the current ones, and iterate as much as you need; any of the screens may be judged. When you're done, shoot both into exactly those folders (delete stale shots first).
+
+(Your file tools may refuse paths outside the worktree: then write the file inside the worktree, outside web/, and copy it into place with PowerShell's Copy-Item. The outputs must end up at the paths given here.)
+
+Write ${out}direction.md: your direction's language on a page (its principles, palette, type, surfaces, density, the moves it makes on the screens), so a later round can keep to it.
+
+Before you finish, from web/: \`npx tsc -p . --noEmit\`, \`npx eslint src\`, \`node node_modules/stylelint/bin/stylelint.mjs "src/**/*.css"\`, \`npx prettier --write src\`, \`npx vitest run\`, then \`node tools/kit.mjs --check\` (all must pass). Don't update the Playwright baselines. Save your whole change against ${args.base} as a patch: from the worktree root, \`git add -A -- web/src\` then \`git diff --cached --binary ${args.base} -- web/src > ${X}patches\\${d.key}.patch\` (create the folder). Return the patch, a summary, the checks and the kit's numbers.`
+}
+
+const JUDGE_SCHEMA = { type: 'object', required: ['pick', 'why', 'loserGap', 'winnerFlaw'], properties: {
+  pick: { type: 'string', enum: ['A', 'B', 'same'] },
+  why: { type: 'string', description: 'The deciding differences, in two or three sentences' },
+  loserGap: { type: 'string', description: "The losing one's single biggest gap to the winner, as one concrete instruction a designer can act on (if same: the bigger shared flaw)" },
+  winnerFlaw: { type: 'string', description: "The winner's own single biggest remaining flaw, as one concrete instruction" },
+  broken: { type: 'string', description: 'Anything broken in either: clipped or overlapping text, missing content or controls, broken layout, unreadable contrast (say which, A or B, and which screen)' },
+} }
+
+const files = (dir, tag, n) => Array.from({ length: n }, (_, i) => `${dir}\\${tag}-${i + 1}.png`)
+
+function judgePrompt(dir, n, kind) {
+  const pairs = Array.from({ length: n }, (_, i) => `Screen ${i + 1}: A ${dir}\\A-${i + 1}.png, B ${dir}\\B-${i + 1}.png`).join('\n')
+  const what = kind === 'screens'
+    ? `Two designs, A and B, of the same product's screens, with their labels stripped: the same content and state on each screen, designed two ways. They may differ in layout and in visual language; that's allowed. Judge which is the better-designed product UI for this content. If one leaves out content or controls the other shows, count it against it.`
+    : `Two versions, A and B, of the same product screens, with their labels stripped: the same content in the same layout, drawn in two visual treatments. Where one shows a picture (a logo, an emoji, a photo) and the other a stand-in for it, don't count that either way.`
+  return `You are a harsh product design critic. Praise is not useful.
+
+${what}
+${pairs}
+
+Open every image and study A and B side by side, part by part, screen by screen; then weigh all the screens together. Judge the craft: visual hierarchy, typography, colour and contrast, density, spacing and alignment, separation and surfaces, glyphs, consistency, polish, and how clearly each screen does its job.
+
+Answer A, B, or same. Say "same" only when you genuinely can't tell them apart in quality, never as a hedge between two that differ. Then name the loser's single biggest gap to the winner and the winner's own biggest remaining flaw, each as one concrete instruction, and list anything broken. Do not edit any file.`
+}
+
+// four judges; judges 1 and 2 see X (the direction) as A. Returns { X, Y, same, judges }
+async function match(id, n, kind, label) {
+  const runs = await parallel([1, 2, 3, 4].map((k) => () => {
+    const xIs = k <= 2 ? 'A' : 'B'
+    return agent(judgePrompt(`${X}judge\\${id}\\j${k}`, n, kind), { label: `${label}:j${k}`, phase: 'Judge', schema: JUDGE_SCHEMA, effort: 'high' })
+      .then((v) => v && { judge: k, xIs, ...v, vote: v.pick === 'same' ? 'same' : (v.pick === xIs ? 'X' : 'Y') })
+  }))
+  const js = runs.filter(Boolean)
+  return { X: js.filter((j) => j.vote === 'X').length, Y: js.filter((j) => j.vote === 'Y').length, same: js.filter((j) => j.vote === 'same').length, judges: js }
+}
+
+async function judge(d, b) {
+  if (!b || !b.patch) return { key: d.key, dir: d.dir, built: false }
+  const out = X + d.dir + '\\'
+  const prep = await agent(`Run these two commands from ${ROOT} and report their output exactly. Do nothing else.
+node ${G3}\\xprep.mjs ${X}judge ${d.dir}-s ${out}screens ${args.polish ? `${PREV}${d.dir}\\screens` : `${INC}screens`} screens
+node ${G3}\\xprep.mjs ${X}judge ${d.dir}-t ${out}twins ${INC}twins linear`,
+    { label: `prep:${d.key}`, phase: 'Judge', effort: 'medium' })
+  if (!/-s: 10 per side/.test(prep) || !/-t: 7 per side/.test(prep)) return { key: d.key, dir: d.dir, built: true, prepFailed: prep, patch: b.patch, summary: b.summary }
+  const [screens, twins] = await Promise.all([
+    match(`${d.dir}-s`, 10, 'screens', `screens:${d.key}`),
+    match(`${d.dir}-t`, 7, 'twins', `linear:${d.key}`),
+  ])
+  return { key: d.key, dir: d.dir, built: true, screens, twins, patch: b.patch, summary: b.summary, checks: b.checks, kit: b.kit }
+}
+
+phase('Build')
+const results = await pipeline(
+  args.directions,
+  (d, _, i) => agent(buildPrompt(d, 5241 + i), { label: `build:${d.key}`, phase: 'Build', schema: BUILD_SCHEMA, isolation: 'worktree', effort: args.effort }),
+  (b, d) => judge(d, b),
+)
+
+const verdicts = results.filter(Boolean)
+for (const r of verdicts) log(`${r.key}: screens ${r.screens ? `direction ${r.screens.X}, ${args.polish ? 'previous' : 'current'} ${r.screens.Y}, same ${r.screens.same}` : '-'}; twins vs Linear ${r.twins ? `direction ${r.twins.X}, Linear ${r.twins.Y}, same ${r.twins.same}` : '-'}`)
+return { round: args.round, verdicts }

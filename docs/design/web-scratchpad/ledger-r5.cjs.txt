@@ -1,0 +1,32 @@
+// Round 5's ledger: reasons rewritten from the CSS, and Avatar.beside.
+const fs = require("fs");
+const path = process.argv[2];
+const led = JSON.parse(fs.readFileSync(path, "utf8"));
+const c = led.components;
+const MK = led.vocab.MarkKind.values;
+
+MK.run = "Running: an orange ring, its pie as far as the run is, its halo breathing.";
+MK.wait = "Waiting on someone else: a grey ring three quarters filled.";
+MK.you = "Needs you: the YOU pill; alone, a blue ring filled whole.";
+MK.blk = "Blocked: a crimson disc with a bar across it.";
+MK.done = "Complete: a green disc with a tick.";
+MK.abandoned = "Abandoned: a grey disc with a cross, its name in crimson.";
+MK.queued = "Queued: a dotted ring, waiting for a runner.";
+MK.idle = "Inbox: an empty grey ring, nobody acting.";
+
+const I = led.vocab.IconName.values;
+I.tick = "Done: a plan step's tick (the Checklist).";
+I.close = "Close: the peek, a full-window editor, a chip's remove.";
+
+c.Text.props.variant.values.display = "The ticket's title (24px).";
+c.Stepper.props.model.items.stages.items.state.values.skipped =
+  "Skipped by the workflow: a dashed bar as thick as the others, and a Skipped caption.";
+c.Badge.props.size.values.sm = "Compact's foot and the cards' keys (an agent's, a board's).";
+c.Meter.props.size.values.row =
+  "Inline (48px), the default: the ticket's Now line, where the stepper widens it to 120px.";
+
+c.Avatar.props.beside = {
+  why: "Its name is written beside it (an option, a message, a row's owner, the account sheet): the face is drawing alone, so a reader hears the name once.",
+};
+
+fs.writeFileSync(path, JSON.stringify(led, null, 2) + "\n");

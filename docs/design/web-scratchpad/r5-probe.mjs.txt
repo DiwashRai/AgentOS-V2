@@ -1,0 +1,88 @@
+// One-off: check the kit review's round-5 fixes in Chrome. Starts Vite on 5191 and stops it.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const go = async (path) => { await page.goto(base + path); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(300); };
+  const watch = () => page.evaluate(() => { window.__closes = 0; document.querySelector("dialog[open]")?.addEventListener("close", () => window.__closes++); });
+  const state = () => page.evaluate(() => ({
+    asking: !!document.querySelector("[role=alertdialog]"),
+    closes: window.__closes,
+    focus: document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.tagName,
+    inAsk: !!document.activeElement?.closest("[role=alertdialog]"),
+  }));
+  const dirty = async () => {
+    await go("/t/NW-17?tab=workflow&edit=workflow");
+    await page.getByRole("button", { name: "Edit Implement" }).focus();
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(300);
+    await watch();
+    const name = page.getByRole("textbox", { name: "Name" });
+    await name.click();
+    await name.press("End");
+    await page.keyboard.type(" x");
+  };
+
+  // S2a: Esc ×3: ask, dismiss, ask again; never a close, focus in the question
+  await dirty();
+  for (const n of [1, 2, 3]) {
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(250);
+    say(`S2 Esc ${n}`, await state());
+  }
+  // S2b: a click on the scrim, then Esc: dismisses the question, no close
+  await page.mouse.click(5, 5);
+  await page.waitForTimeout(150);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+  say("S2 scrim click, Esc", await state());
+
+  // regression: Esc in an open picker inside the overlay closes the picker only
+  await dirty();
+  const combo = page.locator("dialog[open] [role=combobox]").first();
+  await combo.click();
+  await page.waitForTimeout(250);
+  const opened = await page.evaluate(() => !!document.querySelector("[role=listbox]"));
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+  say("picker Esc: opened, listbox gone, asking", [opened, await page.evaluate(() => !document.querySelector("[role=listbox]")), (await state()).asking]);
+
+  // the peek still closes on Esc
+  await go("/?peek=NW-17");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(300);
+  say("peek closed on Esc", await page.evaluate(() => !document.querySelector("dialog[open]") && !location.search.includes("peek")));
+
+  // S1: a bare gate is named; S3: no doubled names
+  await go("/compact?open=NW-17");
+  say("S1 bare gates", await page.evaluate(() => [...document.querySelectorAll("[role=img][aria-label^='Gate']")].map((e) => e.getAttribute("aria-label"))));
+  const snap = await page.locator("main").ariaSnapshot();
+  say("S3 Compact heads", snap.split("\n").filter((l) => /button "(Needs you|Blocked|Running|Queued|Inbox)/.test(l)).map((l) => l.trim()));
+  await go("/t/NW-17");
+  await page.locator("[data-picker] [role=combobox], [data-picker] button").first().click();
+  await page.waitForTimeout(250);
+  say("S3 owner options", await page.evaluate(() => [...document.querySelectorAll("[role=option]")].slice(0, 3).map((o) => o.textContent)));
+  say("S3 option names", (await page.getByRole("listbox").ariaSnapshot()).split("\n").slice(0, 4).map((l) => l.trim()));
+  await page.keyboard.press("Escape");
+  say("S3 thread", (await page.locator("ol, ul").filter({ hasText: "Bea Quinn" }).first().ariaSnapshot()).split("\n").slice(0, 4).map((l) => l.trim()));
+  say("N5 lane read-only gate", await (async () => { await go("/t/NW-17?tab=workflow"); return page.evaluate(() => [...document.querySelectorAll("main *")].find((e) => e.textContent?.startsWith("Gate: ") && e.children.length > 0)?.textContent ?? "(none)"); })());
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

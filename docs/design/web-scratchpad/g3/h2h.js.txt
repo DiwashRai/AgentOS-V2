@@ -1,0 +1,51 @@
+export const meta = {
+  name: 'gauntlet3-h2h',
+  description: 'Blind head-to-head judging: four fresh judges per match (two see each order), each picks A, B or same and names the gaps; no scores',
+  phases: [{ title: 'Judge', detail: 'four fresh blind judges per match, the order swapped for two of them' }],
+}
+
+// args: { root: '<h2h-prep out dir>', matches: [{ id, n: <images per side>, r: <reference images, 0 if none> }] }
+// h2h-prep's layout: <root>\<id>\j<k>\{A,B,R}-<i>.png; judges 1 and 2 see X as A, 3 and 4 as B.
+const files = (dir, tag, n) => Array.from({ length: n }, (_, i) => `${dir}\\${tag}-${i + 1}.png`)
+const JUDGEMENTS = args.matches.flatMap((m) => [1, 2, 3, 4].map((k) => {
+  const dir = `${args.root}\\${m.id}\\j${k}`
+  return { id: m.id, judge: k, xIs: k <= 2 ? 'A' : 'B', a: files(dir, 'A', m.n), b: files(dir, 'B', m.n), ref: files(dir, 'R', m.r || 0) }
+}))
+
+const SCHEMA = { type: 'object', required: ['pick', 'why', 'loserGap', 'winnerFlaw'], properties: {
+  pick: { type: 'string', enum: ['A', 'B', 'same'] },
+  why: { type: 'string', description: 'The deciding differences, in two or three sentences' },
+  loserGap: { type: 'string', description: "The losing one's single biggest gap to the winner, as one concrete instruction a designer can act on (if same: the bigger shared flaw)" },
+  winnerFlaw: { type: 'string', description: "The winner's own single biggest remaining flaw, as one concrete instruction" },
+  broken: { type: 'string', description: 'Anything broken in either: clipped or overlapping text, missing content, broken layout, unreadable contrast (say which, A or B)' },
+} }
+
+function prompt(j) {
+  const ref = j.ref.length
+    ? `\nAlso shown, as the standard both are held to (not a contestant): ${j.ref.join(', ')}.\n`
+    : ''
+  return `You are a harsh product design critic. Praise is not useful.
+
+Two versions of the same product screen, A and B, with their labels stripped: the same content, drawn two ways.
+A: ${j.a.join(', ')}
+B: ${j.b.join(', ')}
+${ref}
+Open every image and study them side by side, part by part. Which is the better-crafted product UI? Judge the craft: visual hierarchy, typography, colour and contrast, density, spacing and alignment, separation and surfaces, glyphs, consistency, polish. Where one shows a picture (a logo, an emoji, a photo) and the other a stand-in for it, don't count that either way.
+
+Answer A, B, or same. Say "same" only when you genuinely can't tell them apart in quality, never as a hedge between two that differ. Then name the loser's single biggest gap to the winner and the winner's own biggest remaining flaw, each as one concrete instruction, and list anything broken. Do not edit any file.`
+}
+
+phase('Judge')
+const verdicts = await parallel(JUDGEMENTS.map((j) => () =>
+  agent(prompt(j), { label: `judge:${j.id}:j${j.judge}`, phase: 'Judge', schema: SCHEMA, ...(args.effort ? { effort: args.effort } : {}) })
+    .then((v) => v && { ...j, ...v, vote: v.pick === 'same' ? 'same' : (v.pick === j.xIs ? 'X' : 'Y') })))
+
+const byMatch = {}
+for (const v of verdicts.filter(Boolean)) {
+  const m = byMatch[v.id] || (byMatch[v.id] = { id: v.id, X: 0, Y: 0, same: 0, judges: [] })
+  m[v.vote]++
+  m.judges.push({ judge: v.judge, xIs: v.xIs, pick: v.pick, vote: v.vote, why: v.why, loserGap: v.loserGap, winnerFlaw: v.winnerFlaw, broken: v.broken || '' })
+}
+const matches = Object.values(byMatch)
+for (const m of matches) log(`${m.id}: X ${m.X}, Y ${m.Y}, same ${m.same}`)
+return { matches, missing: JUDGEMENTS.length - verdicts.filter(Boolean).length }

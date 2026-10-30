@@ -1,0 +1,18 @@
+gauntlet: a row's title alone, plain pickers among values
+
+Round five's four scorers put the same fix first: the grey words after
+each row's title made rows read as strings.
+
+- TitleCell: the status glyph and the title alone; what it waits on
+  goes to the tooltip (the row's Now and stage already say it).
+- Facts: a picker among a properties row's values is plain words at
+  rest, its chip and edge only under the pointer or while open; the
+  values' old gap back.
+- Carbon's popover edge firmer; Compact's Now column unnamed again (its
+  head sat jammed against Stage); Quiet repos' list a word, not a lone
+  glyph; a run stage's state in plain ink beside its name (its glyph
+  carries the hue); a quieter problem edge and a bare +N.
+- The display twin's pickers on form rows, one left edge.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

@@ -1,0 +1,124 @@
+// One-off: probe the new kit pieces in Chrome (tooltips, Menu, toasts, Checkbox, Radio). Starts
+// Vite on 5191 and stops it.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, permissions: ["clipboard-read", "clipboard-write"] });
+  await ctx.addInitScript(() => localStorage.setItem("agentos-theme", "light"));
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  page.on("response", (r) => { if (r.status() >= 400) errors.push(`HTTP ${r.status()} ${r.url()}`); });
+  page.on("console", (m) => { if (m.type() === "error" || m.type() === "warning") errors.push(`${m.type()}: ${m.text().slice(0, 200)}`); });
+  const go = async (path) => { await page.goto(base + path); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(400); };
+  const tip = () => page.evaluate(() => [...document.querySelectorAll("[class*=_tip_]")].filter((e) => e.checkVisibility()).map((e) => e.textContent));
+  const toasts = () => page.evaluate(() => [...document.querySelectorAll("[class*=_toast_]")].map((e) => ({ text: e.textContent, inDialog: !!e.closest("dialog"), visible: e.checkVisibility(), top: document.elementFromPoint(e.getBoundingClientRect().x + 10, e.getBoundingClientRect().y + 10)?.closest("[class*=_toast_]") === e })));
+  const focus = () => page.evaluate(() => [document.activeElement?.tagName, document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.textContent?.slice(0, 30)]);
+
+  // tooltips: hover, focus, descriptions
+  await go("/intake");
+  const t0 = Date.now();
+  say("aria-description count on intake", await page.evaluate(() => document.querySelectorAll("[aria-description]").length));
+  say("title attrs left on intake", await page.evaluate(() => [...document.querySelectorAll("[title]")].map((e) => e.getAttribute("title")).slice(0, 5)));
+  const issue = page.locator("main span[aria-description]").first();
+  say("first described", await issue.evaluate((e) => [e.tagName, e.textContent.slice(0, 40), e.getAttribute("aria-description")]));
+  await issue.hover();
+  await page.waitForTimeout(900);
+  say("hover tip", await tip());
+  await page.screenshot({ path: join(out, "k1-tip.png") });
+  await page.mouse.move(5, 895);
+  await page.waitForTimeout(300);
+  say("tip after leave", await tip());
+  await page.getByRole("button", { name: "Search", exact: true }).focus();
+  await page.waitForTimeout(800);
+  say("focus tip on Search", await tip());
+
+  // Menu on the ticket, the toast
+  await go("/t/NW-17");
+  await page.getByRole("button", { name: "More on NW-17" }).click();
+  await page.waitForTimeout(300);
+  say("menu items", await page.getByRole("menuitem").allTextContents());
+  say("focus in menu", await focus());
+  await page.keyboard.press("ArrowDown");
+  say("after ArrowDown", await focus());
+  await page.screenshot({ path: join(out, "k1-menu.png") });
+  await page.getByRole("menuitem", { name: "Copy link" }).click();
+  await page.waitForTimeout(400);
+  say("clipboard", await page.evaluate(() => navigator.clipboard.readText()));
+  say("toasts", await toasts());
+  say("focus after choosing", await focus());
+  await page.screenshot({ path: join(out, "k1-toast.png") });
+  await page.getByRole("button", { name: "More on NW-17" }).click();
+  await page.waitForTimeout(200);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(200);
+  say("menu after Esc", await page.getByRole("menu").count());
+  say("focus after Esc", await focus());
+
+  // in the peek: the toast shows over the dialog; Esc closes the menu, then the peek
+  await go("/?peek=NW-17");
+  const peekMenu = page.locator("dialog").getByRole("button", { name: "More on NW-17" });
+  await peekMenu.click();
+  await page.waitForTimeout(300);
+  await page.getByRole("menuitem", { name: "Copy key" }).click();
+  await page.waitForTimeout(400);
+  say("peek toasts", await toasts());
+  await page.screenshot({ path: join(out, "k1-peek-toast.png") });
+  await peekMenu.click();
+  await page.waitForTimeout(300);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(200);
+  say("peek after one Esc: dialog open, menu", await page.evaluate(() => [document.querySelector("dialog")?.open, document.querySelectorAll("[role=menu]").length]));
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(300);
+  say("peek after two Esc: url", page.url());
+
+  // the full overlay: close's tooltip on focus, Esc, Esc
+  await go("/kit");
+  await page.getByRole("button", { name: "Open the full-window overlay" }).click();
+  await page.waitForTimeout(300);
+  await page.keyboard.press("Tab");
+  await page.waitForTimeout(800);
+  say("full: tabbed to, tip", [await focus(), await tip()]);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(300);
+  say("full after Esc: dialogs, asking, focus", [await page.evaluate(() => [document.querySelectorAll("dialog[open]").length, !!document.querySelector("[role=alertdialog]")]), await focus()]);
+
+  // Checkbox and Radio
+  await go("/kit");
+  const box = page.getByRole("checkbox", { name: /Take in Platform backlog/ });
+  say("checkbox", await box.evaluate((e) => [e.tagName, e.getAttribute("aria-checked"), e.getAttribute("aria-describedby") && document.getElementById(e.getAttribute("aria-describedby"))?.textContent]));
+  await page.getByText("Take in Platform backlog by itself").click();
+  say("checkbox after label click", await box.getAttribute("aria-checked"));
+  await box.focus();
+  await page.keyboard.press("Space");
+  say("checkbox after Space", await box.getAttribute("aria-checked"));
+  const group = page.getByRole("radiogroup", { name: "Intake" });
+  say("radiogroup", await group.evaluate((e) => [...e.querySelectorAll("[role=radio]")].map((r) => [r.getAttribute("aria-checked"), r.closest("label")?.textContent?.slice(0, 20)])));
+  await page.getByRole("radio", { name: /Ask first/ }).focus();
+  await page.keyboard.press("ArrowDown");
+  await page.waitForTimeout(100);
+  say("radio after ArrowDown", await group.evaluate((e) => [...e.querySelectorAll("[role=radio]")].map((r) => r.getAttribute("aria-checked"))));
+  await page.getByRole("heading", { name: "Checkbox, Radio" }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: join(out, "k1-choices.png") });
+  await page.getByRole("button", { name: "Say something happened" }).click();
+  await page.waitForTimeout(400);
+  say("kit toast", await toasts());
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

@@ -1,0 +1,23 @@
+gauntlet: Inter, quiet editors, one row button, less on the right
+
+What eight judges agreed on after scoring 5a4c745 against Linear.
+
+- Type: Inter (variable, self-hosted, Linear's face) for the sans in
+  place of Geist, which set 500 heavy enough that row titles read bold.
+  Geist Mono stays for code.
+- Editors: Discard and Save appear once there is an edit; a clean
+  editor no longer shows a dead primary and a dashed Discard.
+- Rows: in a list's line either strong action (Approve, Retry) is the
+  same outline.
+- Less on the right: Compact's group heads lose their summaries and
+  its Now tag is plain words; every group's count is the one quiet ink
+  (Head's tone goes); All teams' heads lose their tally and its foot
+  the glyph legend; My queue's Done head keeps its link alone; a run's
+  stages say their state in words, not boxed pills, and its budget is
+  plain.
+- Surface float: a panel open over the page (the twins' Display
+  popovers) takes the popover's lift again; the sub-issues twin's
+  placeholder bars are washed, not outlined.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

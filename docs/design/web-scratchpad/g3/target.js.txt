@@ -1,0 +1,148 @@
+export const meta = {
+  name: 'gauntlet3-target',
+  description: 'One targeted round: distinct answers to one target, each judged head to head against the current screens on the target (and guarded on the rest); the best winner integrated and committed',
+  phases: [
+    { title: 'Build', detail: 'one designer per answer, in its own worktree, saved as a patch' },
+    { title: 'Judge', detail: 'four blind judges on the target screens; four on the guard screens' },
+    { title: 'Final', detail: 'winners play each other on the target when more than one wins' },
+    { title: 'Integrate', detail: 'apply the best winner, all checks, baselines, commit, shoot the new incumbent' },
+  ],
+}
+
+// args: { round: 't1', base: '<commit>', inc: '<incumbent dir holding screens\\ and twins\\>', effort,
+//         target: '<short name>', brief: '<what the target is and what is wrong with it>',
+//         shots: ['<piece>/<shot>', ...] (the target screens), guard: [...] (the rest, judged for regressions),
+//         answers: [{ key, dir, premise }], notes?: '<file with judges' notes to read>' }
+const ROOT = 'C:\\code\\AgentOS-V2-web'
+const SCR = 'C:\\Users\\diwash\\AppData\\Local\\Temp\\claude\\C--code-AgentOS-V2-web\\6d0fdab0-5ae2-4898-99b9-b3d2c29ccdad\\scratchpad'
+const G3 = SCR + '\\g3'
+const GSHOTS = SCR + '\\g2\\gshots.mjs'
+const REF = ROOT + '\\.review\\linear-bar'
+const T = `${ROOT}\\.review\\gauntlet3\\${args.round}\\`
+const INC = args.inc + '\\'
+
+const SETUP = (port) => `You are in your own git worktree (your current directory), a copy of ${ROOT}. Set it up first:
+1. \`git rev-parse HEAD\` must be ${args.base}; if it isn't, run \`git checkout --detach ${args.base}\` (in this worktree only).
+2. Link the installed packages, one junction per package, with the fonts copied for real (Vite refuses to serve files through a junction that leads outside the worktree, and the page then falls back to another font), in PowerShell from the worktree root:
+   \`New-Item -ItemType Directory web\\node_modules | Out-Null; Get-ChildItem ${ROOT}\\web\\node_modules -Force | Where-Object { $_.Name -ne '.vite' } | ForEach-Object { if ($_.Name -eq '@fontsource') { Copy-Item $_.FullName web\\node_modules\\@fontsource -Recurse } else { New-Item -ItemType Junction -Path ('web\\node_modules\\' + $_.Name) -Target $_.FullName | Out-Null } }\`
+   The cameras fail if the Geist font didn't load: then fix the setup, never shoot without it.
+Your port for Vite is ${port}; use no other (never 8000, 5173 or 5174). Never commit, push or stash, and never touch ${ROOT} itself except to write under ${T}. (Your file tools may refuse paths outside the worktree: then write inside the worktree, outside web/, and copy into place with PowerShell's Copy-Item.)`
+
+const BUILD_SCHEMA = { type: 'object', required: ['patch', 'summary', 'checks'], properties: {
+  patch: { type: 'string', description: 'Absolute path of the saved patch' },
+  summary: { type: 'string', description: 'What the answer changes, in a few lines' },
+  checks: { type: 'string', description: 'Each check and its result' },
+  kit: { type: 'string', description: "The kit gate's component and line counts after the change" },
+} }
+
+function buildPrompt(a, port) {
+  const out = T + a.dir + '\\'
+  const others = args.answers.filter((b) => b.key !== a.key)
+  return `You are a product designer improving the AgentOS V2 web app's design, in its "flat" language: flat and quiet, surfaces separated by space, small steps of tone and hairlines, one restrained accent, state colour only where it carries meaning, hierarchy by type weight, size and ink. The language is already in the kit (web/src/kit); keep to it.
+
+${SETUP(port)}
+
+This round's target: ${args.target}. ${args.brief}
+
+Your answer: ${a.premise}
+${others.length ? `Other designers answer the same target differently (${others.map((b) => b.premise.split('.')[0]).join('; ')}). Make yours a distinct, fully committed answer, not a hedge.\n` : ''}${args.notes ? `\nThe judges' notes behind this target: ${args.notes}. Read them.\n` : ''}
+How it's judged. Four blind judges put your screens next to the current ones (the same content and state) on the target screens (${args.shots.join(', ')}) and pick the better-designed product; you need 3 of 4. The other screens are judged too, as a guard: if 3 of 4 judges prefer the current ones there, you lose however well the target does. So change what the target needs, and keep the rest as good or better.
+
+What's free: the composition of the target (layout, hierarchy, grouping, representation, what's prominent and what recedes) and the kit where the target needs it. What's fixed: what the app shows and does. Every screen keeps its content, controls and behaviour; add no feature, screen or data.
+
+The rules of the repo (AGENTS.md) hold: only web/src/kit renders elements or holds CSS; raw values live only in tokens.css; every kit component, prop and variant has a true reason in web/src/kit/ledger.json; the kit's budget is 45 components (44 used) and 9,000 lines (about 8,530 used), so replace rather than add; never change "budget" or "raises"; never weaken a check or a gate. A unit test that pins a behaviour still holds; update one only where its wording or structure changed and the behaviour it checks is kept. The twins (web/src/features/sheet/twins/) stay Linear's layout: change one only where a kit change breaks it.
+
+The current screens are in ${INC}screens\\ (all 25 shots). See your work, from the worktree root: \`node ${GSHOTS} <worktree>\\web ${port} ${out}screens all\`. Look at every shot against the current ones, and iterate as much as you need. When you're done, shoot into exactly that folder (delete stale shots first), and also the twins: \`node ${G3}\\tshots.mjs <worktree>\\web ${port} ${out}twins ${REF} all\`.
+
+Before you finish, from web/: \`npx tsc -p . --noEmit\`, \`npx eslint src\`, \`node node_modules/stylelint/bin/stylelint.mjs "src/**/*.css"\`, \`npx prettier --write src\`, \`npx vitest run\`, then \`node tools/kit.mjs --check\` (all must pass). Don't update the Playwright baselines. Save your change as a patch: from the worktree root, \`git add -A -- web/src\` then \`git diff --cached --binary ${args.base} --output=${T}patches\\${a.key}.patch -- web/src\` (create the folder first). Return the patch, a summary, the checks and the kit's numbers.`
+}
+
+const JUDGE_SCHEMA = { type: 'object', required: ['pick', 'why', 'loserGap', 'winnerFlaw'], properties: {
+  pick: { type: 'string', enum: ['A', 'B', 'same'] },
+  why: { type: 'string', description: 'The deciding differences, in two or three sentences' },
+  loserGap: { type: 'string', description: "The losing one's single biggest gap to the winner, as one concrete instruction a designer can act on (if same: the bigger shared flaw)" },
+  winnerFlaw: { type: 'string', description: "The winner's own single biggest remaining flaw, as one concrete instruction" },
+  broken: { type: 'string', description: 'Anything broken in either: clipped or overlapping text, missing content or controls, broken layout, unreadable contrast (say which, A or B, and which screen)' },
+} }
+
+function judgePrompt(dir, n) {
+  const pairs = Array.from({ length: n }, (_, i) => `Screen ${i + 1}: A ${dir}\\A-${i + 1}.png, B ${dir}\\B-${i + 1}.png`).join('\n')
+  return `You are a harsh product design critic. Praise is not useful.
+
+Two designs, A and B, of the same product's screens, with their labels stripped: the same content and state on each screen, designed two ways. They may differ in layout and in visual language; that's allowed. Judge which is the better-designed product UI for this content. If one leaves out content or controls the other shows, count it against it.
+${pairs}
+
+Open every image and study A and B side by side, part by part, screen by screen; then weigh all the screens together. Judge the craft: visual hierarchy, typography, colour and contrast, density, spacing and alignment, separation and surfaces, glyphs, consistency, polish, and how clearly each screen does its job.
+
+Answer A, B, or same. Say "same" only when you genuinely can't tell them apart in quality, never as a hedge between two that differ. Then name the loser's single biggest gap to the winner and the winner's own biggest remaining flaw, each as one concrete instruction, and list anything broken. Do not edit any file.`
+}
+
+async function match(id, n, label, phase) {
+  const runs = await parallel([1, 2, 3, 4].map((k) => () => {
+    const xIs = k <= 2 ? 'A' : 'B'
+    return agent(judgePrompt(`${T}judge\\${id}\\j${k}`, n), { label: `${label}:j${k}`, phase, schema: JUDGE_SCHEMA, effort: 'high' })
+      .then((v) => v && { judge: k, xIs, ...v, vote: v.pick === 'same' ? 'same' : (v.pick === xIs ? 'X' : 'Y') })
+  }))
+  const js = runs.filter(Boolean)
+  return { X: js.filter((j) => j.vote === 'X').length, Y: js.filter((j) => j.vote === 'Y').length, same: js.filter((j) => j.vote === 'same').length, judges: js }
+}
+
+const prep = (cmds, label, phase) => agent(`Run these commands from ${ROOT}, one at a time, and report each one's output exactly. Do nothing else.\n${cmds.join('\n')}`, { label, phase, effort: 'medium' })
+const xp = (id, x, y, list) => `node ${G3}\\xprep.mjs ${T}judge ${id} ${x} ${y} shots ${list.join(',')}`
+
+async function judge(a, b) {
+  if (!b || !b.patch) return { key: a.key, built: false }
+  const out = T + a.dir + '\\screens'
+  const p = await prep([xp(`${a.dir}-t`, out, INC + 'screens', args.shots), ...(args.guard.length ? [xp(`${a.dir}-g`, out, INC + 'screens', args.guard)] : [])], `prep:${a.key}`, 'Judge')
+  if (!p.includes(`${a.dir}-t: ${args.shots.length} per side`)) return { key: a.key, built: true, prepFailed: p, patch: b.patch }
+  const [t, g] = await Promise.all([
+    match(`${a.dir}-t`, args.shots.length, `target:${a.key}`, 'Judge'),
+    args.guard.length ? match(`${a.dir}-g`, args.guard.length, `guard:${a.key}`, 'Judge') : null,
+  ])
+  const won = t.X >= 3 && !(g && g.Y >= 3)
+  log(`${a.key}: target ${t.X}-${t.Y}${g ? `, guard ${g.X}-${g.Y}` : ''}${won ? ' WINS' : ''}`)
+  return { key: a.key, dir: a.dir, premise: a.premise, built: true, won, target: t, guard: g, patch: b.patch, summary: b.summary, checks: b.checks, kit: b.kit }
+}
+
+phase('Build')
+const results = (await pipeline(
+  args.answers,
+  (a, _, i) => agent(buildPrompt(a, 5241 + i), { label: `build:${a.key}`, phase: 'Build', schema: BUILD_SCHEMA, isolation: 'worktree', effort: args.effort }),
+  (b, a) => judge(a, b),
+)).filter(Boolean)
+
+const winners = results.filter((r) => r.won)
+let best = winners[0] || null
+let finals = []
+if (winners.length > 1) {
+  phase('Final')
+  const pairs = []
+  for (let i = 0; i < winners.length; i++) for (let j = i + 1; j < winners.length; j++) pairs.push([winners[i], winners[j]])
+  const p = await prep(pairs.map(([x, y]) => xp(`${x.dir}${y.dir}-f`, `${T}${x.dir}\\screens`, `${T}${y.dir}\\screens`, args.shots)), 'prep:final', 'Final')
+  finals = (await parallel(pairs.map(([x, y]) => async () => {
+    if (!p.includes(`${x.dir}${y.dir}-f: ${args.shots.length} per side`)) return null
+    const m = await match(`${x.dir}${y.dir}-f`, args.shots.length, `final:${x.key}-${y.key}`, 'Final')
+    log(`final ${x.key} ${m.X} - ${m.Y} ${y.key}`)
+    return { x: x.key, y: y.key, ...m, winner: m.X >= 3 ? x.key : m.Y >= 3 ? y.key : null }
+  }))).filter(Boolean)
+  const score = (w) => finals.filter((f) => f.winner === w.key).length * 100 + finals.reduce((n, f) => n + (f.x === w.key ? f.X : f.y === w.key ? f.Y : 0), 0) * 10 + w.target.X
+  best = winners.slice().sort((p, q) => score(q) - score(p))[0]
+}
+
+let integration = null
+if (best) {
+  phase('Integrate')
+  integration = await agent(`You integrate one targeted round of the AgentOS V2 web restyle, in ${ROOT} (branch web-restyle, at ${args.base}). Do not push, switch branches or stash.
+
+Apply the winning patch from the repo root: \`git apply --binary ${best.patch}\` (${best.summary.replace(/\n/g, ' ')}).
+
+Then make the tree sound, never by weakening a check: from the repo root, \`just check\`, \`just test\` and \`just gates\` all pass. The kit stays within its budget; every ledger reason is true to the code.
+
+Then \`just shots --update-snapshots\` (the screens changed on purpose; open a few new baselines to be sure none is broken), then \`just shots\` once more to confirm it passes (rerun once if a single shot flakes; report it). Commit everything with a message file (\`git commit -F <file>\`): the subject "gauntlet: ${args.target}", a short body on what changed and the vote (the "${best.key}" answer: ${best.premise || ''} It beat the current screens ${best.target.X}-${best.target.Y} on the target${best.guard ? ` and ${best.guard.X}-${best.guard.Y} on the guard` : ''}, four blind judges each${finals.length ? `; finals: ${finals.map((f) => `${f.x} ${f.X}-${f.Y} ${f.y}`).join(', ')}` : ''}), and the trailers "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" and "Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1". The pre-commit hook runs the checks: if it fails, fix and commit again. Never use --no-verify.
+
+Finally shoot the new incumbent: \`node ${GSHOTS} ${ROOT}\\web 5250 ${T}next\\screens all\` and \`node ${G3}\\tshots.mjs ${ROOT}\\web 5250 ${T}next\\twins ${REF} all\`. Return the commit, the checks and the kit's numbers.`,
+    { label: `integrate:${args.round}`, phase: 'Integrate', effort: 'high', schema: { type: 'object', required: ['commit', 'checks'], properties: {
+      commit: { type: 'string' }, checks: { type: 'string' }, kit: { type: 'string' }, notes: { type: 'string' },
+    } } })
+}
+return { round: args.round, target: args.target, results, finals, best: best && best.key, integration }

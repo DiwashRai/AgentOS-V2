@@ -1,0 +1,770 @@
+diff --git a/web/src/features/library/ItemEditor.tsx b/web/src/features/library/ItemEditor.tsx
+index cedc56e..f8fcc24 100644
+--- a/web/src/features/library/ItemEditor.tsx
++++ b/web/src/features/library/ItemEditor.tsx
+@@ -10,7 +10,7 @@ import { type ReactNode, useEffect, useRef } from "react";
+ import { useNow, useSession } from "../../api/queries";
+ import type { ItemBody, UsedBy } from "../../api/types";
+ import { age } from "../../domain/format";
+-import { Button, Chip, Field, FormRow, Page, type PageProps, Stack } from "../../kit";
++import { Button, Chip, Field, Page, type PageProps, Stack } from "../../kit";
+ import { Conflict } from "./conflict";
+ import { Content } from "./content";
+ import type { Draft } from "./draft";
+@@ -115,40 +115,39 @@ function Side({ e, props }: { e: Editor; props: ItemEditorProps }) {
+   );
+ }
+ 
+-/** A library item's name and description, edited together over its content. */
++/** A library item's name and description, the document's title and the lead under it, over its
++ *  content. */
+ function Identity({ e, props }: { e: Editor; props: ItemEditorProps }) {
+   const { name, description } = props;
+   if (!name && description === undefined) return null;
+   return (
+-    <Stack gap={3}>
++    <Stack gap={2}>
+       {name ? (
+-        <FormRow label={name.label}>
+-          <Field
+-            label={name.label}
+-            value={e.draft.name}
+-            mono={name.mono}
+-            onChange={(v) => {
+-              e.edit({ name: v });
+-            }}
+-          />
+-        </FormRow>
++        <Field
++          look="title"
++          label={name.label}
++          value={e.draft.name}
++          placeholder={name.label}
++          mono={name.mono}
++          onChange={(v) => {
++            e.edit({ name: v });
++          }}
++        />
+       ) : null}
+       {description !== undefined ? (
+-        <FormRow label="Description">
+-          <Field
+-            label="Description"
+-            value={e.draft.description}
+-            placeholder="What it is for"
+-            onChange={(v) => {
+-              e.edit({ description: v });
+-            }}
+-          />
+-        </FormRow>
++        <Field
++          look="lead"
++          label="Description"
++          value={e.draft.description}
++          placeholder="Add a short summary…"
++          onChange={(v) => {
++            e.edit({ description: v });
++          }}
++        />
+       ) : null}
+     </Stack>
+   );
+ }
+-
+ function Main({ e, props }: { e: Editor; props: ItemEditorProps }) {
+   return (
+     <Stack gap={9} grow>
+diff --git a/web/src/features/library/content.tsx b/web/src/features/library/content.tsx
+index e1431db..4f112d2 100644
+--- a/web/src/features/library/content.tsx
++++ b/web/src/features/library/content.tsx
+@@ -1,7 +1,7 @@
+-// The item editor's main column: the content, in monospace markdown filling the column (an agent's
+-// instructions, a SKILL.md, a file), or AGENTS.md as its named blocks: each with its name in a field
+-// at its head, a fold to its first line, Move up and Move down beside it (and its handle, to drag it
+-// or step it with ↑ ↓), edited in place.
++// The item editor's main column: the content as the page's own text, monospace markdown filling the
++// column (an agent's instructions, a SKILL.md, a file), or AGENTS.md as its named blocks: each a
++// section of the document under its name as a heading, its length, a fold to its first line,
++// Move up and Move down after it (and its handle, to drag it or step it with ↑ ↓), edited in place.
+ import { useState } from "react";
+ 
+ import type { Block, ItemBody } from "../../api/types";
+@@ -20,20 +20,15 @@ interface BlockCardProps {
+   onMove: (to: number) => void;
+ }
+ 
+-/** A block's head: the fold, its name to edit, its length, and the click way to reorder it. */
++/** A block's head: its name to edit as a heading, its length, the fold, and the click way to
++ *  reorder it. */
+ function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardProps) {
+   const name = block.name || "this block";
+   return (
+     <Stack dir="row" gap={3} align="center">
+-      <Button
+-        variant="quiet"
+-        size="xs"
+-        icon={open ? "chevron" : "right"}
+-        title={open ? `Fold ${name}` : `Unfold ${name}`}
+-        onClick={onFold}
+-      />
+       <Stack grow>
+         <Field
++          look="heading"
+           label="Block name"
+           value={block.name}
+           placeholder="Block name"
+@@ -45,6 +40,13 @@ function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardP
+       <Text variant="meta" tone="3" tabular>
+         {plural(block.text.split("\n").length, "line")}
+       </Text>
++      <Button
++        variant="quiet"
++        size="xs"
++        icon={open ? "caret" : "right"}
++        title={open ? `Fold ${name}` : `Unfold ${name}`}
++        onClick={onFold}
++      />
+       <Button
+         variant="quiet"
+         size="xs"
+@@ -82,6 +84,7 @@ function BlockCard(props: BlockCardProps) {
+       <BlockHead {...props} />
+       {open ? (
+         <TextArea
++          bare
+           label={`${block.name} block`}
+           value={block.text}
+           lines={2}
+@@ -188,6 +191,7 @@ export function Content({
+         <Stack gap={4} grow>
+           {head}
+           <TextArea
++            bare
+             label={title}
+             value={body.text}
+             fill
+@@ -202,6 +206,7 @@ export function Content({
+         <Stack gap={4} grow>
+           {head}
+           <TextArea
++            bare
+             label={title}
+             value={body.agent.instructions}
+             fill
+diff --git a/web/src/features/library/side.tsx b/web/src/features/library/side.tsx
+index 952ae55..cb263aa 100644
+--- a/web/src/features/library/side.tsx
++++ b/web/src/features/library/side.tsx
+@@ -1,7 +1,7 @@
+ // The item editor's side column, a narrow rail ruled off beside the content: the properties (an
+-// agent's runtime, model and effort as pickers in the form's field box; read-only facts as plain
+-// text), what uses the item (its workflows; its tickets as a count and the first few, the rest one
+-// click away), and its latest versions with who wrote each, a person or a ticket's run.
++// agent's runtime, model and effort as Linear's property chips; read-only facts as plain text),
++// what uses the item (its workflows; its tickets as a count and the first few, the rest one click
++// away), and its latest versions with who wrote each, a person or a ticket's run.
+ import { type ReactNode, useState } from "react";
+ 
+ import { useNow, useRuntimes } from "../../api/queries";
+@@ -35,7 +35,6 @@ function AgentPickers({
+     <>
+       <FormRow label="Runtime">
+         <Select
+-          look="field"
+           label="Runtime"
+           value={agent.runtime}
+           options={runtimes.map((r) => ({ id: r.id, label: r.name }))}
+@@ -47,7 +46,6 @@ function AgentPickers({
+       </FormRow>
+       <FormRow label="Model">
+         <Select
+-          look="field"
+           label="Model"
+           value={agent.model}
+           options={models.map((m) => ({ id: m, label: m }))}
+@@ -58,7 +56,6 @@ function AgentPickers({
+       </FormRow>
+       <FormRow label="Effort">
+         <Select
+-          look="field"
+           label="Effort"
+           value={agent.effort}
+           options={EFFORTS.map((e) => ({ id: e, label: e }))}
+diff --git a/web/src/features/workflow/Editor.tsx b/web/src/features/workflow/Editor.tsx
+index bab4057..2a64567 100644
+--- a/web/src/features/workflow/Editor.tsx
++++ b/web/src/features/workflow/Editor.tsx
+@@ -22,7 +22,6 @@ import {
+   Page,
+   type PageProps,
+   Stack,
+-  Surface,
+   Text,
+ } from "../../kit";
+ import type { Draft } from "./draft";
+@@ -65,8 +64,8 @@ type Landed = Fresh & { stage: string };
+ 
+ const EVERY = "*";
+ 
+-/** Every stage gets these: the workflow's skills and files as chips, each with a remove; a skill
+- *  or a file dropped here goes to every stage. */
++/** Every stage gets these: a line over the lane, the workflow's skills and files as chips, each with
++ *  a remove; a skill or a file dropped here goes to every stage. */
+ function ContextStrip({ draft, lib, fresh, land }: Lands & { draft: Draft; lib: Library }) {
+   const c = draft.body.context;
+   const add = (p: DragPayload) => {
+@@ -77,31 +76,27 @@ function ContextStrip({ draft, lib, fresh, land }: Lands & { draft: Draft; lib:
+   };
+   return (
+     <Drop accept={["skill", "file"]} onDrop={add} label="Give every stage">
+-      <Surface level="sheet" pad={5} label="Every stage gets">
+-        <Stack dir="row" gap={4} align="center" wrap>
+-          <Text variant="meta" tone="2" weight={500}>
+-            Every stage gets
+-          </Text>
+-          {(["skills", "files"] as const).flatMap((kind) =>
+-            c[kind].map((id) => {
+-              const ref = `${kind}:${id}`;
+-              const flash = fresh?.stage === EVERY && fresh.ref === ref;
+-              return (
+-                <Chip
+-                  key={flash ? `${ref}:${String(fresh.n)}` : ref}
+-                  lead={kind}
+-                  label={refName(lib, kind, id)}
+-                  flash={flash}
+-                  onRemove={() => {
+-                    draft.change((b) => ({ ...b, context: withoutRef(b.context, kind, id) }));
+-                  }}
+-                />
+-              );
+-            }),
+-          )}
+-          <Text variant="meta">Drop a skill or a file here</Text>
+-        </Stack>
+-      </Surface>
++      <Stack dir="row" gap={4} align="center" wrap>
++        <Text tone="3">Every stage gets</Text>
++        {(["skills", "files"] as const).flatMap((kind) =>
++          c[kind].map((id) => {
++            const ref = `${kind}:${id}`;
++            const flash = fresh?.stage === EVERY && fresh.ref === ref;
++            return (
++              <Chip
++                key={flash ? `${ref}:${String(fresh.n)}` : ref}
++                lead={kind}
++                label={refName(lib, kind, id)}
++                flash={flash}
++                onRemove={() => {
++                  draft.change((b) => ({ ...b, context: withoutRef(b.context, kind, id) }));
++                }}
++              />
++            );
++          }),
++        )}
++        <Text variant="meta">Drop a skill or a file here</Text>
++      </Stack>
+     </Drop>
+   );
+ }
+diff --git a/web/src/features/workflow/LibraryPanel.tsx b/web/src/features/workflow/LibraryPanel.tsx
+index 97305c2..14f5010 100644
+--- a/web/src/features/workflow/LibraryPanel.tsx
++++ b/web/src/features/workflow/LibraryPanel.tsx
+@@ -1,5 +1,5 @@
+ // The editor's library panel, in the column beside the lane: Agents, Skills and Files as tabs, a
+-// search box, and the items as small cards to drag onto the lane. A click is the keyboard-friendly
++// search box, and the items as a list's rows to drag onto the lane. A click is the keyboard-friendly
+ // alternative, with the same rules as a drop: it adds the item to the selected stage (an agent to
+ // a shell stage can't go on it, so it becomes a new stage after it, as a drop on the lane there
+ // would). With no stage selected a click does nothing, and the hint says to select one. An item
+@@ -137,7 +137,7 @@ export function LibraryPanel({ lib, target, where, pick }: PanelProps) {
+             onChange={setQ}
+           />
+           <Text variant="meta">{hint(tab, target)}</Text>
+-          <Stack gap={3}>
++          <Stack gap={1}>
+             {shown.map((e) => {
+               const at = target ? where(e.kind, e.id) : null;
+               const says = clickSays(e.kind, target, at);
+diff --git a/web/src/kit/Card.module.css b/web/src/kit/Card.module.css
+index 7afd16d..ab3136a 100644
+--- a/web/src/kit/Card.module.css
++++ b/web/src/kit/Card.module.css
+@@ -1,7 +1,8 @@
+ /* Card: one object on its own surface, white on a firm hairline with a soft drop (in the dark a
+-   slight step above the sheet on a lit hairline). A stage's summary lights on hover like a row;
+-   the selected stage is ringed in your move's accent and opens in place, its settings ruled off
+-   under the summary. An agent's and a ticket's looks follow below. */
++   slight step above the sheet on a lit hairline). A stage is the exception: words on the page by
++   the lane's axis, its summary washed on hover like a row; selected, it rises onto the card's
++   surface, ringed in your move's accent, its settings ruled off under the summary. An agent's and
++   a ticket's looks follow below. */
+ .card {
+   position: relative;
+   min-width: 0;
+@@ -16,6 +17,11 @@
+ .card[data-edit]:hover {
+   border-color: var(--teams-card-hover-edge);
+ }
++.card[data-look="stage"]:not([data-open]) {
++  border-color: transparent;
++  background: none;
++  box-shadow: none;
++}
+ .card[data-open],
+ .card[data-open]:hover {
+   border-color: var(--you);
+@@ -37,7 +43,7 @@
+   grid-template-columns: var(--h-chip) minmax(0, 1fr);
+ }
+ .card[data-edit] .summary:hover {
+-  background: var(--teams-card-hover);
++  background: var(--list-hover);
+ }
+ .card[data-look="stage"][data-off] .summary > :not(.hit) {
+   opacity: var(--lane-off);
+@@ -60,10 +66,13 @@
+ .card[data-edit] .summary {
+   cursor: pointer;
+ }
++/* on the page's ground, so the lane's axis stops at the face (a shell's glyph too) */
+ .face {
+   display: grid;
+   place-items: center;
+   height: var(--h-chip);
++  border-radius: var(--r-pill);
++  background: var(--ground);
+   color: var(--ink-2);
+ }
+ .main {
+diff --git a/web/src/kit/Drag.module.css b/web/src/kit/Drag.module.css
+index eef033c..5ceb32a 100644
+--- a/web/src/kit/Drag.module.css
++++ b/web/src/kit/Drag.module.css
+@@ -1,23 +1,18 @@
+-/* Drag and drop (Drag, Drop, Sortable): a palette's small cards; a target ringed in your move's
++/* Drag and drop (Drag, Drop, Sortable): a palette's rows; a target ringed in your move's
+    accent with what a drop does on its ring; a list's handle in the gutter at a row's left and the
+    drop line between rows. The thing being dragged stays where it was at half strength. */
++/* a palette's row: Linear's list row, bare until hovered */
+ .drag {
+   display: block;
+   min-width: 0;
+   padding: var(--sp-4) var(--sp-5);
+-  border: var(--line-1) solid var(--tile-edge);
+   border-radius: var(--r-3);
+-  background: var(--tile);
+-  box-shadow: var(--tile-lift);
+   color: var(--ink-1);
+   cursor: grab;
+-  transition:
+-    border-color var(--dur-fast) ease,
+-    background-color var(--dur-fast) ease;
++  transition: background-color var(--dur-fast) ease;
+ }
+ .drag:hover {
+-  border-color: var(--tile-hover-edge);
+-  background: var(--tile-hover);
++  background: var(--list-hover);
+ }
+ .drag:active {
+   cursor: grabbing;
+diff --git a/web/src/kit/Field.tsx b/web/src/kit/Field.tsx
+index 31e8d98..2efb724 100644
+--- a/web/src/kit/Field.tsx
++++ b/web/src/kit/Field.tsx
+@@ -21,6 +21,9 @@ export interface FieldProps {
+   mono?: boolean;
+   /** A search over a list or a view: the search box. */
+   search?: boolean;
++  /** A document's own words, unboxed on the page: an item's name as its title, its description as
++   *  the lead under it, a block's name as its heading. */
++  look?: "title" | "lead" | "heading";
+ }
+ 
+ /** "/" focuses this search when it is the top layer's. */
+@@ -39,7 +42,7 @@ function useSlash(ref: RefObject<HTMLInputElement | null>, on: boolean) {
+   }, [ref, on]);
+ }
+ 
+-export function Field({ label, value, onChange, placeholder, mono, search }: FieldProps) {
++export function Field({ label, value, onChange, placeholder, mono, search, look }: FieldProps) {
+   const ref = useRef<HTMLInputElement>(null);
+   const described = useDescribed();
+   useSlash(ref, search === true);
+@@ -48,7 +51,9 @@ export function Field({ label, value, onChange, placeholder, mono, search }: Fie
+       ref={ref}
+       type={search ? "search" : "text"}
+       aria-keyshortcuts={search ? "/" : undefined}
+-      className={search ? s.findInput : cx(s.box, s.field, mono && s.mono)}
++      className={
++        search ? s.findInput : cx(s.box, s.field, mono && s.mono, look && s.ghost, look && s[look])
++      }
+       aria-label={label}
+       {...described}
+       value={value}
+diff --git a/web/src/kit/Form.module.css b/web/src/kit/Form.module.css
+index 6910158..8488616 100644
+--- a/web/src/kit/Form.module.css
++++ b/web/src/kit/Form.module.css
+@@ -80,7 +80,6 @@
+   font-size: var(--fs-2);
+   letter-spacing: 0;
+ }
+-
+ /* TextArea: monospace markdown, at least `--lines` tall, growing with its text; or filling its
+    column and scrolling inside */
+ .area {
+@@ -103,6 +102,37 @@
+   field-sizing: fixed;
+   resize: none;
+ }
++/* a document's own words (Field's looks, a bare TextArea): no box, the text flush with the column
++   (its padding pulled back into the gutter), a faint wash on hover, the ring alone on focus */
++.ghost {
++  width: calc(100% + var(--sp-3) * 2);
++  margin-inline: calc(var(--sp-3) * -1);
++  padding: var(--sp-1) var(--sp-3);
++  border-color: transparent;
++  background: none;
++  resize: none;
++}
++.ghost:is(:hover, :focus-within) {
++  border-color: transparent;
++}
++.field.ghost:hover:not(:focus) {
++  background: var(--ctl-hover);
++}
++.title {
++  height: auto;
++  font-size: var(--fs-ticket);
++  font-weight: 600;
++  line-height: 1.25;
++}
++.lead {
++  font-size: var(--fs-ticket-lead);
++  color: var(--ink-2);
++}
++.heading {
++  font-size: var(--fs-5);
++  font-weight: 600;
++}
++
+ /* the pop-out: a quiet button in the area's top right corner, shown on hover and focus */
+ .areaWrap {
+   position: relative;
+@@ -325,6 +355,10 @@
+   min-width: 0;
+   min-height: var(--h-field);
+ }
++/* a picker's chip (Select) lines its words up with the plain values, its padding in the gap */
++.control:has(> [role="combobox"]:first-child) {
++  margin-left: calc(var(--sp-4) * -1);
++}
+ .note {
+   color: var(--ink-3);
+   font-size: var(--fs-2);
+diff --git a/web/src/kit/Lane.module.css b/web/src/kit/Lane.module.css
+index cadaf9c..7de0e41 100644
+--- a/web/src/kit/Lane.module.css
++++ b/web/src/kit/Lane.module.css
+@@ -27,24 +27,42 @@
+ .card {
+   min-width: 0;
+ }
++/* the axis: one hairline down the lane from the first face to the last joint (or the last face,
++   read only with no gate after it), under the faces and an opened card */
++.row::before {
++  content: "";
++  position: absolute;
++  top: 0;
++  bottom: 0;
++  left: calc(var(--lane-axis) - var(--line-1) / 2);
++  width: var(--line-1);
++  background: var(--lane-line);
++}
++.row[data-first]::before {
++  top: var(--lane-face);
++}
++.row[data-last]::before {
++  bottom: calc(var(--h) / 2);
++}
++.row[data-last]:not(:has(.joint))::before {
++  bottom: calc(100% - var(--lane-face));
++}
+ 
+-/* a loop's band, one piece per stage: open at the seams, closed and rounded at its ends; the first
+-   piece reaches up past the joint's diamond, the last stops under the loop's foot */
++/* a loop's band, one piece per stage: a faint wash with no edge (the stages are words on the page,
++   so a box round them would be the one box), rounded at its ends; the first piece reaches up past
++   the joint's diamond, the last stops under the loop's foot */
+ .band {
+   position: absolute;
+   inset: 0 calc(var(--sp-5) * -1) 0 calc(var(--out) * -1);
+-  border-inline: var(--line-1) solid var(--loop-edge);
+   background: var(--loop-fill);
+   pointer-events: none;
+ }
+ .band:is([data-pos="first"], [data-pos="only"]) {
+   top: calc(var(--reach) * -1);
+-  border-top: var(--line-1) solid var(--loop-edge);
+   border-radius: var(--r-5) var(--r-5) 0 0;
+ }
+ .band:is([data-pos="last"], [data-pos="only"]) {
+   bottom: calc(var(--sp-4) * -1);
+-  border-bottom: var(--line-1) solid var(--loop-edge);
+   border-radius: 0 0 var(--r-5) var(--r-5);
+ }
+ .band[data-pos="only"] {
+@@ -66,7 +84,7 @@
+   font-size: var(--fs-2);
+ }
+ 
+-/* a joint: the axis through it, the diamond on the axis, the gate's name and the + after it */
++/* a joint: on the axis, the gate's diamond, its name and the + after it */
+ .joint {
+   position: relative;
+   display: flex;
+@@ -75,19 +93,6 @@
+   height: var(--h);
+   padding-left: calc(var(--lane-axis) - var(--h-gate-hit) / 2);
+ }
+-.joint::before {
+-  content: "";
+-  position: absolute;
+-  top: 0;
+-  bottom: 0;
+-  left: calc(var(--lane-axis) - var(--line-1) / 2);
+-  width: var(--line-1);
+-  background: var(--lane-line);
+-}
+-/* after the last card: the axis runs only down to the diamond */
+-.joint[data-end]::before {
+-  bottom: 50%;
+-}
+ .gate {
+   position: relative;
+   flex: none;
+diff --git a/web/src/kit/Lane.tsx b/web/src/kit/Lane.tsx
+index d2110d1..4284cb1 100644
+--- a/web/src/kit/Lane.tsx
++++ b/web/src/kit/Lane.tsx
+@@ -1,7 +1,7 @@
+ // A workflow's stages top to bottom, as Cards on a lane whose axis runs through their faces.
+ // Between two cards a joint: the gate after the stage as a diamond on the axis (the ticket
+ // stepper's), and, while editing, the + that inserts a stage there. A loop is a bracket round its
+-// stages, a faint band on a hairline with its foot (up to N rounds) under its last card. Editing,
++// stages, a faint band with its foot (up to N rounds) under its last card. Editing,
+ // the stages reorder on a Sortable (a handle, a drop line, ↑ ↓) that also takes drops between
+ // cards; the diamond is a toggle. Read only, it is the same lane with none of that.
+ import type { ReactNode } from "react";
+@@ -175,7 +175,7 @@ function Row({ st, i, last, edit, pos, foot }: RowProps) {
+   const inside = pos === "first" || pos === "mid";
+   const joint = <Joint st={st} i={i} last={last} edit={edit} />;
+   return (
+-    <div className={s.row}>
++    <div className={s.row} data-first={i === 0 || undefined} data-last={last || undefined}>
+       <div className={s.block} data-loop={pos}>
+         {pos ? <span className={s.band} data-pos={pos} aria-hidden="true" /> : null}
+         <div className={s.card}>{st.content}</div>
+diff --git a/web/src/kit/Select.module.css b/web/src/kit/Select.module.css
+index 3ab9488..e07e92b 100644
+--- a/web/src/kit/Select.module.css
++++ b/web/src/kit/Select.module.css
+@@ -20,33 +20,6 @@
+   cursor: pointer;
+   transition: background-color var(--dur-fast) ease;
+ }
+-/* field: the form's field box (Form.module.css's .box and .field), the chevron at its far end */
+-.field {
+-  width: 100%;
+-  height: var(--h-field);
+-  padding: 0 var(--sp-4) 0 var(--sp-5);
+-  border: var(--line-1) solid var(--ctl-edge);
+-  background: var(--input);
+-  color: var(--ink-1);
+-  font-size: var(--fs-3);
+-  font-weight: 400;
+-  transition: border-color var(--dur-fast) ease;
+-}
+-.field:hover,
+-.field[data-popup-open] {
+-  border-color: var(--ctl-edge-hover);
+-  background: var(--input);
+-}
+-.field[aria-invalid="true"] {
+-  border-color: var(--blocked);
+-}
+-.field:focus-visible {
+-  outline: var(--line-2) solid var(--focus);
+-  outline-offset: var(--focus-tight);
+-}
+-.field .chev {
+-  margin-left: auto;
+-}
+ .trigger:hover {
+   background: var(--chip-hover);
+ }
+diff --git a/web/src/kit/Select.tsx b/web/src/kit/Select.tsx
+index ea5cd77..c6bbfb9 100644
+--- a/web/src/kit/Select.tsx
++++ b/web/src/kit/Select.tsx
+@@ -1,7 +1,7 @@
+ // A picker: one of a list (the ticket's owner, an agent's runtime, the theme). Base UI's combobox
+ // does the keyboard, filtering and placement; the look is ours: closed, a property chip (face,
+-// name, chevron), a form field, or a sidebar row (its glyph, the label, the current choice muted, a
+-// chevron pointing up); open, the kit's one popover, a "Change owner…" filter on its first line,
++// name, chevron) or a sidebar row (its glyph, the label, the current choice muted, a chevron
++// pointing up); open, the kit's one popover, a "Change owner…" filter on its first line,
+ // each option with its picture, name and muted detail, the current one ticked. The sidebar's opens
+ // above the row, anchored to its start, as Linear's sidebar-foot menus do.
+ import type { ReactNode } from "react";
+@@ -30,9 +30,9 @@ export interface SelectProps {
+   value: string;
+   options: readonly Option[];
+   onChange: (id: string) => void;
+-  /** chip: a property chip (the default); field: the form's field box, as wide as its slot (an
+-   *  agent's runtime beside its name); side: a sidebar row (the theme). */
+-  look?: "chip" | "field" | "side";
++  /** chip: a property chip (the default; an agent's runtime among its properties); side: a sidebar
++   *  row (the theme). */
++  look?: "chip" | "side";
+   /** The sidebar row's glyph. */
+   icon?: IconName;
+ }
+@@ -102,7 +102,7 @@ export function Select({ label, value, options, onChange, look = "chip", icon }:
+       side={side ? "top" : "bottom"}
+       sheet={side ? s.sideSheet : s.sheet}
+       trigger={{
+-        className: side ? s.side : cx(s.trigger, look === "field" && s.field),
++        className: side ? s.side : s.trigger,
+         name: label,
+         body: <TriggerBody label={label} current={current} slot={slot} look={look} icon={icon} />,
+       }}
+diff --git a/web/src/kit/TextArea.tsx b/web/src/kit/TextArea.tsx
+index 42de9f8..b422f08 100644
+--- a/web/src/kit/TextArea.tsx
++++ b/web/src/kit/TextArea.tsx
+@@ -21,9 +21,12 @@ export interface TextAreaProps {
+   lines?: number;
+   /** Fill the height of the column it is in and scroll inside (an item editor's body). */
+   fill?: boolean;
++  /** Unboxed, the page's own text (an item editor's content); popped out, it is boxed. */
++  bare?: boolean;
+ }
+ 
+-export function TextArea({ label, value, onChange, placeholder, lines = 3, fill }: TextAreaProps) {
++export function TextArea(props: TextAreaProps) {
++  const { label, value, onChange, placeholder, lines = 3, fill, bare } = props;
+   const [out, setOut] = useState(false);
+   const popped = useRef<HTMLTextAreaElement>(null);
+   const description = useDescription();
+@@ -43,7 +46,7 @@ export function TextArea({ label, value, onChange, placeholder, lines = 3, fill
+   const area = (full: boolean) => (
+     <textarea
+       ref={full ? popped : undefined}
+-      className={cx(s.box, s.area, (full || fill === true) && s.fill)}
++      className={cx(s.box, s.area, (full || fill === true) && s.fill, bare && !full && s.ghost)}
+       style={vars({ "--lines": String(lines) })}
+       aria-label={label}
+       {...(full ? own : inline)}
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 0741f2b..f6e9cb0 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -182,7 +182,7 @@
+         "look": {
+           "why": "Stages, agents at work and board tickets are cards in three places.",
+           "values": {
+-            "stage": "A workflow stage on the lane: its face on the axis, opening in place to its settings (the default).",
++            "stage": "A workflow stage on the lane: words on the page, its face on the axis, rising onto the card's surface as it opens in place to its settings (the default).",
+             "agent": "An agent at work (My queue): its lines down to the card's foot, an edge Meter along its bottom edge.",
+             "ticket": "A ticket on a board (All teams): its key, title and state chip on a hairline card."
+           }
+@@ -296,7 +296,7 @@
+       }
+     },
+     "Drag": {
+-      "why": "A thing to drag from a palette onto a target (the workflow editor's library panel: an agent, a skill, a file) as a small card; a click or Enter is the alternative to dragging.",
++      "why": "A thing to drag from a palette onto a target (the workflow editor's library panel: an agent, a skill, a file) as a list's row, bare until hovered; a click or Enter is the alternative to dragging.",
+       "single": "The workflow editor's library panel is the one palette; the same editor serves the library's workflows and a ticket's copy.",
+       "props": {
+         "payload": {
+@@ -309,7 +309,7 @@
+           "why": "The click and keyboard alternative to dragging it."
+         },
+         "children": {
+-          "why": "The card's content (a face and a name, a skill's name)."
++          "why": "The row's content (a face and a name, a skill's name)."
+         }
+       }
+     },
+@@ -371,6 +371,14 @@
+         },
+         "search": {
+           "why": "The kit's one search box (a view's top bar, a panel's list): the glyph, a / keycap; / focuses the top layer's, Esc clears it and never closes the overlay it is in. One search per layer: the first is the one / reaches."
++        },
++        "look": {
++          "why": "An item editor is a document, as Linear's project page: its own words are edited in place, unboxed on the page, with a faint wash on hover and the ring on focus.",
++          "values": {
++            "title": "An item's name as the document's title (a file's path in monospace).",
++            "lead": "An item's description as the lead under its title.",
++            "heading": "An AGENTS.md block's name as its section's heading."
++          }
+         }
+       }
+     },
+@@ -733,10 +741,9 @@
+           "why": "A pick."
+         },
+         "look": {
+-          "why": "Among a form's fields (an item editor's runtime, model and effort) a picker must read as one of them, not as a property chip.",
++          "why": "A picker reads as a property among properties, or as a row of the sidebar.",
+           "values": {
+-            "chip": "A properties row's chip (the ticket's owner): the default.",
+-            "field": "The form's field box, as wide as its slot, the chevron at its end.",
++            "chip": "A properties row's chip (the ticket's owner, an item editor's runtime, model and effort): the default.",
+             "side": "A sidebar row (the theme at the sidebar's foot): its glyph, the word, the current choice, opening upward."
+           }
+         },
+@@ -1056,6 +1063,9 @@
+         },
+         "fill": {
+           "why": "An item editor's body fills its column and scrolls inside."
++        },
++        "bare": {
++          "why": "An item editor's content is the document's own text, unboxed under its title or heading (popped out, it is boxed at a readable measure)."
+         }
+       }
+     },
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 12d2292..fbadaff 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -622,13 +622,12 @@
+ 
+ /* lane: a workflow's stages top to bottom (Lane, Card, Chip). The lane's axis runs through the
+    cards' faces; between two cards a joint holds the gate's diamond on the axis and the + that
+-   inserts a stage; a loop is a bracket round its stages, a faint band on a hairline, its rounds
++   inserts a stage; a loop is a bracket round its stages, a faint band with no edge, its rounds
+    at its foot. */
+ :root:not([data-theme]),
+ [data-theme] {
+   --lane-line: color-mix(in srgb, var(--ink-1) 20%, transparent);
+-  --loop-fill: color-mix(in srgb, var(--ink-1) 2.5%, transparent);
+-  --loop-edge: color-mix(in srgb, var(--ink-1) 11%, transparent);
++  --loop-fill: color-mix(in srgb, var(--ink-1) 4%, transparent);
+   --card-open-ring: color-mix(in srgb, var(--you) 22%, transparent);
+   --card-problem: color-mix(in srgb, var(--blocked) 8%, transparent);
+   --card-problem-edge: color-mix(in srgb, var(--blocked) 45%, var(--teams-card-edge));
+@@ -639,6 +638,9 @@
+   --gate-dia: 10px; /* the gate's diamond on the lane */
+   --h-gate-hit: 24px; /* the diamond's click target */
+   --lane-axis: calc(var(--sp-6) + var(--h-chip) / 2); /* the axis, through a card's face */
++  --lane-face: calc(
++    var(--sp-5) + var(--h-chip) / 2
++  ); /* a face's middle, down from its card's top */
+   --lane-off: 0.55; /* a disabled stage's card */
+   --dur-flash: 1.6s; /* a chip just added: its ring fades out */
+ }

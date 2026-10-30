@@ -1,0 +1,512 @@
+diff --git a/web/src/features/intake/IntakeView.tsx b/web/src/features/intake/IntakeView.tsx
+index 351a266..d467d85 100644
+--- a/web/src/features/intake/IntakeView.tsx
++++ b/web/src/features/intake/IntakeView.tsx
+@@ -40,18 +40,18 @@ import {
+   visible,
+ } from "./model";
+ 
+-// One triage inbox, as Linear's Triage: no cards. The list runs out to the sheet's edges under the
+-// bar, each saved query a run of it under a quiet ruled head (no fill) that stays at the top while
+-// its run scrolls past, the runs parted by room alone. An issue is Linear's triage row, two lines
+-// on two ends: the title firm, the Jira key (a link to it) across from it; under them who has it,
+-// a small face leading the name (Unassigned a dashed ring), and one fact (a priority worth saying,
+-// led by its bars, else the Jira status; the rest in its tooltip), across from the age ("1h ago",
+-// in its largest unit; to the minute in its tooltip). Under the pointer or with focus, Take in
+-// takes the age's place. When the queries were checked sits in the list's foot, on the sheet's
+-// floor. No column head: the cells say what they are.
++// One triage inbox, as Linear's Inbox: no cards. The list runs out to the sheet's edges under the
++// bar, each saved query a run of it under a grey band (chevron, project key, name, count) that
++// stays at the top while its run scrolls past and parts it from the run before. An issue is a
++// tight two-line row led by who has it (a face, Unassigned a dashed ring): the title firm; under
++// it the Jira key (a link to it), the assignee and one fact (a priority worth saying, led by its
++// bars, else the Jira status; the rest in its tooltip); across from both the age ("1h ago", in its
++// largest unit; to the minute in its tooltip). Under the pointer or with focus, Take in takes the
++// age's place. When the queries were checked closes the list, right under its last run. No
++// column head: the cells say what they are.
+ const COLUMNS: readonly Column[] = [
+   { label: "Issue", width: "fill" },
+-  { label: "Key and age", width: "lg", end: true, hug: true },
++  { label: "Age", width: "lg", end: true, hug: true },
+ ];
+ 
+ /** Muted words a step under the title (13px regular), the row's second line. */
+@@ -63,14 +63,16 @@ function Quiet({ children, title }: { children: string; title?: string }) {
+   );
+ }
+ 
++/** The second line: the Jira key (a link to it), who has it, and one fact. */
+ function Meta({ issue }: { issue: IntakeIssue }) {
+   const fact = metaFact(issue);
+   return (
+     <Stack dir="row" gap={3} align="center">
+-      <Stack dir="row" gap={4} align="center">
+-        {issue.assignee ? <Avatar name={issue.assignee} beside /> : <Avatar dashed />}
+-        <Quiet>{issue.assignee ?? "Unassigned"}</Quiet>
+-      </Stack>
++      <Button variant="link" href={issue.url} title={`Open ${issue.key} in Jira`}>
++        <Badge kind="key">{issue.key}</Badge>
++      </Button>
++      <Quiet>·</Quiet>
++      <Quiet>{issue.assignee ?? "Unassigned"}</Quiet>
+       <Quiet>·</Quiet>
+       <Stack dir="row" gap={2} align="center">
+         {fact.priority ? <Icon name={fact.priority} /> : null}
+@@ -82,29 +84,31 @@ function Meta({ issue }: { issue: IntakeIssue }) {
+ 
+ function IssueRow({ issue, now }: { issue: IntakeIssue; now: number }) {
+   return (
+-    <Row kind="item">
+-      <Stack gap={3} grow>
+-        <Text variant="label" truncate title={issue.title}>
+-          {issue.title}
+-        </Text>
+-        <Meta issue={issue} />
+-      </Stack>
+-      <Stack gap={1} align="end">
+-        <Button variant="link" href={issue.url} title={`Open ${issue.key} in Jira`}>
+-          <Badge kind="key">{issue.key}</Badge>
+-        </Button>
+-        <Swap
+-          hover={
+-            <Button size="xs" title={`Take in ${issue.key}`}>
+-              Take in
+-            </Button>
+-          }
+-        >
+-          <Text variant="ui" tone="3" tabular>
+-            <Age text={ageLabel(issue.updated_at, now)} title={ageTitle(issue.updated_at, now)} />
++    <Row kind="triage">
++      <Stack dir="row" gap={4} align="center" grow>
++        {issue.assignee ? (
++          <Avatar size="talk" name={issue.assignee} beside />
++        ) : (
++          <Avatar size="talk" dashed />
++        )}
++        <Stack gap={1} grow>
++          <Text variant="label" truncate title={issue.title}>
++            {issue.title}
+           </Text>
+-        </Swap>
++          <Meta issue={issue} />
++        </Stack>
+       </Stack>
++      <Swap
++        hover={
++          <Button size="xs" title={`Take in ${issue.key}`}>
++            Take in
++          </Button>
++        }
++      >
++        <Text variant="ui" tone="3" tabular>
++          <Age text={ageLabel(issue.updated_at, now)} title={ageTitle(issue.updated_at, now)} />
++        </Text>
++      </Swap>
+     </Row>
+   );
+ }
+@@ -216,9 +220,11 @@ function Group({ q, query, jiraUrl, now }: GroupProps) {
+           {rest > 0 ? (
+             <Notice
+               kind="more"
++              align="item"
++              lead={`+${String(rest)}`}
+               more={{
+-                label: `Show ${String(rest)} more`,
+-                title: `Show all ${String(issues.length)}`,
++                label: `Show all ${String(issues.length)}`,
++                title: `Show the other ${String(rest)}`,
+                 run: () => {
+                   setExpanded(true);
+                 },
+@@ -253,7 +259,13 @@ export function IntakeView() {
+         : {})}
+       search={search}
+     >
+-      <Table columns={COLUMNS} head={false} edge {...(data ? { foot: footNote(data, now) } : {})}>
++      <Table
++        columns={COLUMNS}
++        head={false}
++        edge
++        scroll={false}
++        {...(data ? { foot: footNote(data, now) } : {})}
++      >
+         {data ? (
+           data.queries.map((q) => (
+             <Group key={q.name} q={q} query={query} jiraUrl={jiraUrl} now={now} />
+diff --git a/web/src/kit/Head.module.css b/web/src/kit/Head.module.css
+index dc9f084..916e1f1 100644
+--- a/web/src/kit/Head.module.css
++++ b/web/src/kit/Head.module.css
+@@ -101,30 +101,30 @@
+   font-size: var(--fs-2);
+   color: var(--ink-3);
+ }
+-/* line: a query's head over its run, Linear's quiet group line: no fill, a hairline under it, held
+-   at the list's top on the ground while its rows pass under, lit on hover like a row (a Swap in its
+-   summary answers to it). Its fold reaches across it (a click anywhere but the summary folds), its
+-   chevron after the words as the sidebar's section caret, so the key starts where the titles do */
++/* line: a query's head over its run, Linear's group band: a grey fill edge to edge that parts one
++   run from the next, held at the list's top while its rows pass under, lit on hover like a row (a
++   Swap in its summary answers to it). Its fold reaches across it (a click anywhere but the summary
++   folds), the chevron first, in the faces' column, so the key starts where the titles do */
+ .line {
+   position: sticky;
+   top: 0;
+   z-index: var(--z-sticky);
+   height: var(--h-group);
+   padding: 0 var(--list-pad) 0 var(--list-inset);
+-  background: var(--ground);
+-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
++  background: linear-gradient(var(--list-band), var(--list-band)), var(--ground);
+   transition: background-color var(--dur-fast) ease;
+ }
+ .line:is(:hover, :focus-within) {
+-  background: linear-gradient(var(--list-hover), var(--list-hover)), var(--ground);
++  background:
++    linear-gradient(var(--list-hover), var(--list-hover)),
++    linear-gradient(var(--list-band), var(--list-band)), var(--ground);
+ }
+ .line .toggle {
+   flex: 1;
+   min-width: 0;
+ }
+ .line .chev {
+-  order: 1;
+-  width: auto;
++  width: var(--triage-face);
+ }
+ .line .rule {
+   display: none;
+@@ -132,12 +132,17 @@
+ .line .name {
+   overflow: hidden;
+   text-overflow: ellipsis;
+-  font-weight: 600;
+   color: var(--ink-1);
+ }
+ .line .icon {
+   color: var(--ink-3);
+-  font-size: var(--fs-3);
++  font-size: var(--fs-2);
++  font-weight: 500;
++  letter-spacing: var(--track-caps);
++}
++/* on a line the note is the query's state (didn't answer): said in the blocked colour */
++.line .note {
++  color: var(--blocked);
+ }
+ /* a group head in a scrolling list stays at its top while its rows pass under it (Linear's) */
+ .sticky {
+diff --git a/web/src/kit/Head.tsx b/web/src/kit/Head.tsx
+index e6fd27c..8447a30 100644
+--- a/web/src/kit/Head.tsx
++++ b/web/src/kit/Head.tsx
+@@ -24,9 +24,9 @@ export interface HeadProps {
+   summary?: ReactNode;
+   /** group: a list's edge-to-edge band (with or without a fold), its glyph over the rows' first
+    *  cell; zone: the same band run through its surface's padding (over My queue's agent cards);
+-   *  line: a query's head, a quiet line on a hairline with no fill, held at the list's top, lit on
+-   *  hover like a row (it is the row a Swap in its summary answers to), its fold reaching across
+-   *  it (Intake's queries). */
++   *  line: a query's head, a grey band edge to edge that parts one run from the next, held at the
++   *  list's top, lit on hover like a row (it is the row a Swap in its summary answers to), its
++   *  fold reaching across it, the chevron in the faces' column (Intake's queries). */
+   level?: "zone" | "group" | "line";
+   /** Collapsible: whether the group is open, and how to flip it. */
+   fold?: { open: boolean; toggle: () => void };
+diff --git a/web/src/kit/Notice.module.css b/web/src/kit/Notice.module.css
+index cca9195..c75b3c4 100644
+--- a/web/src/kit/Notice.module.css
++++ b/web/src/kit/Notice.module.css
+@@ -112,22 +112,47 @@
+   font-variant-numeric: tabular-nums;
+ }
+ 
+-/* a line of a two-line item list, in the items' title size, led from where the rows' titles start
+-   by its glyph: an empty ring; in place of the edge, a problem's blocked dot on its first line */
++/* a line of the triage list (Intake), a row's height, its glyph in the faces' column so its words
++   start where the titles do: an empty ring; a problem's blocked dot on a halo, in place of the
++   edge; the +N of a capped run on a grey disc, its Show button after it */
+ .empty[data-align="item"],
+-.problem[data-align="item"] {
+-  min-height: var(--h-list-item);
++.problem[data-align="item"],
++.more[data-align="item"] {
++  gap: var(--sp-4);
++  min-height: var(--h-triage);
+   padding-left: var(--list-inset);
+-  font-size: var(--fs-4);
++}
++.empty[data-align="item"] > i {
++  margin-inline: calc((var(--triage-face) - var(--notice-mark)) / 2);
+ }
+ .problem[data-align="item"] {
+-  padding-left: calc(var(--list-inset) + var(--notice-dot) + var(--sp-5));
++  justify-content: center;
++  gap: 0;
++  padding-block: var(--sp-5);
++  padding-left: calc(var(--list-inset) + var(--triage-face) + var(--sp-4));
+ }
+ .problem[data-align="item"]::before {
+   left: var(--list-inset);
+-  top: var(--notice-dot-top);
+-  width: var(--notice-dot);
+-  height: var(--notice-dot);
++  top: 50%;
++  width: var(--triage-face);
++  height: var(--triage-face);
+   border-radius: 50%;
++  background: radial-gradient(
++    circle,
++    var(--blocked) calc(var(--notice-dot) / 2),
++    var(--notice-halo) calc(var(--notice-dot) / 2 + var(--line-1))
++  );
+   transform: translateY(-50%);
+ }
++.more[data-align="item"] {
++  min-height: var(--h-control-lg);
++}
++.more[data-align="item"] > b {
++  display: grid;
++  place-items: center;
++  width: var(--triage-face);
++  height: var(--triage-face);
++  border-radius: 50%;
++  background: var(--list-band);
++  font-size: var(--fs-1);
++}
+diff --git a/web/src/kit/Notice.tsx b/web/src/kit/Notice.tsx
+index 47d4bf6..e6d9be0 100644
+--- a/web/src/kit/Notice.tsx
++++ b/web/src/kit/Notice.tsx
+@@ -32,8 +32,8 @@ export type NoticeProps = Said &
+       }
+     | {
+         kind: "problem";
+-        /** item: a line of a two-line item list (Intake), in the items' size; the blocked dot sits
+-         *  in the rows' leading face's slot, the words where their titles start. */
++        /** item: a line of the triage list (Intake); the blocked dot on a halo sits in the rows'
++         *  faces' column, the words where their titles start. */
+         align?: "item";
+         /** The problem's second line: what can be done about it. */
+         fix?: NoticeFix;
+@@ -42,7 +42,7 @@ export type NoticeProps = Said &
+       }
+     | {
+         kind: "empty";
+-        /** item: as a problem's, the empty ring in the faces' slot. */
++        /** item: as a problem's, the empty ring in the faces' column. */
+         align?: "item";
+         error?: never;
+         fix?: never;
+@@ -50,10 +50,11 @@ export type NoticeProps = Said &
+       }
+     | {
+         kind: "more";
+-        /** The button that shows the rest ("Show 3 more"), its title saying how many in all. */
++        /** The button that shows the rest ("Show all 11"), its title saying how many in all. */
+         more?: { label: string; title: string; run: () => void };
++        /** item: the +N on a disc in the faces' column, the button where the titles start. */
++        align?: "item";
+         error?: never;
+-        align?: never;
+         fix?: never;
+       }
+   );
+@@ -103,13 +104,13 @@ export function Notice(props: NoticeProps) {
+   }
+   if (kind === "more") {
+     return (
+-      <div className={s.more}>
++      <div className={s.more} data-align={props.align}>
++        <Said lead={lead}>{children}</Said>
+         {props.more ? (
+           <Button variant="quiet" size="xs" title={props.more.title} onClick={props.more.run}>
+             {props.more.label}
+           </Button>
+         ) : null}
+-        <Said lead={lead}>{children}</Said>
+       </div>
+     );
+   }
+diff --git a/web/src/kit/Row.module.css b/web/src/kit/Row.module.css
+index e77295b..eed45dc 100644
+--- a/web/src/kit/Row.module.css
++++ b/web/src/kit/Row.module.css
+@@ -11,15 +11,27 @@
+ /* lists: a line and an item are flat rows edge to edge, each on its hairline (Linear's list), the
+    wash (hover, open) running the full width. No card, no shadow, nothing moves */
+ .line,
+-.item {
++.item,
++.triage {
+   border-radius: 0;
+   background: transparent;
+   box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+   transition: background-color var(--dur-fast) ease;
+ }
+-.row:is(.line, .item):is(:hover, :has(:focus-visible)) {
++.row:is(.line, .item, .triage):is(:hover, :has(:focus-visible)) {
+   background: var(--list-hover);
+ }
++/* triage: its hairline runs between the list's gutters, under the words, not to the sheet's edge */
++.triage {
++  box-shadow: none;
++}
++.triage::after {
++  content: "";
++  position: absolute;
++  inset: auto var(--list-pad) 0 var(--list-inset);
++  height: var(--line-1);
++  background: var(--list-rule);
++}
+ .row:is(.line, .item).open {
+   background: var(--list-open);
+ }
+@@ -59,7 +71,8 @@
+   border-radius: var(--r-3);
+ }
+ .line > .inner,
+-.item > .inner {
++.item > .inner,
++.triage > .inner {
+   column-gap: var(--sp-6);
+   border-radius: 0;
+ }
+@@ -74,6 +87,10 @@
+   min-height: var(--h-list-item);
+   padding: var(--sp-7) var(--list-pad) var(--sp-7) var(--list-inset);
+ }
++.triage > .inner {
++  min-height: var(--h-triage);
++  padding: var(--sp-3) var(--list-pad) var(--sp-3) var(--list-inset);
++}
+ .rack > .inner {
+   column-gap: var(--sp-4);
+   height: var(--h-avatar-lg);
+diff --git a/web/src/kit/Row.tsx b/web/src/kit/Row.tsx
+index d2875aa..7d0afc4 100644
+--- a/web/src/kit/Row.tsx
++++ b/web/src/kit/Row.tsx
+@@ -18,11 +18,12 @@ export interface RowProps {
+   /** The cells, one per column; with fewer, the last spans the rest, and one past the columns is
+    *  not drawn. Outside a table they stack. */
+   children: ReactNode;
+-  /** line: a list's one-line row (Compact, My queue); item: a roomy two-line row (Intake); rack: a
+-   *  bare entry (a run's stage); band: a board's swimlane, its first cell a head line across the
++  /** line: a list's one-line row (Compact, My queue); item: a roomy two-line row (the library);
++   *  triage: a tight two-line row led by a face, its hairline between the gutters (Intake); rack:
++   *  a bare entry (a run's stage); band: a board's swimlane, its first cell a head line across the
+    *  board and then a cell per column; columns: the board's column head, one short line of stage
+    *  names over the lanes, on the same grid. */
+-  kind?: "line" | "item" | "rack" | "band" | "columns";
++  kind?: "line" | "item" | "triage" | "rack" | "band" | "columns";
+   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
+    *  names what it opens, for assistive tech. */
+   action?: Action;
+diff --git a/web/src/kit/Surface.module.css b/web/src/kit/Surface.module.css
+index 159aa99..542aa85 100644
+--- a/web/src/kit/Surface.module.css
++++ b/web/src/kit/Surface.module.css
+@@ -16,14 +16,14 @@
+   box-shadow: 0 0 0 var(--line-1) var(--tk-card-edge);
+   border-radius: var(--r-4);
+ }
+-/* a run of a list under its own head (an Intake query): no card, flush with the list's edges; runs
+-   are parted by room alone, so the last line takes no hairline */
+-.list + .list {
+-  margin-top: var(--sp-9);
+-}
++/* a run of a list under its own head (an Intake query): no card, flush with the list's edges; the
++   next run's band parts it, so its last line takes no hairline */
+ .list > :last-child {
+   box-shadow: none;
+ }
++.list > :last-child::after {
++  content: none;
++}
+ .fill {
+   flex: 1;
+   min-height: 0;
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index af2487b..240dac1 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -63,7 +63,7 @@
+             "sm": "16px: a face in a pill (a running board card's state chip), a run's starter.",
+             "md": "Rows, heads, a swimlane's team and pickers (18px): Linear's small face, a disc in the person's own hue.",
+             "lg": "The signed-in face in the sidebar's account popover (30px).",
+-            "talk": "The conversation, the sidebar head's signed-in face and who last changed a library item (24px), on the person's hue.",
++            "talk": "The conversation, the sidebar head's signed-in face, who last changed a library item and who has an Intake issue, leading its row (24px), on the person's hue.",
+             "tile": "An agent leading its library row (32px): a rounded square in its hue, the shape and size of the glyph tiles that lead the other library lists, so the four read as one family."
+           }
+         },
+@@ -484,7 +484,7 @@
+           "values": {
+             "zone": "A band run through its surface's padding, edge to edge (My queue's Agents at work, over its cards).",
+             "group": "A list's band edge to edge (Linear's group head): Compact's fold, My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
+-            "line": "A query's head (Intake's queries): Linear's quiet group line, no fill, on a hairline, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron after its words (the sidebar's section caret), so its key starts where the titles do; the row a Swap in its summary answers to."
++            "line": "A query's head (Intake's queries): Linear's group band, a grey fill edge to edge that parts one run from the next, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first in the faces' column, so its key starts where the titles do; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
+           }
+         },
+         "fold": {
+@@ -589,9 +589,9 @@
+           "why": "A status line that reports a failure."
+         },
+         "align": {
+-          "why": "Where its words sit: a problem or an empty line on a list's item columns (Intake's).",
++          "why": "Where its words sit: a problem, an empty or a +N line on the triage list's columns (Intake's).",
+           "values": {
+-            "item": "Intake's two-line items: the row's size, led from where the titles start by an empty ring or a problem's blocked dot."
++            "item": "Intake's triage rows: a row's height, its glyph in the faces' column (an empty ring, a problem's blocked dot on a halo, the +N on a grey disc) so its words start where the titles do."
+           }
+         },
+         "fix": {
+@@ -691,7 +691,8 @@
+           "why": "The shapes the app's lists take.",
+           "values": {
+             "line": "A list's row (Compact, My queue, the library): one line on a hairline edge to edge (Linear's list), its first cell under the group head's glyph; hover and open wash its full width.",
+-            "item": "A two-line row (Intake, the library's lists): roomy, on a hairline, washed on hover.",
++            "item": "A two-line row (the library's lists, a ticket's context): roomy, on a hairline, washed on hover.",
++            "triage": "Intake's triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; its hairline runs between the gutters, under the words.",
+             "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
+             "band": "A board's swimlane (All teams): its head, one line across the board (the repo, its team, what is in flight), then its stage lanes, each a faint slab holding ticket Cards.",
+             "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid."
+@@ -923,7 +924,7 @@
+           "values": {
+             "recess": "The view's sunken zone.",
+             "sheet": "A hairline card, as Linear's latest-update card.",
+-            "list": "A run of a list under its own head (an Intake query), named as a region: no card, flush with the list's edges, parted from the next run by room alone."
++            "list": "A run of a list under its own head (an Intake query), named as a region: no card, flush with the list's edges, parted from the next run by that run's band, its last line on no hairline."
+           }
+         },
+         "fill": {
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 1d5ae5d..f155afc 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -374,6 +374,8 @@
+   /* rows: a row's Chip, its grey dot or glyph; Unassigned's dashed ring */
+   --prop-mark: color-mix(in srgb, var(--ink-3) 72%, transparent);
+   --face-dashed: color-mix(in srgb, var(--ink-3) 75%, transparent);
++  /* intake · Notice: a failed query's halo, the blocked dot's disc in the faces' column */
++  --notice-halo: color-mix(in srgb, var(--blocked) 15%, transparent);
+   --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
+   /* themes · faces: a hue each, the same in every theme (a person reads the same everywhere), white
+      initials on it */
+@@ -514,9 +516,12 @@
+   --notice-mark: 12px;
+   /* intake · Notice: a problem's reading measure: what went wrong wraps short of the row's end */
+   --notice-measure: 72ch;
+-  /* intake · Notice: a failed query's dot hung in the gutter, on its first line's middle */
++  /* intake · Notice: a failed query's dot, centred in its halo */
+   --notice-dot: 6px;
+-  --notice-dot-top: calc(var(--sp-7) + 0.5lh);
++  /* intake: a triage row, a face over two tight lines; the faces' column, which the query heads'
++     chevron and the notices' glyphs share, so every line's words start on one edge */
++  --h-triage: 52px;
++  --triage-face: var(--sp-9);
+   /* controls */
+   --w-pop: 304px; /* the theme menu */
+   --w-pop-filter: 248px; /* a picker's list, a filter chip's overflow popover */

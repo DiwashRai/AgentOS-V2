@@ -1,0 +1,19 @@
+// One-off: drop the ledger entries for the variants step 1 removed (the kit-budget consolidation).
+import { readFileSync, writeFileSync } from "node:fs";
+
+const path = process.argv[2];
+const led = JSON.parse(readFileSync(path, "utf8"));
+const c = led.components;
+delete c.Age.props.strong;
+delete c.Badge.props.kind.values.status;
+delete c.Badge.props.size.values.lg;
+delete c.Badge.props.href;
+delete c.Button.props.variant.values.lit;
+delete c.Button.props.size.values.lg;
+delete c.Meter.props.size.values.strip;
+delete c.Meter.props.names;
+delete c.Row.props.edge;
+delete c.Stepper.props.look;
+c.Stepper.why =
+  "A ticket's way through its workflow as the labelled stepper (the ticket page, the peek, an expanded row): a column per stage, a gate's diamond where its stage ends.";
+writeFileSync(path, JSON.stringify(led, null, 2) + "\n", { encoding: "utf8" });

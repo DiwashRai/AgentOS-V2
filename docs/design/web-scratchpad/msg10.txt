@@ -1,0 +1,12 @@
+web: knobs found through memo, forwardRef and spread props
+
+`export const Who = memo(function Who({ tone }) { … <Text tone={tone}> })`
+passed the knob check, since only a directly declared top-level function
+was a component; so did `<Text {...props}>` and `{...rest}`, since only
+an object literal spread was read. React's wrappers (memo, forwardRef)
+now still name the component inside them, and a spread of the props or
+their rest counts each of its fields the kit tag takes as a variant (a
+choice between object literals is read on both sides). Each is in the
+tree test.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

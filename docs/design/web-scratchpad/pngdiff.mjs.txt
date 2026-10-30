@@ -1,0 +1,21 @@
+// Usage: node pngdiff.mjs <webdir>  — for each modified baseline PNG, count pixels that differ from HEAD's.
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
+
+const web = process.argv[2];
+const require = createRequire(path.join(web, "package.json"));
+const { PNG } = require("playwright-core/lib/utilsBundle");
+const files = execFileSync("git", ["diff", "--name-only", "--", "e2e"], { cwd: web, encoding: "utf8" })
+  .split("\n")
+  .filter((f) => f.endsWith(".png"));
+for (const f of files) {
+  const rel = path.relative("web", f).replaceAll("\\", "/");
+  const old = PNG.sync.read(execFileSync("git", ["show", `HEAD:${f}`], { cwd: web, maxBuffer: 1e8 }));
+  const cur = PNG.sync.read(readFileSync(path.join(web, rel)));
+  let n = 0;
+  if (old.width !== cur.width || old.height !== cur.height) n = -1;
+  else for (let i = 0; i < old.data.length; i += 4) if (old.data.readUInt32BE(i) !== cur.data.readUInt32BE(i)) n++;
+  console.log(`${n}\t${rel}`);
+}

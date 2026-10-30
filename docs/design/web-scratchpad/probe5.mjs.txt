@@ -1,0 +1,49 @@
+// memo/forwardRef tags with React's real types: does the resolved check still call them strings?
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
+
+const T = "C:/code/AgentOS-V2-web/web/tools/";
+const { layerProblems } = await import(pathToFileURL(T + "layers.mjs").href);
+const { open, readModules } = await import(pathToFileURL(T + "reach.mjs").href);
+
+const NM = "C:/code/AgentOS-V2-web/web/node_modules";
+const root = mkdtempSync(join(tmpdir(), "web-tree5-"));
+writeFileSync(
+  join(root, "tsconfig.json"),
+  JSON.stringify({
+    compilerOptions: {
+      target: "ES2023", module: "ESNext", moduleResolution: "bundler", jsx: "react-jsx",
+      strict: true, skipLibCheck: true, noEmit: true, types: [],
+      baseUrl: ".", paths: { react: [`${NM}/@types/react`], "react/*": [`${NM}/@types/react/*`] },
+    },
+    include: ["src"],
+  }),
+);
+const FILES = {
+  "main.tsx": `import { App } from "./app/App";\nexport { App };\n`,
+  "app/App.tsx": `import { E } from "../features/e/E";\nexport const App = () => E();\n`,
+  "kit/index.ts": `export function Text(p: { tone?: "1" | "2" }) { return p.tone ?? null; }\n`,
+  "patterns/wrap.tsx": [
+    `import { forwardRef, memo } from "react";`,
+    `import { Text } from "../kit";`,
+    `export const M = memo(function M({ who }: { who: string }) { return <Text>{who}</Text>; });`,
+    `export const R = forwardRef<HTMLElement, { who: string }>(({ who }, _ref) => <Text>{who}</Text>);`,
+    ``,
+  ].join("\n"),
+  "features/e/E.tsx": `import { M, R } from "../../patterns/wrap";\nexport const E = () => [<M who="a" />, <R who="b" />];\n`,
+};
+for (const [rel, text] of Object.entries(FILES)) {
+  const p = join(root, "src", rel);
+  mkdirSync(dirname(p), { recursive: true });
+  writeFileSync(p, text);
+}
+try {
+  const w = open(root);
+  const diags = w.ts.getPreEmitDiagnostics(w.program).map((d) => w.ts.flattenDiagnosticMessageText(d.messageText, "\n"));
+  console.log("TS DIAGS:", diags.slice(0, 5));
+  console.log("LAYERS:\n" + layerProblems(readModules(w)).join("\n"));
+} finally {
+  rmSync(root, { recursive: true, force: true });
+}

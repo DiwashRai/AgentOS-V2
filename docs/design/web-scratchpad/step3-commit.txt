@@ -1,0 +1,23 @@
+kit: one pill in Chip, and the agent and board cards in Card
+
+Step 3 of the kit consolidation, count-neutral.
+
+Pills: Badge's tag and prop pills, Chip and Mark's chip drew the same pill four
+times. Chip is now the one label pill (a leading glyph or a state's dot, the
+words, something quieter after them, a remove), with tones for the few that
+stand out; Badge keeps the small text forms (key, count, keycap, YOU). The
+words a Now chip says moved from Mark into Compact, where the state is read.
+
+Cards: My queue's agent cards and All teams' tickets were Rows skinned from
+Row's stylesheet by child position ("the second-to-last child is the chip
+strip", "restyle any avatar inside"), so reordering a screen could restyle it.
+They are Cards now, with an agent and a ticket look on the stage card's surface
+and activation; the screens say their layout themselves (a spacer that sinks
+the chips, a still glyph, a fill chip, the team faces' size). Mark gains
+`still` for glyphs that must not breathe; a tile Meter lies along its card's
+bottom edge by itself. Row loses its tile kind and every descendant rule.
+
+The kit is 39 of 40 components and 7,045 lines.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

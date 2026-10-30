@@ -1,0 +1,65 @@
+// One-off: the app-window frames Linear draws in HTML on its pages (element screenshots, after
+// their entrance animation), and the screenshots in its docs. Usage: node frames.mjs <web> <out>
+import { mkdirSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+mkdirSync(join(out, "frames"), { recursive: true });
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const browser = await chromium.launch({ channel: "chrome" });
+const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 });
+const page = await ctx.newPage();
+const log = [];
+for (const p of ["/", "/intake", "/plan", "/build", "/ai", "/customer-requests", "/coding-sessions", "/asks"]) {
+  const slug = p === "/" ? "home" : p.slice(1);
+  await page.goto(`https://linear.app${p}`, { waitUntil: "networkidle", timeout: 60000 }).catch(() => {});
+  const h = await page.evaluate(() => document.body.scrollHeight);
+  for (let y = 0; y < h; y += 600) {
+    await page.evaluate((yy) => window.scrollTo(0, yy), y);
+    await page.waitForTimeout(250);
+  }
+  const n = await page.evaluate(() => {
+    const els = [...document.querySelectorAll("div, section, figure")].filter((e) => {
+      const r = e.getBoundingClientRect();
+      const cs = getComputedStyle(e);
+      return r.width >= 900 && r.width <= 1400 && r.height >= 380 && r.height <= 1000 &&
+        parseFloat(cs.borderTopLeftRadius) >= 6 && (e.innerText || "").trim().length > 40;
+    });
+    const outer = els.filter((e) => !els.some((o) => o !== e && o.contains(e)));
+    outer.forEach((e, i) => e.setAttribute("data-frame", String(i)));
+    return outer.length;
+  });
+  for (let i = 0; i < n; i++) {
+    const loc = page.locator(`[data-frame="${i}"]`);
+    await loc.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(2500);
+    await loc.screenshot({ path: join(out, "frames", `${slug}-f${i}.png`) }).catch((e) => log.push(`${slug} f${i}: ${e.message.split("\n")[0]}`));
+  }
+  log.push(`${p}: ${n} frames`);
+}
+// the docs: real app screenshots, some in light
+await page.goto("https://linear.app/docs", { waitUntil: "networkidle", timeout: 60000 }).catch(() => {});
+const docs = await page.evaluate(() => [...new Set([...document.querySelectorAll('a[href^="/docs/"]')].map((a) => a.getAttribute("href")))]);
+log.push(`docs: ${docs.length} pages`);
+const want = ["inbox", "my-issues", "sidebar", "triage", "views", "projects", "display-options", "issue", "board", "list", "custom-views", "agents", "themes", "pulse", "reviews", "initiatives"];
+const pick = docs.filter((d) => want.some((w) => d.includes(w))).slice(0, 14);
+let k = 0;
+for (const d of pick) {
+  await page.goto(`https://linear.app${d}`, { waitUntil: "networkidle", timeout: 60000 }).catch(() => {});
+  const srcs = await page.evaluate(async () => {
+    for (let y = 0; y < document.body.scrollHeight; y += 800) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 150)); }
+    return [...document.images].filter((i) => i.naturalWidth >= 1100).map((i) => i.currentSrc || i.src);
+  });
+  for (const s of srcs.slice(0, 4)) {
+    try {
+      const r = await fetch(s);
+      const t = r.headers.get("content-type") ?? "";
+      const ext = t.includes("png") ? "png" : t.includes("webp") ? "webp" : t.includes("avif") ? "avif" : "jpg";
+      writeFileSync(join(out, "frames", `docs-${String(k++).padStart(2, "0")}-${d.split("/").pop()}.${ext}`), Buffer.from(await r.arrayBuffer()));
+    } catch {}
+  }
+  log.push(`${d}: ${srcs.length} images`);
+}
+await browser.close();
+console.log(log.join("\n"));

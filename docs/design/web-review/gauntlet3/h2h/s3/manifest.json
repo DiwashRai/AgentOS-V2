@@ -1,0 +1,418 @@
+[
+  {
+    "id": "t01",
+    "judge": 1,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j1",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j1\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j1\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t01",
+    "judge": 2,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j2",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j2\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j2\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t01",
+    "judge": 3,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j3",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j3\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j3\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t01",
+    "judge": 4,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j4",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j4\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t01\\j4\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t02",
+    "judge": 1,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j1",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j1\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j1\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t02",
+    "judge": 2,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j2",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j2\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j2\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t02",
+    "judge": 3,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j3",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j3\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j3\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t02",
+    "judge": 4,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j4",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j4\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t02\\j4\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t03",
+    "judge": 1,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j1",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j1\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j1\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t03",
+    "judge": 2,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j2",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j2\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j2\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t03",
+    "judge": 3,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j3",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j3\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j3\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t03",
+    "judge": 4,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j4",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j4\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t03\\j4\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t04",
+    "judge": 1,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j1",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j1\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j1\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t04",
+    "judge": 2,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j2",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j2\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j2\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t04",
+    "judge": 3,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j3",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j3\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j3\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t04",
+    "judge": 4,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j4",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j4\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t04\\j4\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t05",
+    "judge": 1,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j1",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j1\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j1\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t05",
+    "judge": 2,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j2",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j2\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j2\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t05",
+    "judge": 3,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j3",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j3\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j3\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t05",
+    "judge": 4,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j4",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j4\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t05\\j4\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t06",
+    "judge": 1,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j1",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j1\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j1\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t06",
+    "judge": 2,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j2",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j2\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j2\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t06",
+    "judge": 3,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j3",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j3\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j3\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t06",
+    "judge": 4,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j4",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j4\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t06\\j4\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t07",
+    "judge": 1,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j1",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j1\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j1\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t07",
+    "judge": 2,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j2",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j2\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j2\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t07",
+    "judge": 3,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j3",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j3\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j3\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t07",
+    "judge": 4,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j4",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j4\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t07\\j4\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t08",
+    "judge": 1,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j1",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j1\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j1\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t08",
+    "judge": 2,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j2",
+    "xIs": "A",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j2\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j2\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t08",
+    "judge": 3,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j3",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j3\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j3\\B-1.png"
+    ],
+    "ref": []
+  },
+  {
+    "id": "t08",
+    "judge": 4,
+    "dir": "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j4",
+    "xIs": "B",
+    "a": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j4\\A-1.png"
+    ],
+    "b": [
+      "C:\\code\\AgentOS-V2-web\\.review\\gauntlet3\\h2h\\s3\\t08\\j4\\B-1.png"
+    ],
+    "ref": []
+  }
+]

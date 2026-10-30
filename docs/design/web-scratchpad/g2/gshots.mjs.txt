@@ -1,0 +1,108 @@
+// The gauntlet's one camera: every builder, critic round and integration shoots each piece's
+// states the same way, so the critic compares like with like.
+// Usage: node gshots.mjs <web dir> <port> <out dir> <piece|all>
+// Starts Vite from <web dir> on <port> (strict), shoots 1440x900 in Chrome, Europe/London, reduced
+// motion, the theme set in localStorage before load, the pointer parked off the page; writes
+// <out dir>/<piece>/<n>-<name>-<theme>.png and prints each path; stops Vite.
+import { spawn } from "node:child_process";
+import { mkdirSync } from "node:fs";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, port, out, which = "all"] = process.argv.slice(2);
+
+const open = (name) => async (page) => {
+  await page.getByRole("button", { name }).first().click();
+};
+const openCombo = (name) => async (page) => {
+  await page.getByRole("combobox", { name }).first().click();
+};
+const editFirstItem = async (page) => {
+  await page.locator("main").getByRole("button", { name: /^Edit / }).first().focus();
+  await page.keyboard.press("Enter");
+};
+
+export const PIECES = {
+  frame: [
+    ["my-queue", "/", "light"],
+    ["my-queue", "/", "dark"],
+    ["theme-menu", "/", "light", openCombo("Theme")],
+  ],
+  lists: [
+    ["my-queue", "/", "light"],
+    ["compact-open", "/compact?open=NW-17", "dark"],
+    ["compact", "/compact", "light"],
+  ],
+  intake: [
+    ["intake", "/intake", "light"],
+    ["intake", "/intake", "dark"],
+  ],
+  teams: [
+    ["all-teams", "/teams", "light"],
+    ["all-teams", "/teams", "dark"],
+  ],
+  ticket: [
+    ["ticket", "/t/NW-17", "light"],
+    ["ticket-runs", "/t/NW-17?tab=runs", "dark"],
+    ["ticket-workflow", "/t/NW-17?tab=workflow", "light"],
+  ],
+  overlays: [
+    ["peek", "/?peek=NW-17", "light"],
+    ["workflow-overlay", "/t/NW-17?tab=workflow&edit=workflow", "dark"],
+    ["item-overlay", "/t/NW-17?tab=context", "light", editFirstItem],
+  ],
+  library: [
+    ["workflows", "/library/workflows", "light"],
+    ["skills", "/library/skills", "dark"],
+    ["agents", "/library/agents", "light"],
+  ],
+  editors: [
+    ["agent-editor", "/library/agents/builder", "light"],
+    ["workflow-editor", "/library/workflows/standard", "dark"],
+    ["file-editor", "/library/files/agents-md", "light"],
+  ],
+  controls: [
+    ["ticket-menu", "/t/NW-17", "light", open("More on NW-17")],
+    ["owner-picker", "/t/NW-17", "dark", openCombo("Owner")],
+    ["compact-filters", "/compact", "dark"],
+  ],
+};
+
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", port, "--strictPort"], { cwd: web, stdio: "ignore" });
+try {
+  const base = `http://127.0.0.1:${port}`;
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 150) throw new Error(`vite did not start on ${port}`);
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const pieces = which === "all" ? Object.keys(PIECES) : which.split(",");
+  for (const piece of pieces) {
+    const dir = join(out, piece);
+    mkdirSync(dir, { recursive: true });
+    for (const [n, [name, path, theme, act]] of PIECES[piece].entries()) {
+      const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, timezoneId: "Europe/London", reducedMotion: "reduce" });
+      await ctx.addInitScript((t) => localStorage.setItem("agentos-theme", t), theme);
+      const page = await ctx.newPage();
+      await page.goto(base + path);
+      await page.evaluate(() => document.fonts.ready);
+      await page.waitForTimeout(500);
+      // the app's own font, or the shot isn't the app (a junctioned node_modules once served none)
+      const geist = await page.evaluate(() => [...document.fonts].some((f) => /Inter/.test(f.family) && f.status === "loaded"));
+      if (!geist) throw new Error(`Inter did not load on ${path}: the font files aren't being served (see the setup note)`);
+      if (act) {
+        try { await act(page); await page.waitForTimeout(500); } catch (e) { console.error(`${piece}/${name}: ${String(e).split("\n")[0]}`); }
+      }
+      await page.mouse.move(1439, 899);
+      const file = join(dir, `${n + 1}-${name}-${theme}.png`);
+      await page.screenshot({ path: file });
+      console.log(file);
+      await ctx.close();
+    }
+  }
+  await browser.close();
+} finally {
+  vite.kill();
+}

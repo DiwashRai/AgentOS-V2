@@ -1,0 +1,20 @@
+web: one useParam for every URL key; ?only= parsed against the queries
+
+useParam had no way to replace the history entry, so useSearch and the
+ticket page's useTicketUrl still wrote their query keys by hand. It now
+takes how a write is made ({ replace, flushSync }), and both go through
+it: the search replaces as it is typed, a tab replaces, an overlay adds.
+
+Intake's ?only= was used as given: an unknown name listed nothing, said
+nothing and pressed no chip. onlyOf parses it at the edge against the
+queries there are; anything else is as if absent.
+
+All teams' stateOf took the ticket and its attention apart, so a caller
+could hand it a mismatched pair; it now takes a row whose attention is
+already narrowed to no run at work.
+
+Tests: the URL hooks over a faked router keep the other keys, read an
+empty ?peek= as no peek and replace as the search is typed; ?only= with
+an unknown name.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

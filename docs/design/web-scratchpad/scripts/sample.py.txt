@@ -1,0 +1,10 @@
+# Print the colour at each named point of a screenshot: sample.py <png> name:x,y ...
+import sys
+from PIL import Image
+
+img = Image.open(sys.argv[1]).convert("RGB")
+for arg in sys.argv[2:]:
+    name, xy = arg.split(":")
+    x, y = (int(v) for v in xy.split(","))
+    r, g, b = img.getpixel((x, y))
+    print(f"{name:10} #{r:02x}{g:02x}{b:02x}  ({r},{g},{b})")

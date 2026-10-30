@@ -1,0 +1,21 @@
+kit: remove the variants nothing draws, and let a text area pop out
+
+Step 1 of the kit consolidation (the Codex budget review in
+.review/kit-budget-codex.md). Only the /kit sheet drew these, so they go with
+their renderers and styles:
+
+- Stepper's miniature glyph (its look, width calculation and CSS): every
+  screen draws the labelled steps;
+- Meter's labelled strip and its names;
+- Row's status edge;
+- Button's lit variant and large size;
+- Badge's status ring, large key and linked key;
+- Age's strong.
+
+The kit goes from 7,695 to 7,317 lines, so the owner's long-text editing fits
+inside the budget: any TextArea now pops out to the whole window (a quiet
+expand button at its corner; the same text at a readable measure; Done or Esc
+returns, over an overlay too).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

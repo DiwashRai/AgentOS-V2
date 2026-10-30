@@ -1,0 +1,165 @@
+diff --git a/web/src/features/library/content.tsx b/web/src/features/library/content.tsx
+index 2dc9ab9..99d0358 100644
+--- a/web/src/features/library/content.tsx
++++ b/web/src/features/library/content.tsx
+@@ -1,5 +1,5 @@
+ // The item editor's main column: the content as a section of the document, a ruled head strip over
+-// monospace markdown as tall as its lines (an agent's instructions, a SKILL.md, a file), or
++// markdown read as a document (its source edited in place) as tall as its lines (an agent's instructions, a SKILL.md, a file), or
+ // AGENTS.md as its named blocks: each a section of its own, its head the fold and its name to edit
+ // as a heading (folded, its first line and length after it), then at its end the pair of Move up
+ // and Move down (shown while it is in use) and its handle, to drag it or step it with ↑ ↓.
+diff --git a/web/src/kit/Form.module.css b/web/src/kit/Form.module.css
+index 7328eaa..1261ee4 100644
+--- a/web/src/kit/Form.module.css
++++ b/web/src/kit/Form.module.css
+@@ -141,7 +141,7 @@
+     border-color var(--dur-fast) ease,
+     box-shadow var(--dur-fast) ease;
+ }
+-.sheet:has(> .leaf:focus) {
++.sheet:has(.leaf:focus) {
+   border-top-color: var(--you);
+   box-shadow: 0 calc(var(--line-1) * -1) 0 var(--you);
+ }
+@@ -163,7 +163,42 @@
+ .leaf.under {
+   padding-left: calc(var(--h-chip) + var(--sp-4));
+ }
+-
++/* at rest, a sheet's markdown is read as a document over its hidden source, in the body face:
++   `code` a faint chip, a fence a tinted block of mono; a click lands in the source and edits it */
++.read {
++  display: grid;
++}
++.read > * {
++  grid-row: 1;
++  grid-column: 1;
++}
++.read:not(:focus-within) > .area {
++  color: transparent;
++}
++.read:focus-within > .prose {
++  visibility: hidden;
++}
++.prose {
++  font-size: var(--fs-tk);
++  line-height: 1.6;
++  pointer-events: none;
++}
++.prose > * {
++  margin: 0 0 var(--sp-4);
++}
++.prose ul {
++  padding-left: var(--sp-9);
++}
++.prose :is(code, pre) {
++  padding: var(--line-1) var(--sp-2);
++  border-radius: var(--r-1);
++  background: var(--chip-hover);
++  font-family: var(--font-mono);
++  font-size: var(--fs-2);
++}
++.prose pre {
++  padding: var(--sp-5) var(--sp-6);
++}
+ /* the pop-out: a quiet button in the area's top right corner, shown on hover and focus */
+ .areaWrap {
+   position: relative;
+diff --git a/web/src/kit/TextArea.tsx b/web/src/kit/TextArea.tsx
+index 18da157..307c18d 100644
+--- a/web/src/kit/TextArea.tsx
++++ b/web/src/kit/TextArea.tsx
+@@ -1,6 +1,7 @@
+ // Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of
+ // AGENTS.md): at least `lines` tall and growing with its text; an item editor's is a section of
+-// its document, a ruled head strip over the bare text. Every area
++// its document, a ruled head strip over its text read as a document (headings, lists, `code`, a
++// fenced block) over its hidden source, which a click edits in place. Every area
+ // can pop out to the whole window, for long text: the same value, edited at a readable measure,
+ // and Done or Esc brings it back (inside an overlay too: it opens over it).
+ import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+@@ -33,6 +34,7 @@ export interface TextAreaProps {
+ export function TextArea(props: TextAreaProps) {
+   const { label, value, onChange, placeholder, lines = 3, head, tools, folded } = props;
+   const sheet = head !== undefined;
++  const under = folded !== undefined && s.under;
+   const [out, setOut] = useState(false);
+   const popped = useRef<HTMLTextAreaElement>(null);
+   const description = useDescription();
+@@ -52,13 +54,7 @@ export function TextArea(props: TextAreaProps) {
+   const area = (full: boolean) => (
+     <textarea
+       ref={full ? popped : undefined}
+-      className={cx(
+-        s.box,
+-        s.area,
+-        full && s.fill,
+-        sheet && !full && s.leaf,
+-        folded !== undefined && s.under,
+-      )}
++      className={cx(s.box, s.area, full && s.fill, sheet && !full && s.leaf, under)}
+       style={vars({ "--lines": String(lines) })}
+       aria-label={label}
+       {...(full ? own : inline)}
+@@ -91,7 +87,14 @@ export function TextArea(props: TextAreaProps) {
+             {tools !== undefined ? <span className={s.tools}>{tools}</span> : null}
+             {pop}
+           </div>
+-          {folded ? null : area(false)}
++          {folded ? null : (
++            <div className={s.read}>
++              {area(false)}
++              <div className={cx(s.leaf, s.prose, under)} aria-hidden>
++                {prose(value)}
++              </div>
++            </div>
++          )}
+         </>
+       ) : (
+         <>
+@@ -159,3 +162,31 @@ interface WordsProps {
+   problem: string | undefined;
+   children: ReactNode;
+ }
++
++/** A run of words: its `code` a chip, its **strong** words strong (the split's odd parts). */
++function span(w: string, i: number): ReactNode {
++  const Tag = w.startsWith("`") ? "code" : "strong";
++  return i % 2 ? <Tag key={i}>{w.replace(/^(`|\*\*)|(`|\*\*)$/g, "")}</Tag> : w;
++}
++const runs = (text: string) => text.split(/(`[^`\n]+`|\*\*[^*\n]+\*\*)/).map(span);
++
++const item = (l: string) => <li key={l}>{runs(l.slice(2))}</li>;
++
++/** A paragraph: a list when every line is an item, a heading, or plain words. */
++function para(text: string, key: string): ReactNode {
++  const items = text.split("\n");
++  if (items.every((l) => /^[-*] /.test(l))) return <ul key={key}>{items.map(item)}</ul>;
++  const Tag = text.startsWith("#") ? "h4" : "p";
++  return <Tag key={key}>{runs(text.replace(/^#+\s*/, ""))}</Tag>;
++}
++
++/** Markdown read as a document: its paragraphs, and its fences' insides (the split's odd parts)
++ *  as code blocks. */
++const prose = (text: string) =>
++  text
++    .split(/^```.*$/m)
++    .flatMap((part, i) =>
++      i % 2
++        ? [<pre key={i}>{part.replace(/^\n|\n$/g, "")}</pre>]
++        : (part.match(/\S.*(\n.+)*/g) ?? []).map((p, k) => para(p, `${String(i)}.${String(k)}`)),
++    );
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index c22a739..5078d43 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -1069,7 +1069,7 @@
+           "why": "Its least height in lines (a prompt's few, an editor's many)."
+         },
+         "head": {
+-          "why": "An item editor's content is a section of its document, as Linear writes a description under its properties: a hairline over a head strip (its title and length; a block's fold and name), the bare text under it as tall as its lines, the hairline lit while the text has the focus; popped out, it is the plain box at a readable measure."
++          "why": "An item editor's content is a section of its document, as Linear writes a description under its properties: a hairline over a head strip (its title and length; a block's fold and name), the text under it as tall as its lines, read at rest as a document (paragraphs, lists, `code` chips, a fenced block in mono) over its hidden source, which a click edits in place, the hairline lit while it has the focus; popped out, it is the plain box at a readable measure."
+         },
+         "tools": {
+           "why": "A block's controls at its head's end (its moves, then its handle): the moves show while the block is in use, so a head at rest is its name and its handle."

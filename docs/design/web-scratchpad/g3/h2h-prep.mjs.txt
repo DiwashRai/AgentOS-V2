@@ -1,0 +1,25 @@
+// Head-to-head prep: copies each match's two image sets into one folder per judge under neutral
+// names (A-1.png, B-1.png, ...), so no file name gives away whose is whose. Judges 1 and 2 see X
+// as A; judges 3 and 4 see X as B, which cancels any lean towards the first-shown.
+// Usage: node h2h-prep.mjs <matches.json> <out dir>
+//   matches.json: [{ "id": "twin-triage", "X": ["<png>", ...], "Y": ["<png>", ...], "ref": ["<png>"]? }]
+//   (ref: optional images every judge also sees, as the standard both are held to)
+// Writes <out>/<id>/j<k>/{A-n,B-n,R-n}.png and <out>/manifest.json: [{ id, judge, dir, xIs, a, b, ref }]
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const [file, out] = process.argv.slice(2);
+const matches = JSON.parse(readFileSync(file, "utf8"));
+const manifest = [];
+for (const m of matches) {
+  for (let k = 1; k <= 4; k++) {
+    const dir = join(out, m.id, `j${k}`);
+    mkdirSync(dir, { recursive: true });
+    const xIs = k <= 2 ? "A" : "B";
+    const [a, b] = xIs === "A" ? [m.X, m.Y] : [m.Y, m.X];
+    const put = (src, tag) => src.map((p, i) => { const to = join(dir, `${tag}-${i + 1}.png`); copyFileSync(p, to); return to; });
+    manifest.push({ id: m.id, judge: k, dir, xIs, a: put(a, "A"), b: put(b, "B"), ref: put(m.ref ?? [], "R") });
+  }
+}
+writeFileSync(join(out, "manifest.json"), JSON.stringify(manifest, null, 2));
+console.log(`${matches.length} matches, ${manifest.length} judgements -> ${out}`);

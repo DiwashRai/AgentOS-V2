@@ -1,0 +1,20 @@
+web: Tally by plural's rule, stage cards by where they are, docs exact
+
+Tally restated plural's rule, and All teams bent it (one="in flight"
+many="in flight") inside a meta Text of its own. The noun now comes
+from nounFor, plural's own rule, and the legend is a row like Compact's
+foot: "12 tickets in flight · Plan 4 · ...", no meta in meta. The
+all-teams screenshots change for that line alone (rebaselined).
+
+StageSummary's `show` ("all", "compact", "head") said how much to draw;
+it now says where the stage is (`on`: the editor or the ticket's tab)
+and whether it is the one open for editing. LINE_END and lineEnd agreed
+on four columns by hand; one table names each column's cell, and both
+come from it. Run.by says what null means.
+
+docs/architecture.md › The web and AGENTS.md say what each check
+enforces and how: the resolved layers, ESLint's spelling rules, the
+raw-tag gate's three, the props followed through types, the credit by
+names, features/shared's two screens.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

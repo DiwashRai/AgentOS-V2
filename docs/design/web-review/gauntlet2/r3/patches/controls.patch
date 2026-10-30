@@ -1,0 +1,518 @@
+diff --git a/web/src/features/shared/TicketMenu.tsx b/web/src/features/shared/TicketMenu.tsx
+index 419e574..b3ee5a1 100644
+--- a/web/src/features/shared/TicketMenu.tsx
++++ b/web/src/features/shared/TicketMenu.tsx
+@@ -28,12 +28,14 @@ export function TicketMenu({ t, size }: { t: Ticket; size: "sm" | "md" }) {
+   const take: [MenuItem, ...MenuItem[]] = [
+     {
+       label: "Copy link",
++      icon: "link",
+       run: () => {
+         copy(`${window.location.origin}/t/${t.key}`, `Copied the link to ${t.key}`);
+       },
+     },
+     {
+       label: "Copy key",
++      icon: "copy",
+       run: () => {
+         copy(t.key, `Copied ${t.key}`);
+       },
+@@ -41,7 +43,9 @@ export function TicketMenu({ t, size }: { t: Ticket; size: "sm" | "md" }) {
+   ];
+   const out: MenuItem[] = [
+     ...(t.source ? [{ label: `Open ${t.source.ref} in Jira`, href: t.source.url }] : []),
+-    ...(t.pr_url ? [{ label: "Open the pull request", href: t.pr_url }] : []),
++    ...(t.pr_url
++      ? [{ label: "Open the pull request", icon: "branch" as const, href: t.pr_url }]
++      : []),
+   ];
+   const [first, ...rest] = out;
+   return (
+diff --git a/web/src/kit/Icon.tsx b/web/src/kit/Icon.tsx
+index 30d5015..4c20d08 100644
+--- a/web/src/kit/Icon.tsx
++++ b/web/src/kit/Icon.tsx
+@@ -171,6 +171,19 @@ const GLYPHS = {
+   // a section heading's fold caret, Linear's small solid triangle
+   caret: { ...LINE10, d: <path d="M2.75 3.75h4.5L5 6.5z" className={s.caret} /> },
+   out: { ...LINE10, d: <path d="M2.5 7.5 7.5 2.5M3.5 2.5h4v4" /> },
++  // a menu's take-away actions: a chain's two links (copy a link), two sheets (copy a key)
++  link: {
++    ...LINE14,
++    d: (
++      <path d="M6 8a2.5 2.5 0 0 0 3.5 0l2-2A2.5 2.5 0 0 0 8 2.5l-.7.7M8 6a2.5 2.5 0 0 0-3.5 0l-2 2A2.5 2.5 0 0 0 6 11.5l.7-.7" />
++    ),
++  },
++  copy: {
++    ...LINE14,
++    d: (
++      <path d="M5 4.5V3a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H9.5M3 5h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
++    ),
++  },
+   // two corners pulled apart: edit in the whole window
+   expand: {
+     ...LINE10,
+diff --git a/web/src/kit/Menu.module.css b/web/src/kit/Menu.module.css
+index cee25e2..63738d9 100644
+--- a/web/src/kit/Menu.module.css
++++ b/web/src/kit/Menu.module.css
+@@ -1,11 +1,25 @@
+ /* A menu: the "…" button held down while its menu is open (its own state, not a tooltip's), and
+-   the popover's rows with a rule between groups and a link out's arrow at its row's end. */
++   the popover hugging its rows (Linear's action menus are as wide as their words), each led by
++   its glyph in muted ink, a rule between groups and a link out's arrow at its row's end. */
+ .trigger[aria-expanded="true"] {
+   background: var(--pop-hover);
+ }
++.sheet {
++  min-width: var(--col-xl);
++}
++.lead {
++  display: inline-flex;
++  flex: none;
++  justify-content: center;
++  width: var(--sp-7);
++  color: var(--ink-3);
++}
++[data-highlighted] > .lead {
++  color: var(--ink-1);
++}
+ .rule {
+   height: var(--line-1);
+-  margin: var(--sp-3) calc(var(--sp-3) * -1);
++  margin: var(--sp-2) calc(var(--sp-2) * -1);
+   background: var(--pop-rule);
+ }
+ .out {
+diff --git a/web/src/kit/Menu.tsx b/web/src/kit/Menu.tsx
+index bcd8e4b..85f31a0 100644
+--- a/web/src/kit/Menu.tsx
++++ b/web/src/kit/Menu.tsx
+@@ -1,5 +1,6 @@
+ // A menu of actions behind a "…" button, as Linear's: the button in the row of buttons it sits in,
+-// and on a click the kit's one popover under it, each action a row (a link out ends on its arrow),
++// and on a click the kit's one popover under it, hugging its rows, each action a row led by its
++// glyph (a link out ends on its arrow),
+ // a rule between groups. Base UI's menu does the keyboard (arrows, typeahead, Esc), the focus and
+ // the placement; the look is the kit's.
+ import { Menu as Base } from "@base-ui/react/menu";
+@@ -8,15 +9,16 @@ import { Link } from "react-router";
+ 
+ import { inApp } from "./Button";
+ import b from "./Button.module.css";
+-import { Icon } from "./Icon";
++import { Icon, type IconName } from "./Icon";
+ import { useLayer } from "./layer";
+ import s from "./Menu.module.css";
+ import p from "./Popover.module.css";
+ import { Tip } from "./tip";
+ import { cx, tokenPx } from "./vars";
+ 
+-/** One action: something to run, or a link (a path in the app, or a URL opened in a new tab). */
+-export type MenuItem = { label: string } & (
++/** One action: something to run, or a link (a path in the app, or a URL opened in a new tab),
++ *  led by its glyph. */
++export type MenuItem = { label: string; icon?: IconName } & (
+   { run: () => void; href?: never } | { href: string; run?: never }
+ );
+ 
+@@ -29,18 +31,25 @@ export interface MenuProps {
+   size?: "sm" | "md";
+ }
+ 
+-function Row({ item }: { item: MenuItem }) {
++/** `lead`: some row in the menu has a glyph, so every row keeps its column and the names align. */
++function Row({ item, lead }: { item: MenuItem; lead: boolean }) {
++  const name = (
++    <>
++      {lead ? <span className={s.lead}>{item.icon ? <Icon name={item.icon} /> : null}</span> : null}
++      {item.label}
++    </>
++  );
+   if (item.run) {
+     return (
+       <Base.Item className={p.row} onClick={item.run}>
+-        {item.label}
++        {name}
+       </Base.Item>
+     );
+   }
+   if (inApp(item.href)) {
+     return (
+       <Base.LinkItem className={p.row} closeOnClick render={<Link to={item.href} />}>
+-        {item.label}
++        {name}
+       </Base.LinkItem>
+     );
+   }
+@@ -52,7 +61,7 @@ function Row({ item }: { item: MenuItem }) {
+       target="_blank"
+       rel="noopener noreferrer"
+     >
+-      {item.label}
++      {name}
+       <span className={s.out}>
+         <Icon name="out" />
+       </span>
+@@ -65,6 +74,7 @@ export function Menu({ label, groups, size = "md" }: MenuProps) {
+   // focus given back as the menu closes doesn't bring its tooltip back (Linear's), until the
+   // button is left and come back to
+   const [rest, setRest] = useState(false);
++  const lead = groups.some((g) => g.some((it) => it.icon !== undefined));
+   return (
+     <Base.Root
+       // only a close that gives the focus back to the button (Esc, a choice); Tab or a click
+@@ -92,12 +102,12 @@ export function Menu({ label, groups, size = "md" }: MenuProps) {
+       </Tip>
+       <Base.Portal {...layer}>
+         <Base.Positioner className={p.layer} align="end" sideOffset={() => tokenPx("--sp-2")}>
+-          <Base.Popup className={p.sheet} aria-label={label}>
++          <Base.Popup className={cx(p.sheet, s.sheet)} aria-label={label}>
+             {groups.map((group, g) => (
+               <Base.Group key={g}>
+                 {g > 0 ? <Base.Separator className={s.rule} /> : null}
+                 {group.map((it, i) => (
+-                  <Row key={i} item={it} />
++                  <Row key={i} item={it} lead={lead} />
+                 ))}
+               </Base.Group>
+             ))}
+diff --git a/web/src/kit/Popover.module.css b/web/src/kit/Popover.module.css
+index 0c289c7..073dcd5 100644
+--- a/web/src/kit/Popover.module.css
++++ b/web/src/kit/Popover.module.css
+@@ -1,21 +1,21 @@
+-/* The kit's one popover (Select, Segmented's overflow and the account sheet draw it): Linear's
+-   lifted layer, its fill only a few percent over the page, told from what it covers by its edge, a crisp lit
+-   hairline over its own fill (so it reads the same over any row) and a large soft drop. Every list
+-   of choices opens on its filter field, ruled off from the rows. Its words are the page's body
+-   size (14px, on 34px rows inset 6px from the sheet's edge, 6px round), so a menu reads as part of
+-   the page it opens over, not a smaller system; only the one active row (pointer or keys) fills, so at most one is ever lit. A row
+-   reads as Linear's: its picture, its name, its muted aside (a count, a descriptor) right after
+-   the name, and the check at the far end on the current one alone. */
++/* The kit's one popover (Select, Segmented's overflow, the menus and the account sheet draw it):
++   Linear's lifted layer, a clear step over what it covers, on a lit hairline inside a dark ring and
++   a deep drop, its corners a touch tighter than a card's. Its words are Linear's menu size (13px
++   on 32px rows inset 4px from the sheet's edge, 6px round), denser than the page it opens over;
++   only the one active row (pointer or keys) fills, so at most one is ever lit. Every list of
++   choices opens on its filter field, ruled off from the rows. A row reads as Linear's: its
++   picture, its name, its muted aside (a count, a descriptor) right after the name, and the check
++   at the far end on the current one alone. */
+ /* the positioner a popup sits in: above the page, its sticky heads included */
+ .layer {
+   z-index: var(--z-pop);
+ }
+ .sheet {
+   min-width: var(--col-2xl);
+-  padding: var(--sp-3);
++  padding: var(--sp-2);
+   background: var(--pop);
+   border: var(--line-1) solid var(--pop-edge);
+-  border-radius: var(--r-5);
++  border-radius: var(--r-4);
+   box-shadow: var(--shadow-pop);
+   color: var(--ink-1);
+   outline: none;
+@@ -31,19 +31,19 @@
+   letter-spacing: var(--track-snug);
+   color: var(--pop-aside);
+ }
+-/* the filter: a real field, full bleed and ruled off from the rows */
++/* the filter: a real field, full bleed and ruled off from the rows, its words on theirs */
+ .find {
+   display: flex;
+   align-items: center;
+-  width: calc(100% + var(--sp-3) * 2);
++  width: calc(100% + var(--sp-2) * 2);
+   height: var(--h-pop-find);
+-  margin: calc(var(--sp-3) * -1) calc(var(--sp-3) * -1) var(--sp-3);
+-  padding: 0 var(--sp-7);
++  margin: calc(var(--sp-2) * -1) calc(var(--sp-2) * -1) var(--sp-2);
++  padding: 0 var(--sp-6);
+   border: 0;
+   border-bottom: var(--line-1) solid var(--pop-rule);
+-  border-radius: var(--r-5) var(--r-5) 0 0;
++  border-radius: var(--r-4) var(--r-4) 0 0;
+   background: none;
+-  font-size: var(--fs-tk);
++  font-size: var(--fs-3);
+   color: var(--ink-1);
+   font-family: inherit;
+   outline: none;
+@@ -55,11 +55,12 @@
+ .row {
+   display: flex;
+   align-items: center;
+-  gap: var(--sp-5);
++  gap: var(--sp-4);
+   height: var(--h-pop-item);
+   padding: 0 var(--sp-4);
+   border-radius: var(--r-2);
+-  font-size: var(--fs-tk);
++  font-size: var(--fs-3);
++  font-weight: 500;
+   color: var(--tk-ink);
+   letter-spacing: var(--track-snug);
+   white-space: nowrap;
+@@ -75,16 +76,17 @@
+   min-width: 0;
+   overflow: hidden;
+   text-overflow: ellipsis;
++  font-weight: 400;
+   color: var(--pop-aside);
+   font-variant-numeric: tabular-nums;
+ }
+-/* the current one's check, at the row's far end */
++/* the current one's check, at the row's far end, in your move's ink */
+ .check {
+   display: inline-flex;
+   flex: none;
+   margin-left: auto;
+   padding-left: var(--sp-4);
+-  color: var(--ink-1);
++  color: var(--you-text);
+ }
+ .check svg {
+   width: var(--sp-7);
+@@ -95,6 +97,6 @@
+   align-items: center;
+   height: var(--h-pop-item);
+   padding: 0 var(--sp-4);
+-  font-size: var(--fs-tk);
++  font-size: var(--fs-3);
+   color: var(--pop-aside);
+ }
+diff --git a/web/src/kit/Segmented.module.css b/web/src/kit/Segmented.module.css
+index 5a67142..fd0c36c 100644
+--- a/web/src/kit/Segmented.module.css
++++ b/web/src/kit/Segmented.module.css
+@@ -1,14 +1,14 @@
+-/* Filter chips as one control: the chips are segments of a single recessed track (a faint ink
+-   fill, rounded at its two ends), so the whole filter has an edge and reads as one thing; the
+-   pressed one is a control raised inside it (the button's fill, hairline and drop, inset from the
+-   track's edge) in primary ink. The rest are words in secondary ink; hover lights an inset fill.
++/* Filter chips as Linear's view tabs: a row of separate small rounded chips a little apart, bare
++   words in secondary ink but for the pressed one, filled a firm step on a lit hairline in primary
++   ink (so the bar holds one box, not a row of them); hover lights a chip's fill.
+    Each state glyph keeps its state's colour, so the filter reads as the list's groups do; counts
+    recede. The row takes the bar's free room and never wraps or clips: what doesn't fit goes into
+-   the track's last segment's popover. */
++   the last chip's popover. */
+ .track {
+   position: relative;
+   display: flex;
+   flex: 999 1 0;
++  gap: var(--sp-2);
+   align-items: center;
+   min-width: 0;
+   /* room inside the clip for a chip's focus ring (2px out, 2px wide), the bar's own box unmoved */
+@@ -21,16 +21,15 @@
+   min-width: min-content;
+ }
+ .pill {
+-  position: relative;
+-  isolation: isolate;
+   flex: none;
+   display: inline-flex;
+   align-items: center;
+   gap: var(--sp-3);
+-  height: var(--h-pill);
+-  padding: 0 var(--sp-5);
+-  border: 0;
+-  background: var(--seg);
++  height: var(--h-control-sm);
++  padding: 0 var(--sp-4);
++  border: var(--line-1) solid transparent;
++  border-radius: var(--r-3);
++  background: none;
+   font-size: var(--fs-3);
+   font-weight: 500;
+   letter-spacing: var(--track-snug);
+@@ -38,44 +37,22 @@
+   color: var(--ink-2);
+   white-space: nowrap;
+   cursor: pointer;
+-  transition: color var(--dur-fast) ease;
+-}
+-/* the track's two ends: the first segment and the last one shown (the overflow chip, when there) */
+-.pill:first-child {
+-  border-radius: var(--r-3) 0 0 var(--r-3);
+-}
+-.track > .pill:not(:has(~ .pill)) {
+-  border-radius: 0 var(--r-3) var(--r-3) 0;
+-}
+-.track > .pill:first-child:not(:has(~ .pill)) {
+-  border-radius: var(--r-3);
+-}
+-/* the inset fill: a light wash on hover, the raised control on the pressed one */
+-.pill::before {
+-  content: "";
+-  position: absolute;
+-  inset: var(--seg-inset);
+-  z-index: -1;
+-  border-radius: var(--r-2);
+-  transition: background-color var(--dur-fast) ease;
++  transition:
++    color var(--dur-fast) ease,
++    background-color var(--dur-fast) ease,
++    border-color var(--dur-fast) ease;
+ }
+ .pill:hover,
+ .pill[data-popup-open] {
+-  color: var(--ink-1);
+-}
+-.pill:hover::before,
+-.pill[data-popup-open]::before {
+   background: var(--chip-hover);
++  color: var(--ink-1);
+ }
+ .pill:is([aria-pressed="true"], [data-current="true"]) {
++  background: var(--chip-on);
++  border-color: var(--chip-on-edge);
++  box-shadow: var(--ctl-shadow);
+   color: var(--ink-1);
+ }
+-.pill:is([aria-pressed="true"], [data-current="true"])::before {
+-  background: var(--ctl-lift);
+-  box-shadow:
+-    0 0 0 var(--line-1) var(--ctl-edge-hover),
+-    var(--ctl-shadow);
+-}
+ .pill em {
+   font-style: normal;
+   font-weight: 500;
+@@ -98,13 +75,13 @@
+   width: var(--sp-6);
+   height: var(--sp-6);
+ }
+-/* the ruler: every chip at natural width, laid out but never seen */
++/* the ruler: every chip at natural width, laid out but never seen, as far apart as in the row */
+ .ruler {
+   position: absolute;
+   top: 0;
+   left: 0;
+   display: flex;
+-  column-gap: 0;
++  column-gap: var(--sp-2);
+   visibility: hidden;
+   pointer-events: none;
+ }
+diff --git a/web/src/kit/Select.module.css b/web/src/kit/Select.module.css
+index e07e92b..2fa49e3 100644
+--- a/web/src/kit/Select.module.css
++++ b/web/src/kit/Select.module.css
+@@ -45,8 +45,11 @@
+ .trigger[data-popup-open] .chev {
+   color: var(--ink-1);
+ }
+-/* the picker's sheet: wide enough for a full name beside its face */
++/* the picker's sheet: wide enough for a full name beside its face, the faces a size up from a
++   row's so the initials read */
+ .sheet {
++  --h-face: var(--h-chip);
++  --fs-face: var(--fs-1);
+   min-width: var(--w-pop-filter);
+ }
+ /* side: a sidebar row (its glyph, the word, the current choice muted, the chevron), as tall as the
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index af2487b..71f6944 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -712,7 +712,7 @@
+       }
+     },
+     "Segmented": {
+-      "why": "Filter chips, one row on the bar that never clips: segments of one recessed track (so the filter has an edge and reads as one control), bare words but for the pressed one, a control raised in the track; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
++      "why": "Filter chips, one row on the bar that never clips: Linear's view tabs, separate small rounded chips, bare words but for the pressed one, filled on a lit hairline; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
+       "single": "Compact's filter, and a stage's Maker | Check in the workflow editor (one of two, said on screen, where a switch's off would need decoding); Settings › Mappings' Try it and the settings nav use it in W8 and W9.",
+       "props": {
+         "label": {
+@@ -1132,13 +1132,13 @@
+       }
+     },
+     "Menu": {
+-      "why": "A menu of actions behind a \"…\" button, as Linear's (a ticket's: copy its link and key, open its Jira issue and pull request): Base UI's keyboard, typeahead, focus and placement, the kit's one popover.",
++      "why": "A menu of actions behind a \"…\" button, as Linear's (a ticket's: copy its link and key, open its Jira issue and pull request): Base UI's keyboard, typeahead, focus and placement, the kit's one popover, hugging its rows.",
+       "props": {
+         "label": {
+           "why": "The button's name and tooltip, and the menu's."
+         },
+         "groups": {
+-          "why": "The actions in groups, a rule between each group and the next (so no rule can lead, trail or double); each something to run or a link (a path in the app is the router's, a URL opens in a new tab, its row ending on the out arrow)."
++          "why": "The actions in groups, a rule between each group and the next (so no rule can lead, trail or double); each something to run or a link (a path in the app is the router's, a URL opens in a new tab, its row ending on the out arrow), led by its glyph (IconName) as Linear's menus are, every row keeping the glyph column once one has a glyph."
+         },
+         "size": {
+           "why": "It sits in a row of buttons and matches them.",
+@@ -1291,9 +1291,11 @@
+         "right": "The chevron turned right: a folded block's unfold (AGENTS.md's blocks, whose head is a name field, not a Head).",
+         "caret": "A sidebar section's fold, Linear's small solid caret.",
+         "out": "Opens in Jira.",
++        "link": "A menu's Copy link: a chain's two links.",
++        "copy": "A menu's Copy key: two sheets.",
+         "expand": "A text area's pop-out: edit it in the whole window.",
+         "repo": "The ticket's properties: its repo.",
+-        "branch": "The ticket's properties: its base branch.",
++        "branch": "The ticket's properties: its base branch; a menu's Open the pull request.",
+         "workflow": "The ticket's properties: its workflow, a stepped path.",
+         "clock": "The ticket's properties: when it opened.",
+         "high": "High priority: all three signal bars lit.",
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 1d5ae5d..cbd83a3 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -229,16 +229,17 @@
+   --ctl-edge: color-mix(in srgb, var(--ink-1) 9%, transparent);
+   --ctl-edge-hover: color-mix(in srgb, var(--ink-1) 15%, transparent);
+   --ctl-hover: color-mix(in srgb, var(--ink-1) 6%, transparent);
+-  --ctl-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+-  /* controls · the popover: Linear's lifted layer, only a few percent over the page (not a grey
+-     slab), told from what it covers by its edge: a crisp lit hairline (about 8% white) inside a
+-     dark ring, and a large soft drop under it; a row lights a 6% tint */
+-  --pop: color-mix(in srgb, var(--wash) 5.5%, var(--recess));
+-  --pop-edge: color-mix(in srgb, var(--hair) 9%, transparent);
+-  --pop-hover: color-mix(in srgb, var(--wash) 6%, transparent);
+-  --pop-rule: color-mix(in srgb, var(--hair) 8%, transparent);
++  --ctl-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 1px rgba(0, 0, 0, 0.3); /* lit top */
++  /* controls · the popover: Linear's lifted layer, a clear step (about 6 L*) over anything it
++     opens on, a lit hairline inside a dark ring, a lit top edge and a deep drop; a row lights an
++     8% tint */
++  --pop: color-mix(in srgb, var(--wash) 9.5%, var(--recess));
++  --pop-edge: color-mix(in srgb, var(--hair) 12%, transparent);
++  --pop-hover: color-mix(in srgb, var(--wash) 8%, transparent);
++  --pop-rule: color-mix(in srgb, var(--hair) 9%, transparent);
+   --shadow-pop:
+-    0 0 0 1px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.35), 0 16px 48px rgba(0, 0, 0, 0.55);
++    inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.5),
++    0 8px 16px rgba(0, 0, 0, 0.35), 0 24px 56px rgba(0, 0, 0, 0.6);
+   /* agents: a raised card a step over the panel (about band height) on a firm hairline */
+   --tile: color-mix(in srgb, var(--wash) 6%, var(--recess));
+   --tile-edge: color-mix(in srgb, var(--hair) 12%, transparent);
+@@ -402,8 +403,6 @@
+   --chip-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
+   --chip-on: color-mix(in srgb, var(--ink-1) 9%, transparent);
+   --chip-on-edge: color-mix(in srgb, var(--ink-1) 14%, transparent);
+-  /* controls · filter chips share one recessed track; the pressed one is a control raised in it */
+-  --seg: color-mix(in srgb, var(--ink-1) 6%, transparent);
+   /* controls · a popover row's aside (a descriptor, a count), its section label and its filter's
+      placeholder: a step under ink-3 on the popover's own surface, so the names lead */
+   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
+@@ -519,16 +518,14 @@
+   --notice-dot-top: calc(var(--sp-7) + 0.5lh);
+   /* controls */
+   --w-pop: 304px; /* the theme menu */
+-  --w-pop-filter: 248px; /* a picker's list, a filter chip's overflow popover */
++  --w-pop-filter: 220px; /* a picker's list, a filter chip's overflow popover */
+   /* themes: the theme menu's swatch, the frame in miniature, and its sidebar's width */
+   --w-swatch: 34px;
+   --h-swatch: 22px;
+   --w-swatch-side: 9px;
+-  --h-pop-item: 34px; /* a menu's or picker's row, at the body's size */
+-  --h-pop-find: 44px; /* a picker's filter field */
++  --h-pop-item: 32px; /* a menu's or picker's row, Linear's 13px on 32 */
++  --h-pop-find: 40px; /* a picker's filter field */
+   --h-pop-head: 28px; /* a menu's section label */
+-  --h-pill: 34px; /* a filter chip: a segment of its track, as tall as the bar's buttons */
+-  --seg-inset: 3px; /* the pressed chip's raised fill, inset from the track's edge */
+ 
+   /* motion: transform and opacity only, and only on live things */
+   --dur-fast: 0.16s;

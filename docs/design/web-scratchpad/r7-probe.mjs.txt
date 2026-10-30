@@ -1,0 +1,63 @@
+// One-off: check the kit review's round-7 fixes in Chrome. Starts Vite on 5191 and stops it.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const go = async (path) => { await page.goto(base + path); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(300); };
+  const lines = async (re, n = 6) => (await page.locator("main").ariaSnapshot()).split("\n").filter((l) => re.test(l)).slice(0, n).map((l) => l.trim());
+
+  // the close question: named by its heading; Esc, Esc, Esc; a nested close
+  await go("/t/NW-17?tab=workflow&edit=workflow");
+  await page.getByRole("button", { name: "Edit Implement" }).focus();
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(300);
+  await page.getByRole("textbox", { name: "Name" }).click();
+  await page.keyboard.type(" x");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+  say("N2 question's name", await page.evaluate(() => {
+    const a = document.querySelector("[role=alertdialog]");
+    const id = a?.getAttribute("aria-labelledby");
+    return id ? document.getElementById(id)?.textContent : a?.getAttribute("aria-label");
+  }));
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+  say("Esc 2: dismissed, focus", await page.evaluate(() => [!document.querySelector("[role=alertdialog]"), document.activeElement?.getAttribute("aria-label")]));
+  const prompt = page.getByRole("textbox", { name: "Prompt" });
+  await prompt.hover();
+  await page.getByRole("button", { name: /Prompt in the whole window/ }).first().click();
+  await page.waitForTimeout(300);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(300);
+  say("nested Esc: dialogs, asking", await page.evaluate(() => [document.querySelectorAll("dialog[open]").length, !!document.querySelector("[role=alertdialog]")]));
+
+  // S1: glyphs said once
+  await go("/");
+  say("S1 My queue heads", await lines(/heading/));
+  say("S1 agent card glyphs", await lines(/img "(Running|Queued)"/));
+  await go("/teams");
+  say("S1 All teams imgs", (await lines(/img "/, 40)).reduce((m, l) => ((m[l] = (m[l] ?? 0) + 1), m), {}));
+  await go("/t/NW-17?tab=runs");
+  say("S1 runs imgs", await lines(/img "/, 10));
+  await go("/library/workflows");
+  say("N3 strip", await page.evaluate(() => [...document.querySelectorAll("[aria-label*=' then ']")].slice(0, 1).map((e) => e.getAttribute("aria-label").slice(0, 140))));
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

@@ -1,0 +1,790 @@
+diff --git a/web/src/features/library/AgentView.tsx b/web/src/features/library/AgentView.tsx
+index 3974dc9..4b78dc0 100644
+--- a/web/src/features/library/AgentView.tsx
++++ b/web/src/features/library/AgentView.tsx
+@@ -39,7 +39,7 @@ export function AgentView() {
+         },
+       }}
+       contentTitle="Instructions"
+-      name={{ label: "Name", value: a.name, mono: false }}
++      name={{ label: "Name", value: a.name }}
+       description={a.description}
+       usedBy={a.used_by}
+       siblings={{
+diff --git a/web/src/features/library/FileView.tsx b/web/src/features/library/FileView.tsx
+index ead02ac..bfb983c 100644
+--- a/web/src/features/library/FileView.tsx
++++ b/web/src/features/library/FileView.tsx
+@@ -28,7 +28,7 @@ export function FileView() {
+       title={[{ label: "Files", href: "/library/files" }, f.path]}
+       item={f}
+       contentTitle={f.body.kind === "blocks" ? "Blocks, in the order agents read them" : "Content"}
+-      name={{ label: "Path", value: f.path, mono: true }}
++      name={{ label: "Path", value: f.path }}
+       facts={[{ label: "Size", value: <Text tone="2">{sizeText(f.size)}</Text> }]}
+       usedBy={f.used_by}
+       siblings={{
+diff --git a/web/src/features/library/ItemEditor.tsx b/web/src/features/library/ItemEditor.tsx
+index f8fcc24..a745ae5 100644
+--- a/web/src/features/library/ItemEditor.tsx
++++ b/web/src/features/library/ItemEditor.tsx
+@@ -29,8 +29,9 @@ export interface ItemEditorProps {
+   item: EditorItem;
+   /** Over the content, saying what it is (Instructions, the path). */
+   contentTitle: string;
+-  /** A library item's name to edit (a file's path, in monospace), over its description. */
+-  name?: { label: string; value: string; mono: boolean };
++  /** A library item's name to edit (a file's path too: a title, in the headings' sans), over its
++   *  description. */
++  name?: { label: string; value: string };
+   /** A library item's description to edit, under its name. */
+   description?: string;
+   /** Read-only properties (a skill's path, a file's size, a ticket copy's origin). */
+@@ -61,25 +62,36 @@ const MINUTE = 60_000;
+ const ago = (a: string) => (a === "now" ? "just now" : `${a} ago`);
+ const FIRST = "Keep yours or take theirs first";
+ 
++/** Discard quiet, Save the bar's one filled button (faded while there is nothing to save). */
+ function Actions({ e }: { e: Editor }) {
+   if (e.theirs)
+     return (
+       <>
+-        <Button blocked={FIRST}>Discard</Button>
+-        <Button blocked={FIRST}>Save</Button>
++        <Button variant="quiet" blocked={FIRST}>
++          Discard
++        </Button>
++        <Button variant="you" blocked={FIRST}>
++          Save
++        </Button>
+       </>
+     );
+   return e.dirty ? (
+     <>
+-      <Button onClick={e.discard}>Discard</Button>
++      <Button variant="quiet" onClick={e.discard}>
++        Discard
++      </Button>
+       <Button variant="you" onClick={e.save}>
+         Save
+       </Button>
+     </>
+   ) : (
+     <>
+-      <Button blocked="No changes to discard">Discard</Button>
+-      <Button blocked="No changes to save">Save</Button>
++      <Button variant="quiet" blocked="No changes to discard">
++        Discard
++      </Button>
++      <Button variant="you" blocked="No changes to save">
++        Save
++      </Button>
+     </>
+   );
+ }
+@@ -128,7 +140,6 @@ function Identity({ e, props }: { e: Editor; props: ItemEditorProps }) {
+           label={name.label}
+           value={e.draft.name}
+           placeholder={name.label}
+-          mono={name.mono}
+           onChange={(v) => {
+             e.edit({ name: v });
+           }}
+diff --git a/web/src/features/library/SkillView.tsx b/web/src/features/library/SkillView.tsx
+index 189daff..8019343 100644
+--- a/web/src/features/library/SkillView.tsx
++++ b/web/src/features/library/SkillView.tsx
+@@ -27,7 +27,7 @@ export function SkillView() {
+       title={[{ label: "Skills", href: "/library/skills" }, s.name]}
+       item={{ ...s, body: { kind: "text", text: s.content } }}
+       contentTitle="SKILL.md"
+-      name={{ label: "Name", value: s.name, mono: false }}
++      name={{ label: "Name", value: s.name }}
+       description={s.description}
+       facts={[
+         {
+diff --git a/web/src/features/library/content.tsx b/web/src/features/library/content.tsx
+index 4f112d2..12ca472 100644
+--- a/web/src/features/library/content.tsx
++++ b/web/src/features/library/content.tsx
+@@ -1,7 +1,7 @@
+-// The item editor's main column: the content as the page's own text, monospace markdown filling the
+-// column (an agent's instructions, a SKILL.md, a file), or AGENTS.md as its named blocks: each a
+-// section of the document under its name as a heading, its length, a fold to its first line,
+-// Move up and Move down after it (and its handle, to drag it or step it with ↑ ↓), edited in place.
++// The item editor's main column: the content as a sheet, its head strip over monospace markdown
++// filling the column (an agent's instructions, a SKILL.md, a file), or AGENTS.md as its named
++// blocks: each a sheet of its own, its head the fold, its name to edit as a heading, its length and
++// the pair of Move up and Move down (and its handle, to drag it or step it with ↑ ↓).
+ import { useState } from "react";
+ 
+ import type { Block, ItemBody } from "../../api/types";
+@@ -20,12 +20,55 @@ interface BlockCardProps {
+   onMove: (to: number) => void;
+ }
+ 
+-/** A block's head: its name to edit as a heading, its length, the fold, and the click way to
+- *  reorder it. */
++const lines = (text: string) => plural(text.split("\n").length, "line");
++
++/** Move up and Move down, a pair apart from the rest of the head; an end's one faded. */
++function Moves({ name, at, of, onMove }: { name: string; at: number; of: number } & MoveTo) {
++  const step = (to: number, blocked: string) =>
++    to < 0 || to >= of
++      ? { blocked }
++      : {
++          onClick: () => {
++            onMove(to);
++          },
++        };
++  return (
++    <Stack dir="row" align="center">
++      <Button
++        variant="quiet"
++        size="xs"
++        icon="up"
++        title={`Move ${name} up`}
++        {...step(at - 1, "Already first")}
++      />
++      <Button
++        variant="quiet"
++        size="xs"
++        icon="chevron"
++        title={`Move ${name} down`}
++        {...step(at + 1, "Already last")}
++      />
++    </Stack>
++  );
++}
++
++interface MoveTo {
++  onMove: (to: number) => void;
++}
++
++/** A block's head strip: the fold, its name to edit as a heading (folded, its first line after
++ *  it), its length, and the click way to reorder it. */
+ function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardProps) {
+   const name = block.name || "this block";
+   return (
+-    <Stack dir="row" gap={3} align="center">
++    <Stack dir="row" gap={4} align="center" grow>
++      <Button
++        variant="quiet"
++        size="xs"
++        icon={open ? "caret" : "right"}
++        title={open ? `Fold ${name}` : `Unfold ${name}`}
++        onClick={onFold}
++      />
+       <Stack grow>
+         <Field
+           look="heading"
+@@ -37,42 +80,17 @@ function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardP
+           }}
+         />
+       </Stack>
++      {open ? null : (
++        <Stack grow>
++          <Text variant="code" tone="3" truncate>
++            {firstLine(block)}
++          </Text>
++        </Stack>
++      )}
+       <Text variant="meta" tone="3" tabular>
+-        {plural(block.text.split("\n").length, "line")}
++        {lines(block.text)}
+       </Text>
+-      <Button
+-        variant="quiet"
+-        size="xs"
+-        icon={open ? "caret" : "right"}
+-        title={open ? `Fold ${name}` : `Unfold ${name}`}
+-        onClick={onFold}
+-      />
+-      <Button
+-        variant="quiet"
+-        size="xs"
+-        icon="up"
+-        title={`Move ${name} up`}
+-        {...(at === 0
+-          ? { blocked: "Already first" }
+-          : {
+-              onClick: () => {
+-                onMove(at - 1);
+-              },
+-            })}
+-      />
+-      <Button
+-        variant="quiet"
+-        size="xs"
+-        icon="chevron"
+-        title={`Move ${name} down`}
+-        {...(at === of - 1
+-          ? { blocked: "Already last" }
+-          : {
+-              onClick: () => {
+-                onMove(at + 1);
+-              },
+-            })}
+-      />
++      <Moves name={name} at={at} of={of} onMove={onMove} />
+     </Stack>
+   );
+ }
+@@ -80,24 +98,16 @@ function BlockHead({ block, at, of, open, onFold, onChange, onMove }: BlockCardP
+ function BlockCard(props: BlockCardProps) {
+   const { block, open, onChange } = props;
+   return (
+-    <Stack gap={3}>
+-      <BlockHead {...props} />
+-      {open ? (
+-        <TextArea
+-          bare
+-          label={`${block.name} block`}
+-          value={block.text}
+-          lines={2}
+-          onChange={(text) => {
+-            onChange({ ...block, text });
+-          }}
+-        />
+-      ) : (
+-        <Text variant="code" tone="3" truncate>
+-          {firstLine(block)}
+-        </Text>
+-      )}
+-    </Stack>
++    <TextArea
++      head={<BlockHead {...props} />}
++      folded={!open}
++      label={`${block.name} block`}
++      value={block.text}
++      lines={2}
++      onChange={(text) => {
++        onChange({ ...block, text });
++      }}
++    />
+   );
+ }
+ 
+@@ -124,7 +134,7 @@ function Blocks({
+   return (
+     <Sortable
+       label="AGENTS.md blocks"
+-      gap={6}
++      gap={5}
+       onMove={move}
+       items={blocks.map((b, i) => {
+         const key = keys[i] ?? b.name;
+@@ -158,6 +168,18 @@ function Blocks({
+   );
+ }
+ 
++/** A sheet's head over the whole text: what it is (Instructions, the path) and its length. */
++function Head({ title, text }: { title: string; text: string }) {
++  return (
++    <Stack dir="row" gap={4} align="center" grow>
++      <Text variant="label">{title}</Text>
++      <Text variant="meta" tone="3" tabular>
++        {lines(text)}
++      </Text>
++    </Stack>
++  );
++}
++
+ /** The content editor for a body: its own words over it say what it is (Instructions, the path). */
+ export function Content({
+   body,
+@@ -168,16 +190,13 @@ export function Content({
+   title: string;
+   onChange: (body: ItemBody) => void;
+ }) {
+-  const head = (
+-    <Text variant="meta" weight={500}>
+-      {title}
+-    </Text>
+-  );
+   switch (body.kind) {
+     case "blocks":
+       return (
+         <Stack gap={5}>
+-          {head}
++          <Text variant="meta" tone="3">
++            {title}
++          </Text>
+           <Blocks
+             blocks={body.blocks}
+             onChange={(blocks) => {
+@@ -188,33 +207,27 @@ export function Content({
+       );
+     case "text":
+       return (
+-        <Stack gap={4} grow>
+-          {head}
+-          <TextArea
+-            bare
+-            label={title}
+-            value={body.text}
+-            fill
+-            onChange={(text) => {
+-              onChange({ kind: "text", text });
+-            }}
+-          />
+-        </Stack>
++        <TextArea
++          head={<Head title={title} text={body.text} />}
++          label={title}
++          value={body.text}
++          fill
++          onChange={(text) => {
++            onChange({ kind: "text", text });
++          }}
++        />
+       );
+     case "agent":
+       return (
+-        <Stack gap={4} grow>
+-          {head}
+-          <TextArea
+-            bare
+-            label={title}
+-            value={body.agent.instructions}
+-            fill
+-            onChange={(instructions) => {
+-              onChange({ kind: "agent", agent: { ...body.agent, instructions } });
+-            }}
+-          />
+-        </Stack>
++        <TextArea
++          head={<Head title={title} text={body.agent.instructions} />}
++          label={title}
++          value={body.agent.instructions}
++          fill
++          onChange={(instructions) => {
++            onChange({ kind: "agent", agent: { ...body.agent, instructions } });
++          }}
++        />
+       );
+   }
+ }
+diff --git a/web/src/features/library/side.tsx b/web/src/features/library/side.tsx
+index cb263aa..fdf2e86 100644
+--- a/web/src/features/library/side.tsx
++++ b/web/src/features/library/side.tsx
+@@ -13,7 +13,7 @@ import { authorName } from "./model";
+ const EFFORTS: readonly Effort[] = ["low", "medium", "high", "xhigh", "max"];
+ 
+ /** How many tickets "Used by" names before the rest fold into +N. */
+-const FEW = 3;
++const FEW = 2;
+ 
+ export interface Fact {
+   label: string;
+@@ -90,31 +90,42 @@ export function Properties({ agent, facts }: PropertiesProps) {
+   );
+ }
+ 
+-/** The tickets: how many, the first few as links, and the rest behind +N, opened in place. */
++/** The tickets: how many on a line of its own, the first few as links under it, and the rest
++ *  behind +N, opened in place. */
+ function Tickets({ keys }: { keys: readonly string[] }) {
+   const [all, setAll] = useState(false);
+   if (keys.length === 0) return <Text tone="3">None</Text>;
+   const shown = all ? keys : keys.slice(0, FEW);
+   return (
+-    <Stack dir="row" gap={3} align="center" wrap>
+-      <Text tone="2">{`${plural(keys.length, "ticket")}:`}</Text>
++    <Stack gap={2}>
++      <Text>{plural(keys.length, "ticket")}</Text>
++      <Stack dir="row" gap={4} align="center" wrap>
++        <Keys shown={shown} />
++        {keys.length > FEW ? (
++          <Button
++            variant="link"
++            title={all ? "Show the first few" : `Show all ${String(keys.length)}`}
++            onClick={() => {
++              setAll(!all);
++            }}
++          >
++            {all ? "Fewer" : `+${String(keys.length - FEW)}`}
++          </Button>
++        ) : null}
++      </Stack>
++    </Stack>
++  );
++}
++
++function Keys({ shown }: { shown: readonly string[] }) {
++  return (
++    <>
+       {shown.map((key) => (
+         <Button key={key} variant="link" href={`/t/${key}`}>
+           {key}
+         </Button>
+       ))}
+-      {keys.length > FEW ? (
+-        <Button
+-          variant="link"
+-          title={all ? "Show the first few" : `Show all ${String(keys.length)}`}
+-          onClick={() => {
+-            setAll(!all);
+-          }}
+-        >
+-          {all ? "Fewer" : `+${String(keys.length - FEW)}`}
+-        </Button>
+-      ) : null}
+-    </Stack>
++    </>
+   );
+ }
+ 
+diff --git a/web/src/features/workflow/Editor.tsx b/web/src/features/workflow/Editor.tsx
+index 2a64567..c4e19ae 100644
+--- a/web/src/features/workflow/Editor.tsx
++++ b/web/src/features/workflow/Editor.tsx
+@@ -244,29 +244,32 @@ function loopsOf(draft: Draft, problems: Problems): LaneLoop[] {
+   }));
+ }
+ 
+-/** Undo and Redo (one look in every state, a blocked one in the muted ink), Discard and Save,
+- *  which says how many problems there are. */
++/** Undo and Redo (quiet glyphs, a blocked one faded), Discard quiet and Save the bar's one filled
++ *  button (faded while there is nothing to save), which says how many problems there are. */
+ function Actions({ draft, problems }: { draft: Draft; problems: number }) {
+   const save = problems > 0 ? `Save · ${plural(problems, "problem")}` : "Save";
+   return (
+     <>
+       <Button
++        variant="quiet"
+         icon="undo"
+         title="Undo"
+         {...(draft.canUndo ? { onClick: draft.undo } : { blocked: "Nothing to undo" })}
+       />
+       <Button
++        variant="quiet"
+         icon="redo"
+         title="Redo"
+         {...(draft.canRedo ? { onClick: draft.redo } : { blocked: "Nothing to redo" })}
+       />
+       <Button
++        variant="quiet"
+         {...(draft.dirty ? { onClick: draft.discard } : { blocked: "No changes to discard" })}
+       >
+         Discard
+       </Button>
+       <Button
+-        variant={draft.dirty ? "you" : "default"}
++        variant="you"
+         {...(draft.dirty
+           ? {
+               onClick: draft.save,
+diff --git a/web/src/features/workflow/StageCard.tsx b/web/src/features/workflow/StageCard.tsx
+index 676a7f3..98196aa 100644
+--- a/web/src/features/workflow/StageCard.tsx
++++ b/web/src/features/workflow/StageCard.tsx
+@@ -149,7 +149,11 @@ function HeadLine({ stage, run }: { stage: Stage; run: LastRun | null }) {
+         </Text>
+       ) : null}
+       <Stack grow />
+-      {stage.enabled ? null : <Text variant="meta">Skipped</Text>}
++      {stage.enabled ? null : (
++        <Text variant="meta" tone="2">
++          Skipped
++        </Text>
++      )}
+       <RoleMark stage={stage} />
+     </Stack>
+   );
+diff --git a/web/src/kit/Button.module.css b/web/src/kit/Button.module.css
+index 208faf6..816574a 100644
+--- a/web/src/kit/Button.module.css
++++ b/web/src/kit/Button.module.css
+@@ -124,7 +124,8 @@
+ .link:hover {
+   color: var(--ink-1);
+ }
+-/* blocked (R11): whatever its variant, an empty dashed outline in muted ink that hover leaves alone */
++/* blocked (R11): an empty dashed outline in muted ink that hover leaves alone; a quiet one is its
++   faded glyph alone (no box), and the gate primary keeps its fill, faded, so it still leads its bar */
+ .btn[aria-disabled="true"],
+ .btn[aria-disabled="true"]:hover {
+   background: transparent;
+@@ -133,3 +134,13 @@
+   color: var(--ink-3);
+   cursor: not-allowed;
+ }
++.btn:is(.quiet, .you)[aria-disabled="true"] {
++  border-style: solid;
++  border-color: transparent;
++  opacity: var(--blocked-fade);
++}
++.btn.you[aria-disabled="true"] {
++  border-color: var(--you);
++  background: var(--you);
++  color: var(--you-ink);
++}
+diff --git a/web/src/kit/Card.module.css b/web/src/kit/Card.module.css
+index 93c0ab4..5f97b34 100644
+--- a/web/src/kit/Card.module.css
++++ b/web/src/kit/Card.module.css
+@@ -1,8 +1,7 @@
+ /* Card: one object on its own surface, white on a firm hairline with a soft drop (in the dark a
+-   slight step above the sheet on a lit hairline). A stage is the exception: words on the page by
+-   the lane's axis, its summary washed on hover like a row; selected, it rises onto the card's
+-   surface, ringed in your move's accent, its settings ruled off under the summary. An agent's and
+-   a ticket's looks follow below. */
++   slight step above the sheet on a lit hairline). A stage is flat on the lane, its summary washed
++   on hover like a row; selected, it is ringed in your move's accent, its settings ruled off under
++   the summary. An agent's and a ticket's looks follow below. */
+ .card {
+   position: relative;
+   min-width: 0;
+@@ -17,11 +16,16 @@
+ .card[data-edit]:hover {
+   border-color: var(--teams-card-hover-edge);
+ }
+-.card[data-look="stage"]:not([data-open]) {
+-  border-color: transparent;
+-  background: none;
++/* a stage: a flat card on the lane, over its axis, its face on the card's own ground; a disabled
++   one keeps the card on a dashed edge */
++.card[data-look="stage"] {
++  --ground: var(--teams-card);
+   box-shadow: none;
+ }
++.card[data-look="stage"][data-off]:not([data-open]) {
++  border-style: dashed;
++  border-color: var(--ctl-edge-hover);
++}
+ .card[data-open],
+ .card[data-open]:hover {
+   border-color: var(--you);
+diff --git a/web/src/kit/Form.module.css b/web/src/kit/Form.module.css
+index 8488616..f7d6050 100644
+--- a/web/src/kit/Form.module.css
++++ b/web/src/kit/Form.module.css
+@@ -102,15 +102,14 @@
+   field-sizing: fixed;
+   resize: none;
+ }
+-/* a document's own words (Field's looks, a bare TextArea): no box, the text flush with the column
+-   (its padding pulled back into the gutter), a faint wash on hover, the ring alone on focus */
++/* a document's own words (Field's looks): no box, the text flush with the column (its padding
++   pulled back into the gutter), a faint wash on hover, the ring alone on focus */
+ .ghost {
+   width: calc(100% + var(--sp-3) * 2);
+   margin-inline: calc(var(--sp-3) * -1);
+   padding: var(--sp-1) var(--sp-3);
+   border-color: transparent;
+   background: none;
+-  resize: none;
+ }
+ .ghost:is(:hover, :focus-within) {
+   border-color: transparent;
+@@ -133,6 +132,44 @@
+   font-weight: 600;
+ }
+ 
++/* a sheet (an item editor's content): a framed panel, its head strip ruled off over the text; the
++   edge firms on hover, and while the text has the focus the whole is ringed in your move's accent */
++.sheet {
++  border: var(--line-1) solid var(--tk-card-edge);
++  border-radius: var(--r-4);
++  background: var(--tk-card);
++  transition:
++    border-color var(--dur-fast) ease,
++    box-shadow var(--dur-fast) ease;
++}
++.sheet:hover {
++  border-color: var(--ctl-edge-hover);
++}
++.sheet:has(> .leaf:focus) {
++  border-color: var(--you);
++  box-shadow: 0 0 0 var(--line-3) var(--card-open-ring);
++}
++.sheetHead {
++  display: flex;
++  align-items: center;
++  gap: var(--sp-3);
++  min-height: calc(var(--h-field) + var(--sp-5));
++  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-6);
++  border-bottom: var(--line-1) solid var(--tk-card-edge);
++}
++.sheetHead:last-child {
++  border-bottom: 0;
++}
++.leaf,
++.leaf:is(:hover, :focus-within) {
++  padding: var(--sp-6) var(--sp-8) var(--sp-8);
++  border: 0;
++  border-radius: 0 0 var(--r-4) var(--r-4);
++  background: none;
++  outline: none;
++  resize: none;
++}
++
+ /* the pop-out: a quiet button in the area's top right corner, shown on hover and focus */
+ .areaWrap {
+   position: relative;
+diff --git a/web/src/kit/Lane.module.css b/web/src/kit/Lane.module.css
+index 7de0e41..1880b53 100644
+--- a/web/src/kit/Lane.module.css
++++ b/web/src/kit/Lane.module.css
+@@ -48,8 +48,8 @@
+   bottom: calc(100% - var(--lane-face));
+ }
+ 
+-/* a loop's band, one piece per stage: a faint wash with no edge (the stages are words on the page,
+-   so a box round them would be the one box), rounded at its ends; the first piece reaches up past
++/* a loop's band, one piece per stage: a faint wash with no edge under the stages' own cards (their
++   edges part them), rounded at its ends; the first piece reaches up past
+    the joint's diamond, the last stops under the loop's foot */
+ .band {
+   position: absolute;
+diff --git a/web/src/kit/TextArea.tsx b/web/src/kit/TextArea.tsx
+index b422f08..cceab14 100644
+--- a/web/src/kit/TextArea.tsx
++++ b/web/src/kit/TextArea.tsx
+@@ -1,5 +1,6 @@
+ // Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of
+-// AGENTS.md): at least `lines` tall and growing with its text, or filling its column. Every area
++// AGENTS.md): at least `lines` tall and growing with its text, or filling its column; an item
++// editor's is a framed sheet under its own head strip. Every area
+ // can pop out to the whole window, for long text: the same value, edited at a readable measure,
+ // and Done or Esc brings it back (inside an overlay too: it opens over it).
+ import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+@@ -21,12 +22,16 @@ export interface TextAreaProps {
+   lines?: number;
+   /** Fill the height of the column it is in and scroll inside (an item editor's body). */
+   fill?: boolean;
+-  /** Unboxed, the page's own text (an item editor's content); popped out, it is boxed. */
+-  bare?: boolean;
++  /** A sheet: this strip over the text (an item editor's content: its title, or a block's name,
++   *  length and moves), the pop-out at its end, the whole ringed while the text has the focus. */
++  head?: ReactNode;
++  /** Folded to its head strip alone (a block of AGENTS.md; its head says the first line). */
++  folded?: boolean;
+ }
+ 
+ export function TextArea(props: TextAreaProps) {
+-  const { label, value, onChange, placeholder, lines = 3, fill, bare } = props;
++  const { label, value, onChange, placeholder, lines = 3, fill, head, folded } = props;
++  const sheet = head !== undefined;
+   const [out, setOut] = useState(false);
+   const popped = useRef<HTMLTextAreaElement>(null);
+   const description = useDescription();
+@@ -46,7 +51,7 @@ export function TextArea(props: TextAreaProps) {
+   const area = (full: boolean) => (
+     <textarea
+       ref={full ? popped : undefined}
+-      className={cx(s.box, s.area, (full || fill === true) && s.fill, bare && !full && s.ghost)}
++      className={cx(s.box, s.area, (full || fill === true) && s.fill, sheet && !full && s.leaf)}
+       style={vars({ "--lines": String(lines) })}
+       aria-label={label}
+       {...(full ? own : inline)}
+@@ -61,20 +66,29 @@ export function TextArea(props: TextAreaProps) {
+   const close = () => {
+     setOut(false);
+   };
++  const pop = (
++    <span className={sheet ? undefined : s.pop}>
++      <Button
++        variant="quiet"
++        size="xs"
++        icon="expand"
++        title={`Edit ${label} in the whole window`}
++        onClick={() => {
++          setOut(true);
++        }}
++      />
++    </span>
++  );
+   return (
+-    <div className={cx(s.areaWrap, fill && s.areaFill)}>
+-      {area(false)}
+-      <span className={s.pop}>
+-        <Button
+-          variant="quiet"
+-          size="xs"
+-          icon="expand"
+-          title={`Edit ${label} in the whole window`}
+-          onClick={() => {
+-            setOut(true);
+-          }}
+-        />
+-      </span>
++    <div className={cx(s.areaWrap, fill && s.areaFill, sheet && s.sheet)}>
++      {sheet ? (
++        <div className={s.sheetHead}>
++          {head}
++          {pop}
++        </div>
++      ) : null}
++      {folded ? null : area(false)}
++      {sheet ? null : pop}
+       <Dialog label={label} open={out} onClose={close} look="full">
+         <Page
+           title={label}
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 1edf31c..df391dc 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -126,9 +126,9 @@
+           "values": {
+             "default": "A filled button on a hairline edge.",
+             "ink": "A primary that isn't a gate (Retry): a firmer neutral fill.",
+-            "you": "The gate primary (Approve).",
++            "you": "The gate primary (Approve), and an editor's Save: the bar's one filled button, faded while blocked so it still leads.",
+             "accent": "Only Dispatch run, only on a ticket.",
+-            "quiet": "A borderless button (+N, icon buttons in a bar).",
++            "quiet": "A borderless button (+N, icon buttons in a bar, an editor's Discard); blocked, its faded words or glyph alone.",
+             "link": "A bare text action in secondary ink, primary on hover (Show all, Open ticket)."
+           }
+         },
+@@ -184,7 +184,7 @@
+         "look": {
+           "why": "Stages, agents at work and board tickets are cards in three places.",
+           "values": {
+-            "stage": "A workflow stage on the lane: words on the page, its face on the axis, rising onto the card's surface as it opens in place to its settings (the default).",
++            "stage": "A workflow stage on the lane: a flat card over the axis (its edge parts it from the next, inside a loop's band too; a disabled one on a dashed edge), its face on the axis, ringed as it opens in place to its settings (the default).",
+             "agent": "An agent at work (My queue): a flat slab of the band's grey, its lines down to the card's foot, a still Meter beside its step count.",
+             "ticket": "A ticket on a board (All teams): its key, title and state chip on a hairline card."
+           }
+@@ -383,9 +383,9 @@
+         "look": {
+           "why": "An item editor is a document, as Linear's project page: its own words are edited in place, unboxed on the page, with a faint wash on hover and the ring on focus.",
+           "values": {
+-            "title": "An item's name as the document's title (a file's path in monospace).",
++            "title": "An item's name as the document's title (a file's path too, in the headings' sans).",
+             "lead": "An item's description as the lead under its title.",
+-            "heading": "An AGENTS.md block's name as its section's heading."
++            "heading": "An AGENTS.md block's name as the heading in its sheet's head strip."
+           }
+         }
+       }
+@@ -1077,8 +1077,11 @@
+         "fill": {
+           "why": "An item editor's body fills its column and scrolls inside."
+         },
+-        "bare": {
+-          "why": "An item editor's content is the document's own text, unboxed under its title or heading (popped out, it is boxed at a readable measure)."
++        "head": {
++          "why": "An item editor's content is a framed sheet with a head strip over the text (its title and length; a block's fold, name, length and moves), so the editable area shows where it starts and ends; popped out, it is the plain box at a readable measure."
++        },
++        "folded": {
++          "why": "A block of AGENTS.md folds to its head strip alone, which then says its first line."
+         }
+       }
+     },
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index c3c885b..05672dd 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -648,7 +648,8 @@
+   --lane-face: calc(
+     var(--sp-5) + var(--h-chip) / 2
+   ); /* a face's middle, down from its card's top */
+-  --lane-off: 0.55; /* a disabled stage's card */
++  --lane-off: 0.72; /* a disabled stage's card, its dashed edge saying the rest */
++  --blocked-fade: 0.45; /* a blocked quiet button's glyph, a blocked primary's fill */
+   --dur-flash: 1.6s; /* a chip just added: its ring fades out */
+ }
+ 

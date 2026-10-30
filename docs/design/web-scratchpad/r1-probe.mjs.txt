@@ -1,0 +1,73 @@
+// One-off: check the consolidation's round-1 fixes in Chrome. Starts Vite on 5191 and stops it.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const go = async (path) => { await page.goto(base + path); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(250); };
+
+  // 1. a short prompt keeps its width
+  await go("/library/workflows/standard");
+  await page.getByRole("button", { name: /^Edit Implement/ }).focus(); await page.keyboard.press("Enter");
+  const prompt = page.getByRole("textbox", { name: "Prompt" });
+  await prompt.fill("abc");
+  say("1 short prompt width", Math.round((await prompt.boundingBox()).width));
+  // 7. an unknown field marks the prompt invalid and describes it
+  await prompt.fill("{{ verdict.note }}");
+  await page.waitForTimeout(150);
+  say("7 prompt invalid/describedby", await prompt.evaluate((e) => [e.getAttribute("aria-invalid"), document.getElementById((e.getAttribute("aria-describedby") ?? "").split(" ").pop() ?? "")?.textContent]));
+
+  // 2. the waiting chip names who
+  await go("/compact");
+  say("2 waiting chips", await page.evaluate(() => [...document.querySelectorAll("[data-tone]")].map((e) => e.textContent).filter((t) => t?.includes("·")).slice(0, 3)));
+
+  // 3. Esc in the library search clears it and leaves the overlay open; 6. / focuses it
+  await go("/t/NW-17?edit=workflow");
+  await page.keyboard.press("/");
+  say("6 / focuses", await page.evaluate(() => document.activeElement?.getAttribute("aria-label")));
+  await page.keyboard.type("builder");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(150);
+  say("3 after Esc: open dialogs, url", [await page.evaluate(() => document.querySelectorAll("dialog[open]").length), page.url().replace(base, "")]);
+
+  // 4. the sheet's Meter stays in its section
+  await go("/kit");
+  say("4 kit meter top/height", await page.evaluate(() => { const m = document.querySelector("[aria-label='2/5 steps']"); const r = m?.getBoundingClientRect(); return r ? [Math.round(r.top), Math.round(r.height), getComputedStyle(m).position] : null; }));
+
+  // 5. the agent card's lines take the pointer; a click on the title opens the peek
+  await go("/");
+  const hit = await page.evaluate(() => {
+    const t = [...document.querySelectorAll("[data-look='agent'] *")].find((e) => e.textContent === "Preserve comments after a refresh" && e.children.length === 0);
+    const r = t.getBoundingClientRect();
+    const at = document.elementFromPoint(r.left + 5, r.top + r.height / 2);
+    const pill = document.querySelector("[data-look='agent'] [data-who]");
+    return [at?.tagName, at?.textContent?.slice(0, 30), pill?.getAttribute("title")];
+  });
+  say("5 under the title / agent pill title", hit);
+  await page.locator("[data-look='agent']").getByText("Preserve comments after a refresh").click();
+  await page.waitForTimeout(250);
+  say("5 click title -> url", page.url().replace(base, ""));
+  await page.screenshot({ path: join(out, "queue-peek.png") });
+  await go("/");
+  await page.screenshot({ path: join(out, "queue.png") });
+  await go("/teams");
+  await page.screenshot({ path: join(out, "teams.png") });
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

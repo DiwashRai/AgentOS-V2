@@ -1,0 +1,55 @@
+import { execFileSync } from "node:child_process";
+import { rmSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+
+const T = "C:/code/AgentOS-V2-web/web/tools/";
+const imp = (f) => import(pathToFileURL(T + f).href);
+const { tree } = await imp("tree.mjs");
+const { layerProblems } = await imp("layers.mjs");
+const { open, readModules } = await imp("reach.mjs");
+const { readWeb } = await imp("uses.mjs");
+const { patternProblems, knobProblems } = await imp("patterns.mjs");
+
+const FILES = {
+  "main.tsx": `import { App } from "./app/App";\nexport { App };\n`,
+  "app/App.tsx": [
+    `import { E } from "../features/e";`,
+    `export const App = async () => [E(), (await import("../features/f/F")).F()];`,
+    ``,
+  ].join("\n"),
+  "kit/index.ts": [
+    `import type { ReactNode } from "react";`,
+    `export function Text(p: { tone?: "1" | "2"; children?: ReactNode }) { return p.tone ?? null; }`,
+    ``,
+  ].join("\n"),
+  "patterns/wrap.tsx": [
+    `import { forwardRef, memo, type ReactNode } from "react";`,
+    `import { Text } from "../kit";`,
+    `export const M = memo(function M({ tone }: { tone: "1" | "2" }) { return <Text tone={tone}>Ada</Text>; });`,
+    `export const R = forwardRef<HTMLElement, { tone: "1" | "2" }>(({ tone }, _ref) => <Text tone={tone}>Ada</Text>);`,
+    `export function S(props: { tone: "1" | "2" }) { return <Text {...props}>Ada</Text>; }`,
+    `export const Label: (p: { name: string }) => ReactNode = ({ name }) => <Text>{name}</Text>;`,
+    `export const UseLabel = () => <Label name="Ada" />;`,
+    ``,
+  ].join("\n"),
+  "features/e/index.ts": `export { E } from "./E";\n`,
+  "features/e/E.tsx": `import { M, R, S, UseLabel } from "../../patterns/wrap";\nexport const E = () => [<M tone="1" />, <R tone="1" />, <S tone="1" />, <UseLabel />];\n`,
+  "features/f/F.tsx": `import { M, R, S, UseLabel } from "../../patterns/wrap";\nexport const F = () => [<M tone="2" />, <R tone="2" />, <S tone="2" />, <UseLabel />];\n`,
+};
+
+const root = tree(FILES);
+try {
+  console.log("LAYERS:\n" + layerProblems(readModules(open(root))).join("\n"));
+  const web = readWeb(root);
+  console.log("PATTERNS:\n" + patternProblems(web.patterns, 8).join("\n"));
+  console.log("KNOBS:\n" + knobProblems(web.knobs).join("\n"));
+  console.log("CREDIT:", web.patterns.map((p) => `${p.name}=${p.screens.join(",")}`).join(" "));
+  console.log("TEXT:", [...(web.used.get("Text") ?? [])].join(","));
+  const out = execFileSync("node", ["C:/code/AgentOS-V2-web/tools/gates/ts_measures.mjs", root, "src/patterns/wrap.tsx"], {
+    encoding: "utf8",
+    env: { ...process.env, NODE_PATH: "C:/code/AgentOS-V2-web/web/node_modules" },
+  });
+  console.log("RAW TAGS:", JSON.stringify(JSON.parse(out)["src/patterns/wrap.tsx"].raw_tags));
+} finally {
+  rmSync(root, { recursive: true, force: true });
+}

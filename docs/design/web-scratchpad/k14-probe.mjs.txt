@@ -1,0 +1,35 @@
+// One-off: Section's head-to-body spacing on Talk, Plan and the Workflow tab; region names and
+// descriptions. Vite on 5191, stopped at the end.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const gaps = () => page.evaluate(() => [...document.querySelectorAll("section")].filter((s) => s.querySelector("h2")).map((s) => {
+    const head = s.firstElementChild.getBoundingClientRect();
+    const body = s.children[1]?.getBoundingClientRect();
+    return [s.querySelector("h2").textContent.slice(0, 24), body ? Math.round(body.top - head.bottom) : null, s.getAttribute("aria-describedby") ? document.getElementById(s.getAttribute("aria-describedby")).textContent.slice(0, 30) : null];
+  }));
+  for (const [path, shot] of [["/t/NW-17", "k14-ticket"], ["/t/NW-17?tab=workflow", "k14-wf"], ["/?peek=NW-17", "k14-peek"]]) {
+    await page.goto(base + path);
+    await page.waitForTimeout(600);
+    say(`${path} head→body gap, description`, await gaps());
+    await page.screenshot({ path: join(out, `${shot}.png`) });
+  }
+  say("peek regions", (await page.locator("dialog").ariaSnapshot()).split("\n").filter((l) => /region /.test(l)).map((l) => l.trim()));
+  await browser.close();
+} finally {
+  vite.kill();
+}

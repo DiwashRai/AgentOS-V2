@@ -1,0 +1,18 @@
+// Round 6's ledger words.
+const fs = require("fs");
+const path = process.argv[2];
+const led = JSON.parse(fs.readFileSync(path, "utf8"));
+const c = led.components;
+
+led.vocab.IconName.values.normal = "Normal priority: three dashes, the bars' resting form.";
+led.vocab.MarkKind.values.you = "Needs you: the YOU pill; alone, a ring filled whole in the your-move accent.";
+c.Avatar.props.size.values.sm = "16px: a face in a pill (an agent card's state chip), a run's starter.";
+const gate = c.Stepper.props.model.items.stages.items.gate.items.state.values;
+gate.waiting = "Parked, waiting on someone else: a ring in the your-move accent.";
+gate.you = "Parked, waiting on you: filled in the your-move accent.";
+c.Page.props.title.why = c.Page.props.title.why.replace("a list is Linear's breadcrumb", "a pair is Linear's breadcrumb");
+c.Dialog.props.children.why =
+  "Beside the page: its sections, each top element the children draw, padded and ruled apart; full window: the one view.";
+
+fs.writeFileSync(path, JSON.stringify(led, null, 2) + "\n");
+console.log([c.Page.props.title.why, JSON.stringify(c.Chip.props.after ?? null).slice(0, 400)].join("\n"));

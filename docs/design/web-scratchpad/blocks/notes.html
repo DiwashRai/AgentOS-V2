@@ -1,0 +1,49 @@
+<div>
+  <h2 id="b-h">Building blocks, and whether to add more</h2>
+  <p class="muted">From a read of all 52 feature files at 090db35. The kit is about right. Most of what repeats across screens is ordinary composition, which belongs in <code>features/shared</code> and costs nothing against the budget. One new kit component pays for itself.</p>
+</div>
+<div class="notes">
+  <div class="note">
+    <h3>Add <code>Section</code> <span class="pill">41st slot · worth it</span></h3>
+    <p>A named <code>&lt;section&gt;</code> with an h2, an optional count or note, an optional end slot (faces, an Edit button) and its body. About 5 props.</p>
+    <ul>
+      <li>Replaces 8 hand-built heading blocks, 3 of them with their own local definitions: library side panel, peek, ticket Plan and Talk, Workflow tab, library panel, All teams.</li>
+      <li>Settles owner decision #1. The peek's Dialog would lay out Sections instead of styling whatever top elements it gets.</li>
+      <li>Gives the peek's and the rail's regions names in the accessibility tree. No screen can name them today.</li>
+      <li>Cost: about 50 kit lines. It needs two <code>raises</code> entries: components to 41, lines to about 7,680.</li>
+      <li>Cheaper alternative: a <code>sections</code> list prop on Dialog's side look. That ends decision #1 with no new slot, but leaves the 8 heading sites as they are.</li>
+    </ul>
+  </div>
+  <div class="note">
+    <h3>Three small kit fixes <span class="pill">no new slot</span></h3>
+    <ul>
+      <li><b>An Icon <code>down</code>.</b> Today one chevron means both "fold open" and "move down" in the same row (<code>content.tsx:31,64</code>, <code>nav.tsx:64</code>).</li>
+      <li><b>Row takes an empty cell.</b> That removes the <code>&lt;Text&gt;{""}&lt;/Text&gt;</code> placeholders in <code>RunsTab.tsx:190,207,235</code>.</li>
+      <li><b>Drop <code>Stack justify="between"</code>.</b> No screen uses it.</li>
+    </ul>
+  </div>
+  <div class="note">
+    <h3>Shared pieces in features <span class="pill">no kit cost</span></h3>
+    <ul>
+      <li><b>Loading and missing blocks.</b> They cover 15 loading and 12 error sites, and "Can't reach the server" is written out 4 times. The peek's loading state is plain text without the status role the other screens give it.</li>
+      <li><b>Promote the library's <code>NameCell</code>.</b> Its pattern (a name with quiet words after it) appears 4 times.</li>
+      <li><b>One face helper.</b> 13 call sites each pick the colour seed by hand, so an agent could get a person's hue.</li>
+      <li><b>One "time ago".</b> 4 formatters read "47m ago", "3h 05m" and "just now" on different screens.</li>
+      <li><b>Others:</b> <code>usePeek()</code>, "N shipped this week", the key-hint foot, the Plan section and the "Every stage gets" strip. Each is copied 2 or 3 times.</li>
+      <li>Together these save about 120–150 lines and remove the inconsistencies above.</li>
+    </ul>
+  </div>
+  <div class="note">
+    <h3>Watch, don't split yet</h3>
+    <ul>
+      <li><b>Chip</b> is at the 8-prop cap and has three roles. The agent-state pill has one caller. If another pill need comes, move that case out instead of adding a ninth prop.</li>
+      <li><b>Card</b> is at 8 of 8, with three looks. Stage uses 6 props, agent and ticket 3 or 4. A StageCard split is the natural one, but not with 4 call sites.</li>
+      <li><b>Row</b>'s <code>band</code> and <code>columns</code> kinds exist only for the All teams board. That's fine while there is one board.</li>
+      <li><b>Compare</b> appears on none of these screens. It shows only in a version conflict, which the fixtures don't stage; the kit sheet has it.</li>
+    </ul>
+  </div>
+  <div class="note">
+    <h3>Not worth adding</h3>
+    <p>Glyph plus words, key hints, a plan section, a ticket header and a drift badge would each be a composition of existing pieces. Putting them in the kit would spend budget the owner wants kept for real behaviour, which is the same rule as the accepted budget review.</p>
+  </div>
+</div>

@@ -1,0 +1,33 @@
+// One-off: Sections on each screen that has them: named regions, and the peek's parts padded and
+// ruled off. Vite on 5191, stopped at the end.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  for (const [path, shot] of [["/?peek=NW-17", "k12-peek"], ["/?peek=NW-404", null], ["/t/NW-17", "k12-ticket"], ["/t/NW-17?tab=workflow", "k12-wf-tab"], ["/library/agents/builder", "k12-agent"], ["/library/workflows/standard", "k12-wf-editor"]]) {
+    await page.goto(base + path);
+    await page.waitForTimeout(600);
+    say(`${path} regions`, (await page.locator("body").ariaSnapshot()).split("\n").filter((l) => /^\s*- region /.test(l)).map((l) => l.trim()));
+    if (path.includes("peek")) say(`${path} parts`, await page.evaluate(() => [...document.querySelectorAll("dialog section")].map((e) => { const cs = getComputedStyle(e); return [e.getAttribute("aria-label") ?? e.querySelector("h2")?.textContent, cs.paddingTop, cs.borderBottomWidth]; })));
+    if (shot) await page.screenshot({ path: join(out, `${shot}.png`) });
+  }
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

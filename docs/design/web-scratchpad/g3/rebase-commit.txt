@@ -1,0 +1,10 @@
+web: rebaseline the screenshots for this machine's renderer
+
+Since 25f57b3 was committed (30/30 passing), this machine's Chrome
+draws 1 to 5 pixels of every screenshot differently (antialiasing on
+the sidebar's glyphs), on unchanged code: 25f57b3 itself now fails all
+30 against its own baselines. These baselines are 25f57b3's code
+drawn now, all-teams excepted (760fcc6 changed it on purpose); HEAD
+passes against them, so the fixes since change nothing else.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

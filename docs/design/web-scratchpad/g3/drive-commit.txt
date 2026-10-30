@@ -1,0 +1,10 @@
+gates: measure a TypeScript file by its absolute path too
+
+The ts_measures test wrote its probe in pytest's temp folder and passed
+it relative to web/. On the Windows runner the checkout is on D: and
+the temp folder on C:, so os.path.relpath raised ("path is on mount
+'C:', start on mount 'D:'"). The script now resolves a path against
+the web dir, so an absolute one works, and the test passes its probe's
+absolute path. The gate itself still passes paths relative to web/.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

@@ -1,0 +1,291 @@
+diff --git a/web/src/kit/Menu.module.css b/web/src/kit/Menu.module.css
+index e6390ec..cee25e2 100644
+--- a/web/src/kit/Menu.module.css
++++ b/web/src/kit/Menu.module.css
+@@ -5,7 +5,7 @@
+ }
+ .rule {
+   height: var(--line-1);
+-  margin: var(--sp-2) calc(var(--sp-2) * -1);
++  margin: var(--sp-3) calc(var(--sp-3) * -1);
+   background: var(--pop-rule);
+ }
+ .out {
+diff --git a/web/src/kit/Popover.module.css b/web/src/kit/Popover.module.css
+index b11a107..0c289c7 100644
+--- a/web/src/kit/Popover.module.css
++++ b/web/src/kit/Popover.module.css
+@@ -1,8 +1,9 @@
+ /* The kit's one popover (Select, Segmented's overflow and the account sheet draw it): Linear's
+    lifted layer, its fill only a few percent over the page, told from what it covers by its edge, a crisp lit
+    hairline over its own fill (so it reads the same over any row) and a large soft drop. Every list
+-   of choices opens on its filter field, ruled off from the rows. 32px rows inset 4px from the sheet's edge,
+-   6px round; only the one active row (pointer or keys) fills, so at most one is ever lit. A row
++   of choices opens on its filter field, ruled off from the rows. Its words are the page's body
++   size (14px, on 34px rows inset 6px from the sheet's edge, 6px round), so a menu reads as part of
++   the page it opens over, not a smaller system; only the one active row (pointer or keys) fills, so at most one is ever lit. A row
+    reads as Linear's: its picture, its name, its muted aside (a count, a descriptor) right after
+    the name, and the check at the far end on the current one alone. */
+ /* the positioner a popup sits in: above the page, its sticky heads included */
+@@ -11,10 +12,10 @@
+ }
+ .sheet {
+   min-width: var(--col-2xl);
+-  padding: var(--sp-2);
++  padding: var(--sp-3);
+   background: var(--pop);
+   border: var(--line-1) solid var(--pop-edge);
+-  border-radius: var(--r-4);
++  border-radius: var(--r-5);
+   box-shadow: var(--shadow-pop);
+   color: var(--ink-1);
+   outline: none;
+@@ -34,15 +35,15 @@
+ .find {
+   display: flex;
+   align-items: center;
+-  width: calc(100% + var(--sp-2) * 2);
++  width: calc(100% + var(--sp-3) * 2);
+   height: var(--h-pop-find);
+-  margin: calc(var(--sp-2) * -1) calc(var(--sp-2) * -1) var(--sp-2);
+-  padding: 0 var(--sp-6);
++  margin: calc(var(--sp-3) * -1) calc(var(--sp-3) * -1) var(--sp-3);
++  padding: 0 var(--sp-7);
+   border: 0;
+   border-bottom: var(--line-1) solid var(--pop-rule);
+-  border-radius: var(--r-4) var(--r-4) 0 0;
++  border-radius: var(--r-5) var(--r-5) 0 0;
+   background: none;
+-  font-size: var(--fs-3);
++  font-size: var(--fs-tk);
+   color: var(--ink-1);
+   font-family: inherit;
+   outline: none;
+@@ -54,11 +55,12 @@
+ .row {
+   display: flex;
+   align-items: center;
+-  gap: var(--sp-4);
++  gap: var(--sp-5);
+   height: var(--h-pop-item);
+   padding: 0 var(--sp-4);
+   border-radius: var(--r-2);
+-  font-size: var(--fs-3);
++  font-size: var(--fs-tk);
++  color: var(--tk-ink);
+   letter-spacing: var(--track-snug);
+   white-space: nowrap;
+   outline: none;
+@@ -66,6 +68,7 @@
+ }
+ .row[data-highlighted] {
+   background: var(--pop-hover);
++  color: var(--ink-1);
+ }
+ /* the muted aside, set right after the name */
+ .aside {
+@@ -92,6 +95,6 @@
+   align-items: center;
+   height: var(--h-pop-item);
+   padding: 0 var(--sp-4);
+-  font-size: var(--fs-3);
++  font-size: var(--fs-tk);
+   color: var(--pop-aside);
+ }
+diff --git a/web/src/kit/Segmented.module.css b/web/src/kit/Segmented.module.css
+index c43c556..5a67142 100644
+--- a/web/src/kit/Segmented.module.css
++++ b/web/src/kit/Segmented.module.css
+@@ -1,14 +1,15 @@
+-/* Linear's view chips: one row of the same chip (one height, radius and weight). A chip is its
+-   words in secondary ink and nothing else until hovered (a light fill); the pressed one alone is
+-   a firm fill on a lit hairline in primary ink, so it reads at a glance. Counts recede and the
+-   state glyphs stay small and muted. The row takes the bar's free room and never wraps or clips:
+-   what doesn't fit goes into the last chip's popover. */
++/* Filter chips as one control: the chips are segments of a single recessed track (a faint ink
++   fill, rounded at its two ends), so the whole filter has an edge and reads as one thing; the
++   pressed one is a control raised inside it (the button's fill, hairline and drop, inset from the
++   track's edge) in primary ink. The rest are words in secondary ink; hover lights an inset fill.
++   Each state glyph keeps its state's colour, so the filter reads as the list's groups do; counts
++   recede. The row takes the bar's free room and never wraps or clips: what doesn't fit goes into
++   the track's last segment's popover. */
+ .track {
+   position: relative;
+   display: flex;
+   flex: 999 1 0;
+   align-items: center;
+-  gap: var(--sp-2);
+   min-width: 0;
+   /* room inside the clip for a chip's focus ring (2px out, 2px wide), the bar's own box unmoved */
+   margin: calc(var(--focus-room) * -1);
+@@ -20,15 +21,16 @@
+   min-width: min-content;
+ }
+ .pill {
++  position: relative;
++  isolation: isolate;
+   flex: none;
+   display: inline-flex;
+   align-items: center;
+   gap: var(--sp-3);
+   height: var(--h-pill);
+-  padding: 0 var(--sp-4);
+-  border: var(--line-1) solid transparent;
+-  border-radius: var(--r-2);
+-  background: transparent;
++  padding: 0 var(--sp-5);
++  border: 0;
++  background: var(--seg);
+   font-size: var(--fs-3);
+   font-weight: 500;
+   letter-spacing: var(--track-snug);
+@@ -36,32 +38,43 @@
+   color: var(--ink-2);
+   white-space: nowrap;
+   cursor: pointer;
+-  transition:
+-    background-color var(--dur-fast) ease,
+-    border-color var(--dur-fast) ease,
+-    color var(--dur-fast) ease;
++  transition: color var(--dur-fast) ease;
+ }
+-/* the state glyphs in the muted ink, whatever their state (on the row and in the popover) */
+-.pill,
+-.item {
+-  --you: var(--ink-3);
+-  --live: var(--ink-3);
+-  --blocked: var(--ink-3);
+-  --done: var(--ink-3);
++/* the track's two ends: the first segment and the last one shown (the overflow chip, when there) */
++.pill:first-child {
++  border-radius: var(--r-3) 0 0 var(--r-3);
++}
++.track > .pill:not(:has(~ .pill)) {
++  border-radius: 0 var(--r-3) var(--r-3) 0;
++}
++.track > .pill:first-child:not(:has(~ .pill)) {
++  border-radius: var(--r-3);
++}
++/* the inset fill: a light wash on hover, the raised control on the pressed one */
++.pill::before {
++  content: "";
++  position: absolute;
++  inset: var(--seg-inset);
++  z-index: -1;
++  border-radius: var(--r-2);
++  transition: background-color var(--dur-fast) ease;
+ }
+ .pill:hover,
+ .pill[data-popup-open] {
+-  background: var(--chip-hover);
+   color: var(--ink-1);
+ }
+-.pill[aria-pressed="true"],
+-.pill[data-current="true"] {
+-  background: var(--chip-on);
+-  border-color: var(--chip-on-edge);
++.pill:hover::before,
++.pill[data-popup-open]::before {
++  background: var(--chip-hover);
++}
++.pill:is([aria-pressed="true"], [data-current="true"]) {
+   color: var(--ink-1);
+ }
+-.pill:is([aria-pressed="true"], [data-current="true"]):hover {
+-  background: var(--chip-on-hover);
++.pill:is([aria-pressed="true"], [data-current="true"])::before {
++  background: var(--ctl-lift);
++  box-shadow:
++    0 0 0 var(--line-1) var(--ctl-edge-hover),
++    var(--ctl-shadow);
+ }
+ .pill em {
+   font-style: normal;
+@@ -91,7 +104,7 @@
+   top: 0;
+   left: 0;
+   display: flex;
+-  column-gap: var(--sp-2);
++  column-gap: 0;
+   visibility: hidden;
+   pointer-events: none;
+ }
+diff --git a/web/src/kit/Toast.module.css b/web/src/kit/Toast.module.css
+index ca7e8e1..1e20328 100644
+--- a/web/src/kit/Toast.module.css
++++ b/web/src/kit/Toast.module.css
+@@ -56,14 +56,14 @@
+ }
+ .title {
+   margin: 0;
+-  font-size: var(--fs-3);
++  font-size: var(--fs-tk);
+   font-weight: 500;
+   letter-spacing: var(--track-snug);
+   color: var(--ink-1);
+ }
+ .note {
+   margin: 0;
+-  font-size: var(--fs-2);
++  font-size: var(--fs-3);
+   color: var(--pop-aside);
+ }
+ .note:empty {
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 1edf31c..1354131 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -713,7 +713,7 @@
+       }
+     },
+     "Segmented": {
+-      "why": "Filter chips, one row on the bar that never clips: bare words but for the pressed one, filled on a hairline; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
++      "why": "Filter chips, one row on the bar that never clips: segments of one recessed track (so the filter has an edge and reads as one control), bare words but for the pressed one, a control raised in the track; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
+       "single": "Compact's filter, and a stage's Maker | Check in the workflow editor (one of two, said on screen, where a switch's off would need decoding); Settings › Mappings' Try it and the settings nav use it in W8 and W9.",
+       "props": {
+         "label": {
+@@ -723,7 +723,7 @@
+           "why": "The chips, each with a count and mark.",
+           "items": {
+             "mark": {
+-              "why": "The state a pill filters by (MarkKind), a small glyph in the muted ink."
++              "why": "The state a pill filters by (MarkKind), a small glyph in its state's colour, as the list's group heads draw it."
+             }
+           }
+         },
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index c3c885b..0711658 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -422,6 +422,8 @@
+   --chip-on: color-mix(in srgb, var(--ink-1) 9%, transparent);
+   --chip-on-hover: color-mix(in srgb, var(--ink-1) 12%, transparent);
+   --chip-on-edge: color-mix(in srgb, var(--ink-1) 14%, transparent);
++  /* controls · filter chips share one recessed track; the pressed one is a control raised in it */
++  --seg: color-mix(in srgb, var(--ink-1) 6%, transparent);
+   /* controls · a popover row's aside (a descriptor, a count), its section label and its filter's
+      placeholder: a step under ink-3 on the popover's own surface, so the names lead */
+   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
+@@ -540,16 +542,17 @@
+   --notice-dot: 6px;
+   --notice-dot-top: calc(var(--sp-7) + 0.5lh);
+   /* controls */
+-  --w-pop: 272px; /* the theme menu */
+-  --w-pop-filter: 220px; /* a filter chip's overflow popover */
++  --w-pop: 304px; /* the theme menu */
++  --w-pop-filter: 248px; /* a picker's list, a filter chip's overflow popover */
+   /* themes: the theme menu's swatch, the frame in miniature, and its sidebar's width */
+   --w-swatch: 34px;
+   --h-swatch: 22px;
+   --w-swatch-side: 9px;
+-  --h-pop-item: 32px; /* a menu's or picker's row */
+-  --h-pop-find: 40px; /* a picker's filter field */
++  --h-pop-item: 34px; /* a menu's or picker's row, at the body's size */
++  --h-pop-find: 44px; /* a picker's filter field */
+   --h-pop-head: 28px; /* a menu's section label */
+-  --h-pill: 26px; /* a filter chip, a picker's trigger */
++  --h-pill: 34px; /* a filter chip: a segment of its track, as tall as the bar's buttons */
++  --seg-inset: 3px; /* the pressed chip's raised fill, inset from the track's edge */
+ 
+   /* motion: transform and opacity only, and only on live things */
+   --dur-fast: 0.16s;

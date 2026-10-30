@@ -1,0 +1,19 @@
+gauntlet: round runs again, an opaque off stage, a clearer panel
+
+Regressions the owner found after the list reach and the card edges.
+
+- The ticket's runs were squared by the one reach. A list's corners now
+  follow where it reaches: square at the sheet's edges, round where it
+  stops short (--list-radius; the ticket's body is round).
+- A disabled stage was the one card with no ground, so the lane's line
+  ran through it, and the cards' new hairline sat under its dashes and
+  hid them. It now takes the sheet's own opaque ground, like every
+  card, so the line can't cross it, and draws its dashed outline alone,
+  in a skipped stage's dashes.
+- Linear's agent panel holds its messages and reply box about 8 levels
+  over the panel; ours were 6 and the reply box sat darker, on the
+  page. A sheet inside a sheet, and the reply box in one, are now about
+  10 over the panel.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

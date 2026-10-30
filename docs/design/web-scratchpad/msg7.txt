@@ -1,0 +1,26 @@
+web: ban outright what could carry code past the layer checks
+
+Round 2 found more disguises: a "/"-led import.meta.glob matched nothing
+and so imported nothing; a .pcss stylesheet in a pattern, or .css in a
+screen, passed the resolved check; a .js file with a .d.ts beside it was
+never read; `const h = React.createElement`, a tag typed "div" | "span",
+`import { Checklist as List }`, `import * as Kit` and a class component
+all got past. Each is now banned outright rather than read more
+cleverly (tools/layers.mjs, read by tools/reach.mjs):
+
+- code under src/ is .ts or .tsx: .js/.jsx/.mjs/.cjs and bare .d.ts fail;
+- every stylesheet language Vite reads exists, and is imported, in the
+  kit alone;
+- a glob's "/"-led pattern is read from the web's root; one that matches
+  nothing fails;
+- outside the kit: any mention of createElement, a tag whose type is or
+  may be a string, a renamed or default import of the kit, a re-export
+  of it, a kit component held in a const, any namespace import;
+- no class in the layers that draw.
+
+ESLint says the same: a typed rule for string tags (so only names used
+as a tag; `const Mode = "edit"` no longer trips it), one for the kit by
+another name, selectors for the rest. The raw-tag gate counts a tag that
+may be a string and any createElement. Each case is in the tests.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

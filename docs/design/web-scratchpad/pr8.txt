@@ -1,0 +1,18 @@
+web: one TicketHead for the ticket page's head and the peek's
+
+The ticket page and the peek each drew a ticket's head (the title and
+lead, the property rows, the stepper with what happens now) the same
+way, and the peek did it by importing four of the ticket screen's
+modules. patterns/ticketHead.tsx now holds them: TicketHead (absorbing
+ticket/properties and now), PlanSection and TalkSection, used by both.
+
+- `place: "page" | "peek"` sets the title's h1 or h2 and the plan's
+  checklist look (PlanSection no longer takes the kit's look type).
+- What reads the session or edits comes in drawn: the page's owner
+  picker (without one the head says the owner, as the peek did), and
+  the run's Cancel, now one CancelButton in shared/Actions.
+
+The peek's imports of ticket/* go. No screenshot changes.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

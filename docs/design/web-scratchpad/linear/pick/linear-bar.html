@@ -1,0 +1,153 @@
+<title>Linear Bar Candidates</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a contact sheet. Groups by what each picture can judge; tick the ones that become the
+   bar, and the selection line at the top collects their numbers. */
+:root {
+  --bg: #f7f7f8; --card: #ffffff; --ink-1: #0b0b0f; --ink-2: #4d4d57; --ink-3: #6b6b75;
+  --rule: #e3e3e8; --accent: #5e6ad2; --accent-tint: #eceefc; --shot: #0d0d10;
+  --f-body: "Geist", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0c0c0f; --card: #16161a; --ink-1: #f4f4f6; --ink-2: #b0b0ba; --ink-3: #8c8c96; --rule: #26262c; --accent: #8a93ec; --accent-tint: rgba(138,147,236,.14); --shot: #050507; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0c0c0f; --card: #16161a; --ink-1: #f4f4f6; --ink-2: #b0b0ba; --ink-3: #8c8c96; --rule: #26262c; --accent: #8a93ec; --accent-tint: rgba(138,147,236,.14); --shot: #050507; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink-1); font: 400 14px/1.5 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 72px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 36px; }
+header { display: grid; gap: 10px; padding-top: 36px; }
+h1 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -.025em; text-wrap: balance; }
+h2 { margin: 0; font-size: 16px; font-weight: 600; }
+p { margin: 0; }
+.eyebrow { font: 500 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.lead { color: var(--ink-2); max-width: 72ch; font-size: 15px; }
+.sel { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--rule); padding-block: 12px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.sel b { font-weight: 600; }
+.sel output { font: 500 13px/1.4 var(--f-mono); color: var(--accent); min-width: 0; overflow-wrap: anywhere; }
+.btn { font: 500 13px/1 var(--f-body); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--rule); background: var(--card); color: var(--ink-1); cursor: pointer; }
+.btn:focus-visible, .card button:focus-visible, label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.group { display: grid; gap: 14px; }
+.group .gh { display: grid; gap: 4px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 14px; }
+.card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
+.card.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.card button.view { display: block; padding: 0; border: 0; background: var(--shot); cursor: zoom-in; aspect-ratio: 16 / 10; width: 100%; max-width: 100%; }
+.card img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.meta { padding: 12px 14px 14px; display: grid; gap: 6px; align-content: start; }
+.top { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+.num { font: 500 12px/1 var(--f-mono); color: var(--ink-3); }
+.title { font-weight: 600; }
+.meta p { color: var(--ink-2); font-size: 13px; }
+.src { font: 400 11.5px/1.3 var(--f-mono); color: var(--ink-3); }
+label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); cursor: pointer; border-radius: 4px; }
+label input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { font: 500 11px/1 var(--f-mono); padding: 4px 6px; border-radius: 4px; background: var(--accent-tint); color: var(--accent); }
+dialog { border: 0; padding: 0; background: transparent; max-width: 96vw; max-height: 94vh; }
+dialog::backdrop { background: rgba(5,5,8,.82); }
+dialog img { display: block; max-width: 96vw; max-height: 88vh; object-fit: contain; border-radius: 8px; }
+dialog p { color: #f4f4f6; font-size: 13px; margin-top: 8px; text-align: center; }
+footer { color: var(--ink-3); font-size: 12px; max-width: 90ch; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Gauntlet loop · the bar · AgentOS V2 web</span>
+    <h1>Linear, twenty candidates for the bar</h1>
+    <p class="lead">Four of Linear's real themes that you found, and sixteen pictures of its app taken from linear.app and its docs. Tick the ones the critic should judge our screens against. Click a picture to see it full size.</p>
+  </header>
+  <div class="sel" aria-live="polite">
+    <span><b id="count">0</b> chosen:</span>
+    <output id="chosen">none yet</output>
+    <button class="btn" type="button" id="copy">Copy the numbers</button>
+    <button class="btn" type="button" id="clear">Clear</button>
+  </div>
+  <div id="groups" style="display:grid;gap:36px"></div>
+  <footer>Pictures 1 to 4 are your own screenshots. Pictures 5 to 20 came from linear.app's product pages (crops of the app windows they draw) and from linear.app/docs, on 21 October 2026. They're kept only as a reference for this design spike.</footer>
+</div>
+
+<dialog id="zoom" aria-label="Full size">
+  <img id="zimg" alt="">
+  <p id="zcap"></p>
+</dialog>
+
+<script>
+const GROUPS = [
+  { title: "Themes: one layout, four palettes", blurb: "The same Cycle screen with the full sidebar, in four of Linear's themes. The best bar for colour range, the sidebar's shape and row contrast.",
+    items: [
+      [1, "theme-ash.png", "Light (ash)", "Light theme: white list, faint grey sidebar, banded group heads, coloured status glyphs and label dots.", ["palette", "sidebar", "light"]],
+      [2, "theme-dawn.png", "Plum (dawn)", "A tinted dark theme: the whole neutral scale shifts to plum, and the accent follows.", ["palette", "dark"]],
+      [3, "theme-midnight.png", "Dark (midnight)", "Near-black. Rows separate by a lighter band per group head, not by shadows.", ["palette", "dark", "contrast"]],
+      [4, "theme-pale.png", "Slate (pale)", "A blue-slate dark with a violet accent. A cooler, softer dark.", ["palette", "dark"]],
+    ] },
+  { title: "The full app: sidebar and lists", blurb: "The frame we need: sidebar sections, list rows, group heads and the issue detail.",
+    items: [
+      [5, "home-f0.png", "Issue detail with sidebar", "Linear's homepage app: the sidebar (Pulse, Inbox, My issues, Reviews; Workspace; Favorites), the issue, activity and properties.", ["sidebar", "detail"]],
+      [6, "docs-07-select-issues.avif", "Sidebar and issue list", "The sidebar with Workspace and Your teams sections, and a list grouped by status, with selection.", ["sidebar", "list"]],
+      [7, "docs-06-issue-property-issue-status.avif", "List with a menu open", "Active issues with the right-click menu and a submenu: density, keyboard hints and priority icons.", ["list", "menu"]],
+      [8, "docs-09-triage.avif", "Triage", "The triage inbox: incoming work grouped, each with source and age. Closest to our Intake.", ["list", "intake"]],
+      [9, "docs-11-triage.avif", "Sidebar close-up", "The sidebar's top: workspace switcher, Inbox, My issues, Drafts, counts, and the Workspace section.", ["sidebar"]],
+      [17, "home-f1.png", "Review queue", "Reviews: the diff list on the left and code on the right. A dense list beside a detail pane.", ["list", "detail"]],
+      [18, "build-f5.png", "Release pipelines", "A grouped table (Mobile › iOS, Platform) with version pills and ages. Like our All teams board.", ["table"]],
+      [19, "plan-f2.png", "Projects table", "Projects with health, lead, progress and dates: a dense, ruled table.", ["table"]],
+      [20, "ai-f4.png", "Board", "Task cards in project columns, each with an agent's state (Working, Waiting, Finished, Error). Like our Agents at work.", ["board", "live"]],
+    ] },
+  { title: "Detail pages", blurb: "Bars for our Ticket page and the peek: properties, activity, the description.",
+    items: [
+      [10, "docs-13-parent-and-sub-issues.png", "Sub-issues and display options (light)", "A rare light picture: a sub-issue list with the display-options popover.", ["light", "menu"]],
+      [11, "docs-12-parent-and-sub-issues.avif", "Issue with sub-issues", "An issue page: title, description, sub-issues, activity, and the properties column.", ["detail"]],
+      [12, "docs-01-projects.avif", "Project page", "A project's overview: properties, resources, milestones and the latest update.", ["detail"]],
+      [13, "docs-02-projects.avif", "Project properties with a picker", "A properties block with a multi-select picker open. Close to our Select.", ["detail", "menu"]],
+      [16, "intake-f0.png", "Conversation to issue", "A Slack-style thread beside the issue it became. Close to our Talk column.", ["detail", "talk"]],
+    ] },
+  { title: "Controls and settings", blurb: "For the pieces our kit doesn't have yet: popovers, toggles and form rows.",
+    items: [
+      [14, "docs-08-display-options.avif", "Display options popover", "List or board, grouping, ordering, toggles and property chips in one popover.", ["menu", "controls"]],
+      [15, "docs-05-issue-property-issue-status.avif", "Settings form", "Settings rows with toggles and selects. What our Settings screens will need.", ["controls", "forms"]],
+    ] },
+];
+let chosen = new Set();
+try { chosen = new Set(JSON.parse(localStorage.getItem("linear-bar") || "[]")); } catch {}
+const save = () => { try { localStorage.setItem("linear-bar", JSON.stringify([...chosen])); } catch {} };
+const el = (t, a = {}, ...k) => { const e = document.createElement(t); for (const [x, v] of Object.entries(a)) x === "text" ? (e.textContent = v) : x === "class" ? (e.className = v) : e.setAttribute(x, v); k.forEach((c) => c != null && e.append(c)); return e; };
+const zoom = document.getElementById("zoom");
+zoom.addEventListener("click", () => zoom.close());
+const root = document.getElementById("groups");
+for (const g of GROUPS) {
+  const grid = el("div", { class: "grid" });
+  for (const [n, file, title, what, tags] of g.items) {
+    const src = `img/${String(n).padStart(2, "0")}-${file}`;
+    const box = el("input", { type: "checkbox", id: `p${n}` });
+    box.checked = chosen.has(n);
+    const card = el("article", { class: `card${box.checked ? " on" : ""}` });
+    box.addEventListener("change", () => { box.checked ? chosen.add(n) : chosen.delete(n); card.classList.toggle("on", box.checked); save(); draw(); });
+    const view = el("button", { class: "view", type: "button", "aria-label": `Open ${n}, ${title}, full size` }, el("img", { src, alt: `${n}. ${title}: ${what}`, loading: "lazy" }));
+    view.addEventListener("click", () => { const z = document.getElementById("zimg"); z.src = src; z.alt = title; document.getElementById("zcap").textContent = `${n}. ${title}`; zoom.showModal(); });
+    card.append(view, el("div", { class: "meta" },
+      el("div", { class: "top" }, el("span", { class: "num", text: `#${n}` }), el("label", { for: `p${n}` }, box, "Use as the bar")),
+      el("div", { class: "title", text: title }), el("p", { text: what }),
+      el("div", { class: "chips" }, ...tags.map((t) => el("span", { class: "chip", text: t })))));
+    grid.append(card);
+  }
+  root.append(el("section", { class: "group" }, el("div", { class: "gh" }, el("h2", { text: g.title }), el("p", { class: "lead", text: g.blurb })), grid));
+}
+function draw() {
+  const list = [...chosen].sort((a, b) => a - b);
+  document.getElementById("count").textContent = String(list.length);
+  document.getElementById("chosen").textContent = list.length ? list.map((n) => `#${n}`).join(", ") : "none yet";
+}
+document.getElementById("copy").addEventListener("click", async () => {
+  const text = document.getElementById("chosen").textContent;
+  try { await navigator.clipboard.writeText(text); document.getElementById("copy").textContent = "Copied"; }
+  catch { const r = document.createRange(); r.selectNodeContents(document.getElementById("chosen")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  setTimeout(() => (document.getElementById("copy").textContent = "Copy the numbers"), 1500);
+});
+document.getElementById("clear").addEventListener("click", () => { chosen.clear(); save(); document.querySelectorAll(".card").forEach((c) => c.classList.remove("on")); document.querySelectorAll(".card input").forEach((i) => (i.checked = false)); draw(); });
+draw();
+</script>

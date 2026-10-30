@@ -1,0 +1,59 @@
+diff --git a/web/src/features/ticket/TicketView.tsx b/web/src/features/ticket/TicketView.tsx
+index 6b6ceb5..24c085b 100644
+--- a/web/src/features/ticket/TicketView.tsx
++++ b/web/src/features/ticket/TicketView.tsx
+@@ -1,7 +1,7 @@
+ // The ticket page (/t/:key), as Linear's project page: the bar (My queue › the key, the crumb the way
+ // back; search; the ticket's actions), then one calm column (the title and lead, its labelled
+ // property rows, the workflow's stepper with what happens now at its foot, the tabs) and beside it
+-// the rail, Talk alone, its reply box at the window's foot. The tab is in the URL (?tab=), and so
++// the rail, Talk alone, its reply box under the last message. The tab is in the URL (?tab=), and so
+ // is a full-window editor over the page (?edit=: tabs.ts, overlays.tsx).
+ import { type ReactNode, useState } from "react";
+ import { useParams } from "react-router";
+@@ -111,14 +111,15 @@ function Overview({
+ }
+ 
+ /** The rail beside the page: Talk alone, the whole column a conversation (who is in it, the thread,
+- *  and the reply box at its foot). */
++ *  and the reply box right under its last message, as Linear's comment box follows the activity,
++ *  so no blank stretch parts the two; a long thread scrolls with the box held at the rail's foot). */
+ function Rail({ t, me }: { t: Ticket; me: Person | null }) {
+   const messages = useMessages(t.key).data?.items ?? [];
+   const people = [...new Map(messages.map((m) => [m.author.id, m.author])).values()];
+   const others = people.filter((p) => p.id !== me?.id).map((p) => firstName(p.name));
+   const [draft, setDraft] = useState("");
+   return (
+-    <Stack gap={9} grow>
++    <Stack gap={9}>
+       <TalkSection people={people}>
+         <Thread messages={messages.map((m) => threadMessage(m, me))} />
+       </TalkSection>
+diff --git a/web/src/kit/Page.module.css b/web/src/kit/Page.module.css
+index cbcb393..7fd897d 100644
+--- a/web/src/kit/Page.module.css
++++ b/web/src/kit/Page.module.css
+@@ -175,8 +175,8 @@
+   margin-inline: auto;
+ }
+ /* the column beside: Linear's issue sidebar, a tinted rail ruled off by one hairline and run out to
+-   the sheet's edge, full height, so what it holds can pin its foot (Talk's reply box) to the
+-   window's bottom */
++   the sheet's edge, full height, so what it holds can hold its foot (Talk's reply box) at the
++   window's bottom as it scrolls */
+ .side {
+   min-height: 0;
+   display: flex;
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index c22a739..bc66589 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -1109,7 +1109,7 @@
+       }
+     },
+     "Composer": {
+-      "why": "The reply box under a conversation (the ticket's Talk, the peek's foot): one line growing as you type, Send at its end, pinned at a full-height column's foot.",
++      "why": "The reply box under a conversation (the ticket's Talk, the peek's foot): one line growing as you type, Send at its end, held at a column's foot as the thread scrolls.",
+       "props": {
+         "label": {
+           "why": "Its accessible name and placeholder (\"Say something to Bea and Cy\")."

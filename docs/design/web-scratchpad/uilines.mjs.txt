@@ -1,0 +1,30 @@
+// One-off: code lines by area (TS and CSS) in a web, with count.mjs's line rule.
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
+
+const walk = (d) =>
+  readdirSync(d).flatMap((n) => {
+    const p = join(d, n);
+    if (n === "node_modules") return [];
+    return statSync(p).isDirectory() ? walk(p) : [p];
+  });
+const lines = (t) => t.split("\n").filter((l) => l.trim() && !/^\s*(\/\/|\/\*|\*)/.test(l)).length;
+
+const [web, ...features] = process.argv.slice(2);
+const src = join(web, "src");
+const out = {};
+for (const p of walk(src)) {
+  if (/\.test\.tsx?$|schema\.ts$|openapi\.json$|fixtures\.ts$/.test(p)) continue;
+  const kind = p.endsWith(".css") ? "css" : /\.tsx?$/.test(p) ? "ts" : null;
+  if (!kind) continue;
+  const r = relative(src, p).replace(/\\/g, "/");
+  const parts = r.split("/");
+  let area = parts[0];
+  if (area === "features") {
+    area = features.includes(parts[1]) ? `feat:${parts[1]}` : "feat(other)";
+  }
+  if (!r.includes("/")) area = "root";
+  const k = `${area} ${kind}`;
+  out[k] = (out[k] ?? 0) + lines(readFileSync(p, "utf8"));
+}
+for (const k of Object.keys(out).sort()) console.log(`${k}\t${out[k]}`);

@@ -1,0 +1,38 @@
+kit: the consolidation's review round 1
+
+The Opus and Codex reviews of the five consolidation commits; every must and
+should is fixed, each checked in Chrome (.review/consolidation-r1-fixes.md
+lists them all).
+
+Must-fix:
+- Text areas took the width of their text inside a form row (a 49px prompt);
+  the pop-out wrapper takes the slot's width again.
+- Compact's waiting chip lost who it waits on (" · Plan sign-off"); its words
+  moved to the compact model with a test.
+- Esc in the workflow library's search also closed the overlay; search
+  consumes its Esc.
+- A default Meter pinned itself to the window; it stays in flow, and the
+  agent card's track is an explicit `edge` size.
+
+Should-fix:
+- Card's button sat over its lines, hiding their tooltips; it is visually
+  hidden and a pointer click is delegated, as Row does.
+- Chip and Card types rule out contradictory props (a glyph or a dot; a
+  card's props by its look); Chip's trailing content is typed, which brings
+  back the agent pill's live disc without inferring from markup.
+- One search box (Field's search, which Page's bar uses), `/` and the
+  sidebar's Search reaching the top layer's search.
+- One single-choice popup inside the kit, for Select and Segmented's overflow.
+- FormRow names its group and describes its controls with its note and
+  problem; stage problems say which field they are about.
+- Composer is controlled; Button, Dialog and Table's columns are typed
+  unions; Lane takes gate eligibility from the workflow model; Sortable's
+  gutter is a prop; Row's last positional rule is gone.
+- 45 unused tokens, Mark.text, edgeOf and Chip's sheet-only `strong` removed;
+  the ledger's reasons rewritten to match the code. The kit gate now reads
+  intersection shapes, so a union-typed column's fields are still checked.
+
+The kit is 40 of 40 components and 7,212 lines.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

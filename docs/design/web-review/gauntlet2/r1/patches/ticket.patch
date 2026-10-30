@@ -1,0 +1,509 @@
+diff --git a/web/src/features/ticket/TicketView.tsx b/web/src/features/ticket/TicketView.tsx
+index 9309cbf..f565dd2 100644
+--- a/web/src/features/ticket/TicketView.tsx
++++ b/web/src/features/ticket/TicketView.tsx
+@@ -1,7 +1,7 @@
+ // The ticket page (/t/:key), as Linear's issue page: the bar (My queue › the key, the crumb the way
+-// back; search; the ticket's actions), then one calm column with no cards (the title and lead, the
+-// properties, the workflow's stepper with what happens now under it, the tabs) and Talk in the
+-// column beside it, its reply box at the window's foot. The tab is in the URL (?tab=), and so is a
++// back; search; the ticket's actions), then one calm column (the title and lead, the workflow's
++// stepper with what happens now under it, the tabs) and the rail beside it, as Linear's issue
++// sidebar: the properties, then Talk, its reply box at the window's foot. The tab is in the URL (?tab=), and so is a
+ // full-window editor over the page (?edit=: tabs.ts, overlays.tsx).
+ import { type ReactNode, useState } from "react";
+ import { useParams } from "react-router";
+@@ -74,7 +74,6 @@ function Header({ t, me, now, plan }: HeaderProps) {
+           {lead}
+         </Text>
+       </Stack>
+-      <Properties t={t} now={now} owner={{ picker: <Owner t={t} /> }} />
+       <Stepper model={stageModel(t, me)} now={<Now t={t} me={me} now={now} plan={plan} />} />
+     </Stack>
+   );
+@@ -108,14 +107,16 @@ function Overview({
+   );
+ }
+ 
+-/** Talk, in the column beside the page: who is in it, the thread, and the reply box at its foot. */
+-function Talk({ t, me }: { t: Ticket; me: Person | null }) {
++/** The rail beside the page, as Linear's issue sidebar: the properties, then Talk (who is in it, the
++ *  thread, and the reply box at its foot). */
++function Rail({ t, me, now }: { t: Ticket; me: Person | null; now: number }) {
+   const messages = useMessages(t.key).data?.items ?? [];
+   const people = [...new Map(messages.map((m) => [m.author.id, m.author])).values()];
+   const others = people.filter((p) => p.id !== me?.id).map((p) => firstName(p.name));
+   const [draft, setDraft] = useState("");
+   return (
+-    <Stack gap={9} grow>
++    <Stack gap={10} grow>
++      <Properties t={t} now={now} owner={{ picker: <Owner t={t} /> }} stack />
+       <TalkSection people={people}>
+         <Thread messages={messages.map((m) => threadMessage(m, me))} />
+       </TalkSection>
+@@ -181,7 +182,7 @@ export function TicketView() {
+               <TicketMenu key="more" t={t} size="md" />,
+             ],
+             // keyed by the ticket: a draft is one ticket's, and doesn't follow you to the next
+-            side: { content: <Talk key={t.key} t={t} me={me} /> },
++            side: { content: <Rail key={t.key} t={t} me={me} now={now} /> },
+           }
+         : {})}
+     >
+diff --git a/web/src/features/ticket/plan.tsx b/web/src/features/ticket/plan.tsx
+index 21ae67c..2cc1ed7 100644
+--- a/web/src/features/ticket/plan.tsx
++++ b/web/src/features/ticket/plan.tsx
+@@ -1,7 +1,8 @@
+ // The ticket's plan (TASKS.md), the same on the ticket page and in the peek: how much of it is done
+-// after its name, then its items, or a quiet line while there is none.
++// after its name (Linear's sub-issues: a pie as far as it is, then the count), then its items, or a
++// quiet line while there is none.
+ import type { PlanItem } from "../../domain/plan";
+-import { Checklist, type ChecklistProps, Section, Text } from "../../kit";
++import { Checklist, type ChecklistProps, Mark, Section, Text } from "../../kit";
+ 
+ export function PlanSection({
+   plan,
+@@ -11,11 +12,20 @@ export function PlanSection({
+   look: ChecklistProps["look"];
+ }) {
+   const done = plan.filter((i) => i.done).length;
++  const aside = (
++    <>
++      <Mark
++        kind={done === plan.length ? "done" : "run"}
++        glyph
++        small
++        name={false}
++        progress={{ done, total: plan.length }}
++      />
++      {`${String(done)}/${String(plan.length)}`}
++    </>
++  );
+   return (
+-    <Section
+-      title="Plan"
+-      {...(plan.length > 0 ? { aside: `${String(done)} of ${String(plan.length)} done` } : {})}
+-    >
++    <Section title="Plan" {...(plan.length > 0 ? { aside } : {})}>
+       {plan.length > 0 ? (
+         <Checklist items={plan} look={look} />
+       ) : (
+diff --git a/web/src/features/ticket/properties.tsx b/web/src/features/ticket/properties.tsx
+index 2d21abc..03987ed 100644
+--- a/web/src/features/ticket/properties.tsx
++++ b/web/src/features/ticket/properties.tsx
+@@ -1,7 +1,7 @@
+-// A ticket's properties, as Linear's project page lists them: labelled rows of chips, each a muted
+-// icon and its value at body size (what it is, where its code lives, how it runs). The ticket page
+-// and the peek both draw them; the owner is the screen's own (a picker on the page, a face in the
+-// peek).
++// A ticket's properties, as Linear lists them: labelled groups of chips, each a muted icon and its
++// value at body size (what it is, where its code lives, how it runs); in rows across the peek, and
++// stacked in the ticket page's rail as Linear's issue sidebar. The owner is the screen's own (a
++// picker on the page, a face in the peek).
+ import type { ReactNode } from "react";
+ 
+ import type { Ticket } from "../../api/types";
+@@ -63,11 +63,19 @@ function rows(t: Ticket, now: number, owner: Owner): Row[] {
+   ];
+ }
+ 
+-export function Properties({ t, now, owner }: { t: Ticket; now: number; owner: Owner }) {
++interface PropertiesProps {
++  t: Ticket;
++  now: number;
++  owner: Owner;
++  /** Each row's head over its values, one a line: the ticket page's rail. */
++  stack?: boolean;
++}
++
++export function Properties({ t, now, owner, stack = false }: PropertiesProps) {
+   return (
+-    <Stack>
++    <Stack gap={stack ? 6 : 0}>
+       {rows(t, now, owner).map((r) => (
+-        <Facts key={r.label} label={r.label} items={r.items} />
++        <Facts key={r.label} label={r.label} items={r.items} stack={stack} />
+       ))}
+     </Stack>
+   );
+diff --git a/web/src/kit/Checklist.module.css b/web/src/kit/Checklist.module.css
+index cbfb8d7..5dd9214 100644
+--- a/web/src/kit/Checklist.module.css
++++ b/web/src/kit/Checklist.module.css
+@@ -52,9 +52,14 @@
+   color: var(--ink-3);
+ }
+ 
+-/* large: the ticket's and the peek's plan as Linear lists sub-issues: rows at body size on the
+-   page's own ground, no card and no rules; a section head is a quiet label with room above it;
+-   done items recede a step. The peek's rows are a little shorter */
++/* large: the ticket's and the peek's plan as Linear lists sub-issues: one hairline under the head,
++   then rows at body size on the page's own ground; a section head is a quiet label with room above
++   it; done items recede a step. The peek's rows are a little shorter */
++.large {
++  margin-top: calc(var(--sp-3) * -1);
++  padding-top: var(--sp-4);
++  border-top: var(--line-1) solid var(--tk-card-edge);
++}
+ .large .section {
+   min-height: var(--h-control-sm);
+   margin-top: var(--sp-6);
+diff --git a/web/src/kit/Facts.module.css b/web/src/kit/Facts.module.css
+index 3898a84..9c98bc8 100644
+--- a/web/src/kit/Facts.module.css
++++ b/web/src/kit/Facts.module.css
+@@ -69,3 +69,19 @@
+   margin-left: calc(var(--sp-2) * -1);
+   color: var(--tk-label);
+ }
++/* stacked: Linear's issue sidebar, the head a small label over its values, one value a line */
++.stack {
++  flex-direction: column;
++  gap: var(--sp-1);
++}
++.stack > .head {
++  width: auto;
++  line-height: var(--h-control-sm);
++  font-size: var(--fs-3);
++  font-weight: 500;
++}
++.stack > .chips {
++  flex-direction: column;
++  align-items: flex-start;
++  margin-left: calc(var(--sp-4) * -1);
++}
+diff --git a/web/src/kit/Facts.tsx b/web/src/kit/Facts.tsx
+index 22c5574..903edd0 100644
+--- a/web/src/kit/Facts.tsx
++++ b/web/src/kit/Facts.tsx
+@@ -7,6 +7,7 @@ import s from "./Facts.module.css";
+ import { Icon, type IconName } from "./Icon";
+ import { Tip } from "./tip";
+ import u from "./unseen.module.css";
++import { cx } from "./vars";
+ 
+ export type Fact = {
+   label: string;
+@@ -32,6 +33,8 @@ export interface FactsProps {
+   items: readonly Fact[];
+   /** A head before the chips, as Linear's "Properties". */
+   label?: string;
++  /** The head over the values, one a line, as Linear's issue sidebar (the ticket page's rail). */
++  stack?: boolean;
+ }
+ 
+ /** A fact's value: a picker as it is, or the glyph, the words and the note in the chip. */
+@@ -57,10 +60,10 @@ function Value({ f }: { f: Fact }) {
+   );
+ }
+ 
+-export function Facts({ items, label }: FactsProps) {
++export function Facts({ items, label, stack = false }: FactsProps) {
+   const head = useId();
+   return (
+-    <div className={s.facts}>
++    <div className={cx(s.facts, stack && s.stack)}>
+       {label ? (
+         <span className={s.head} id={head}>
+           {label}
+diff --git a/web/src/kit/Page.module.css b/web/src/kit/Page.module.css
+index 43b0e56..d243320 100644
+--- a/web/src/kit/Page.module.css
++++ b/web/src/kit/Page.module.css
+@@ -140,12 +140,14 @@
+   min-width: var(--col-lg);
+ }
+ 
+-/* a body with a full-height column beside it: each scrolls on its own */
++/* a body with a full-height column beside it, run out to the sheet's right edge: each scrolls on
++   its own */
+ .split {
+   flex: 1;
+   min-height: 0;
+   display: grid;
+   grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 30vw, var(--w-talk-max));
++  margin-right: calc(var(--sp-9) * -1);
+   border-top: var(--line-1) solid var(--tk-card-edge);
+ }
+ /* a rail of settings (an item editor's properties) is narrower than a reading column, so the
+@@ -172,14 +174,16 @@
+ .split[data-side="rail"] .measure {
+   max-width: none;
+ }
+-/* the column beside: no card, the page's own ground ruled off by one hairline, full height, so what
+-   it holds can pin its foot (Talk's reply box) to the window's bottom */
++/* the column beside: Linear's issue sidebar, a tinted rail ruled off by one hairline and run out to
++   the sheet's edge, full height, so what it holds can pin its foot (Talk's reply box) to the
++   window's bottom */
+ .side {
+   min-height: 0;
+   display: flex;
+   flex-direction: column;
+-  padding: var(--sp-9) 0 var(--sp-8) var(--sp-9);
++  padding: var(--sp-9) var(--sp-9) var(--sp-8);
+   border-left: var(--line-1) solid var(--tk-card-edge);
++  background: var(--tk-well);
+   overflow-y: auto;
+   scrollbar-width: thin;
+ }
+diff --git a/web/src/kit/Section.module.css b/web/src/kit/Section.module.css
+index 0c4d8e8..e3603f8 100644
+--- a/web/src/kit/Section.module.css
++++ b/web/src/kit/Section.module.css
+@@ -35,7 +35,10 @@
+   align-self: baseline;
+ }
+ .aside {
+-  font-size: var(--fs-2);
++  display: inline-flex;
++  align-items: center;
++  gap: var(--sp-3);
++  font-size: var(--fs-3);
+   line-height: 1.35;
+   color: var(--ink-3);
+   font-variant-numeric: tabular-nums;
+diff --git a/web/src/kit/Section.tsx b/web/src/kit/Section.tsx
+index 06592f7..d9c039f 100644
+--- a/web/src/kit/Section.tsx
++++ b/web/src/kit/Section.tsx
+@@ -17,8 +17,8 @@ export type SectionProps = { children: ReactNode } & (
+   | {
+       /** The heading, and the part's name. */
+       title: string;
+-      /** Quiet words right after the heading ("2 of 5 done"). */
+-      aside?: string;
++      /** Quiet words right after the heading, with a glyph if it has one (a plan's pie, "2/5"). */
++      aside?: ReactNode;
+       /** A quiet line under the heading: what the part is for, or its subline (a copy's drift). */
+       note?: ReactNode;
+       /** At the head's end: who is in it, its one action. */
+@@ -39,7 +39,7 @@ export type SectionProps = { children: ReactNode } & (
+ interface HeadProps {
+   id: string;
+   title: string;
+-  aside: string | undefined;
++  aside: ReactNode;
+   note: ReactNode;
+   end: ReactNode;
+ }
+diff --git a/web/src/kit/Stepper.module.css b/web/src/kit/Stepper.module.css
+index 071dcdc..947bc88 100644
+--- a/web/src/kit/Stepper.module.css
++++ b/web/src/kit/Stepper.module.css
+@@ -108,7 +108,7 @@
+ }
+ /* in the run card a ring of the card's ground keeps the diamond off the bars either side */
+ .card .knot {
+-  outline: var(--line-2) solid var(--tk-well);
++  outline: var(--line-2) solid var(--page);
+ }
+ .knot[data-state="passed"] {
+   background: var(--progress);
+@@ -178,12 +178,12 @@
+   font-size: var(--fs-2);
+ }
+ 
+-/* the run card: the stages and what happens now in one contained card, the composer's radius */
++/* the run card: the stages and what happens now in one card, as Linear's latest update: the page's
++   own ground on a hairline, a larger radius */
+ .card {
+-  padding: var(--sp-6);
++  padding: var(--sp-6) var(--sp-8);
+   border: var(--line-1) solid var(--tk-card-edge);
+-  border-radius: var(--r-4);
+-  background: var(--tk-well);
++  border-radius: var(--r-5);
+ }
+ .card .bar {
+   margin-top: var(--sp-2);
+@@ -193,8 +193,8 @@
+ .now {
+   grid-column: 1 / -1;
+   min-width: 0;
+-  margin: var(--sp-6) calc(var(--sp-6) * -1) 0;
+-  padding: var(--sp-6) var(--sp-6) 0;
++  margin: var(--sp-6) calc(var(--sp-8) * -1) 0;
++  padding: var(--sp-6) var(--sp-8) 0;
+   border-top: var(--line-1) solid var(--tk-card-edge);
+   --w-meter: var(--w-tk-meter);
+ }
+diff --git a/web/src/kit/Tabs.module.css b/web/src/kit/Tabs.module.css
+index 61dcb82..782fd6d 100644
+--- a/web/src/kit/Tabs.module.css
++++ b/web/src/kit/Tabs.module.css
+@@ -1,47 +1,49 @@
+-/* Linear's section tabs: plain words on a hairline, the current one in the strong ink with a 2px
+-   underline sitting on the rule; a count trails each in the quiet ink */
++/* Linear's view tabs: plain words as quiet buttons, the current one a filled chip on a hairline
++   ring in the strong ink; a count trails each in the quiet ink */
+ .list {
+   display: flex;
+-  align-items: stretch;
+-  gap: var(--sp-9);
+-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--tk-card-edge);
++  align-items: center;
++  gap: var(--sp-2);
++  margin-left: calc(var(--sp-5) * -1);
+ }
+ .tab {
+   display: inline-flex;
+   align-items: center;
+   gap: var(--sp-3);
+   height: var(--h-tab);
+-  padding: 0;
++  padding: 0 var(--sp-5);
+   border: 0;
++  border-radius: var(--r-3);
+   background: none;
+-  color: var(--tk-label);
+-  font-size: var(--fs-tk);
++  color: var(--ink-2);
++  font-size: var(--fs-3);
+   font-weight: 500;
+   white-space: nowrap;
+   cursor: pointer;
+   transition:
+     color var(--dur-fast),
+-    box-shadow var(--dur-fast);
++    background var(--dur-fast);
+ }
+ .tab:hover {
+   color: var(--ink-1);
++  background: var(--tk-hover);
+ }
+ .tab:focus-visible {
+   outline: var(--line-2) solid var(--focus);
+-  outline-offset: var(--focus-out);
+-  border-radius: var(--r-1);
++  outline-offset: var(--focus-tight);
+ }
+ .tab[data-active] {
+   color: var(--ink-1);
+-  box-shadow: inset 0 calc(var(--line-2) * -1) 0 var(--ink-1);
++  background: var(--tk-mine);
++  box-shadow: inset 0 0 0 var(--line-1) var(--tk-card-edge);
+ }
+ .count {
+-  font-size: var(--fs-4);
++  font-size: var(--fs-2);
+   font-weight: 400;
+   color: var(--tk-label);
+   font-variant-numeric: tabular-nums;
+ }
+ .panel {
+-  padding-top: var(--sp-10);
++  padding-top: var(--sp-9);
+   outline: none;
+ }
+diff --git a/web/src/kit/Text.module.css b/web/src/kit/Text.module.css
+index a170bed..32fe930 100644
+--- a/web/src/kit/Text.module.css
++++ b/web/src/kit/Text.module.css
+@@ -5,8 +5,8 @@
+ .display {
+   font-size: var(--fs-ticket);
+   font-weight: 600;
+-  line-height: 1.25;
+-  letter-spacing: var(--track-snug);
++  line-height: 1.2;
++  letter-spacing: calc(var(--track-snug) * 2);
+   color: var(--ink-1);
+ }
+ .title {
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 0741f2b..d7ec1dd 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -348,6 +348,9 @@
+         },
+         "label": {
+           "why": "The row's head, as Linear's \"Properties\" (Properties, Code, Workflow on the ticket page and the peek)."
++        },
++        "stack": {
++          "why": "The head over the values, one a line, as Linear's issue sidebar: the ticket page's rail is too narrow for a row of chips beside a head column."
+         }
+       }
+     },
+@@ -645,12 +648,12 @@
+           "why": "The bar's buttons at its right end (New ticket; the ticket's actions)."
+         },
+         "side": {
+-          "why": "A full-height column beside the body, ruled off by one hairline; its look says how wide.",
++          "why": "A full-height column beside the body, as Linear's issue sidebar: a tinted rail ruled off by one hairline, run out to the sheet's edge; its look says how wide.",
+           "items": {
+             "look": {
+               "why": "How wide the column is.",
+               "values": {
+-                "column": "A reading column (the ticket's Talk, the workflow editor's library): the default.",
++                "column": "A reading column (the ticket's properties and Talk, the workflow editor's library): the default.",
+                 "rail": "A narrow rail of settings (an item editor's properties), the body beside it an editor out to its gutter."
+               }
+             }
+@@ -963,7 +966,7 @@
+       }
+     },
+     "Tabs": {
+-      "why": "Underline tabs on a hairline, as Linear's section tabs (plain words, the current one underlined on the rule): Base UI's roving focus and arrow keys, our look.",
++      "why": "Pill tabs, as Linear's view tabs (plain words as quiet buttons, the current one a filled chip on a hairline ring): Base UI's roving focus and arrow keys, our look.",
+       "single": "The ticket page's sections today; Settings' areas use them in W8.",
+       "props": {
+         "label": {
+@@ -1169,7 +1172,7 @@
+           "why": "A part with no head of its own (a ticket's head in the peek, its title the heading inside it): its name for assistive tech only."
+         },
+         "aside": {
+-          "why": "Quiet words right after the heading: how much is done, a count."
++          "why": "Quiet words right after the heading, with a glyph if it has one: how much is done (a plan's pie and 2/5, as Linear's sub-issues), a count."
+         },
+         "note": {
+           "why": "A quiet line under the heading: what the part is for (Talk is just people), or its subline (a workflow copy's drift chips and who edited it); it describes the part."
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 12d2292..e60f51c 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -102,13 +102,13 @@
+   --tk-hover: color-mix(in srgb, var(--ink-1) 4.5%, transparent);
+   --tk-card: var(--surface);
+   --tk-card-edge: color-mix(in srgb, var(--ink-1) 9%, transparent);
+-  --tk-mine: color-mix(in srgb, var(--ink-1) 4.5%, var(--surface));
++  --tk-mine: color-mix(in srgb, var(--ink-1) 6%, var(--surface));
+   --tk-mine-edge: color-mix(in srgb, var(--ink-1) 6%, transparent);
+   --tk-side: var(--surface);
+   --tk-scrim: color-mix(in srgb, var(--ink-1) 24%, transparent);
+   --tk-ink: var(--ink-1); /* body-size text: a property, a plan item, a message */
+   --tk-label: var(--ink-3); /* a property's head, a section head: clearly under the values */
+-  --tk-well: color-mix(in srgb, var(--ink-1) 1.8%, var(--surface)); /* the run card, Talk's card */
++  --tk-well: color-mix(in srgb, var(--ink-1) 4.5%, var(--surface)); /* the rail: Linear's sidebar */
+   --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
+   /* depth: hairlines, almost no shadow */
+   --shadow-recess: inset 0 0 0 1px rgba(9, 9, 11, 0.06);
+@@ -577,17 +577,17 @@
+   --type-square: color-mix(in srgb, var(--ink-1) 8%, transparent);
+   --type-glyph: var(--ink-2);
+ 
+-  /* ticket: Linear's issue-page measures, one step above the lists' type */
+-  --fs-ticket: 24px; /* the ticket's title */
+-  --fs-ticket-lead: 16px; /* the ticket's description */
+-  --fs-tk: 15px; /* the page's body: a property, a stage, a tab, a plan item, a message */
+-  --w-fact-label: 112px; /* the properties row's head column */
+-  --h-fact: 32px; /* a property row */
+-  --h-check: 36px; /* a plan row */
+-  --h-check-sm: 32px; /* a plan row in the peek */
++  /* ticket: Linear's issue-page measures: a large title over a dense body at the lists' row type */
++  --fs-ticket: 28px; /* the ticket's title */
++  --fs-ticket-lead: 15px; /* the ticket's description */
++  --fs-tk: 14px; /* the page's body: a property, a stage, a plan item, a message */
++  --w-fact-label: 104px; /* the properties row's head column */
++  --h-fact: 30px; /* a property row */
++  --h-check: 34px; /* a plan row */
++  --h-check-sm: 30px; /* a plan row in the peek */
+   --h-compose: 24px; /* the composer's text, one line beside Send; it grows as you type */
+   --w-ticket: 760px; /* the ticket body's reading width */
+-  --h-tab: 40px; /* a section tab, its underline on the list's hairline */
++  --h-tab: 28px; /* a view tab, a quiet button */
+   --w-tk-meter: 120px; /* the run's step meter, on the stepper's now line */
+ 
+   /* form: a field's height (a row's control), a code line's height in a text area, a number

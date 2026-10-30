@@ -1,0 +1,18 @@
+gauntlet: glyphs, popover sections, field edges, a cool dark
+
+The gaps that blind judges named in the twins-against-Linear match.
+
+- Icon: filter, display, sort and order, so the twins' toolbars no
+  longer reuse one stacked-lines glyph.
+- Surface parts: a hairline between an options panel's sections.
+- Select: a faint hairline round the trigger, so a value you can change
+  reads as a field.
+- Carbon: a cool near-black sheet over a blacker ground, with firmer
+  tonal steps.
+
+A smaller view title was tried and dropped: on our own screens it lost
+1-3 (it no longer anchors the list pages). This version beat the current
+screens 3-1, four blind judges. The twins still lose to Linear 0-4.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

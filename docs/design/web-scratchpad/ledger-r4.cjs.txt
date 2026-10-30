@@ -1,0 +1,32 @@
+// Round 4's ledger words: reasons that said other than the code.
+const fs = require("fs");
+const path = process.argv[2];
+const led = JSON.parse(fs.readFileSync(path, "utf8"));
+const c = led.components;
+const W = led.vocab.Width.values;
+
+W.xs = "44px: an age, a run's or a version's number, a row's one icon button.";
+W.sm = "76px: a key, a stage, a source, a short verdict or start time.";
+W["2xl"] = "208px: a fill column's floor (a title keeps it), a row's buttons' cap.";
+W["3xl"] = "300px: a list line's chips, hugging their content up to it.";
+
+c.Notice.props.fix.why =
+  "A problem's way out, on a muted line of its own so neither wraps into the other: words, or words round a link (An admin can fix the query in Settings › Intake).";
+c.Notice.props.align.why =
+  "Where its words sit: a problem or an empty line on a list's item columns (Intake's), a status at the list's far edge.";
+
+c.Mark.props.name.why =
+  "Who or what, in the state's colour (Builder · run #42, Bea, Blocked), never with YOU, which stands alone; on a glyph, its accessible name, the state's word by default, or false where the words beside it already say it (a filter chip, a counter).";
+
+c.Toggle.props.label.why = c.Toggle.props.label.why.replace(" and tooltip", "");
+
+c.Facts.props.items.why =
+  "The facts: a label, then a value (words after a muted glyph, or other content) or a picker that brings its own padding; quiet words after either (main, from the repo).";
+
+fs.writeFileSync(path, JSON.stringify(led, null, 2) + "\n");
+console.log({
+  toggle: c.Toggle.props.label.why,
+  now: c.Stepper.props.now.why,
+  count: c.Head.props.count.why,
+  stepper: JSON.stringify(c.Stepper.props.model ?? c.Stepper.props, null, 0).slice(0, 900),
+});

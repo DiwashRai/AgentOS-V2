@@ -1,0 +1,18 @@
+gauntlet: a cooler palette, faint tones, cards on hairlines
+
+The owner's call: the light mode's grey made it drab, and in both modes
+the grey slabs stood too far off the page (Linear's comment card is 3
+levels over its sheet in the dark; ours was 6).
+
+- Paper: tones, fills and lines mixed from a cool slate (--wash, --hair)
+  instead of the ink, each step smaller; cool near-black and slate inks;
+  a pale cool sidebar.
+- Carbon: a touch cooler; card tones a third to a half of what they
+  were (a card now 4 levels over the sheet); the sidebar 30% black, as
+  near Linear's as its sheet.
+- Card, the run card and the reply box take a hairline, so a card is
+  told by its edge more than its shade.
+- Group gap 10px everywhere.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

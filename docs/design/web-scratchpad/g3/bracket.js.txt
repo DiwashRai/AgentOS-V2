@@ -1,0 +1,92 @@
+export const meta = {
+  name: 'gauntlet3-bracket',
+  description: 'The directions play each other head to head on our screens (every pair, four blind judges each); a split pair is decided on the twins; the top two then play the current screens',
+  phases: [
+    { title: 'Prep', detail: 'copy each pair under neutral names' },
+    { title: 'Judge', detail: 'every pair of directions on our 10 screens; the twins only where a pair splits' },
+    { title: 'Confirm', detail: 'the top two against the current screens' },
+  ],
+}
+
+// args: { out: '<judge dir>', dirs: [{ key, dir: '<neutral id>', root: '<round dir holding screens\\ and twins\\>' }], current: '<current shots dir with screens\\>' }
+const G3 = 'C:\\Users\\diwash\\AppData\\Local\\Temp\\claude\\C--code-AgentOS-V2-web\\6d0fdab0-5ae2-4898-99b9-b3d2c29ccdad\\scratchpad\\g3'
+const ROOT = 'C:\\code\\AgentOS-V2-web'
+
+const JUDGE_SCHEMA = { type: 'object', required: ['pick', 'why', 'loserGap', 'winnerFlaw'], properties: {
+  pick: { type: 'string', enum: ['A', 'B', 'same'] },
+  why: { type: 'string', description: 'The deciding differences, in two or three sentences' },
+  loserGap: { type: 'string', description: "The losing one's single biggest gap to the winner, as one concrete instruction a designer can act on (if same: the bigger shared flaw)" },
+  winnerFlaw: { type: 'string', description: "The winner's own single biggest remaining flaw, as one concrete instruction" },
+  broken: { type: 'string', description: 'Anything broken in either: clipped or overlapping text, missing content or controls, broken layout, unreadable contrast (say which, A or B, and which screen)' },
+} }
+
+function judgePrompt(dir, n, kind) {
+  const pairs = Array.from({ length: n }, (_, i) => `Screen ${i + 1}: A ${dir}\\A-${i + 1}.png, B ${dir}\\B-${i + 1}.png`).join('\n')
+  const what = kind === 'screens'
+    ? `Two designs, A and B, of the same product's screens, with their labels stripped: the same content and state on each screen, designed two ways. They may differ in layout and in visual language; that's allowed. Judge which is the better-designed product UI for this content. If one leaves out content or controls the other shows, count it against it.`
+    : `Two versions, A and B, of the same product screens, with their labels stripped: the same content in the same layout, drawn in two visual treatments. Where one shows a picture (a logo, an emoji, a photo) and the other a stand-in for it, don't count that either way.`
+  return `You are a harsh product design critic. Praise is not useful.
+
+${what}
+${pairs}
+
+Open every image and study A and B side by side, part by part, screen by screen; then weigh all the screens together. Judge the craft: visual hierarchy, typography, colour and contrast, density, spacing and alignment, separation and surfaces, glyphs, consistency, polish, and how clearly each screen does its job.
+
+Answer A, B, or same. Say "same" only when you genuinely can't tell them apart in quality, never as a hedge between two that differ. Then name the loser's single biggest gap to the winner and the winner's own biggest remaining flaw, each as one concrete instruction, and list anything broken. Do not edit any file.`
+}
+
+async function match(id, n, kind, label, phase) {
+  const runs = await parallel([1, 2, 3, 4].map((k) => () => {
+    const xIs = k <= 2 ? 'A' : 'B'
+    return agent(judgePrompt(`${args.out}\\${id}\\j${k}`, n, kind), { label: `${label}:j${k}`, phase, schema: JUDGE_SCHEMA, effort: 'high' })
+      .then((v) => v && { judge: k, xIs, ...v, vote: v.pick === 'same' ? 'same' : (v.pick === xIs ? 'X' : 'Y') })
+  }))
+  const js = runs.filter(Boolean)
+  return { X: js.filter((j) => j.vote === 'X').length, Y: js.filter((j) => j.vote === 'Y').length, same: js.filter((j) => j.vote === 'same').length, judges: js }
+}
+
+const prepRun = (cmds, label, phase) => agent(`Run these commands from ${ROOT}, one at a time, and report each one's output exactly. Do nothing else.\n${cmds.join('\n')}`, { label, phase, effort: 'medium' })
+
+const D = args.dirs
+const pairs = []
+for (let i = 0; i < D.length; i++) for (let j = i + 1; j < D.length; j++) pairs.push([D[i], D[j]])
+const pid = (a, b, k) => `${a.dir}${b.dir}-${k}`
+
+phase('Prep')
+const prepOut = await prepRun(pairs.flatMap(([a, b]) => [
+  `node ${G3}\\xprep.mjs ${args.out} ${pid(a, b, 's')} ${a.root}\\screens ${b.root}\\screens screens`,
+  `node ${G3}\\xprep.mjs ${args.out} ${pid(a, b, 't')} ${a.root}\\twins ${b.root}\\twins twins`,
+]), 'prep:pairs', 'Prep')
+const bad = pairs.filter(([a, b]) => !prepOut.includes(`${pid(a, b, 's')}: 10 per side`) || !prepOut.includes(`${pid(a, b, 't')}: 7 per side`))
+if (bad.length) return { prepFailed: prepOut }
+
+phase('Judge')
+const games = await parallel(pairs.map(([a, b]) => async () => {
+  const s = await match(pid(a, b, 's'), 10, 'screens', `${a.key}-${b.key}`, 'Judge')
+  let winner = s.X >= 3 ? a.key : s.Y >= 3 ? b.key : null
+  let t = null
+  if (!winner) {
+    t = await match(pid(a, b, 't'), 7, 'twins', `twins:${a.key}-${b.key}`, 'Judge')
+    winner = t.X >= 3 ? a.key : t.Y >= 3 ? b.key : null
+  }
+  log(`${a.key} ${s.X} - ${s.Y} ${b.key}${t ? ` (split; twins ${t.X} - ${t.Y})` : ''}: ${winner ?? 'draw'}`)
+  return { x: a.key, y: b.key, screens: s, twins: t, winner }
+}))
+
+const table = D.map((d) => ({
+  key: d.key,
+  wins: games.filter((g) => g && g.winner === d.key).length,
+  votes: games.filter(Boolean).reduce((n, g) => n + (g.x === d.key ? g.screens.X : g.y === d.key ? g.screens.Y : 0), 0),
+})).sort((p, q) => q.wins - p.wins || q.votes - p.votes)
+log(`table: ${table.map((r) => `${r.key} ${r.wins} wins (${r.votes} votes)`).join(', ')}`)
+
+phase('Confirm')
+const top = table.slice(0, 2).map((r) => D.find((d) => d.key === r.key))
+const confOut = await prepRun(top.map((d) => `node ${G3}\\xprep.mjs ${args.out} ${d.dir}-c ${d.root}\\screens ${args.current}\\screens screens`), 'prep:confirm', 'Confirm')
+const confirm = await parallel(top.map((d) => async () => {
+  if (!confOut.includes(`${d.dir}-c: 10 per side`)) return { key: d.key, prepFailed: true }
+  const m = await match(`${d.dir}-c`, 10, 'screens', `confirm:${d.key}`, 'Confirm')
+  log(`${d.key} against the current screens: ${m.X} - ${m.Y}`)
+  return { key: d.key, ...m }
+}))
+return { games, table, confirm }

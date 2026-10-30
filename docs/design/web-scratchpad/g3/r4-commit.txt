@@ -1,0 +1,18 @@
+gauntlet: expanded rows on hairlines, one select width, room on facts
+
+Round three's judges, all but the group bands (the owner keeps them:
+Linear draws them too).
+
+- Row: an expanded row is no band but a part of the list on two
+  hairlines, so a large panel never reads as a slab of the accent; a
+  plain selected row keeps the tint.
+- Form: a form row's picker takes the control's room, up to a
+  popover's width, chevron at its end, so the selects down a form share
+  one width and one right edge.
+- Facts: a step more room between values, a narrower label column, so a
+  properties row fits on one line.
+- Compact names its Now column; All teams' Open list is a quiet glyph
+  button; the sub-issues twin's Display popover is in parts.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

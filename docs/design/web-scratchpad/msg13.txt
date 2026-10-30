@@ -1,0 +1,17 @@
+web: a kit component only as a tag; a "!" glob pattern only takes out
+
+`const CELL = { text: Text }` then `<CELL.text tone={tone} />` drew Text
+under a name the credit and the knob check don't know; only a const
+holding a kit component was banned. Now a kit component may appear only
+as its tag, a call's argument (`memo(Text)`) or a type (`typeof Text`):
+held anywhere else (a const, an object's field, an array) it fails, in
+the resolved check and in ESLint's kit-by-name rule (which now tracks
+value imports of components only, so `watchVisibility()` and types
+pass).
+
+A "!"-led pattern in an import.meta.glob array took nothing in, so it
+failed as matching nothing; it now takes its matches out of the
+others', and only a pattern that adds files must match one. Both cases
+are in the tree test.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

@@ -1,0 +1,94 @@
+// The twins' camera: for each twin, our drawing (twin.png) and the matching crop of Linear's
+// reference (linear.png), at the same pixel size, so a judge compares like with like.
+// Usage: node tshots.mjs <web dir> <port> <out dir> <ref dir> <name|all> [twin|design]
+// With "design": shoots /designs/<name> (our own design of the twin's content) as design.png, at the
+// twin's crop size; designs/<name>.json, if there, overrides the twin's view, at, click and theme.
+// Reads web/src/features/sheet/twins/<name>.json:
+//   { "ref": "<file in ref dir>", "crop": [x, y, w, h] (the reference's pixels),
+//     "scale": <reference pixels per CSS pixel>, "theme": "<theme id>",
+//     "click": [{ "role": "button", "name": "Display" }]  (optional, run in order before the shot),
+//     "view": [width, height]  (optional: the page's viewport in CSS pixels, when Linear's crop cuts
+//                               through a wider window; default w/scale x h/scale),
+//     "at": [x, y]  (optional: where in that viewport the crop starts, CSS pixels; default 0, 0) }
+// Starts Vite on <port> (strict), shoots /twins/<name> at a device scale of `scale`, clipped to the
+// crop's size (w/scale x h/scale CSS pixels), Europe/London, reduced motion, pointer parked; writes
+// <out>/<name>/twin.png and linear.png and prints them; stops Vite.
+import { spawn } from "node:child_process";
+import { existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+
+const [web, port, out, refs, which = "all", mode = "twin"] = process.argv.slice(2);
+const dir = join(web, "src", "features", "sheet", "twins");
+const ddir = join(web, "src", "features", "sheet", "designs");
+const kind = mode === "design" ? { route: "designs", file: "design.png" } : { route: "twins", file: "twin.png" };
+const names =
+  which === "all"
+    ? mode === "design"
+      ? readdirSync(ddir).filter((f) => f.endsWith(".tsx")).map((f) => f.slice(0, -4))
+      : readdirSync(dir).filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5))
+    : which.split(",");
+
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", port, "--strictPort"], { cwd: web, stdio: "ignore" });
+try {
+  const base = `http://127.0.0.1:${port}`;
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 150) throw new Error(`vite did not start on ${port}`);
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  for (const name of names) {
+    const own = join(ddir, `${name}.json`);
+    const spec = {
+      ...JSON.parse(readFileSync(join(dir, `${name}.json`), "utf8")),
+      ...(mode === "design" && existsSync(own) ? JSON.parse(readFileSync(own, "utf8")) : {}),
+    };
+    const [x, y, w, h] = spec.crop;
+    const into = join(out, name);
+    mkdirSync(into, { recursive: true });
+
+    // Linear's: the crop of the reference, at its own pixels
+    const rctx = await browser.newContext({ viewport: { width: 400, height: 400 } });
+    const rpage = await rctx.newPage();
+    await rpage.goto(pathToFileURL(join(refs, spec.ref)).href);
+    const [nw, nh] = await rpage.evaluate(() => { const i = document.querySelector("img"); return [i.naturalWidth, i.naturalHeight]; });
+    await rpage.setViewportSize({ width: nw, height: nh });
+    await rpage.evaluate(() => { document.body.style.margin = "0"; });
+    await rpage.screenshot({ path: join(into, "linear.png"), clip: { x, y, width: w, height: h } });
+    await rctx.close();
+
+    // ours: the twin at the reference's scale
+    const cw = Math.round(w / spec.scale), ch = Math.round(h / spec.scale);
+    const [vw, vh] = spec.view ?? [cw, ch];
+    const [ax, ay] = spec.at ?? [0, 0];
+    const ctx = await browser.newContext({
+      viewport: { width: vw, height: vh },
+      deviceScaleFactor: spec.scale,
+      timezoneId: "Europe/London",
+      reducedMotion: "reduce",
+    });
+    await ctx.addInitScript((t) => localStorage.setItem("agentos-theme", t), spec.theme);
+    const page = await ctx.newPage();
+    await page.goto(`${base}/${kind.route}/${name}`);
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(500);
+    const geist = await page.evaluate(() => [...document.fonts].some((f) => /Inter/.test(f.family) && f.status === "loaded"));
+    if (!geist) throw new Error(`Inter did not load on /${kind.route}/${name}: the font files aren't being served (see the setup note)`);
+    if (new URL(page.url()).pathname !== `/${kind.route}/${name}`) throw new Error(`/${kind.route}/${name} has no ${mode} (it went to ${page.url()})`);
+    for (const c of spec.click ?? []) {
+      await page.getByRole(c.role, { name: c.name, exact: true }).first().click();
+      await page.waitForTimeout(400);
+    }
+    await page.mouse.move(vw - 1, vh - 1);
+    await page.screenshot({ path: join(into, kind.file), clip: { x: ax, y: ay, width: cw, height: ch } });
+    await ctx.close();
+    console.log(join(into, "linear.png"));
+    console.log(join(into, kind.file));
+  }
+  await browser.close();
+} finally {
+  vite.kill();
+}

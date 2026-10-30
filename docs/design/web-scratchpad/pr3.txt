@@ -1,0 +1,19 @@
+web: one LoadNotice for every read's loading, failure and absence
+
+Fifteen screens said a read's state in their own words, and the by-id
+ones said "not found" for any failure. Now the DataSource boundary
+rejects a read of one thing that isn't there with a typed NotFound;
+loadOf(query) in api/queries turns a query into its data or a Load
+(pending, unreachable, missing, in domain/load.ts), and LoadNotice
+(patterns/load.tsx) says each the same way everywhere: "Loading {id,
+else the noun}", "Can't reach the server · {message}", "No {noun} {id}".
+
+The Runs and Context tabs had no failure branch: a failed read showed
+"No runs yet" or an empty table. They say it now.
+
+Screenshots: ticket-missing (both themes) changes from "Ticket not
+found · NW-404" to "No ticket NW-404", the decided wording. No other
+picture changes.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

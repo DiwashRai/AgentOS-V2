@@ -1,0 +1,15 @@
+kit: the budget is the owner's checkpoint, and the card lists each raise
+
+The owner's intent for the kit budget: a raise is fine when it's needed, but it
+never happens unseen, and the pressure is there to make reuse the first choice.
+
+- AGENTS.md: a change that needs more asks the owner (through the lead) with
+  what it needs, the components it tried and why they don't fit, and the cost;
+  the owner approves by adding the raises entry.
+- kit.mjs: the card lists every raise against the base with its reason, under
+  "Budget raised", where it used to print only the totals. The header comment
+  says the gate is a checkpoint, not a wall.
+- ledger.json: the components raise to 40 records the owner's own approval.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

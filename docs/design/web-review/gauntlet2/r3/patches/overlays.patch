@@ -1,0 +1,606 @@
+diff --git a/web/src/features/ticket/WorkflowOverlay.tsx b/web/src/features/ticket/WorkflowOverlay.tsx
+index c726698..b8c6a5c 100644
+--- a/web/src/features/ticket/WorkflowOverlay.tsx
++++ b/web/src/features/ticket/WorkflowOverlay.tsx
+@@ -1,19 +1,19 @@
+ // The ticket's workflow editor (?edit=workflow): the library's workflow editor, full window over
+-// the ticket, framed as the ticket's copy (R27). The top bar names it as the Workflow tab does
+-// ("NW-17's copy of Standard v3", who edited it, which gives way first when the bar is narrow),
+-// with Undo, Redo, Discard and Save at its end; the row under it holds the copy's drift both ways
+-// with what resolves it beside it: Take library version (one undoable step) and Promote (refused
+-// while the library has moved on, and saying why on screen). Closing with unsaved changes asks
+-// inside the overlay: Save, Discard, or keep editing.
++// the ticket, framed as the ticket's copy (R27). The top bar's crumb names it as the item overlay
++// does ("NW-17 › Copy of Standard v3", who edited it, which gives way first when the bar is
++// narrow), with Undo, Redo, Discard and Save at its end; the row under it holds the copy's drift
++// both ways with what resolves it beside it: Take library version (one undoable step) and Promote
++// (refused while the library has moved on, saying why in the row's note). Closing with unsaved
++// changes asks inside the overlay: Save, Discard, or keep editing.
+ import { useState } from "react";
+ 
+ import { useNow, useTicketWorkflow, useWorkflow } from "../../api/queries";
+ import type { Ticket, TicketWorkflow, Workflow, WorkflowBody } from "../../api/types";
+-import { Button, Chip, Dialog, FormRow, Notice, Page, Text } from "../../kit";
++import { Button, Chip, Dialog, FormRow, Notice, Page } from "../../kit";
+ import { type Draft, useDraft } from "../workflow/draft";
+ import { Editor } from "../workflow/Editor";
+ import { authorText } from "../workflow/who";
+-import { copyTitle, DriftChips as SharedDrift, saveAsk } from "./copy";
++import { DriftChips as SharedDrift, saveAsk } from "./copy";
+ 
+ interface OverlayProps {
+   t: Ticket;
+@@ -65,21 +65,16 @@ function Take({ w, lib, draft }: { w: TicketWorkflow; lib: Workflow | undefined;
+   );
+ }
+ 
+-/** Promote, and why it is refused now, said on screen beside it. */
++/** Promote, refused with its reason as its tip (the row's note says it on screen). */
+ function Promote({ w, block }: { w: TicketWorkflow; block: string | null }) {
+-  if (block === null)
+-    return (
+-      <Button size="sm" title={`Save this copy as ${w.name}'s next version (admins)`}>
+-        Promote
+-      </Button>
+-    );
+-  return (
+-    <>
+-      <Button size="sm" blocked={block}>
+-        Promote
+-      </Button>
+-      <Text variant="meta">{block}</Text>
+-    </>
++  return block === null ? (
++    <Button size="sm" title={`Save this copy as ${w.name}'s next version (admins)`}>
++      Promote
++    </Button>
++  ) : (
++    <Button size="sm" blocked={block}>
++      Promote
++    </Button>
+   );
+ }
+ 
+@@ -89,15 +84,21 @@ function Drift({ w, draft }: { w: TicketWorkflow; draft: Draft }) {
+   const lib = useWorkflow(w.from.id).data;
+   const taken = lib !== undefined && draft.dirty && same(draft.body, lib);
+   const drifted = w.drift.library !== null || w.drift.changed;
++  const block = promoteBlock(w, lib, taken);
++  // why Promote waits, short, on the chips' line (its tip says it whole)
++  const why =
++    w.drift.library !== null && !taken
++      ? `Promote after taking v${String(w.drift.library)}`
++      : (block ?? undefined);
+   return (
+-    <FormRow label="This copy">
++    <FormRow label="This copy" note={why}>
+       {taken ? (
+         <Chip dot="you" label={`Taking library v${String(lib.version)} · unsaved`} />
+       ) : (
+         <DriftChips w={w} />
+       )}
+       {drifted && !taken ? <Take w={w} lib={lib} draft={draft} /> : null}
+-      <Promote w={w} block={promoteBlock(w, lib, taken)} />
++      <Promote w={w} block={block} />
+     </FormRow>
+   );
+ }
+@@ -138,7 +139,7 @@ function CopyEditor({ t, w, open, onClose }: OverlayProps & { w: TicketWorkflow
+       }
+     >
+       <Editor
+-        title={copyTitle(t.key, w.name, w.from.version)}
++        title={[{ label: t.key }, `Copy of ${w.name} v${String(w.from.version)}`]}
+         draft={draft}
+         context={`Edited by ${authorText(w.updated_by, w.updated_at, now)}`}
+         banner={<Drift w={w} draft={draft} />}
+diff --git a/web/src/features/ticket/itemOverlay.tsx b/web/src/features/ticket/itemOverlay.tsx
+index c01bece..02c9780 100644
+--- a/web/src/features/ticket/itemOverlay.tsx
++++ b/web/src/features/ticket/itemOverlay.tsx
+@@ -1,6 +1,7 @@
+ // One of the ticket's context items in the full-window overlay over the ticket (?edit=<name>): the
+ // library's one item editor (features/library/ItemEditor), framed as the ticket's copy the way its
+-// workflow overlay is: "NW-17's copy of tests v2", its drift, and Take library version and Promote
++// workflow overlay is: the crumb "NW-17 › Copy of tests v2" (the document's heading is the item's
++// one title), its drift, and Take library version and Promote
+ // beside Discard and Save while it has drifted. The agents' switch is the Context tab's own and
+ // saves at once, so it sits in the bar, not among the properties Save governs. Used by says which
+ // of the ticket's stages get it. Esc or the close with unsaved changes asks the same question as the
+@@ -16,7 +17,7 @@ import {
+   useTicketWorkflow,
+ } from "../../api/queries";
+ import type { Item, ItemBody, Origin, Ticket } from "../../api/types";
+-import { Button, Dialog, Icon, Notice, Page, Stack, Text, Toggle } from "../../kit";
++import { Button, Dialog, Icon, Notice, Page, type PageProps, Stack, Text, Toggle } from "../../kit";
+ import { type EditorActs, ItemEditor } from "../library/ItemEditor";
+ import type { Fact } from "../library/side";
+ import { copyTitle, DriftChips, saveAsk } from "./copy";
+@@ -26,11 +27,13 @@ import { ticketHref } from "./tabs";
+ type Copy = Extract<Origin, { kind: "copy" }>;
+ type Take = (body: ItemBody) => void;
+ 
+-/** The editor's title: the copy and the version it came from, or the ticket's own item. */
+-function titleOf(key: string, i: Item): string {
+-  return i.origin.kind === "copy"
+-    ? copyTitle(key, labelOf(i), i.origin.version)
+-    : `${key}'s ${i.name}`;
++/** The bar's crumb: the ticket it is over, then the copy and the version it came from (the
++ *  ticket's own item: its Context), at crumb size, so the document's heading is the one title. */
++function titleOf(key: string, i: Item): PageProps["title"] {
++  return [
++    { label: key },
++    i.origin.kind === "copy" ? `Copy of ${labelOf(i)} v${String(i.origin.version)}` : "Context",
++  ];
+ }
+ 
+ /** What it is, and the library item it was copied from. */
+@@ -165,8 +168,10 @@ type OnDirty = (dirty: boolean, acts: EditorActs, what: string) => void;
+ 
+ function Editor({ t, i, onDirty }: { t: Ticket; i: Item; onDirty: OnDirty }) {
+   const usedIn = useUsedIn(t, i);
+-  const title = titleOf(t.key, i);
+-  const what = i.origin.kind === "copy" ? `${t.key}'s copy of ${labelOf(i)}` : title;
++  const what =
++    i.origin.kind === "copy"
++      ? copyTitle(t.key, labelOf(i), i.origin.version)
++      : `${t.key}'s ${i.name}`;
+   const told = useCallback(
+     (d: boolean, a: EditorActs) => {
+       onDirty(d, a, what);
+@@ -175,7 +180,7 @@ function Editor({ t, i, onDirty }: { t: Ticket; i: Item; onDirty: OnDirty }) {
+   );
+   return (
+     <ItemEditor
+-      title={title}
++      title={titleOf(t.key, i)}
+       heading={labelOf(i)}
+       item={i}
+       contentTitle={contentTitle(i, i.body.kind === "blocks")}
+diff --git a/web/src/kit/Dialog.module.css b/web/src/kit/Dialog.module.css
+index c0247e2..7ddc9b4 100644
+--- a/web/src/kit/Dialog.module.css
++++ b/web/src/kit/Dialog.module.css
+@@ -1,16 +1,14 @@
+-/* side: the peek, a sheet floated at the window's right edge, inset as the full look is, the list
+-   under it dimmed by the same scrim, so the one thing lifted is the one thing to read */
+-.side {
++/* both looks: a sheet lifted over the window, at the app's sheet's corner, on the scrim; the page
++   under it frosted as well as dimmed, so it reads as the page behind, not as words cut off */
++.side,
++.full {
+   position: fixed;
+-  inset: var(--sp-4) var(--sp-4) var(--sp-4) auto;
+-  width: min(var(--w-peek), calc(100vw - var(--sp-10)));
+   height: auto;
+   max-height: none;
+   margin: 0;
+   padding: 0;
+   border: 0;
+   border-radius: var(--r-4);
+-  background: var(--tk-side);
+   color: var(--ink-2);
+   box-shadow: var(--shadow-float);
+   overflow: hidden;
+@@ -22,20 +20,27 @@
+ .side::backdrop,
+ .full::backdrop {
+   background: var(--tk-scrim);
++  backdrop-filter: blur(var(--scrim-blur));
++}
++/* side: the peek, a sheet floated at the window's right edge, inset as the full look is, so the
++   one thing lifted is the one thing to read */
++.side {
++  inset: var(--sp-4) var(--sp-4) var(--sp-4) auto;
++  width: min(var(--w-peek), calc(100vw - var(--sp-10)));
++  background: var(--tk-side);
+ }
+ .side[open] {
++  --from: translateX(var(--sp-9));
+   display: flex;
+   flex-direction: column;
+-  animation: slide var(--dur-fast) var(--ease-out);
++  animation: lift var(--dur-fast) var(--ease-out);
+ }
+-@keyframes slide {
++/* both come in from a step off where they settle (the side from the right, the full from under),
++   fading up */
++@keyframes lift {
+   from {
+     opacity: 0;
+-    transform: translateX(var(--sp-9));
+-  }
+-  to {
+-    opacity: 1;
+-    transform: none;
++    transform: var(--from);
+   }
+ }
+ /* the bar: the panel's chrome, pinned over the sections the way the foot is under them (the key,
+@@ -82,37 +87,18 @@
+ }
+ 
+ /* full: the app's main sheet lifted over the whole window, for editing: the same inset and corner
+-   as the sheet it covers, on the scrim. Its bar runs edge to edge (the close, a rule, then the
+-   view's top bar), one hairline under all of it; the view (a Page) fills the rest. */
++   as the sheet it covers. Its bar runs edge to edge (the view's top bar, then the close), one
++   hairline under all of it; the view (a Page) fills the rest. */
+ .full {
+-  position: fixed;
+   inset: var(--sp-4);
+   width: auto;
+-  height: auto;
+   max-width: none;
+-  max-height: none;
+-  margin: 0;
+-  padding: 0;
+-  border: 0;
+-  border-radius: var(--r-4);
+   background: var(--page);
+-  color: var(--ink-2);
+-  box-shadow: var(--shadow-float);
+-  overflow: hidden;
+ }
+ .full[open] {
++  --from: translateY(var(--sp-4));
+   display: block;
+-  animation: rise var(--dur-fast) var(--ease-out);
+-}
+-@keyframes rise {
+-  from {
+-    opacity: 0;
+-    transform: translateY(var(--sp-4));
+-  }
+-  to {
+-    opacity: 1;
+-    transform: none;
+-  }
++  animation: lift var(--dur-fast) var(--ease-out);
+ }
+ .frame {
+   position: relative;
+diff --git a/web/src/kit/Dialog.tsx b/web/src/kit/Dialog.tsx
+index e132ff2..09d0165 100644
+--- a/web/src/kit/Dialog.tsx
++++ b/web/src/kit/Dialog.tsx
+@@ -4,7 +4,7 @@
+ // - side: the peek, docked full height at the right edge. Its parts are Sections, padded apart as
+ //   one document; they scroll inside the panel, between a bar and a foot that stay put.
+ // - full: the whole window, for editing (a ticket's workflow or item): the app's sheet lifted over
+-//   it, the close at the top left of its bar, then the view (a Page, so its top bar and body are
++//   it, the close a quiet glyph at its bar's end, then the view (a Page, so its top bar and body are
+ //   the same as on its own screen). `ask` draws a question over it, modal inside it (unsaved
+ //   changes: Save, Discard, Keep editing).
+ // It sits in the browser's top layer, so the kit's popovers, tooltips and toasts raised inside it
+@@ -98,7 +98,7 @@ function Full({
+       >
+         <div className={s.view}>{children}</div>
+         <span className={s.close}>
+-          <Button icon="close" title="Close (Esc)" onClick={onClose} />
++          <Button variant="quiet" icon="close" title="Close (Esc)" onClick={onClose} />
+         </span>
+       </div>
+       {hasAsk ? (
+diff --git a/web/src/kit/Form.module.css b/web/src/kit/Form.module.css
+index f7d6050..00736bf 100644
+--- a/web/src/kit/Form.module.css
++++ b/web/src/kit/Form.module.css
+@@ -145,7 +145,7 @@
+ .sheet:hover {
+   border-color: var(--ctl-edge-hover);
+ }
+-.sheet:has(> .leaf:focus) {
++.sheet:has(.leaf:focus) {
+   border-color: var(--you);
+   box-shadow: 0 0 0 var(--line-3) var(--card-open-ring);
+ }
+@@ -154,12 +154,11 @@
+   align-items: center;
+   gap: var(--sp-3);
+   min-height: calc(var(--h-field) + var(--sp-5));
++}
++.sheet > .sheetHead {
+   padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-6);
+   border-bottom: var(--line-1) solid var(--tk-card-edge);
+ }
+-.sheetHead:last-child {
+-  border-bottom: 0;
+-}
+ .leaf,
+ .leaf:is(:hover, :focus-within) {
+   padding: var(--sp-6) var(--sp-8) var(--sp-8);
+@@ -170,6 +169,61 @@
+   resize: none;
+ }
+ 
++/* a block of AGENTS.md (a sheet that folds): a section of one document, not a framed sheet: its
++   name a heading on the page, its text hung under the name past the fold; its length, moves and
++   pop-out (the head's last parts) come up on hover and focus; written in, a bar of your move's
++   accent runs down beside the text */
++.block:not(:hover, :focus-within) > .sheetHead > * > :nth-last-child(-n + 2) {
++  opacity: 0;
++}
++.block .leaf {
++  padding: var(--sp-1) 0 var(--sp-2) var(--block-indent);
++  border-radius: 0;
++}
++.block .leaf:focus {
++  box-shadow: inset var(--line-2) 0 var(--you);
++}
++
++/* a growing area read in place: the area and its markdown in one cell, the markdown over it on
++   the area's own box (each line falls where the area's own would), letting clicks through */
++.read {
++  display: grid;
++  grid-template-areas: "one";
++}
++.read > * {
++  grid-area: one;
++}
++.clear {
++  color: transparent;
++  caret-color: var(--ink-1);
++}
++.tint {
++  border-color: transparent;
++  background: none;
++  white-space: pre-wrap;
++  overflow-wrap: break-word;
++  pointer-events: none;
++}
++.tick {
++  border-radius: var(--r-1);
++  background: var(--md-tick);
++  color: var(--you-text);
++}
++/* a fenced block: one band from fence to fence, run a little out past the text, rounded at its
++   opening fence and its closing one (the fence after a band's line); its fences faint */
++.code {
++  margin-inline: calc(var(--sp-5) * -1);
++  padding-inline: var(--sp-5);
++  background: var(--md-band);
++}
++.fence {
++  border-radius: var(--r-2) var(--r-2) 0 0;
++  color: var(--ink-3);
++}
++.code + .fence {
++  border-radius: 0 0 var(--r-2) var(--r-2);
++}
++
+ /* the pop-out: a quiet button in the area's top right corner, shown on hover and focus */
+ .areaWrap {
+   position: relative;
+diff --git a/web/src/kit/Lane.module.css b/web/src/kit/Lane.module.css
+index 4b7ac81..768ae3f 100644
+--- a/web/src/kit/Lane.module.css
++++ b/web/src/kit/Lane.module.css
+@@ -48,24 +48,24 @@
+   bottom: calc(100% - var(--lane-face));
+ }
+ 
+-/* a loop's band, one piece per stage: a bracket in the gutter in the axis's line, no wash and no
+-   box (the stages' own cards, their edges parting them, are the boxes); the first piece turns in
+-   past the joint's diamond, the last under the loop's foot */
++/* a loop's band, one piece per stage: a bracket in the gutter, a step firmer than the axis so the
++   loop reads at a glance, no wash and no box (the stages' own cards, their edges parting them, are
++   the boxes); the first piece turns in past the joint's diamond, the last under the loop's foot */
+ .band {
+   position: absolute;
+   inset: 0 auto 0 calc(var(--out) * -1);
+   width: var(--sp-4);
+-  border-left: var(--line-2) solid var(--lane-line);
++  border-left: var(--line-2) solid var(--ink-3);
+   pointer-events: none;
+ }
+ .band:is([data-pos="first"], [data-pos="only"]) {
+   top: calc(var(--reach) * -1);
+-  border-top: var(--line-2) solid var(--lane-line);
++  border-top: var(--line-2) solid var(--ink-3);
+   border-top-left-radius: var(--r-3);
+ }
+ .band:is([data-pos="last"], [data-pos="only"]) {
+   bottom: calc(var(--sp-4) * -1);
+-  border-bottom: var(--line-2) solid var(--lane-line);
++  border-bottom: var(--line-2) solid var(--ink-3);
+   border-bottom-left-radius: var(--r-3);
+ }
+ .block:is([data-loop="last"], [data-loop="only"]) {
+diff --git a/web/src/kit/Page.tsx b/web/src/kit/Page.tsx
+index 416c763..9318637 100644
+--- a/web/src/kit/Page.tsx
++++ b/web/src/kit/Page.tsx
+@@ -22,9 +22,9 @@ export interface Search {
+ 
+ export interface PageProps {
+   /** The view's name; a pair is Linear's breadcrumb (the ticket: the view it came from, a link
+-   *  back, then its key), the last step the name, drawn at crumb size rather than as a view's
+-   *  heading. */
+-  title: string | readonly [{ label: string; href: string }, string];
++   *  back, then its key; a full-window editor: the ticket it is over, no link, since closing is
++   *  the close's), the last step the name, drawn at crumb size rather than as a view's heading. */
++  title: string | readonly [{ label: string; href?: string }, string];
+   /** After the title, quiet: the Space, a scope. */
+   context?: string | undefined;
+   /** The number carries the weight, a zero recedes; "|" draws a separator. */
+@@ -85,7 +85,7 @@ export function Page({
+       <header className={s.top}>
+         {crumb !== null ? (
+           <span className={s.crumb}>
+-            <Link to={crumb.href}>{crumb.label}</Link>
++            {crumb.href ? <Link to={crumb.href}>{crumb.label}</Link> : crumb.label}
+             <span aria-hidden="true">›</span>
+           </span>
+         ) : null}
+diff --git a/web/src/kit/TextArea.tsx b/web/src/kit/TextArea.tsx
+index 47a7b86..0f10125 100644
+--- a/web/src/kit/TextArea.tsx
++++ b/web/src/kit/TextArea.tsx
+@@ -1,6 +1,8 @@
+ // Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of
+ // AGENTS.md): at least `lines` tall and growing with its text, or filling its column; an item
+-// editor's is a framed sheet under its own head strip. Every area
++// editor's is a framed sheet under its own head strip, a block of AGENTS.md a section of one
++// document. A growing area reads as markdown as it is edited (a fenced block on its band, inline
++// code tinted). Every area
+ // can pop out to the whole window, for long text: the same value, edited at a readable measure,
+ // and Done or Esc brings it back (inside an overlay too: it opens over it).
+ import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+@@ -48,10 +50,13 @@ export function TextArea(props: TextAreaProps) {
+   // the popped area is described by its own copies of them, under it
+   const inline = description ? describe(description.id, description) : {};
+   const own = description ? describe(words, description) : {};
++  // a growing area (not a filling one) reads its markdown in place: its own ink clear, the same
++  // text drawn over it on the same box
++  const [box, leaf] = [cx(s.box, s.area), sheet && s.leaf];
+   const area = (full: boolean) => (
+     <textarea
+       ref={full ? popped : undefined}
+-      className={cx(s.box, s.area, (full || fill === true) && s.fill, sheet && !full && s.leaf)}
++      className={cx(box, (full || fill) && s.fill, !full && leaf, !full && !fill && s.clear)}
+       style={vars({ "--lines": String(lines) })}
+       aria-label={label}
+       {...(full ? own : inline)}
+@@ -63,6 +68,14 @@ export function TextArea(props: TextAreaProps) {
+       }}
+     />
+   );
++  const inPlace = fill ? (
++    area(false)
++  ) : (
++    <div className={s.read}>
++      {area(false)}
++      <Markdown text={value} className={cx(box, leaf, s.tint)} />
++    </div>
++  );
+   const close = () => {
+     setOut(false);
+   };
+@@ -75,19 +88,21 @@ export function TextArea(props: TextAreaProps) {
+       }}
+     />
+   );
++  // a sheet that folds is a block of a document, not a framed sheet
++  const look = sheet && (folded === undefined ? s.sheet : s.block);
+   return (
+-    <div className={cx(s.areaWrap, fill && s.areaFill, sheet && s.sheet)}>
++    <div className={cx(s.areaWrap, fill && s.areaFill, look)}>
+       {sheet ? (
+         <>
+           <div className={s.sheetHead}>
+             {head}
+             {pop}
+           </div>
+-          {folded ? null : area(false)}
++          {folded ? null : inPlace}
+         </>
+       ) : (
+         <>
+-          {area(false)}
++          {inPlace}
+           {pop}
+         </>
+       )}
+@@ -111,6 +126,30 @@ export function TextArea(props: TextAreaProps) {
+   );
+ }
+ 
++/** The text as its markdown reads, line for line on the area's own metrics, so it lies exactly
++ *  over the clear text under it: a fenced block on one band, its fences faint; `inline code` (a
++ *  split's odd parts) tinted. A line's key is its place: the text is drawn whole on every edit. */
++function Markdown({ text, className }: { text: string; className: string }) {
++  let code = false;
++  return (
++    <div className={className} aria-hidden="true">
++      {text.split("\n").map((line, i) => {
++        const fence = /^\s*```/.test(line);
++        if (fence) code = !code;
++        return (
++          <div key={i} className={cx(fence && s.fence, (fence || code) && s.code)}>
++            {(line || " ").split(/(`[^`]+`)/).map((p, k) => (
++              <span key={k} className={k % 2 ? s.tick : undefined}>
++                {p}
++              </span>
++            ))}
++          </div>
++        );
++      })}
++    </div>
++  );
++}
++
+ /** The pop-out: at a sheet's head strip's end, or in a plain area's top right corner. */
+ function Pop({ label, corner, onPop }: { label: string; corner: boolean; onPop: () => void }) {
+   return (
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index af2487b..37924bc 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -292,8 +292,8 @@
+         "look": {
+           "why": "The peek reads beside the list; editing always gets the whole window (the owner's rule).",
+           "values": {
+-            "side": "The peek: a sheet floated at the right edge on the full look's scrim, so the one thing lifted is the one to read; its sections one document between its bar and foot, fading out under both (the default).",
+-            "full": "A full-window editor over the page (a ticket's workflow or item): the app's sheet lifted over the window on a scrim, a Page in it, so the editor is framed as on its own screen, the close at its bar's end where the peek's is."
++            "side": "The peek: a sheet floated at the right edge on the full look's frosted scrim (the list under it dimmed and blurred, so a row it cuts reads as the page behind, not as words cut off), so the one thing lifted is the one to read; its sections one document between its bar and foot, fading out under both (the default).",
++            "full": "A full-window editor over the page (a ticket's workflow or item): the app's sheet lifted over the window on the frosted scrim, a Page in it, so the editor is framed as on its own screen, the close a quiet glyph at its bar's end where the peek's is (the bar's one filled button stays Save)."
+           }
+         },
+         "ask": {
+@@ -642,7 +642,7 @@
+       "why": "A view: the top bar (title, context, counters, the view's controls, search, its buttons) and the body.",
+       "props": {
+         "title": {
+-          "why": "The view's name, and the tab's; a pair is Linear's breadcrumb, its last step the name; a pair's first step is a link back (the ticket: My queue › NW-17, the way back to the queue)."
++          "why": "The view's name, and the tab's; a pair is Linear's breadcrumb, its last step the name; a pair's first step is a link back (the ticket: My queue › NW-17, the way back to the queue), or, with no link, the place a full-window editor is over (NW-17 › Copy of AGENTS.md v5: leaving is its close's, which asks first about unsaved changes), so the document under it holds the one title."
+         },
+         "context": {
+           "why": "Quiet after the title: the Space, a scope, who."
+@@ -1057,7 +1057,7 @@
+       }
+     },
+     "TextArea": {
+-      "why": "Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of AGENTS.md), growing with its text; any area pops out to the whole window for long text.",
++      "why": "Markdown in a monospace area (an agent's instructions, a SKILL.md, a stage's prompt, a block of AGENTS.md), growing with its text; a growing area reads as markdown while it is edited (a fenced block on its band with its fences faint, inline code tinted), drawn line for line over the area's own clear text so the caret and selection are the browser's; any area pops out to the whole window for long text.",
+       "props": {
+         "label": {
+           "why": "Its accessible name, and the popped-out window's title."
+@@ -1081,7 +1081,7 @@
+           "why": "An item editor's content is a framed sheet with a head strip over the text (its title and length; a block's fold, name, length and moves), so the editable area shows where it starts and ends; popped out, it is the plain box at a readable measure."
+         },
+         "folded": {
+-          "why": "A block of AGENTS.md folds to its head strip alone, which then says its first line."
++          "why": "A block of AGENTS.md folds to its head strip alone, which then says its first line; a block is a section of one document rather than a framed sheet (its name a heading on the page, its text hung past the fold, its length and moves up on hover and focus, a bar of your move's accent beside the text being written)."
+         }
+       }
+     },
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 1d5ae5d..6022cc9 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -422,6 +422,9 @@
+   --diff-mine: color-mix(in srgb, var(--you) 11%, transparent);
+   --diff-theirs: color-mix(in srgb, var(--ink-1) 7%, transparent);
+   --diff-gap: color-mix(in srgb, var(--ink-1) 3%, transparent);
++  /* form: a text area's markdown read in place: a fenced block's band, inline code's tint */
++  --md-band: color-mix(in srgb, var(--ink-1) 5%, transparent);
++  --md-tick: color-mix(in srgb, var(--you) 10%, transparent);
+ }
+ 
+ /* Theme-independent */
+@@ -579,6 +582,7 @@
+   --h-field: 30px;
+   --code-line: 20px;
+   --w-number: 5ch;
++  --block-indent: calc(var(--h-chip) + var(--sp-4)); /* a block's text, hung past its fold */
+   --w-form-label: 128px;
+   --w-switch: 28px;
+   --h-switch: 16px;
+@@ -587,6 +591,7 @@
+   --h-pip: 6px; /* the dot in a chosen radio */
+   /* overlay: the full-window editor's question (unsaved changes) */
+   --w-ask: 400px;
++  --scrim-blur: 3px; /* the page frosted under a dialog */
+   --w-editor: 960px; /* a popped-out text area's measure */
+   --w-form-col: 280px; /* a form's two columns fold to one below this each */
+   --ground: var(--page); /* what a sticky head paints over, where no Surface sets its own */

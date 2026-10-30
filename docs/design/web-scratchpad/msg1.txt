@@ -1,0 +1,19 @@
+web: the layers checked on the file each import resolves to
+
+The layers were held by how an import was spelled: "./../compact/model",
+"../shared/../ticket/TicketView", "../domain/fixtures.js", a lazy
+import(), @tanstack/react-query in a pattern, a new src/ui folder, and
+`const Div = "div"` or createElement all got past them.
+
+kit.mjs now resolves every import as the bundler would (static,
+re-export, type-only, import.meta.glob, import()) and checks the file it
+reaches against an allow-list per layer: local modules by layer, packages
+by name (tools/layers.mjs, read by tools/reach.mjs). A file in no layer
+fails, a lazy import is the app's alone, and outside the kit a raw tag, a
+tag bound to a string or a createElement call fails. ESLint stays the
+fast first line: a path climbs only at its start, fixtures however
+spelled, no scoped packages in patterns or screens, no import() outside
+the app, no string-bound tag or createElement. The raw-tag gate counts
+the last two too. Tested on a tree with the reviewers' bypasses.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

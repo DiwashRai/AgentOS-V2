@@ -1,0 +1,9 @@
+web: screenshots for the agents list and the ticket's tabs
+
+The patterns layer's later changes touch the agents list and the ticket
+page's Runs, Context and Workflow tabs, which no screenshot covered. Add
+those four states, in both themes, with their baselines, so a change to
+them shows as a changed picture.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

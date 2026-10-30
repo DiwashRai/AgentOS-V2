@@ -1,0 +1,20 @@
+// One-off: render each .avif reference in Chrome and save it as a PNG at its own size, so every
+// critic can open it.
+import { readdirSync } from "node:fs";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+
+const [web, dir] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const browser = await chromium.launch({ channel: "chrome" });
+const page = await browser.newPage();
+for (const f of readdirSync(dir).filter((n) => n.endsWith(".avif"))) {
+  await page.goto(pathToFileURL(join(dir, f)).href);
+  const size = await page.evaluate(() => { const i = document.querySelector("img"); return [i.naturalWidth, i.naturalHeight]; });
+  await page.setViewportSize({ width: size[0], height: size[1] });
+  await page.evaluate(() => { document.body.style.margin = "0"; });
+  await page.locator("img").screenshot({ path: join(dir, f.replace(/\.avif$/, ".png")) });
+  console.log(f, size);
+}
+await browser.close();

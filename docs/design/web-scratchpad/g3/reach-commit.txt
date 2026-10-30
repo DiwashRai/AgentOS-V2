@@ -1,0 +1,18 @@
+gauntlet: one reach for a list's heads and rows; tinted tags
+
+The owner saw the issue twin's band run to the sheet's edges while its
+rows stayed in rounded patches with inset rules: the head and the row
+each had their own extent.
+
+- Row and Head: one --list-reach for what lies under a list's heads and
+  rows (a band, a hover's wash, the open card, the hairline between
+  rows), square, to the sheet's edges (a Table edge, and the ticket's
+  body, are already there). The joined-patch radius rules go.
+- Chip: four tones that wash a hue into the tag with no edge, the glyph
+  in the hue and the words in full ink, as Linear marks a project's
+  resources: indigo, teal and amber (the kinds' hues) and neutral. How
+  strong is the theme's (--chip-tint, measured on Linear's: about 12%
+  in the dark). The project twin uses them.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

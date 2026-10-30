@@ -1,0 +1,48 @@
+// Round 3's ledger changes: the reasons for every kit API the round changed.
+const fs = require("fs");
+const path = process.argv[2];
+const led = JSON.parse(fs.readFileSync(path, "utf8"));
+const c = led.components;
+
+c.Avatar.why =
+  "A person's face: a disc with initials, neutral in a pill and on a team (so a chip's or a card's own colour leads), in the person's own hue in rows, pickers and the conversation; an empty slot; or a row of faces.";
+c.Avatar.props.name.why = "Initials on the face and its accessible name (one person's face).";
+c.Avatar.props.dashed.why =
+  "An empty slot drawn dashed: the owner picker's Unassigned choice (without it, the invisible slot that keeps a row's missing owner in its column).";
+
+c.Button.props.size.why = "Three heights: inline, a row's, a bar's.";
+c.Button.props.blocked.why =
+  "The server says why an action is blocked (R11): in place of what it does, it stays focusable, does nothing, and says why.";
+
+c.Mark.props.name.why =
+  "Who or what, in the state's colour (Builder · run #42, Bea, Blocked); on a glyph, its accessible name, the state's word by default, or false where the words beside it already say it (a tab's count, a counter).";
+
+c.Notice.props.align.why =
+  "Where its words sit: a problem or an empty line on a list's item columns (Intake's), a status at the list's far edge.";
+c.Notice.props.fix.why =
+  "A problem's or an empty line's way out, on a muted line of its own so neither wraps into the other: words, or words round a link (An admin can fix the query in Settings › Intake).";
+c.Notice.props.more = {
+  why: "A capped list's +N line: what it says and the button that shows the rest (Show 3 more).",
+};
+
+delete c.Row.props.look;
+c.Row.props.kind.values.band =
+  "A board's swimlane (All teams): the team, then its stage lanes to the board's edge, each holding ticket Cards.";
+c.Row.props.kind.values.columns =
+  "A board's column head: one short line of stage names over the swimlanes, on their grid.";
+
+c.Facts.why =
+  "A ticket's properties as one of Linear's labelled property rows: the values at body size, each a muted glyph and its words, as chips; each label in its tooltip.";
+c.Facts.props.items.why =
+  "The facts: a label, a value (words, after a muted glyph, or other content) or a picker that brings its own padding, and quiet words after it (main, from the repo).";
+
+c.Lane.props.edit.why =
+  "The editing affordances (reorder, the gate toggle, insert, drops between cards, a still of the drop line); none draws the lane read only (the ticket's Workflow tab). Where a gate can't go is the screen's to say (a stage's noGate).";
+
+for (const v of ["fit", "line", "dot"]) delete led.vocab.Width.values[v];
+led.vocab.Length = {
+  why: "A width that is a length (every Width but the whole track fill), where a track wraps it: a hugging column's cap, a fill column's floor. Its values' reasons are Width's.",
+  of: "Width",
+};
+
+fs.writeFileSync(path, JSON.stringify(led, null, 2) + "\n");

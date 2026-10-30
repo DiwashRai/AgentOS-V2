@@ -1,0 +1,36 @@
+// Which shots a change really moved: compares each PNG under <before> with the same path under
+// <after> in Chrome (canvas pixels), counting pixels whose channels differ by more than 16. More
+// than 40 such pixels (or a size change) is a change; under that is rendering drift between
+// checkouts. Prints one line per changed shot: "<relative path> <pixels>", then a total.
+// Usage: node changed.mjs <web dir> <before dir> <after dir>
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { createRequire } from "node:module";
+import { join, relative } from "node:path";
+
+const [web, before, after] = process.argv.slice(2);
+const walk = (d) => readdirSync(d).flatMap((n) => { const p = join(d, n); return statSync(p).isDirectory() ? walk(p) : p.endsWith(".png") ? [p] : []; });
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const browser = await chromium.launch({ channel: "chrome" });
+const page = await browser.newPage();
+await page.setContent("<canvas></canvas>");
+let n = 0;
+for (const a of walk(before)) {
+  const rel = relative(before, a);
+  let b;
+  try { b = join(after, rel); statSync(b); } catch { console.log(`${rel} missing`); n++; continue; }
+  const diff = await page.evaluate(async ([x, y]) => {
+    const load = async (src) => { const i = new Image(); i.src = src; await i.decode(); return i; };
+    const [i, j] = await Promise.all([load(x), load(y)]);
+    if (i.width !== j.width || i.height !== j.height) return -1;
+    const c = document.createElement("canvas"); c.width = i.width; c.height = i.height;
+    const g = c.getContext("2d", { willReadFrequently: true });
+    g.drawImage(i, 0, 0); const p = g.getImageData(0, 0, c.width, c.height).data;
+    g.clearRect(0, 0, c.width, c.height); g.drawImage(j, 0, 0); const q = g.getImageData(0, 0, c.width, c.height).data;
+    let k = 0;
+    for (let t = 0; t < p.length; t += 4) if (Math.abs(p[t] - q[t]) > 16 || Math.abs(p[t + 1] - q[t + 1]) > 16 || Math.abs(p[t + 2] - q[t + 2]) > 16) k++;
+    return k;
+  }, [`data:image/png;base64,${readFileSync(a).toString("base64")}`, `data:image/png;base64,${readFileSync(b).toString("base64")}`]);
+  if (diff === -1 || diff > 40) { console.log(`${rel} ${diff === -1 ? "resized" : diff}`); n++; }
+}
+console.log(`${n} changed`);
+await browser.close();

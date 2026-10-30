@@ -1,0 +1,25 @@
+// Folds an h2h workflow's output into a markdown summary: per match the vote, then each judge's
+// reasons and named gaps, attributed to X or Y (not A or B).
+// Usage: node h2h-summary.mjs <workflow output file> <names json: {"t01": "home", ...}> <x label> <y label> <out.md>
+import { readFileSync, writeFileSync } from "node:fs";
+
+const [file, namesFile, xl, yl, out] = process.argv.slice(2);
+const run = JSON.parse(readFileSync(file, "utf8"));
+const result = run.result ?? run;
+const names = JSON.parse(readFileSync(namesFile, "utf8"));
+const who = (j, side) => (side === j.xIs ? xl : yl); // the side shown as A or B, named
+const lines = [];
+for (const m of result.matches.sort((a, b) => a.id.localeCompare(b.id))) {
+  lines.push(`## ${names[m.id] ?? m.id}: ${xl} ${m.X}, ${yl} ${m.Y}, same ${m.same}`, "");
+  for (const j of m.judges.sort((a, b) => a.judge - b.judge)) {
+    const winner = j.pick === "same" ? "same" : who(j, j.pick);
+    const loser = j.pick === "same" ? "both" : winner === xl ? yl : xl;
+    lines.push(`- **Judge ${j.judge}** (A was ${who(j, "A")}) picked ${winner}. ${j.why}`);
+    lines.push(`  - ${loser}'s gap: ${j.loserGap}`);
+    lines.push(`  - ${winner}'s flaw: ${j.winnerFlaw}`);
+    if (j.broken) lines.push(`  - Broken: ${j.broken}`);
+  }
+  lines.push("");
+}
+writeFileSync(out, lines.join("\n"));
+console.log(out);

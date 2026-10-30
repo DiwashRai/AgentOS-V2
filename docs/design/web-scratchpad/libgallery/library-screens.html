@@ -1,0 +1,128 @@
+<title>Library Screens</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a review sheet. Groups follow the spec's screens; a theme switch shows each screen in
+   light or dark; click a screen for full size. */
+:root {
+  --bg: #f7f7f8; --card: #ffffff; --ink-1: #0b0b0f; --ink-2: #4d4d57; --ink-3: #6b6b75;
+  --rule: #e3e3e8; --accent: #5e6ad2; --shot: #ececef;
+  --f-body: "Geist", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0c0c0f; --card: #16161a; --ink-1: #f4f4f6; --ink-2: #b0b0ba; --ink-3: #8c8c96; --rule: #26262c; --accent: #8a93ec; --shot: #050507; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #0c0c0f; --card: #16161a; --ink-1: #f4f4f6; --ink-2: #b0b0ba; --ink-3: #8c8c96; --rule: #26262c; --accent: #8a93ec; --shot: #050507; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink-1); font: 400 14px/1.5 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 72px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1400px; margin: 0 auto; display: grid; gap: 40px; }
+header { display: grid; gap: 10px; padding-top: 36px; }
+h1 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -.025em; text-wrap: balance; }
+h2 { margin: 0; font-size: 17px; font-weight: 600; }
+p { margin: 0; }
+.eyebrow { font: 500 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.lead { color: var(--ink-2); max-width: 74ch; font-size: 15px; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--rule); padding-block: 12px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 8px; border: 1px solid var(--rule); background: var(--card); }
+.seg button { font: 500 13px/1 var(--f-body); border: 0; background: transparent; color: var(--ink-2); padding: 7px 12px; border-radius: 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: #ffffff; }
+.seg button:focus-visible, .shot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.group { display: grid; gap: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+figure { margin: 0; background: var(--card); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; display: grid; }
+.shot { display: block; padding: 0; border: 0; background: var(--shot); cursor: zoom-in; width: 100%; }
+.shot img { width: 100%; height: auto; display: block; aspect-ratio: 1440 / 900; object-fit: cover; object-position: top; max-width: 100%; }
+figcaption { padding: 10px 14px 12px; display: grid; gap: 2px; }
+figcaption b { font-weight: 600; }
+figcaption span { color: var(--ink-2); font-size: 13px; }
+dialog { border: 0; padding: 0; background: transparent; max-width: 96vw; max-height: 96vh; }
+dialog::backdrop { background: rgba(5,5,8,.85); }
+dialog img { display: block; max-width: 96vw; max-height: 92vh; object-fit: contain; border-radius: 8px; }
+footer { color: var(--ink-3); font-size: 12px; max-width: 90ch; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">web-restyle · commit 4102414 · static, on fixtures</span>
+    <h1>The library and the workflow editor</h1>
+    <p class="lead">The screens built from the spec in the restyled design language: the four library lists, the shared item editor, the workflow editor, and the ticket's Workflow, Runs and Context tabs with their full-window overlays. Switch the theme above. Click a screen to see it full size.</p>
+  </header>
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Theme">
+      <button type="button" data-t="light">Light (Paper)</button>
+      <button type="button" data-t="dark">Dark (Carbon)</button>
+    </div>
+  </div>
+  <div id="groups" style="display:grid;gap:40px"></div>
+  <footer>Rendered at 1440 × 900 from the app on fixtures. The buttons do nothing yet; every screen and state the spec names is drawn.</footer>
+</div>
+<dialog id="zoom" aria-label="Full size"><img id="zimg" alt=""></dialog>
+
+<script>
+const GROUPS = [
+  ["The workflow editor", "One component, used full window from the library and, as an overlay, from a ticket.", [
+    ["workflow-standard-clean", "Standard, clean", "The stage lane, the gate diamond, the loop bracket, the workflow-wide strip, and the library panel."],
+    ["workflow-standard-selected", "A stage selected", "Implement expanded in place: agent, overrides, prompt, skills and files, role, timeout, toggles."],
+    ["workflow-standard-drag", "Mid-drag", "A skill held over the Implement card, lit with \"Add to Implement\"."],
+    ["workflow-standard-problem", "A validation problem", "An unknown prompt field flagged on its card; Save says \"1 problem\"."],
+    ["workflow-careful-clean", "Careful review", "A longer loop, overrides, and a gate on the loop's last stage."],
+  ]],
+  ["The ticket", "The read-only tab, and the same editor as a full-window overlay for the ticket's copy.", [
+    ["ticket-workflow-tab-scrolled", "Workflow tab (read only)", "The ticket's copy with drift, each stage's last run state, and one Edit."],
+    ["ticket-workflow-overlay-drift", "Editing the ticket's copy", "\"Library has v4\", \"Changed here\", Take library version, Promote."],
+    ["ticket-workflow-overlay-ask", "Closing with unsaved changes", "The save, discard or keep-editing question, inside the overlay."],
+    ["ticket-runs-tab-scrolled", "Runs tab", "The runs, newest first, one expanded with its stages, rounds and verdicts."],
+    ["ticket-context-tab-scrolled", "Context tab", "The ticket's items with version, writable toggle and drift."],
+    ["ticket-context-overlay", "Editing a context item", "The shared item editor in the same full-window overlay."],
+  ]],
+  ["Library lists", "The four lists the sidebar's Context section opens.", [
+    ["library-workflows-list", "Workflows", "Stage strips, the default mark, version, and the tickets using each."],
+    ["library-agents-list", "Agents", "Runtime, model, effort, and the workflows using each."],
+    ["library-skills-list", "Skills", "Description and use."],
+    ["library-files-list", "Files", "AGENTS.md first."],
+  ]],
+  ["Item editors", "One layout for agents, skills and files.", [
+    ["agent-clean", "Agent, clean", "Instructions in the centre; properties, use and history at the side."],
+    ["agent-edited", "Agent, edited", "Unsaved changes, Save lit."],
+    ["agent-conflict", "Agent, version conflict", "Someone saved meanwhile: keep mine or take theirs."],
+    ["skill-clean", "Skill", "SKILL.md content."],
+    ["file-agentsmd-clean", "AGENTS.md as blocks", "Named blocks, collapsible and reorderable."],
+    ["file-agentsmd-conflict", "AGENTS.md conflict", "The version-conflict state on AGENTS.md."],
+  ]],
+];
+let theme = (() => { try { return localStorage.getItem("lib-theme") || null; } catch { return null; } })()
+  || (document.documentElement.getAttribute("data-theme") === "dark" || (!document.documentElement.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light");
+const zoom = document.getElementById("zoom");
+zoom.addEventListener("click", () => zoom.close());
+const root = document.getElementById("groups");
+const imgs = [];
+for (const [title, blurb, items] of GROUPS) {
+  const grid = document.createElement("div"); grid.className = "grid";
+  for (const [id, name, what] of items) {
+    const fig = document.createElement("figure");
+    const btn = document.createElement("button"); btn.type = "button"; btn.className = "shot"; btn.setAttribute("aria-label", `Open ${name} full size`);
+    const img = document.createElement("img"); img.loading = "lazy"; img.alt = `${name}: ${what}`; img.dataset.id = id;
+    btn.append(img); imgs.push(img);
+    btn.addEventListener("click", () => { document.getElementById("zimg").src = img.src; document.getElementById("zimg").alt = name; zoom.showModal(); });
+    const cap = document.createElement("figcaption");
+    const b = document.createElement("b"); b.textContent = name;
+    const s = document.createElement("span"); s.textContent = what;
+    cap.append(b, s); fig.append(btn, cap); grid.append(fig);
+  }
+  const sec = document.createElement("section"); sec.className = "group";
+  const h = document.createElement("h2"); h.textContent = title;
+  const p = document.createElement("p"); p.className = "lead"; p.textContent = blurb;
+  sec.append(h, p, grid); root.append(sec);
+}
+function draw() {
+  for (const img of imgs) img.src = `img/${img.dataset.id}-${theme}.png`;
+  for (const b of document.querySelectorAll(".seg button")) b.setAttribute("aria-pressed", String(b.dataset.t === theme));
+}
+for (const b of document.querySelectorAll(".seg button")) b.addEventListener("click", () => { theme = b.dataset.t; try { localStorage.setItem("lib-theme", theme); } catch {} draw(); });
+draw();
+</script>

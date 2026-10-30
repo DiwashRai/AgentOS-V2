@@ -1,0 +1,18 @@
+gauntlet: two themes, and Paper as Linear's light
+
+The owner wants two themes nailed before any others, and Paper's grey
+gone. Sampled from Linear's light screenshots: its sheet is a hair off
+white (#fcfcfc) and what sits on it (a card, a button, a field, a
+label) is white on a hairline, never a shade darker; grey is left to a
+group's band and a hover.
+
+- Themes: Paper and Carbon only. Mist, Midnight, Harbour and Plum go
+  from tokens.css, theme.ts and index.html; the two twins on Midnight
+  move to Carbon.
+- Paper: the sheet #fcfcfd; its tones, the popover and the current
+  view's pill white; buttons, fields, the search box, picker chips,
+  tags and keycaps white at rest on a hairline (rest-edge tokens,
+  transparent on Carbon, so the dark is unchanged).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

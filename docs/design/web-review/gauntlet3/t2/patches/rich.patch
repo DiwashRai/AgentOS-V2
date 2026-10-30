@@ -1,0 +1,721 @@
+diff --git a/web/src/features/queue/QueueView.tsx b/web/src/features/queue/QueueView.tsx
+index 64fa93b..7e47566 100644
+--- a/web/src/features/queue/QueueView.tsx
++++ b/web/src/features/queue/QueueView.tsx
+@@ -3,12 +3,13 @@ import { useSearchParams } from "react-router";
+ 
+ import type { Person, TicketRow } from "../../api/types";
+ import { groupOf, stageModel, stepText } from "../../domain/board";
+-import { age, elapsed, matches } from "../../domain/format";
++import { age, elapsed, matches, repoShort } from "../../domain/format";
+ import {
+   Avatar,
+   Badge,
+   Button,
+   Card,
++  Checklist,
+   type Column,
+   Head,
+   Icon,
+@@ -28,7 +29,7 @@ import { ActionButton, rowActions } from "../shared/Actions";
+ import { contextOf, useBoard, useSpace } from "../shared/board";
+ import { NewTicket } from "../shared/NewTicket";
+ import { useSearch } from "../shared/useSearch";
+-import { atWorkNote, CAP, shipped, type Zones, zones } from "./model";
++import { atWorkNote, CAP, shipped, trail, type Zones, zones } from "./model";
+ 
+ // Linear's list, as Compact's: the key and the title on the left, what it waits on receding after
+ // the title; a row's buttons where Compact has its Now tag, hugging the plain properties at the
+@@ -90,114 +91,157 @@ function stageText(t: TicketRow, me: Person | null): string {
+   return m.round ? `${m.label} · round ${String(m.round.n)} of ${String(m.round.of)}` : m.label;
+ }
+ 
+-/** A tile's top line, quiet: the key, its run and how long it has run or waited; at the end who
+- *  works it (the agent in ink, or that it waits in the queue, muted), then the face of whose
+- *  ticket it is. No pill: the tile's one colour is its glyph and its meter. */
+-function Top({
+-  t,
+-  now,
+-  run,
+-}: {
+-  t: TicketRow;
+-  now: number;
+-  run: { id: number; agent: string | null };
+-}) {
+-  const how = run.agent ? "running" : "queued";
++/** The face of whose ticket it is (Linear's dashed ring when nobody owns it). */
++const Owner = ({ t }: { t: TicketRow }) =>
++  t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} /> : <Avatar dashed />;
++
++type Running = Extract<TicketRow["attention"], { kind: "running" }>;
++
++/** What the step under way is doing, after its name: its round in a loop, its latest word, then
++ *  at the line's end how far the run is (its steps, and which one of how many). */
++function Doing({ a, round }: { a: Running; round: string | undefined }) {
++  const p = a.progress;
++  const said = round ? `${round} · ${a.step}` : a.step;
+   return (
+-    <Stack dir="row" gap={4} align="center">
+-      <Badge kind="key" size="sm">
+-        {t.key}
+-      </Badge>
++    <Stack dir="row" gap={5} align="center">
+       <Stack grow>
+-        <Text
+-          variant="meta"
+-          tone="3"
+-          tabular
+-          truncate
+-          title={`Run #${String(run.id)}, ${how} for ${elapsed(t.since, now)}`}
+-        >
+-          {`run #${String(run.id)} · ${age(t.since, now)}`}
++        <Text tone="2" truncate title={said}>
++          {round ? <Text tone="3">{`${round} · `}</Text> : null}
++          {a.step}
+         </Text>
+       </Stack>
+-      <Text variant="meta" weight={500} tone={run.agent ? "1" : "3"}>
+-        {run.agent ?? "Queued"}
+-      </Text>
+-      {t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} /> : <Avatar dashed />}
++      {p ? (
++        <Stack dir="row" gap={4} align="center">
++          <Meter size="tile" done={p.done} total={p.total} />
++          <Text variant="meta" tone="3" tabular title={`Step ${stepText(p).replace("/", " of ")}`}>
++            {stepText(p)}
++          </Text>
++        </Stack>
++      ) : null}
+     </Stack>
+   );
+ }
+ 
+-/** A tile's body: its state glyph (Linear's in-progress ring, a dashed one queued) hanging before
+- *  the title, and under the title where it is (the stage and the repo, plain words). A queued
+- *  tile's title is muted, so the state reads down the left edge. */
+-function Body({ t, me }: { t: TicketRow; me: Person | null }) {
+-  const running = t.attention.kind === "running";
+-  const where = [stageText(t, me), t.repo ?? ""].filter(Boolean).join(" · ");
++/** A running run's card: who works it and since when over its title, then its trail (the stage it
++ *  finished, the one under way with what it is doing and how far, and what comes next), so a
++ *  glance says how far along it is and whether a gate is next. */
++function RunCard({ t, me, now, onOpen, a }: ItemProps & { a: Running }) {
++  const where = t.repo ? ` · ${repoShort(t.repo)}` : "";
+   return (
+-    <Stack dir="row" gap={4} align="baseline">
+-      <Mark kind={running ? "run" : "queued"} glyph still name={false} />
++    <Card
++      look="agent"
++      label={`Peek at ${t.key}: ${t.title}`}
++      onOpen={() => {
++        onOpen(t.key);
++      }}
++    >
+       <Stack gap={2}>
+-        <Text variant="label" tone={running ? "1" : "2"} truncate={2} title={t.title}>
+-          {t.title}
+-        </Text>
+-        <Text variant="meta" tone="3" truncate title={where}>
+-          {where}
+-        </Text>
+-      </Stack>
+-    </Stack>
+-  );
+-}
+-
+-/** A tile's foot: what it is doing (or that it waits for a runner) and a running one's step count;
+- *  under them its steps, the tile's whole width. */
+-function Progress({ t }: { t: TicketRow }) {
+-  const a = t.attention;
+-  const step = a.kind === "running" ? a.step : "Waiting for a runner";
+-  const p = a.kind === "running" ? a.progress : null;
+-  return (
+-    <Stack gap={3}>
+-      <Stack dir="row" gap={4} align="center">
+-        <Stack grow>
+-          <Text variant="meta" tone="2" truncate title={step}>
+-            {step}
++        <Stack dir="row" gap={4} align="center">
++          <Badge kind="key" size="sm">
++            {t.key}
++          </Badge>
++          <Stack grow>
++            <Text
++              variant="meta"
++              tone="3"
++              tabular
++              truncate
++              title={`Run #${String(a.run_id)}, running for ${elapsed(t.since, now)}${where}`}
++            >
++              {`run #${String(a.run_id)} · ${age(t.since, now)}${where}`}
++            </Text>
++          </Stack>
++          <Text variant="meta" weight={500} tone="1">
++            {a.agent}
+           </Text>
++          <Owner t={t} />
+         </Stack>
+-        {p ? (
+-          <Text variant="meta" tone="3" tabular>
+-            {stepText(p)}
+-          </Text>
+-        ) : null}
++        <Text variant="label" truncate title={t.title}>
++          {t.title}
++        </Text>
+       </Stack>
+-      {p ? <Meter size="tile" done={p.done} total={p.total} /> : null}
+-    </Stack>
++      <Checklist
++        look="trail"
++        items={trail(t, me).map((st) => ({
++          text: st.text,
++          done: st.state === "done",
++          ...(st.state === "now" ? { now: <Doing a={a} round={st.round} /> } : {}),
++          ...(st.state === "gate" ? { gate: true } : {}),
++        }))}
++      />
++    </Card>
+   );
+ }
+ 
+-/** An agent's tile, Linear's lines each in its own space: the key, its run and who works it; the
+- *  state glyph, the title and where it is; then its progress at the foot. */
+-function AgentCard({ t, me, now, onOpen }: ItemProps) {
++/** A queued run, one compact line under the cards: the dashed ring, its key and title, where it
++ *  will run, that it waits for a runner and how long, whose it is. */
++function QueuedLine({ t, me, now, onOpen }: ItemProps) {
+   const a = t.attention;
+-  if (a.kind !== "running" && a.kind !== "queued") return null;
++  if (a.kind !== "queued") return null;
++  const where = [stageText(t, me), t.repo ? repoShort(t.repo) : ""].filter(Boolean).join(" · ");
+   return (
+     <Card
+       look="agent"
+       label={`Peek at ${t.key}: ${t.title}`}
+-      off={a.kind === "queued"}
++      off
+       onOpen={() => {
+         onOpen(t.key);
+       }}
+     >
+-      {/* the top line and the body take the free height, so the progress sinks to the foot and
+-          lines up across a row of tiles */}
+-      <Stack grow gap={5}>
+-        <Top t={t} now={now} run={{ id: a.run_id, agent: a.kind === "running" ? a.agent : null }} />
+-        <Body t={t} me={me} />
++      <Stack dir="row" gap={4} align="center">
++        <Mark kind="queued" glyph still name="Queued" />
++        <Badge kind="key" size="sm">
++          {t.key}
++        </Badge>
++        <Stack grow>
++          <Text tone="3" truncate title={`${t.title} · ${where}`}>
++            <Text weight={500} tone="2">
++              {t.title}
++            </Text>
++            {`\u2002${where}`}
++          </Text>
++        </Stack>
++        <Text
++          variant="meta"
++          tone="3"
++          tabular
++          title={`Run #${String(a.run_id)}, queued for ${elapsed(t.since, now)}`}
++        >
++          {`Waiting for a runner · ${age(t.since, now)}`}
++        </Text>
++        <Owner t={t} />
+       </Stack>
+-      <Progress t={t} />
+     </Card>
+   );
+ }
+ 
++/** Agents at work: the running runs as cards two abreast, the queued ones a line each under them. */
++function AtWork({ z, me, now, open }: ZoneListProps) {
++  const shown = z.agents.slice(0, CAP.agents);
++  const queued = shown.filter((t) => t.attention.kind === "queued");
++  const props = { me, now, onOpen: open };
++  return (
++    <Stack gap={5}>
++      {queued.length < shown.length ? (
++        <Stack cols={2} gap={5}>
++          {shown.map((t) =>
++            t.attention.kind === "running" ? (
++              <RunCard key={t.key} t={t} a={t.attention} {...props} />
++            ) : null,
++          )}
++        </Stack>
++      ) : null}
++      {queued.length > 0 ? (
++        <Stack cols={2} gap={5}>
++          {queued.map((t) => (
++            <QueuedLine key={t.key} t={t} {...props} />
++          ))}
++        </Stack>
++      ) : null}
++    </Stack>
++  );
++}
++
+ interface ZoneListProps {
+   z: Zones;
+   me: Person | null;
+@@ -246,11 +290,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
+               count={z.agents.length}
+               note={atWorkNote(z)}
+             />
+-            <Stack cols={3} gap={5}>
+-              {z.agents.slice(0, CAP.agents).map((t) => (
+-                <AgentCard key={t.key} t={t} me={me} now={now} onOpen={open} />
+-              ))}
+-            </Stack>
++            <AtWork z={z} me={me} now={now} open={open} />
+             {z.agents.length > CAP.agents ? (
+               <Button variant="link" href="/compact">
+                 {`+${String(z.agents.length - CAP.agents)} more running or queued`}
+diff --git a/web/src/features/queue/model.test.ts b/web/src/features/queue/model.test.ts
+new file mode 100644
+index 0000000..108d69a
+--- /dev/null
++++ b/web/src/features/queue/model.test.ts
+@@ -0,0 +1,40 @@
++import { describe, expect, it } from "vitest";
++
++import type { RailStep, StepState } from "../../api/types";
++import { trail } from "./model";
++
++const step = (name: string, state: StepState, more: Partial<RailStep> = {}): RailStep => ({
++  stage_id: name.toLowerCase(),
++  name,
++  state,
++  gate: null,
++  round: null,
++  ...more,
++});
++
++const running = { kind: "running", run_id: 1, agent: "Builder", step: "", progress: null } as const;
++
++describe("a running run's trail", () => {
++  it("is the stage it finished, the one under way and the next, skipped stages left out", () => {
++    const rail = [
++      step("Implement", "done"),
++      step("Lint", "skipped"),
++      step("Review", "current", { round: { n: 2, of: 3 } }),
++      step("Open a PR", "pending"),
++    ];
++    expect(trail({ rail, phase: "review", attention: running }, null)).toEqual([
++      { text: "Implement", state: "done" },
++      { text: "Review", state: "now", round: "Round 2 of 3" },
++      { text: "Open a PR", state: "next" },
++    ]);
++  });
++  it("ends at the gate the stage under way stops at", () => {
++    const gate = { label: "Plan sign-off", short: "Sign-off", state: "pending" } as const;
++    const rail = [step("Plan", "current", { gate }), step("Implement", "pending")];
++    expect(trail({ rail, phase: "plan", attention: running }, null)).toEqual([
++      { text: "Inbox", state: "done" },
++      { text: "Plan", state: "now" },
++      { text: "Plan sign-off", state: "gate" },
++    ]);
++  });
++});
+diff --git a/web/src/features/queue/model.ts b/web/src/features/queue/model.ts
+index 26ec616..dc23a29 100644
+--- a/web/src/features/queue/model.ts
++++ b/web/src/features/queue/model.ts
+@@ -1,8 +1,9 @@
+ // Pure selection for My queue: only what is the viewer's. Your move (waiting on me or nobody, or
+-// blocked and mine or nobody's), Agents at work (every running and queued run as one card: mine
+-// first, then the team's by repo), Ready to start (my inbox), Done recently (mine, last 7 days).
++// blocked and mine or nobody's), Agents at work (every running run as a card with its trail, every
++// queued one a line: mine first, then the team's by repo), Ready to start (my inbox), Done
++// recently (mine, last 7 days).
+ import type { Person, TicketRow } from "../../api/types";
+-import { isMine, isYourMove } from "../../domain/board";
++import { isMine, isYourMove, stageModel } from "../../domain/board";
+ import { minutesSince } from "../../domain/format";
+ 
+ export const CAP = { agents: 9, done: 3 } as const;
+@@ -14,8 +15,8 @@ const newestFirst = (a: TicketRow, b: TicketRow) => sinceMs(b) - sinceMs(a);
+ 
+ export interface Zones {
+   yourMove: TicketRow[];
+-  /** Every running and queued run, one card each: running before queued, mine before the team's,
+-   *  the team's by repo. */
++  /** Every running and queued run (a card each running, a line each queued): running before
++   *  queued, mine before the team's, the team's by repo. */
+   agents: TicketRow[];
+   ready: TicketRow[];
+   done: TicketRow[];
+@@ -58,6 +59,44 @@ export function atWorkNote(z: Zones): string {
+   return `${String(z.mine)} yours · ${String(Math.max(0, z.running + z.queued - z.mine))} across the team`;
+ }
+ 
++/** One line of a run's trail: a stage it finished, the one under way, the next stage or the gate
++ *  that comes next. */
++export interface TrailStep {
++  text: string;
++  state: "done" | "now" | "next" | "gate";
++  /** The step under way's round in a loop, in words so it never reads as the step count. */
++  round?: string;
++}
++
++/** A running run at a glance: the stage before the one under way, that one (with its round in a
++ *  loop), and what comes after it: the gate it stops at, else the next stage. Skipped stages are
++ *  left out; a ticket with no stage under way has no trail. */
++export function trail(
++  t: Pick<TicketRow, "rail" | "phase" | "attention">,
++  me: Person | null,
++): TrailStep[] {
++  const path = stageModel(t, me).stages.filter((st) => st.state !== "skipped");
++  const at = path.findIndex((st) => st.state === "current" || st.state === "failed");
++  const cur = path[at];
++  if (!cur) return [];
++  const before = path[at - 1];
++  const after = path[at + 1];
++  const gate = cur.gate && cur.gate.state !== "passed" ? cur.gate : undefined;
++  const next: TrailStep[] = gate
++    ? [{ text: gate.label, state: "gate" }]
++    : after
++      ? [{ text: after.name, state: "next" }]
++      : [];
++  const now: TrailStep = cur.round
++    ? {
++        text: cur.name,
++        state: "now",
++        round: `Round ${String(cur.round.n)} of ${String(cur.round.of)}`,
++      }
++    : { text: cur.name, state: "now" };
++  return [...(before ? [{ text: before.name, state: "done" } as const] : []), now, ...next];
++}
++
+ /** Shipped this week: completed in the last 7 days. */
+ export function shipped(done: readonly TicketRow[]): number {
+   return done.filter((t) => t.attention.kind === "done" && t.attention.outcome === "completed")
+diff --git a/web/src/kit/Card.module.css b/web/src/kit/Card.module.css
+index 32ede8e..9bccba4 100644
+--- a/web/src/kit/Card.module.css
++++ b/web/src/kit/Card.module.css
+@@ -126,9 +126,9 @@
+   gap: var(--sp-3);
+ }
+ 
+-/* agent: an agent's tile, as tall as its neighbours, its lines one under another down to its foot.
+-   Running, a tile of tone; queued, nothing at work yet: no tone, a dashed outline (the kit's "not
+-   here now"), the tone only under the pointer */
++/* agent: a running agent's card, as tall as its neighbours, its lines one under another down to its
++   foot, a tile of tone. Queued, nothing at work yet: one compact line, no tone, a dashed outline
++   (the kit's "not here now"), the tone only under the pointer */
+ .card[data-look="agent"] {
+   align-self: stretch;
+   border-radius: var(--r-4);
+@@ -144,11 +144,14 @@
+ }
+ .card[data-look="agent"] .summary {
+   height: 100%;
+-  padding: var(--sp-7) var(--sp-8) var(--sp-8);
++  padding: var(--sp-6) var(--sp-8);
++}
++.card[data-look="agent"][data-off] .summary {
++  padding: var(--sp-4) var(--sp-8);
+ }
+ .card[data-look="agent"] .main {
+   display: flex;
+   flex-direction: column;
+-  gap: var(--sp-4);
++  gap: var(--sp-5);
+   height: 100%;
+ }
+diff --git a/web/src/kit/Card.tsx b/web/src/kit/Card.tsx
+index b122bd5..87f9fab 100644
+--- a/web/src/kit/Card.tsx
++++ b/web/src/kit/Card.tsx
+@@ -3,8 +3,9 @@
+ // - stage: a workflow stage on the lane: its face in the slot the lane's axis runs through, its
+ //   summary beside it; the summary selects it, and selected it opens in place to its settings (no
+ //   dialog). A disabled stage is dimmed; a problem with it is said at its foot.
+-// - agent: an agent at work (My queue): its lines one under another, filling the card's height so
+-//   cards in a row line up; running, a tile of tone; queued, no tone and a dashed outline.
++// - agent: an agent at work (My queue): running, a tile of tone, its lines one under another,
++//   filling the card's height so cards in a row line up; queued, one compact line, no tone and a
++//   dashed outline.
+ // - ticket: a ticket on a board (All teams): two tight lines on a card lifted off its lane by tone.
+ // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
+ // ring round the card, and a click anywhere on it for a pointer. What the lines say is the
+@@ -41,7 +42,8 @@ export type CardProps = Common &
+         look: "agent";
+         /** A click (or Enter) opens what the card is of (a peek). */
+         onOpen: () => void;
+-        /** Queued, waiting for a runner: no tone, a dashed outline (nothing at work here yet). */
++        /** Queued, waiting for a runner: one compact line, no tone, a dashed outline (nothing at
++         *  work here yet). */
+         off?: boolean;
+         face?: never;
+         open?: never;
+diff --git a/web/src/kit/Checklist.module.css b/web/src/kit/Checklist.module.css
+index 214c211..41c1305 100644
+--- a/web/src/kit/Checklist.module.css
++++ b/web/src/kit/Checklist.module.css
+@@ -93,3 +93,52 @@
+ .peek .line {
+   min-height: var(--h-check-sm);
+ }
++
++/* trail: a run's steps on an agent's card, one under another, their glyphs on a thread (the line
++   is the picture: a way walked). What it finished and what comes recede; the step under way leads
++   in ink, what it is doing after it, a gate is the stepper's diamond */
++.trail .line {
++  position: relative;
++  grid-template-columns: var(--glyph) minmax(0, max-content) minmax(0, 1fr);
++  gap: var(--sp-5);
++  min-height: var(--h-trail);
++  line-height: 1.35;
++  color: var(--ink-3);
++}
++.trail .line > :first-child {
++  justify-self: center;
++}
++.trail .item[data-done="true"] .line {
++  color: var(--ink-3);
++}
++.trail .item[data-now] .text {
++  font-weight: 500;
++  color: var(--ink-1);
++}
++.trail .item[data-gate] .line {
++  color: var(--ink-2);
++}
++.trail .item:not(:last-child) .line::after {
++  content: "";
++  position: absolute;
++  top: calc(50% + var(--glyph) / 2);
++  left: calc(var(--glyph) / 2 - var(--line-mark) / 2);
++  width: var(--line-mark);
++  height: calc(var(--h-trail) - var(--glyph));
++  background: var(--rule-strong);
++}
++.trail .todo {
++  width: var(--glyph);
++  height: var(--glyph);
++  box-shadow: inset 0 0 0 var(--glyph-ring) var(--ink-3);
++}
++.gate {
++  width: var(--sp-4);
++  height: var(--sp-4);
++  border-radius: var(--line-1);
++  transform: rotate(45deg);
++  box-shadow: inset 0 0 0 var(--line-mark) var(--ink-3);
++}
++.now {
++  min-width: 0;
++}
+diff --git a/web/src/kit/Checklist.tsx b/web/src/kit/Checklist.tsx
+index 5b05f3c..f40c99a 100644
+--- a/web/src/kit/Checklist.tsx
++++ b/web/src/kit/Checklist.tsx
+@@ -1,5 +1,10 @@
+-// A plan's items: a green tick or an open ring, with an optional section head and "+N more".
++// A plan's items: a green tick or an open ring, with an optional section head and "+N more". A
++// trail is a run's steps the same way, one under another on a thread: the item under way takes the
++// live ring and says what it is doing after its text, a gate takes a diamond.
++import type { ReactNode } from "react";
++
+ import { Icon } from "./Icon";
++import { Mark } from "./Mark";
+ import s from "./Checklist.module.css";
+ import { Tip } from "./tip";
+ import { cx } from "./vars";
+@@ -9,6 +14,11 @@ export interface CheckItem {
+   done: boolean;
+   /** The section this item opens ("Server", "Client"). */
+   section?: string;
++  /** A trail's item under way: the live ring for its glyph, and this after its text (what it is
++   *  doing, how far along). */
++  now?: ReactNode;
++  /** A trail's gate, not a step: a diamond for its glyph. */
++  gate?: boolean;
+ }
+ 
+ export interface ChecklistProps {
+@@ -16,25 +26,44 @@ export interface ChecklistProps {
+   /** Items left out after these. */
+   more?: number;
+   /** bare: an expanded row's list; page: rows at body size (the ticket's plan); peek: the same, a
+-   *  little shorter. */
+-  look?: "bare" | "page" | "peek";
++   *  little shorter; trail: a run's steps on an agent's card, on a thread. */
++  look?: "bare" | "page" | "peek" | "trail";
++}
++
++/** A plan's tick is green; a trail's is a quiet check, so the step under way is its one colour. */
++function Glyph({ it, trail }: { it: CheckItem; trail: boolean }) {
++  if (it.done) return <Icon name={trail ? "check" : "tick"} label="Done" />;
++  if (it.now !== undefined) return <Mark kind="run" glyph still name="Under way" />;
++  if (it.gate) return <span className={s.gate} role="img" aria-label="Gate" />;
++  return <span className={s.todo} role="img" aria-label="Open" />;
+ }
+ 
+ export function Checklist({ items, more = 0, look = "bare" }: ChecklistProps) {
++  const large = look === "page" || look === "peek";
+   return (
+-    <ul className={cx(s.list, look !== "bare" && s.large, look === "peek" && s.peek)}>
++    <ul
++      className={cx(
++        s.list,
++        large && s.large,
++        look === "peek" && s.peek,
++        look === "trail" && s.trail,
++      )}
++    >
+       {items.map((it, i) => (
+-        <li key={i} className={s.item} data-done={it.done}>
++        <li
++          key={i}
++          className={s.item}
++          data-done={it.done}
++          data-now={it.now !== undefined || undefined}
++          data-gate={it.gate === true || undefined}
++        >
+           {it.section ? <span className={s.section}>{it.section}</span> : null}
+           <span className={s.line}>
+-            {it.done ? (
+-              <Icon name="tick" label="Done" />
+-            ) : (
+-              <span className={s.todo} role="img" aria-label="Open" />
+-            )}
++            <Glyph it={it} trail={look === "trail"} />
+             <Tip text={it.text} cut>
+               <span className={s.text}>{it.text}</span>
+             </Tip>
++            {it.now !== undefined ? <span className={s.now}>{it.now}</span> : null}
+           </span>
+         </li>
+       ))}
+diff --git a/web/src/kit/Meter.module.css b/web/src/kit/Meter.module.css
+index 5ff573b..ae58368 100644
+--- a/web/src/kit/Meter.module.css
++++ b/web/src/kit/Meter.module.css
+@@ -40,15 +40,16 @@
+     opacity: 0.9;
+   }
+ }
+-/* row: inline beside a step count; tile: an agent's card's whole width at its foot, still (a grid
++/* row: inline beside a step count; tile: inline on an agent card's step under way, still (a grid
+    of cards would sweep all at once), the step under way a soft live */
+-.row {
++.row,
++.tile {
+   flex: none;
+   gap: var(--line-2);
+   width: var(--w-meter);
+ }
+ .tile {
+-  gap: var(--line-2);
++  width: var(--w-tile-meter);
+ }
+ .tile .seg[data-seg="done"] {
+   background: var(--live);
+diff --git a/web/src/kit/Meter.tsx b/web/src/kit/Meter.tsx
+index 48b102e..077f994 100644
+--- a/web/src/kit/Meter.tsx
++++ b/web/src/kit/Meter.tsx
+@@ -1,5 +1,5 @@
+-// A run's progress: one segment per step; the step in progress sweeps. One form, two sizes: inline
+-// in a row (the default), and still beside the step count of the agent Card it is in.
++// A run's progress: one segment per step; the step in progress sweeps. One form, two sizes, both
++// inline: in a row (the default), and wider and still on the step under way of an agent Card.
+ import s from "./Meter.module.css";
+ import { cx } from "./vars";
+ 
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 5e62c40..cb98d33 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -166,7 +166,7 @@
+           "why": "A stage's face (an agent's, or a shell's glyph), in the slot the lane's axis runs through."
+         },
+         "children": {
+-          "why": "Its lines: a stage's summary; an agent's key and who works it, title and where, and progress; a ticket's key, title and state."
++          "why": "Its lines: a stage's summary; a running agent's key, run and who works it, its title, and its trail; a queued run's one line; a ticket's key, title and state."
+         },
+         "open": {
+           "why": "The selected stage's settings, drawn in place under the summary (the owner's rule: no dialog, every field visible)."
+@@ -175,7 +175,7 @@
+           "why": "A click (or Enter) anywhere but its own controls: selects a stage (none: read only), or opens a peek at the agent's or ticket's ticket."
+         },
+         "off": {
+-          "why": "A disabled stage is dimmed, still in its place; a queued agent's card loses its tone for a dashed outline, so running and queued read apart at a glance."
++          "why": "A disabled stage is dimmed, still in its place; a queued run's card is one compact line with no tone and a dashed outline, so running and queued read apart at a glance."
+         },
+         "problem": {
+           "why": "A stage's inline validation (a gate inside a loop, a prompt naming an unknown field), at its foot in the blocked ink."
+@@ -184,7 +184,7 @@
+           "why": "Stages, agents at work and board tickets are cards in three places.",
+           "values": {
+             "stage": "A workflow stage on the lane: a card of tone over the axis (its tone parts it from the next, inside a loop's bracket too; a disabled one no tone, a dashed outline alone), its face on the axis, ringed in the accent as it opens in place to its settings (the default).",
+-            "agent": "An agent at work (My queue): a tile of tone while it runs, a dashed outline with no tone while it is queued (nothing at work there yet), its lines down to the card's foot, its steps a still Meter across the foot.",
++            "agent": "An agent at work (My queue): a tile of tone while it runs, its lines one under another down to its foot (who and where, the title, its trail of steps); queued, one compact line with a dashed outline and no tone (nothing at work there yet).",
+             "ticket": "A ticket on a board (All teams): two tight lines on a tile of tone straight on the sheet (no lane under it), its key with its state's pill at the line's end, then its title (Linear's board card)."
+           }
+         }
+@@ -233,20 +233,21 @@
+       }
+     },
+     "Checklist": {
+-      "why": "A plan's items (TASKS.md) with ticks, rings and section heads, drawn three times in V1.",
++      "why": "A plan's items (TASKS.md) with ticks, rings and section heads, drawn three times in V1; a run's steps the same way (a trail).",
+       "props": {
+         "items": {
+-          "why": "The plan's items."
++          "why": "The plan's items; a trail's steps, where the step under way carries what it is doing (now) and a gate is marked as one (gate)."
+         },
+         "more": {
+           "why": "How many were left out (+N more)."
+         },
+         "look": {
+-          "why": "A row's expansion keeps the bare list; the ticket's and the peek's plan are rows at body size on the page's own ground, as Linear lists sub-issues (no card, no rules).",
++          "why": "A row's expansion keeps the bare list; the ticket's and the peek's plan are rows at body size on the page's own ground, as Linear lists sub-issues (no card, no rules); an agent's card draws its run's steps as a trail.",
+           "values": {
+             "bare": "An expanded row's list (the default).",
+             "page": "The ticket page's plan: 36px rows at body size, quiet section heads.",
+-            "peek": "The peek's plan: the same, in shorter rows so its conversation fits beside it."
++            "peek": "The peek's plan: the same, in shorter rows so its conversation fits beside it.",
++            "trail": "A running agent's card (My queue): the stage it finished, the one under way (the live ring, what it is doing and how far after its name) and what comes next (a ring, or a gate's diamond), in tight lines on a thread, so a glance says how far along it is."
+           }
+         }
+       }
+@@ -558,7 +559,7 @@
+           "why": "Two places draw a run's progress.",
+           "values": {
+             "row": "Inline (48px), the default: the ticket's Now line, where the stepper widens it to 120px.",
+-            "tile": "An agent Card's: the card's whole width at its foot, under its step count, still (a grid of cards would sweep all at once)."
++            "tile": "An agent Card's: inline (80px) on its trail's step under way, beside the step count, still (a grid of cards would sweep all at once), the steps done in the live hue."
+           }
+         }
+       }
+@@ -829,8 +830,8 @@
+         "cols": {
+           "why": "A grid instead of a line.",
+           "values": {
+-            "2": "A form's settings two side by side (each at least half the width), one under the other where a column would be narrower than a form column.",
+-            "3": "Equal columns: the agents' cards (three at most)."
++            "2": "Two side by side (each at least half the width), one under the other where a column would be narrower than a form column: a form's settings, My queue's agent cards and queued lines.",
++            "3": "Equal columns, three at most: a twin's board lanes, and the third where a twin's panel opens."
+           }
+         }
+       }
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 007ccb0..2aa89a8 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -461,6 +461,8 @@
+   --h-fact: 30px; /* a property row */
+   --h-check: 32px; /* a plan row */
+   --h-check-sm: 30px; /* a plan row in the peek */
++  --h-trail: 20px; /* a run's step on an agent's card (a trail) */
++  --w-tile-meter: 80px; /* the run's step meter, on an agent card's step under way */
+   --h-compose: 24px; /* the composer's text, one line beside Send; it grows as you type */
+   --w-ticket: 760px; /* the ticket body's reading width */
+   --w-tk-meter: 120px; /* the run's step meter, on the stepper's now line */

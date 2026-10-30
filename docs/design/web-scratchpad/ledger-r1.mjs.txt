@@ -1,0 +1,66 @@
+// One-off: the ledger after the consolidation's review round 1: every reason true to the code.
+import { readFileSync, writeFileSync } from "node:fs";
+
+const path = process.argv[2];
+const led = JSON.parse(readFileSync(path, "utf8"));
+const c = led.components;
+
+// Card: three looks
+c.Card.props.label.why =
+  "What it is: a stage's button says Edit Implement or Close Implement; an agent's or a ticket's says what it opens (Peek at NW-17: …).";
+c.Card.props.face.why = "A stage's face (an agent's, or a shell's glyph), in the slot the lane's axis runs through.";
+c.Card.props.children.why =
+  "Its lines: a stage's summary; an agent's key, title, chips and progress; a ticket's key, title and state.";
+c.Card.props.onOpen.why =
+  "A click (or Enter) anywhere but its own controls: selects a stage (none: read only), or opens a peek at the agent's or ticket's ticket.";
+c.Card.props.off.why = "A disabled stage is dimmed, still in its place; a queued agent recedes to a hairline.";
+c.Card.props.problem.why = "A stage's inline validation (a gate inside a loop, a prompt naming an unknown field), at its foot in the blocked ink.";
+c.Card.props.look.values.agent =
+  "An agent at work (My queue): its lines down to the card's foot, an edge Meter along its bottom edge.";
+
+// Chip
+c.Chip.props.lead.why = "A small glyph before the words (skills, files, the repo, the clock, a version); one or the other with a dot.";
+c.Chip.props.dot.why = "A dot in a state's hue before the words, instead of a glyph: a row's stage, a verdict, drift.";
+c.Chip.props.dot.values.done = "Passed, complete, the default workflow.";
+delete c.Chip.props.tone.values.strong;
+c.Chip.props.tone.values.blocked = "The words in the blocked ink: a conflict.";
+c.Chip.props.after.why =
+  "Quieter, after the words: a step count; or who works on it, the agent's glyph on its live disc and the face of whose ticket it is.";
+
+// Mark
+delete c.Mark.props.text;
+c.Mark.props.name.why = "Who or what, in the state's colour (Builder · run #42, Bea, Blocked).";
+
+// Meter
+c.Meter.why = "A run's progress, one segment per step, the current one sweeping (V1's RunMeter).";
+delete c.Meter.props.size.values.tile;
+c.Meter.props.size.values.row = "Inline in a row (48px): the ticket's Now line; the default.";
+c.Meter.props.size.values.edge =
+  "An agent Card's: one still hairline track along the card's bottom edge (the card is its containing block).";
+
+// Composer: the draft is the screen's
+c.Composer.props.value = { why: "The draft, held by the screen (it decides when to keep or clear it)." };
+c.Composer.props.onChange = { why: "An edit to the draft." };
+c.Composer.props.onSend = { why: "Send the draft (the button, or Ctrl/Cmd+Enter); W0 is static, so the screens keep the draft." };
+
+// Sortable
+c.Sortable.props.gutter = {
+  why: "A sortable list keeps its handles' gutter at its left; a Lane, which keeps one for its loop bands too, turns it off.",
+};
+
+// others the reviews named
+c.Avatar.props.size.values.lg = "The signed-in face in the sidebar's account popover (30px).";
+c.Head.props.level.why = "Three heads over a list's runs.";
+c.Head.props.level.values.group =
+  "A list's band edge to edge (Linear's group head): Compact's fold, My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.";
+c.Stack.props.cols.why = "A grid instead of a line.";
+c.Stack.props.cols.values["2"] =
+  "A form's settings two side by side (each at least half the width), one under the other where a column would be narrower than a form column.";
+c.Stack.props.cols.values["3"] = "Equal columns: the agents' cards (three at most).";
+c.Field.props.search.why =
+  "The kit's one search box (a view's top bar, a panel's list): the glyph, a / keycap; / focuses the top layer's, Esc clears it and never closes the overlay it is in.";
+c.Override.why = "A value set over another it replaces (a stage's effort over its agent's): the set value, the replaced one struck through.";
+if (c.Lane.props.stages.items) {
+  c.Lane.props.stages.items.noGate = { why: "Why no gate can go after the stage (the screen's rule): its empty diamond is inert and says so." };
+}
+writeFileSync(path, JSON.stringify(led, null, 2) + "\n", { encoding: "utf8" });

@@ -1,0 +1,37 @@
+// One-off: open the theme picker (now a Select) and the ticket's owner picker, shoot both, and pick
+// a theme to check it applies. Starts Vite on 5191 and stops it.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  await page.goto(`${base}/`);
+  await page.evaluate(() => document.fonts.ready);
+  const trig = page.locator("nav").getByText("Theme", { exact: true }); console.log("theme trigger role:", await trig.evaluate((e) => { const b = e.closest("button,[role]"); return b ? (b.getAttribute("role") ?? b.tagName) + " / " + (b.getAttribute("aria-label") ?? b.textContent) : "none"; })); await trig.click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: join(out, "theme-open.png") });
+  await page.getByRole("option", { name: /plum/i }).click();
+  await page.waitForTimeout(200);
+  console.log("theme after pick:", await page.evaluate(() => document.documentElement.dataset.theme));
+  await page.goto(`${base}/t/NW-17`);
+  await page.getByRole("combobox", { name: /owner/i }).first().click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: join(out, "owner-open.png") });
+  console.log("errors:", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

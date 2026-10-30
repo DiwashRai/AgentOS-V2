@@ -1,0 +1,58 @@
+// One-off: check the consolidation's round-2 fixes in Chrome. Starts Vite on 5191 and stops it.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 560 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const go = async (path) => { await page.goto(base + path); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(250); };
+  const desc = (loc) => loc.evaluate((e) => (e.getAttribute("aria-describedby") ?? "").split(" ").filter(Boolean).map((id) => document.getElementById(id)?.textContent ?? `(missing ${id})`));
+
+  // O S1: tabbing to a card brings the whole card into view (560px tall window)
+  await go("/library/workflows/standard");
+  const review = page.getByRole("button", { name: "Edit Review" });
+  await review.focus();
+  await page.waitForTimeout(200);
+  say("O-S1 Review card in view (top, bottom, window)", await review.evaluate((b) => { const r = b.closest("[data-look]").getBoundingClientRect(); return [Math.round(r.top), Math.round(r.bottom), innerHeight]; }));
+
+  // C3: the Role row's note describes the Maker/Check group
+  await page.getByRole("button", { name: "Edit Implement" }).focus();
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(200);
+  say("C3 Role group described by", await desc(page.getByRole("group", { name: "Role" }).locator("[role=group]").first()));
+
+  // C1: a popped-out prompt keeps its help and error
+  const prompt = page.getByRole("textbox", { name: "Prompt" });
+  await prompt.fill("{{ verdict.note }}");
+  await page.waitForTimeout(150);
+  await prompt.hover();
+  await page.getByRole("button", { name: /Prompt in the whole window/ }).first().click();
+  await page.waitForTimeout(300);
+  const popped = page.locator("dialog[open] textarea");
+  say("C1 popped invalid + described by", [await popped.evaluate((e) => e.getAttribute("aria-invalid")), await desc(popped)]);
+  await page.keyboard.press("Escape");
+
+  // O S2: a draft stays with its ticket
+  await go("/t/NW-17");
+  await page.getByRole("textbox", { name: /Say something/ }).fill("draft for NW-17");
+  await page.evaluate(() => { history.pushState({}, "", "/t/NW-19"); dispatchEvent(new PopStateEvent("popstate")); });
+  await page.waitForTimeout(400);
+  say("O-S2 composer on NW-19", await page.getByRole("textbox", { name: /Say something/ }).inputValue());
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

@@ -1,0 +1,9 @@
+web: loadOf keeps a read's data when its refetch fails
+
+TanStack keeps `data` while `status` is "error", but loadOf read the
+status first, so any failed background refetch (a mutation's
+invalidation, W11's /changes) replaced the ticket page, the lists and
+the editors with "Can't reach the server". A read is ready whenever it
+has data; only one with none says where it stands.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

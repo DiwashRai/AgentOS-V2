@@ -1,0 +1,15 @@
+gauntlet: medium titles, a fixed priority slot, quiet faces and actions
+
+Round six's eight judges.
+
+- A page's title and a document's title set medium, not semibold: the
+  blind judges read them as loud and oversized.
+- Normal priority a faint glyph again: drawing nothing left some rows
+  with a glyph and some without, a ragged gutter.
+- A row's faces one neutral slate; the hues stay where a face stands
+  for a voice (a thread).
+- Button outline: a row's primary its accent words alone at rest, its
+  edge and wash under the pointer, an inline action, not a box.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

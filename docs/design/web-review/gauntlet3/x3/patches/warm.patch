@@ -1,0 +1,3110 @@
+diff --git a/web/src/features/compact/CompactView.tsx b/web/src/features/compact/CompactView.tsx
+index 0b73f5c..0782de5 100644
+--- a/web/src/features/compact/CompactView.tsx
++++ b/web/src/features/compact/CompactView.tsx
+@@ -1,6 +1,6 @@
+ // Compact: every ticket, one line each, grouped by what it waits on. `?f=` keeps one group, `?q=`
+ // searches, and `?open=KEY` expands one row in place: the move, the plan and the last message.
+-import { useEffect, useRef, useState } from "react";
++import { Fragment, useEffect, useRef, useState } from "react";
+ import { useSearchParams } from "react-router";
+ 
+ import { useMessages, usePlan } from "../../api/queries";
+@@ -347,50 +347,55 @@ export function CompactView() {
+           {board.error ? (
+             <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
+           ) : null}
+-          {sections(listed, me, now, filter === "all" && query.length === 0).map((sec) => {
+-            if (sec.kind === "empty")
++          {/* every group on one sheet, each under a soft band of a head that rides at the top while
++              its rows pass: denser than My queue's sheet per group */}
++          <Surface level="sheet" pad={4}>
++            {sections(listed, me, now, filter === "all" && query.length === 0).map((sec) => {
++              if (sec.kind === "empty")
++                return (
++                  <Notice key={`empty-${sec.id}`} kind="empty" lead={sec.lead}>
++                    {sec.note}
++                  </Notice>
++                );
++              const g = sec.group;
++              const collapsed = (g.id === "done" && filter !== "done") !== flipped.has(g.id);
+               return (
+-                <Notice key={`empty-${sec.id}`} kind="empty" lead={sec.lead}>
+-                  {sec.note}
+-                </Notice>
++                <Fragment key={g.id}>
++                  <Head
++                    name={g.title}
++                    count={g.items.length}
++                    icon={<Mark kind={g.mark} glyph name={false} />}
++                    tone={TONE[g.id]}
++                    summary={<SummaryText summary={g.summary} />}
++                    fold={{
++                      open: !collapsed,
++                      toggle: () => {
++                        setFlipped((prev) => {
++                          const next = new Set(prev);
++                          if (!next.delete(g.id)) next.add(g.id);
++                          return next;
++                        });
++                      },
++                    }}
++                  />
++                  {collapsed
++                    ? null
++                    : g.items.map((t) => (
++                        <CompactRow
++                          key={t.key}
++                          t={t}
++                          me={me}
++                          now={now}
++                          open={open === t.key}
++                          onToggle={() => {
++                            setParam("open", open === t.key ? null : t.key);
++                          }}
++                        />
++                      ))}
++                </Fragment>
+               );
+-            const g = sec.group;
+-            const collapsed = (g.id === "done" && filter !== "done") !== flipped.has(g.id);
+-            return [
+-              <Head
+-                key={`head-${g.id}`}
+-                name={g.title}
+-                count={g.items.length}
+-                icon={<Mark kind={g.mark} glyph name={false} />}
+-                tone={TONE[g.id]}
+-                summary={<SummaryText summary={g.summary} />}
+-                fold={{
+-                  open: !collapsed,
+-                  toggle: () => {
+-                    setFlipped((prev) => {
+-                      const next = new Set(prev);
+-                      if (!next.delete(g.id)) next.add(g.id);
+-                      return next;
+-                    });
+-                  },
+-                }}
+-              />,
+-              ...(collapsed
+-                ? []
+-                : g.items.map((t) => (
+-                    <CompactRow
+-                      key={t.key}
+-                      t={t}
+-                      me={me}
+-                      now={now}
+-                      open={open === t.key}
+-                      onToggle={() => {
+-                        setParam("open", open === t.key ? null : t.key);
+-                      }}
+-                    />
+-                  ))),
+-            ];
+-          })}
++            })}
++          </Surface>
+         </Table>
+       </Surface>
+     </Page>
+diff --git a/web/src/features/compact/TicketLine.tsx b/web/src/features/compact/TicketLine.tsx
+index bdcf5df..5e67a43 100644
+--- a/web/src/features/compact/TicketLine.tsx
++++ b/web/src/features/compact/TicketLine.tsx
+@@ -65,9 +65,7 @@ export function TitleCell({ t, me, after }: { t: TicketRow; me: Person | null; a
+         progress={a.kind === "running" ? a.progress : null}
+       />
+       <Text tone="3" truncate title={after ? `${t.title} · ${after}` : t.title}>
+-        <Text weight={500} tone="1">
+-          {t.title}
+-        </Text>
++        <Text variant="label">{t.title}</Text>
+         {after ? `\u2002${after}` : null}
+       </Text>
+     </Stack>
+diff --git a/web/src/features/intake/IntakeView.tsx b/web/src/features/intake/IntakeView.tsx
+index d467d85..d2259d7 100644
+--- a/web/src/features/intake/IntakeView.tsx
++++ b/web/src/features/intake/IntakeView.tsx
+@@ -40,9 +40,9 @@ import {
+   visible,
+ } from "./model";
+ 
+-// One triage inbox, as Linear's Inbox: no cards. The list runs out to the sheet's edges under the
+-// bar, each saved query a run of it under a grey band (chevron, project key, name, count) that
+-// stays at the top while its run scrolls past and parts it from the run before. An issue is a
++// One triage inbox, as Linear's Inbox: each saved query a sheet of its own under the bar, a step
++// under the last, its head the sheet's first line (chevron, project key, name, count), which
++// stays at the top while its run scrolls past. An issue is a
+ // tight two-line row led by who has it (a face, Unassigned a dashed ring): the title firm; under
+ // it the Jira key (a link to it), the assignee and one fact (a priority worth saying, led by its
+ // bars, else the Jira status; the rest in its tooltip); across from both the age ("1h ago", in its
+@@ -186,7 +186,7 @@ function Group({ q, query, jiraUrl, now }: GroupProps) {
+   const { shown, rest } = visible(issues, expanded);
+   const empty = emptyText(q, query.length > 0);
+   return (
+-    <Surface level="list" label={q.name}>
++    <Surface level="sheet" pad={3} label={q.name}>
+       <GroupLabel
+         q={q}
+         count={issues.length}
+@@ -262,14 +262,15 @@ export function IntakeView() {
+       <Table
+         columns={COLUMNS}
+         head={false}
+-        edge
+         scroll={false}
+         {...(data ? { foot: footNote(data, now) } : {})}
+       >
+         {data ? (
+-          data.queries.map((q) => (
+-            <Group key={q.name} q={q} query={query} jiraUrl={jiraUrl} now={now} />
+-          ))
++          <Stack gap={7}>
++            {data.queries.map((q) => (
++              <Group key={q.name} q={q} query={query} jiraUrl={jiraUrl} now={now} />
++            ))}
++          </Stack>
+         ) : intake.error ? (
+           <Notice kind="status" error>
+             {`Can't reach the server · ${intake.error.message}`}
+diff --git a/web/src/features/library/content.tsx b/web/src/features/library/content.tsx
+index 99d0358..8f5629b 100644
+--- a/web/src/features/library/content.tsx
++++ b/web/src/features/library/content.tsx
+@@ -144,6 +144,7 @@ function Blocks({
+   return (
+     <Sortable
+       label="AGENTS.md blocks"
++      gap={5}
+       onMove={move}
+       items={blocks.map((b, i) => {
+         const key = keys[i] ?? b.name;
+diff --git a/web/src/features/library/list.tsx b/web/src/features/library/list.tsx
+index 6d4f80a..3c2e153 100644
+--- a/web/src/features/library/list.tsx
++++ b/web/src/features/library/list.tsx
+@@ -1,6 +1,6 @@
+ // What the four library lists share, as Linear's issue list: the bar (the list's name, the Space's
+-// Library, search, New), then a table out to the sheet's edges with no surface of its own: a banded
+-// column head, one-line rows on hairlines (a bare glyph and the name, what it is in a column of its
++// Library, search, New), then a table on a sheet of its own: the column head its first line,
++// one-line unruled rows (a bare glyph and the name, what it is in a column of its
+ // own, the facts packed at the right) that open the item's editor on a click or Enter, ↑ ↓ (or j k)
+ // moving a selection that Enter opens, and a foot with those keys and the count pinned to the
+ // pane's bottom, the rows scrolling above it. A search that matches nothing says so.
+diff --git a/web/src/features/queue/QueueView.tsx b/web/src/features/queue/QueueView.tsx
+index afe3145..ded6212 100644
+--- a/web/src/features/queue/QueueView.tsx
++++ b/web/src/features/queue/QueueView.tsx
+@@ -1,4 +1,5 @@
+ // My queue (home): only what is mine. Click, Enter or Space on an item opens the peek (`?peek=`).
++import type { ReactNode } from "react";
+ import { useSearchParams } from "react-router";
+ 
+ import type { Person, TicketRow } from "../../api/types";
+@@ -149,7 +150,8 @@ function Body({ t, me }: { t: TicketRow; me: Person | null }) {
+ }
+ 
+ /** A tile's foot: what it is doing (or that it waits for a runner) and a running one's step count;
+- *  under them its steps, the tile's whole width. */
++ *  under them its steps, the tile's whole width (a queued one's track empty, so every tile ends on
++ *  the same line). */
+ function Progress({ t }: { t: TicketRow }) {
+   const a = t.attention;
+   const step = a.kind === "running" ? a.step : "Waiting for a runner";
+@@ -168,7 +170,12 @@ function Progress({ t }: { t: TicketRow }) {
+           </Text>
+         ) : null}
+       </Stack>
+-      {p ? <Meter size="tile" done={p.done} total={p.total} /> : null}
++      {/* a queued tile keeps the running ones' foot: its track waits, faint and empty */}
++      {p ? (
++        <Meter size="tile" done={p.done} total={p.total} />
++      ) : (
++        <Meter size="tile" done={0} total={1} waiting />
++      )}
+     </Stack>
+   );
+ }
+@@ -204,16 +211,27 @@ interface ZoneListProps {
+   open: Open;
+ }
+ 
++/** A run of the queue on a sheet of its own: its head, then its lines. */
++function Sheet({ children }: { children: ReactNode }) {
++  return (
++    <Surface level="sheet" pad={3}>
++      <Table columns={ITEM} head={false} scroll={false}>
++        {children}
++      </Table>
++    </Surface>
++  );
++}
++
+ function ZoneList({ z, me, now, open }: ZoneListProps) {
+   const n = shipped(z.done);
+   return (
+-    <Stack>
++    <Stack gap={7}>
+       {z.yourMove.length === 0 ? (
+         <Notice kind="empty" lead="All clear">
+           nothing is your move
+         </Notice>
+       ) : (
+-        <Table columns={ITEM} head={false} scroll={false} bleed>
++        <Sheet>
+           <Head
+             icon={<Mark kind="you" glyph name={false} />}
+             name="Your move"
+@@ -224,40 +242,36 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
+           {z.yourMove.map((t) => (
+             <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
+           ))}
+-        </Table>
++        </Sheet>
+       )}
+-      {/* the cards' zone keeps room under it before the next band */}
+-      <Stack gap={8}>
+-        {z.agents.length === 0 ? (
+-          <Notice kind="empty" lead="All quiet">
+-            nothing running, nothing queued
+-          </Notice>
+-        ) : (
+-          <Stack gap={6}>
+-            <Head
+-              level="zone"
+-              icon={<Mark kind="run" glyph name={false} />}
+-              name="Agents at work"
+-              tone="live"
+-              count={z.agents.length}
+-              note={atWorkNote(z)}
+-            />
+-            <Stack cols={3} gap={5}>
+-              {z.agents.slice(0, CAP.agents).map((t) => (
+-                <AgentCard key={t.key} t={t} me={me} now={now} onOpen={open} />
+-              ))}
+-            </Stack>
+-            {z.agents.length > CAP.agents ? (
+-              <Button variant="link" href="/compact">
+-                {`+${String(z.agents.length - CAP.agents)} more running or queued`}
+-              </Button>
+-            ) : null}
++      {z.agents.length === 0 ? (
++        <Notice kind="empty" lead="All quiet">
++          nothing running, nothing queued
++        </Notice>
++      ) : (
++        <Stack gap={2}>
++          <Head
++            level="zone"
++            icon={<Mark kind="run" glyph name={false} />}
++            name="Agents at work"
++            tone="live"
++            count={z.agents.length}
++            note={atWorkNote(z)}
++          />
++          <Stack cols={3} gap={7}>
++            {z.agents.slice(0, CAP.agents).map((t) => (
++              <AgentCard key={t.key} t={t} me={me} now={now} onOpen={open} />
++            ))}
+           </Stack>
+-        )}
+-        <Stack />
+-      </Stack>
++          {z.agents.length > CAP.agents ? (
++            <Button variant="link" href="/compact">
++              {`+${String(z.agents.length - CAP.agents)} more running or queued`}
++            </Button>
++          ) : null}
++        </Stack>
++      )}
+       {z.ready.length > 0 ? (
+-        <Table columns={ITEM} head={false} scroll={false} bleed>
++        <Sheet>
+           <Head
+             icon={<Mark kind="idle" glyph name={false} />}
+             name="Ready to start"
+@@ -267,10 +281,10 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
+           {z.ready.map((t) => (
+             <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
+           ))}
+-        </Table>
++        </Sheet>
+       ) : null}
+       {z.done.length > 0 ? (
+-        <Table columns={ITEM} head={false} scroll={false} bleed>
++        <Sheet>
+           <Head
+             icon={<Mark kind="done" glyph name={false} />}
+             name="Done recently"
+@@ -299,7 +313,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
+           {z.done.length > CAP.done ? (
+             <Notice kind="more" lead={`+${String(z.done.length - CAP.done)} more`} />
+           ) : null}
+-        </Table>
++        </Sheet>
+       ) : null}
+     </Stack>
+   );
+@@ -337,7 +351,7 @@ export function QueueView() {
+         { n: z.queued, label: "queued" },
+       ]}
+     >
+-      <Surface pad={8}>
++      <Surface>
+         {board.error ? (
+           <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
+         ) : board.pending ? (
+diff --git a/web/src/features/teams/TeamsView.tsx b/web/src/features/teams/TeamsView.tsx
+index e509531..053e7b3 100644
+--- a/web/src/features/teams/TeamsView.tsx
++++ b/web/src/features/teams/TeamsView.tsx
+@@ -306,7 +306,7 @@ export function TeamsView() {
+       {board.error ? (
+         <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
+       ) : null}
+-      <Table columns={columnsOf(counts)} head={false} edge foot={<Legend />}>
++      <Table columns={columnsOf(counts)} head={false} foot={<Legend />}>
+         <Head counts={counts} />
+         {repos.map((repo) => {
+           const work = shown.filter((t) => t.repo === repo.name && inFlight(t));
+diff --git a/web/src/kit/Button.module.css b/web/src/kit/Button.module.css
+index b6942b6..b0d49b7 100644
+--- a/web/src/kit/Button.module.css
++++ b/web/src/kit/Button.module.css
+@@ -9,7 +9,7 @@
+   gap: var(--sp-3);
+   height: var(--h-control);
+   padding: 0 var(--sp-6);
+-  border-radius: var(--r-2);
++  border-radius: var(--r-3);
+   border: var(--line-1) solid var(--ctl-edge);
+   background: var(--ctl);
+   box-shadow: var(--ctl-shadow);
+@@ -138,6 +138,6 @@
+   opacity: var(--blocked-fade);
+ }
+ .btn.you[aria-disabled="true"] {
+-  background: var(--seg);
++  background: var(--track);
+   opacity: 1;
+ }
+diff --git a/web/src/kit/Card.module.css b/web/src/kit/Card.module.css
+index 5fba395..0cb3f57 100644
+--- a/web/src/kit/Card.module.css
++++ b/web/src/kit/Card.module.css
+@@ -131,23 +131,27 @@
+   gap: var(--sp-3);
+ }
+ 
+-/* agent: an agent's tile, the surface on a hairline (one treatment, running or queued: the glyph
+-   says which), as tall as its neighbours, its lines one under another down to its foot */
++/* agent: an agent's tile, a sheet of its own on the desk (one treatment, running or queued: the
++   glyph says which), as tall as its neighbours, its lines one under another down to its foot;
++   under the pointer it lifts a little further off the desk */
+ .card[data-look="agent"] {
+   align-self: stretch;
+-  border-color: var(--tile-edge);
+-  border-radius: var(--r-3);
++  border-color: transparent;
++  border-radius: var(--r-5);
+   background: var(--tile);
+-  box-shadow: var(--tile-lift);
++  box-shadow: var(--shadow-sheet);
+ }
+ .card[data-look="agent"][data-edit]:hover,
+ .card[data-look="agent"]:has(.hit:focus-visible) {
+-  border-color: var(--tile-hover-edge);
++  border-color: transparent;
+   background: var(--tile-hover);
++  box-shadow: var(--shadow-lift);
+ }
+ .card[data-look="agent"] .summary {
+   height: 100%;
+-  padding: var(--sp-7) var(--sp-8) var(--sp-8);
++  /* its words on the line of the sheets' rows beside it */
++  padding: var(--sp-7) var(--sp-9) var(--sp-8) calc(var(--list-in) + var(--list-inset));
++  border-radius: var(--r-5);
+ }
+ .card[data-look="agent"][data-edit] .summary:hover {
+   background: none;
+diff --git a/web/src/kit/Card.tsx b/web/src/kit/Card.tsx
+index f5524a1..79ac5eb 100644
+--- a/web/src/kit/Card.tsx
++++ b/web/src/kit/Card.tsx
+@@ -4,7 +4,8 @@
+ //   summary beside it; the summary selects it, and selected it opens in place to its settings (no
+ //   dialog). A disabled stage is dimmed; a problem with it is said at its foot.
+ // - agent: an agent at work (My queue): its lines one under another, filling the card's height so
+-//   cards in a row line up, on a tile on a hairline, running or queued alike (its glyph says which).
++//   cards in a row line up, a sheet of its own on the desk, running or queued alike (its glyph says
++//   which).
+ // - ticket: a ticket on a board (All teams): two tight lines on a hairline card, each its width.
+ // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
+ // ring round the card, and a click anywhere on it for a pointer. What the lines say is the
+diff --git a/web/src/kit/Checklist.module.css b/web/src/kit/Checklist.module.css
+index 5dd9214..1472c2a 100644
+--- a/web/src/kit/Checklist.module.css
++++ b/web/src/kit/Checklist.module.css
+@@ -52,13 +52,11 @@
+   color: var(--ink-3);
+ }
+ 
+-/* large: the ticket's and the peek's plan as Linear lists sub-issues: one hairline under the head,
+-   then rows at body size on the page's own ground; a section head is a quiet label with room above
+-   it; done items recede a step. The peek's rows are a little shorter */
++/* large: the ticket's and the peek's plan as sub-issues: rows at body size on the sheet's own
++   ground under the head, no rule; a section head is a quiet label with room above it; done items
++   recede a step. The peek's rows are a little shorter */
+ .large {
+-  margin-top: calc(var(--sp-3) * -1);
+-  padding-top: var(--sp-4);
+-  border-top: var(--line-1) solid var(--tk-card-edge);
++  margin-top: calc(var(--sp-2) * -1);
+ }
+ .large .section {
+   min-height: var(--h-control-sm);
+@@ -74,7 +72,7 @@
+   min-height: var(--h-check);
+   margin-inline: calc(var(--sp-4) * -1);
+   padding: 0 var(--sp-4);
+-  border-radius: var(--r-2);
++  border-radius: var(--r-3);
+   font-size: var(--fs-tk);
+   color: var(--tk-ink);
+   transition: background var(--dur-fast);
+diff --git a/web/src/kit/Chip.module.css b/web/src/kit/Chip.module.css
+index 8970666..14ba5a1 100644
+--- a/web/src/kit/Chip.module.css
++++ b/web/src/kit/Chip.module.css
+@@ -9,8 +9,8 @@
+   min-width: 0;
+   max-width: 100%;
+   height: var(--h-list-chip);
+-  padding: 0 var(--sp-4);
+-  border-radius: var(--r-2);
++  padding: 0 var(--sp-5);
++  border-radius: var(--r-pill);
+   background: var(--list-chip-fill);
+   color: var(--ink-2);
+   font-size: var(--fs-2);
+@@ -19,13 +19,7 @@
+   white-space: nowrap;
+ }
+ .chip[data-lead] {
+-  padding-left: var(--sp-3);
+-}
+-/* in a list's row: Linear's label chip, a pill on a hairline with no fill */
+-:where([data-row]) .chip[data-tone="line"] {
+-  border: var(--line-1) solid var(--list-chip-edge);
+-  border-radius: var(--r-pill);
+-  background: none;
++  padding-left: var(--sp-4);
+ }
+ .chip[data-tone="fill"] {
+   background: var(--chip-on);
+diff --git a/web/src/kit/Chip.tsx b/web/src/kit/Chip.tsx
+index e988bd5..69bbacf 100644
+--- a/web/src/kit/Chip.tsx
++++ b/web/src/kit/Chip.tsx
+@@ -22,7 +22,8 @@ export interface ChipAfter {
+ export type ChipProps = {
+   /** Its words (tests, AGENTS.md, Implement, northwind/web). */
+   label: string;
+-  /** line: a faint fill, no outline (the default; in a list's row, a pill on a hairline); fill: a firmer fill (a stage's phase); edge: a round pill on a hairline, no fill (a board card's state, Linear's
++  /** line: a faint fill, no outline (the default, in a list's row too); fill: a firmer fill (a
++   *  stage's phase); edge: a round pill on a hairline, no fill (a board card's state, Linear's
+    *  card pill); blocked: the words in the blocked ink (a conflict). */
+   tone?: "line" | "fill" | "edge" | "blocked";
+   /** The full text on hover, when it says more than the words. */
+diff --git a/web/src/kit/Composer.module.css b/web/src/kit/Composer.module.css
+index 9380c82..bae5aa9 100644
+--- a/web/src/kit/Composer.module.css
++++ b/web/src/kit/Composer.module.css
+@@ -1,5 +1,6 @@
+-/* the composer: Linear's reply box, one line of text with Send at its right end, growing as you
+-   type; in a full-height column it sits at the foot and stays there while the thread scrolls */
++/* the composer: the reply box, a well set into the sheet, one line of text with Send at its right
++   end, growing as you type; in a full-height column it sits at the foot and stays there while the
++   thread scrolls */
+ .compose {
+   position: sticky;
+   bottom: 0;
+@@ -8,9 +9,9 @@
+   gap: var(--sp-4);
+   margin-top: auto;
+   padding-right: var(--sp-3);
+-  border: var(--line-1) solid var(--tk-card-edge);
+-  border-radius: var(--r-4);
+-  background: var(--tk-card);
++  border: var(--line-1) solid transparent;
++  border-radius: var(--r-5);
++  background: var(--tk-well);
+   transition: border-color var(--dur-fast);
+ }
+ /* the text's label fills the box but Send, its padding the box's, so a click anywhere round the text
+@@ -20,11 +21,11 @@
+   align-self: stretch;
+   display: flex;
+   min-width: 0;
+-  padding: var(--sp-3) 0 var(--sp-3) var(--sp-6);
++  padding: var(--sp-4) 0 var(--sp-4) var(--sp-7);
+   cursor: text;
+ }
+ .compose:hover {
+-  border-color: var(--rule-strong);
++  border-color: var(--tk-card-edge);
+ }
+ .compose:has(textarea:focus-visible) {
+   border-color: var(--rule-strong);
+@@ -52,5 +53,5 @@
+ /* Send, at the foot of the box as the text grows, the box's padding under it */
+ .send {
+   flex: none;
+-  padding-bottom: var(--sp-3);
++  padding-bottom: var(--sp-4);
+ }
+diff --git a/web/src/kit/Dialog.module.css b/web/src/kit/Dialog.module.css
+index c0247e2..6643441 100644
+--- a/web/src/kit/Dialog.module.css
++++ b/web/src/kit/Dialog.module.css
+@@ -9,7 +9,7 @@
+   margin: 0;
+   padding: 0;
+   border: 0;
+-  border-radius: var(--r-4);
++  border-radius: var(--r-6);
+   background: var(--tk-side);
+   color: var(--ink-2);
+   box-shadow: var(--shadow-float);
+@@ -81,10 +81,10 @@
+   display: none;
+ }
+ 
+-/* full: the app's main sheet lifted over the whole window, for editing: the same inset and corner
+-   as the sheet it covers, on the scrim. Its bar runs edge to edge (the close, a rule, then the
+-   view's top bar), one hairline under all of it; the view (a Page) fills the rest. */
++/* full: a desk of its own lifted over the whole window, for editing, on the scrim: the view (a
++   Page) lays its bar and its sheets on it as on the app's own desk, the close at the bar's end. */
+ .full {
++  --ground: var(--side);
+   position: fixed;
+   inset: var(--sp-4);
+   width: auto;
+@@ -94,8 +94,8 @@
+   margin: 0;
+   padding: 0;
+   border: 0;
+-  border-radius: var(--r-4);
+-  background: var(--page);
++  border-radius: var(--r-6);
++  background: var(--side);
+   color: var(--ink-2);
+   box-shadow: var(--shadow-float);
+   overflow: hidden;
+@@ -119,23 +119,16 @@
+   display: flex;
+   height: 100%;
+ }
+-/* the bar's hairline, under the close as well as the view's top bar */
+-.frame::before {
+-  content: "";
+-  position: absolute;
+-  inset: var(--h-top) 0 auto;
+-  border-top: var(--line-1) solid var(--tk-card-edge);
+-}
+ /* the close: at the bar's end, where the peek's is, in the room the view's bar leaves for it */
+ .close {
+   position: absolute;
+   top: 0;
+-  right: var(--gutter);
++  right: var(--sp-8);
+   display: flex;
+   align-items: center;
+   height: var(--h-top);
+ }
+-/* the gutter inside the scroller, as the sheet's own, so a rail beside the body runs out through it */
++/* the desk's margin round the view, as the app's main column keeps it */
+ .view {
+   --top-end: calc(var(--h-control) + var(--sp-4));
+   display: flex;
+@@ -143,7 +136,7 @@
+   flex-direction: column;
+   min-width: 0;
+   min-height: 0;
+-  padding-inline: var(--gutter);
++  padding-inline: var(--sp-8);
+   overflow-y: auto;
+   scrollbar-width: thin;
+ }
+diff --git a/web/src/kit/Facts.module.css b/web/src/kit/Facts.module.css
+index e59f22e..0fd595e 100644
+--- a/web/src/kit/Facts.module.css
++++ b/web/src/kit/Facts.module.css
+@@ -31,7 +31,7 @@
+   position: relative;
+   display: flex;
+   min-width: 0;
+-  border-radius: var(--r-2);
++  border-radius: var(--r-3);
+   transition: background var(--dur-fast);
+   --priority-on: var(--ink-3);
+   --type-glyph: var(--ink-3);
+diff --git a/web/src/kit/Form.module.css b/web/src/kit/Form.module.css
+index 1261ee4..3274b4f 100644
+--- a/web/src/kit/Form.module.css
++++ b/web/src/kit/Form.module.css
+@@ -4,7 +4,7 @@
+ .box {
+   min-width: 0;
+   border: var(--line-1) solid var(--ctl-edge);
+-  border-radius: var(--r-2);
++  border-radius: var(--r-3);
+   background: var(--input);
+   color: var(--ink-1);
+   font-size: var(--fs-3);
+@@ -44,7 +44,7 @@
+   height: var(--h-control);
+   padding: 0 var(--sp-3) 0 var(--sp-5);
+   border: var(--line-1) solid var(--rule);
+-  border-radius: var(--r-3);
++  border-radius: var(--r-4);
+   background: var(--raised);
+   color: var(--ink-3);
+   font-size: var(--fs-3);
+@@ -132,18 +132,17 @@
+   font-weight: 600;
+ }
+ 
+-/* a sheet (an item editor's content): a section of the document, not a box. A hairline over its
+-   head strip, the text under it on the column's own edge (a folding block's under its name, past
+-   the fold) as tall as its lines; while the text has the focus the hairline is your move's accent */
++/* a sheet (an item editor's content): a section of the document set in a soft well, its head strip
++   over the text (a folding block's under its name, past the fold) as tall as its lines; while the
++   text has the focus the well is ringed in the focus colour */
+ .sheet {
+-  border-top: var(--line-1) solid var(--rule);
+-  transition:
+-    border-color var(--dur-fast) ease,
+-    box-shadow var(--dur-fast) ease;
++  padding: var(--sp-1) var(--sp-6) 0 var(--sp-8);
++  border-radius: var(--r-5);
++  background: var(--tk-well);
++  transition: box-shadow var(--dur-fast) ease;
+ }
+ .sheet:has(.leaf:focus) {
+-  border-top-color: var(--you);
+-  box-shadow: 0 calc(var(--line-1) * -1) 0 var(--you);
++  box-shadow: 0 0 0 var(--line-2) var(--focus);
+ }
+ .sheetHead {
+   display: flex;
+@@ -153,7 +152,7 @@
+ }
+ .leaf,
+ .leaf:is(:hover, :focus-within) {
+-  padding: 0 0 var(--sp-9);
++  padding: 0 0 var(--sp-8);
+   border: 0;
+   border-radius: 0;
+   background: none;
+@@ -166,6 +165,7 @@
+ /* at rest, a sheet's markdown is read as a document over its hidden source, in the body face:
+    `code` a faint chip, a fence a tinted block of mono; a click lands in the source and edits it */
+ .read {
++  position: relative;
+   display: grid;
+ }
+ .read > * {
+@@ -175,6 +175,14 @@
+ .read:not(:focus-within) > .area {
+   color: transparent;
+ }
++/* at rest the words read set the well's height (the source's fences take lines the reading
++   doesn't), the source laid over them to take the click */
++.read:not(:focus-within):has(> .prose:not(:empty)) > .area {
++  position: absolute;
++  inset: 0;
++  min-height: 0;
++  overflow: hidden;
++}
+ .read:focus-within > .prose {
+   visibility: hidden;
+ }
+@@ -186,6 +194,9 @@
+ .prose > * {
+   margin: 0 0 var(--sp-4);
+ }
++.prose > :last-child {
++  margin-bottom: 0;
++}
+ .prose ul {
+   padding-left: var(--sp-9);
+ }
+@@ -208,6 +219,10 @@
+   width: 100%;
+   min-width: 0;
+ }
++/* a sheet's well hugs its text, the paper showing under it */
++.areaWrap.sheet {
++  flex: none;
++}
+ /* a sheet's controls: the last (a block's handle) always; the rest while the sheet is in use */
+ .tools {
+   display: flex;
+diff --git a/web/src/kit/Frame.module.css b/web/src/kit/Frame.module.css
+index 8ad65f0..354d1d4 100644
+--- a/web/src/kit/Frame.module.css
++++ b/web/src/kit/Frame.module.css
+@@ -1,27 +1,24 @@
+-/* the frame: Linear's own, two planes and one hairline. The sidebar is a full-height column on its
+-   ground, ruled off by a single hairline; the main column runs flush beside it on the page, to the
+-   window's edges, a sized flex column so a screen that fills it (flex: 1) scrolls to its foot. The
+-   page is the one plane a view lies on: a view's recess sits flush on it (no card inside a sheet),
+-   so a list's bands and rows lie straight on the page, as Linear's do */
++/* the frame: one desk, no rules. The sidebar lies straight on the desk; the main column beside it
++   is desk too, a sized flex column so a screen that fills it (flex: 1) scrolls to its foot, and a
++   view lays its sheets of paper on it with the desk showing round them */
+ .app {
+   display: grid;
+   grid-template-columns: var(--w-side) minmax(0, 1fr);
+   min-height: 100dvh;
+-  background: var(--page);
++  background: var(--side);
+ }
+ .main {
+-  --recess: var(--page);
+-  --shadow-recess: none;
++  --ground: var(--side);
+   display: flex;
+   flex-direction: column;
+   min-width: 0;
+   height: 100dvh;
+-  padding: 0 var(--gutter);
++  padding: 0 var(--gutter) 0 var(--sp-4);
+   overflow-y: auto;
+ }
+ 
+-/* the sidebar: Linear's labelled list on its ground; 13px medium labels on 28px rows, 16px icons
+-   under the label's ink, the current view a filled pill */
++/* the sidebar: a calm labelled list on the desk; 13px medium labels on 32px rows, 16px icons under
++   the label's ink, the current view a sheet of paper lifted off the desk */
+ .side {
+   position: sticky;
+   top: 0;
+@@ -30,11 +27,9 @@
+   flex-direction: column;
+   gap: var(--side-gap);
+   min-width: 0;
+-  padding: 0 var(--sp-5) var(--sp-5);
++  padding: 0 var(--sp-6) var(--sp-6) var(--sp-7);
+   overflow-y: auto;
+   scrollbar-width: none;
+-  border-right: var(--line-1) solid var(--side-edge);
+-  background: var(--side);
+   color: var(--side-ink);
+ }
+ 
+@@ -169,7 +164,7 @@
+ .list {
+   display: flex;
+   flex-direction: column;
+-  gap: var(--line-1);
++  gap: var(--sp-1);
+ }
+ 
+ /* a section's heading: Linear's muted 12px label with its caret; its text sits low, so it hugs its
+@@ -207,8 +202,8 @@
+   gap: var(--sp-5);
+   min-width: 0;
+   height: var(--h-side-item);
+-  padding: 0 var(--sp-4);
+-  border-radius: var(--r-2);
++  padding: 0 var(--sp-5);
++  border-radius: var(--r-3);
+   font-size: var(--fs-3);
+   font-weight: 500;
+   letter-spacing: 0;
+@@ -229,6 +224,7 @@
+ }
+ .item[aria-current] {
+   background: var(--side-on);
++  box-shadow: var(--shadow-sheet);
+   color: var(--side-on-ink);
+ }
+ .item[aria-current] svg {
+diff --git a/web/src/kit/Frame.tsx b/web/src/kit/Frame.tsx
+index 5246869..b97f51f 100644
+--- a/web/src/kit/Frame.tsx
++++ b/web/src/kit/Frame.tsx
+@@ -1,7 +1,8 @@
+ // The app's frame: the labelled sidebar in three groups under its head (the Space's switcher, which
+ // opens on who is signed in, then search and new ticket at the row's end, as Linear's): the views,
+ // the headed sections, and Settings with the theme menu (a row naming the current theme) at the
+-// foot, ruled off by one hairline; and the main column, flush beside it on the page. It holds the app's tooltip and its toasts.
++// foot; and the main column beside it on the same desk, no rule between them. It holds the app's
++// tooltip and its toasts.
+ import { Popover } from "@base-ui/react/popover";
+ import { type ReactNode, useState } from "react";
+ import { Link, matchPath, useLocation } from "react-router";
+@@ -103,7 +104,7 @@ function Workspace({ space, me }: { space: string; me: FrameProps["me"] }) {
+           className={p.layer}
+           side="bottom"
+           align="start"
+-          sideOffset={() => tokenPx("--sp-2")}
++          sideOffset={() => tokenPx("--sp-3")}
+         >
+           <Popover.Popup className={cx(p.sheet, s.account)} aria-label={space}>
+             <span className={p.head}>{space}</span>
+diff --git a/web/src/kit/Head.module.css b/web/src/kit/Head.module.css
+index 916e1f1..ed18bf8 100644
+--- a/web/src/kit/Head.module.css
++++ b/web/src/kit/Head.module.css
+@@ -6,28 +6,17 @@
+   white-space: nowrap;
+ }
+ 
+-/* group: a dense list's band, edge to edge, rows straight under it (Linear's group head): one
+-   neutral grey for every group, so the list never stripes; the state is the glyph and the count */
++/* group: the first line of its sheet, the rows under it (the sheet gathers the group, so there is
++   no band); its glyph over the rows' first cell, its fold's chevron after its count */
+ .group {
+   height: var(--h-group);
+-  padding: 0 var(--list-pad);
+-  background: var(--list-band);
+-}
+-.group .toggle {
+-  /* the chevron hangs in the inset, so the glyph lines up with the rows' first cell */
+-  margin-left: calc(var(--sp-9) * -1);
+-}
+-/* with no fold, the glyph still starts over the rows' first cell (My queue's zones) */
+-.group > .static {
+-  margin-left: calc(var(--list-inset) - var(--list-pad));
++  padding: 0 var(--list-pad) 0 var(--list-inset);
+ }
+-/* zone: My queue's band, the group's band without a fold. It runs through its surface's padding
+-   to the edges (the padding is for the agents' cards), its glyph over the rows' first cell */
++/* zone: on the desk over a run of sheets (My queue's agents at work), its glyph on the line of the
++   groups' glyphs in the sheets beside it */
+ .zone {
+   height: var(--h-group);
+-  margin-inline: calc(var(--pad) * -1);
+-  padding: 0 var(--list-pad) 0 var(--list-inset);
+-  background: var(--list-band);
++  padding: 0 var(--list-pad) 0 calc(var(--list-in) + var(--list-inset));
+ }
+ /* a fold's heading is no box: its button lays out as the head's own child */
+ .holds {
+@@ -42,7 +31,7 @@
+   margin: 0;
+   padding: 0;
+   border: 0;
+-  border-radius: var(--r-1);
++  border-radius: var(--r-2);
+   background: none;
+   font-size: inherit;
+   font-weight: inherit;
+@@ -52,17 +41,20 @@
+   cursor: pointer;
+ }
+ .chev {
++  order: 1;
+   display: inline-grid;
+   place-items: center;
+-  width: var(--sp-9);
++  width: var(--sp-8);
++  height: var(--sp-8);
++  border-radius: var(--r-1);
+   color: var(--ink-3);
+-  opacity: 0.7;
+   transition:
+     transform var(--dur-fast) ease,
+-    opacity var(--dur-fast) ease;
++    background-color var(--dur-fast) ease;
+ }
+ .toggle:hover > .chev {
+-  opacity: 1;
++  background: var(--chip-hover);
++  color: var(--ink-1);
+ }
+ .toggle[aria-expanded="false"] > .chev {
+   transform: rotate(-90deg);
+@@ -72,8 +64,9 @@
+   align-items: center;
+ }
+ .name {
+-  font-size: var(--fs-3);
+-  font-weight: 500;
++  font-size: var(--fs-4);
++  font-weight: 600;
++  letter-spacing: var(--track-snug);
+   color: var(--ink-1);
+ }
+ /* the spacer between the title and the summary */
+@@ -98,32 +91,34 @@
+   min-width: 0;
+   overflow: hidden;
+   text-overflow: ellipsis;
+-  font-size: var(--fs-2);
++  font-size: var(--fs-3);
+   color: var(--ink-3);
+ }
+-/* line: a query's head over its run, Linear's group band: a grey fill edge to edge that parts one
+-   run from the next, held at the list's top while its rows pass under, lit on hover like a row (a
+-   Swap in its summary answers to it). Its fold reaches across it (a click anywhere but the summary
+-   folds), the chevron first, in the faces' column, so the key starts where the titles do */
++/* line: a query's head, the first line of its sheet, held at the list's top while its run scrolls,
++   lit like a row (a Swap in its summary answers to it). Its fold reaches across it (a click
++   anywhere but the summary folds), the chevron first, in the faces' column, so the key starts
++   where the titles do */
+ .line {
+   position: sticky;
+   top: 0;
+   z-index: var(--z-sticky);
+   height: var(--h-group);
+   padding: 0 var(--list-pad) 0 var(--list-inset);
+-  background: linear-gradient(var(--list-band), var(--list-band)), var(--ground);
++  border-radius: var(--r-4);
++  background: linear-gradient(var(--ground), var(--ground));
+   transition: background-color var(--dur-fast) ease;
+ }
+ .line:is(:hover, :focus-within) {
+   background:
+     linear-gradient(var(--list-hover), var(--list-hover)),
+-    linear-gradient(var(--list-band), var(--list-band)), var(--ground);
++    linear-gradient(var(--ground), var(--ground));
+ }
+ .line .toggle {
+   flex: 1;
+   min-width: 0;
+ }
+ .line .chev {
++  order: 0;
+   width: var(--triage-face);
+ }
+ .line .rule {
+@@ -132,7 +127,6 @@
+ .line .name {
+   overflow: hidden;
+   text-overflow: ellipsis;
+-  color: var(--ink-1);
+ }
+ .line .icon {
+   color: var(--ink-3);
+@@ -144,10 +138,18 @@
+ .line .note {
+   color: var(--blocked);
+ }
+-/* a group head in a scrolling list stays at its top while its rows pass under it (Linear's) */
++/* a group head in a scrolling list (Compact's groups, all on one sheet) is a well set into the
++   paper: the desk's tint with round corners, slimmer than a sheet's head, room over it parting it
++   from the group above. It sits below the paper where an open row is lifted above it, so the two
++   never read alike; it stays at the list's top while its rows pass under it */
+ .sticky {
+   position: sticky;
+   top: 0;
+   z-index: var(--z-sticky);
+-  background: linear-gradient(var(--list-band), var(--list-band)), var(--ground);
++  height: var(--h-band);
++  border-radius: var(--r-4);
++  background: var(--tk-well);
++}
++.sticky:not(:first-child) {
++  margin-top: var(--sp-4);
+ }
+diff --git a/web/src/kit/Head.tsx b/web/src/kit/Head.tsx
+index 8447a30..180fcce 100644
+--- a/web/src/kit/Head.tsx
++++ b/web/src/kit/Head.tsx
+@@ -1,7 +1,7 @@
+ // The head over a group (Compact, My queue's lists), a zone (My queue's cards) or a list's run of
+-// lines (Intake): name, count, note, and a summary slot at the far end. A zone or group head is a
+-// band; a line head is a plain line of the list. A head with `fold` collapses its group; the
+-// screen then leaves the group's rows out.
++// lines (Intake): name, count, note, and a summary slot at the far end. A group or line head is its
++// sheet's first line; a zone head sits on the desk over its cards. A head with `fold` collapses
++// its group; the screen then leaves the group's rows out.
+ import { type ReactNode, useContext } from "react";
+ 
+ import { Badge } from "./Badge";
+@@ -16,17 +16,17 @@ export interface HeadProps {
+   /** Before the name: a status glyph, or a project key. */
+   icon?: ReactNode;
+   /** The group's state: its count is written in that hue (you: Needs you; live: running; blocked;
+-   *  done). The band stays one neutral grey and the name in ink. */
++   *  done). The name stays in ink. */
+   tone?: "neutral" | "you" | "live" | "blocked" | "done";
+   /** Quiet, right after the count ("Longest wait first"). */
+   note?: string | undefined;
+   /** At the far end: a stat, links. */
+   summary?: ReactNode;
+-  /** group: a list's edge-to-edge band (with or without a fold), its glyph over the rows' first
+-   *  cell; zone: the same band run through its surface's padding (over My queue's agent cards);
+-   *  line: a query's head, a grey band edge to edge that parts one run from the next, held at the
+-   *  list's top, lit on hover like a row (it is the row a Swap in its summary answers to), its
+-   *  fold reaching across it, the chevron in the faces' column (Intake's queries). */
++  /** group: its sheet's first line (with or without a fold), its glyph over the rows' first cell;
++   *  zone: on the desk over a run of sheets (My queue's agent cards); line: a query's head, its
++   *  sheet's first line, held at the list's top, lit on hover like a row (it is the row a Swap in
++   *  its summary answers to), its fold reaching across it, the chevron in the faces' column
++   *  (Intake's queries). */
+   level?: "zone" | "group" | "line";
+   /** Collapsible: whether the group is open, and how to flip it. */
+   fold?: { open: boolean; toggle: () => void };
+diff --git a/web/src/kit/Menu.tsx b/web/src/kit/Menu.tsx
+index 85f31a0..9e12066 100644
+--- a/web/src/kit/Menu.tsx
++++ b/web/src/kit/Menu.tsx
+@@ -101,7 +101,7 @@ export function Menu({ label, groups, size = "md" }: MenuProps) {
+         </Base.Trigger>
+       </Tip>
+       <Base.Portal {...layer}>
+-        <Base.Positioner className={p.layer} align="end" sideOffset={() => tokenPx("--sp-2")}>
++        <Base.Positioner className={p.layer} align="end" sideOffset={() => tokenPx("--sp-3")}>
+           <Base.Popup className={cx(p.sheet, s.sheet)} aria-label={label}>
+             {groups.map((group, g) => (
+               <Base.Group key={g}>
+diff --git a/web/src/kit/Meter.tsx b/web/src/kit/Meter.tsx
+index 48b102e..18a417e 100644
+--- a/web/src/kit/Meter.tsx
++++ b/web/src/kit/Meter.tsx
+@@ -8,24 +8,26 @@ export interface MeterProps {
+   done: number;
+   total: number;
+   size?: "row" | "tile";
++  /** No step under way yet (a queued run): every segment a faint track, none sweeping. */
++  waiting?: boolean;
+ }
+ 
+ type Seg = "done" | "now" | "next";
+ 
+-function segments(done: number, total: number): Seg[] {
++function segments(done: number, total: number, waiting: boolean): Seg[] {
+   return Array.from({ length: total }, (_, i): Seg =>
+-    i < done ? "done" : i === done ? "now" : "next",
++    waiting ? "next" : i < done ? "done" : i === done ? "now" : "next",
+   );
+ }
+ 
+-export function Meter({ done, total, size = "row" }: MeterProps) {
++export function Meter({ done, total, size = "row", waiting = false }: MeterProps) {
+   return (
+     <span
+       className={cx(s.meter, s[size])}
+       role="img"
+-      aria-label={`${String(done)} of ${String(total)} steps done`}
++      aria-label={waiting ? "Not started" : `${String(done)} of ${String(total)} steps done`}
+     >
+-      {segments(done, total).map((seg, i) => (
++      {segments(done, total, waiting).map((seg, i) => (
+         <i key={i} className={s.seg} data-seg={seg} />
+       ))}
+     </span>
+diff --git a/web/src/kit/Notice.module.css b/web/src/kit/Notice.module.css
+index c75b3c4..03c536e 100644
+--- a/web/src/kit/Notice.module.css
++++ b/web/src/kit/Notice.module.css
+@@ -18,7 +18,7 @@
+   color: var(--blocked);
+ }
+ 
+-/* the quiet row of an empty zone: a row's height and hairline; the lead a step firmer (never as
++/* the quiet row of an empty zone: a row's height, unruled; the lead a step firmer (never as
+    firm as a row's title), a dash, the rest muted */
+ .empty {
+   display: flex;
+@@ -26,7 +26,6 @@
+   gap: var(--sp-4);
+   min-height: var(--h-row);
+   padding: 0 var(--list-pad) 0 calc(var(--list-pad) - var(--notice-mark));
+-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+   color: var(--ink-3);
+   font-size: var(--fs-3);
+   white-space: nowrap;
+@@ -56,7 +55,6 @@
+   flex-direction: column;
+   gap: var(--sp-2);
+   padding: var(--sp-7) var(--list-pad) var(--sp-7) calc(var(--list-pad) + var(--sp-4));
+-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+   font-size: var(--fs-3);
+   line-height: 1.5;
+   color: var(--ink-2);
+@@ -96,7 +94,6 @@
+   gap: var(--sp-5);
+   min-height: var(--h-row-flat);
+   padding: 0 var(--list-pad) 0 var(--list-inset);
+-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+   font-size: var(--fs-2);
+   color: var(--ink-3);
+ }
+diff --git a/web/src/kit/Page.module.css b/web/src/kit/Page.module.css
+index cbcb393..452acb3 100644
+--- a/web/src/kit/Page.module.css
++++ b/web/src/kit/Page.module.css
+@@ -5,6 +5,7 @@
+   min-width: 0;
+   min-height: 0;
+ }
++/* the bar: on the desk over the sheets, its words on the sheets' edge, with room to breathe */
+ .top {
+   flex: none;
+   display: flex;
+@@ -12,6 +13,7 @@
+   gap: var(--sp-8);
+   height: var(--h-top);
+   min-width: 0;
++  padding-left: var(--sp-2);
+   /* room at its end for what sits over it there (a full dialog's close) */
+   padding-right: var(--top-end, 0);
+ }
+@@ -20,7 +22,7 @@
+   margin: 0;
+   font-size: var(--fs-6);
+   font-weight: 600;
+-  letter-spacing: var(--track-snug);
++  letter-spacing: calc(var(--track-snug) * 2);
+   color: var(--ink-1);
+   white-space: nowrap;
+ }
+@@ -36,7 +38,7 @@
+ .grow {
+   flex: 1;
+ }
+-/* a crumb: Linear's breadcrumb, the Space then the title as its last step */
++/* a crumb: the view it came from, then the title as its last step */
+ .crumb {
+   flex: none;
+   display: inline-flex;
+@@ -49,9 +51,9 @@
+   white-space: nowrap;
+ }
+ .crumb > a {
+-  margin-inline: calc(var(--sp-3) * -1);
+-  padding: var(--sp-2) var(--sp-3);
+-  border-radius: var(--r-2);
++  margin-inline: calc(var(--sp-4) * -1);
++  padding: var(--sp-3) var(--sp-4);
++  border-radius: var(--r-3);
+   color: inherit;
+   text-decoration: none;
+   transition:
+@@ -59,7 +61,7 @@
+     color var(--dur-fast);
+ }
+ .crumb > a:hover {
+-  background: var(--tk-hover);
++  background: var(--side-hover);
+   color: var(--ink-1);
+ }
+ .crumb > a:focus-visible {
+@@ -68,7 +70,7 @@
+ }
+ .title.step {
+   font-size: var(--fs-4);
+-  font-weight: 500;
++  font-weight: 600;
+   letter-spacing: 0;
+ }
+ .actions {
+@@ -77,56 +79,56 @@
+   align-items: center;
+   gap: var(--sp-4);
+ }
++/* the body: the desk the view lays its sheets on, run out a step into the gutters so a sheet's
++   soft drop isn't clipped at the edge, the desk showing under the last one */
+ .body {
+   flex: 1;
+   min-height: 0;
+   display: flex;
+   flex-direction: column;
++  margin-inline: calc(var(--sp-6) * -1);
++  padding: 0 var(--sp-6) var(--sheets);
+   overflow-y: auto;
+   scrollbar-width: thin;
+ }
+-/* a body that is an edge Table (the library's lists) runs out through the sheet's gutter */
+-.body:has(> [data-edge="true"]) {
+-  margin-inline: calc(var(--gutter) * -1);
+-}
+ 
+-/* counters: the number carries the weight; a zero recedes; a non-zero "need you" takes the accent's
+-   ink, with no fill, so nothing in the bar is a filled block */
++/* counters: the number carries the weight, a zero recedes; a non-zero "need you" is the bar's one
++   soft pill, in the accent's tint and ink; a separator is a small dot */
+ .counters {
+   flex: 0 0.001 auto;
+   display: flex;
+   align-items: center;
+-  gap: var(--sp-8);
++  gap: var(--sp-7);
+   min-width: 0;
+   overflow: hidden;
+   white-space: nowrap;
+ }
+ .counter {
+   display: inline-flex;
+-  align-items: baseline;
++  align-items: center;
+   gap: var(--sp-2);
+-  padding: var(--line-3) 0;
++  height: var(--h-control-sm);
+   font-size: var(--fs-3);
+   color: var(--ink-2);
+ }
+ .counter > b {
+-  font-size: var(--fs-5);
++  font-size: var(--fs-4);
+   font-weight: 600;
+   color: var(--ink-1);
+   font-variant-numeric: tabular-nums;
+ }
+ .counter > span:first-child {
+-  align-self: center;
++  margin-right: var(--sp-1);
+ }
+ .zero,
+ .zero > b {
+   color: var(--ink-3);
+   font-weight: 500;
+ }
+-.zero > b {
+-  font-size: var(--fs-3);
+-}
+ .you {
++  padding: 0 var(--sp-5);
++  border-radius: var(--r-pill);
++  background: var(--ring-you);
+   color: var(--you-text);
+   font-weight: 500;
+ }
+@@ -134,9 +136,10 @@
+   color: var(--you-text);
+ }
+ .sep {
+-  width: var(--line-1);
+-  height: var(--sp-7);
+-  background: var(--rule);
++  width: var(--sp-2);
++  height: var(--sp-2);
++  border-radius: var(--r-pill);
++  background: var(--rule-strong);
+ }
+ 
+ /* the bar's search: 268 wide, giving way first when the bar is short */
+@@ -146,23 +149,48 @@
+   min-width: var(--col-lg);
+ }
+ 
+-/* a body with a full-height column beside it, run out to the sheet's right edge: each scrolls on
+-   its own */
++/* a body with a full-height column beside it: two sheets of paper on the desk, the document and
++   its column, a step apart; each scrolls on its own */
+ .split {
+   flex: 1;
+   min-height: 0;
+   display: grid;
+   grid-template-columns: minmax(0, 1fr) clamp(var(--w-talk-min), 30vw, var(--w-talk-max));
+-  margin-right: calc(var(--gutter) * -1);
+-  border-top: var(--line-1) solid var(--tk-card-edge);
++  gap: var(--sheets);
++  padding-bottom: var(--sheets);
+ }
+-/* the body: one calm reading column, room under its last line when scrolled to the end */
+-.split > .body {
+-  padding: var(--sp-10) var(--sp-10) calc(var(--sp-10) * 2) 0;
++/* the document: one calm reading column on its sheet, room under its last line when scrolled to
++   the end */
++.split > .body,
++.doc {
++  margin: 0;
++  border-radius: var(--r-6);
++  background: var(--page);
++  box-shadow: var(--shadow-sheet);
+ }
+-/* a document: the reading column centred under the bar, room above and under it */
++.split > .body {
++  padding: var(--sp-10) var(--sp-10) var(--doc-foot);
++}
++/* what runs on past a sheet's foot fades into the paper rather than being sliced by its edge: a
++   veil of the paper held at the sheet's bottom while it scrolls, over the room under the last
++   line once scrolled to the end */
++.split > .body::after,
++.doc::after {
++  content: "";
++  flex: none;
++  position: sticky;
++  /* the sheet's own room under its last line, so the veil sits on its foot */
++  bottom: calc(var(--doc-foot) * -1);
++  height: var(--sp-11);
++  background: linear-gradient(transparent, var(--page));
++  pointer-events: none;
++}
++/* a document alone: one sheet the main column's width, the reading column centred on it, room
++   above and under it */
+ .doc {
+-  padding: calc(var(--sp-10) + var(--sp-7)) 0 calc(var(--sp-10) * 2);
++  flex: 1;
++  margin-bottom: var(--sheets);
++  padding: calc(var(--sp-11) + var(--sp-6)) var(--sp-11) var(--doc-foot);
+ }
+ /* the measure carries the body's column on: at least the body's height, so an editor's growing
+    content (a filled text area) takes the rest of the window */
+@@ -174,16 +202,16 @@
+   max-width: var(--w-ticket);
+   margin-inline: auto;
+ }
+-/* the column beside: Linear's issue sidebar, a tinted rail ruled off by one hairline and run out to
+-   the sheet's edge, full height, so what it holds can pin its foot (Talk's reply box) to the
+-   window's bottom */
++/* the column beside: a sheet of its own, full height, so what it holds can pin its foot (Talk's
++   reply box) to the sheet's bottom */
+ .side {
+   min-height: 0;
+   display: flex;
+   flex-direction: column;
+   padding: var(--sp-9) var(--sp-9) var(--sp-8);
+-  border-left: var(--line-1) solid var(--tk-card-edge);
+-  background: var(--tk-well);
++  border-radius: var(--r-6);
++  background: var(--page);
++  box-shadow: var(--shadow-sheet);
+   overflow-y: auto;
+   scrollbar-width: thin;
+ }
+diff --git a/web/src/kit/Page.tsx b/web/src/kit/Page.tsx
+index 416c763..17cd17e 100644
+--- a/web/src/kit/Page.tsx
++++ b/web/src/kit/Page.tsx
+@@ -34,9 +34,9 @@ export interface PageProps {
+   search?: Search;
+   /** The bar's buttons at its right end (New ticket; a ticket's actions). */
+   action?: ReactNode;
+-  /** column: a full-height reading column beside the body, ruled off by one hairline (the
+-   *  ticket's Talk, the workflow editor's library); doc: none, what would sit there (an item
+-   *  editor's properties) is in the body, one centred document, as Linear's project page. */
++  /** column: a full-height reading column beside the body, each a sheet of its own (the ticket's
++   *  Talk, the workflow editor's library); doc: none, what would sit there (an item editor's
++   *  properties) is in the body, one centred document on its sheet, as Linear's project page. */
+   side?: { look?: "column"; content: ReactNode } | { look: "doc"; content?: never };
+   children: ReactNode;
+ }
+diff --git a/web/src/kit/Popover.module.css b/web/src/kit/Popover.module.css
+index 073dcd5..f72439f 100644
+--- a/web/src/kit/Popover.module.css
++++ b/web/src/kit/Popover.module.css
+@@ -58,7 +58,7 @@
+   gap: var(--sp-4);
+   height: var(--h-pop-item);
+   padding: 0 var(--sp-4);
+-  border-radius: var(--r-2);
++  border-radius: var(--r-3);
+   font-size: var(--fs-3);
+   font-weight: 500;
+   color: var(--tk-ink);
+diff --git a/web/src/kit/Row.module.css b/web/src/kit/Row.module.css
+index e64181c..bccfbb5 100644
+--- a/web/src/kit/Row.module.css
++++ b/web/src/kit/Row.module.css
+@@ -1,39 +1,42 @@
+ .row {
+   position: relative;
+   min-width: 0;
+-  border-radius: var(--r-3);
++  border-radius: var(--r-4);
+   transition:
+     background-color var(--dur-fast) ease,
+     box-shadow var(--dur-fast) ease,
+     transform var(--dur-fast) var(--ease-out);
+ }
+ 
+-/* lists: a line and an item are flat rows edge to edge, the wash (hover, open) running the full
+-   width. A line is dense and unruled (Linear's list: the rhythm and the group bands part the rows);
+-   a roomier item sits on its hairline. No card, no shadow, nothing moves */
++/* lists: a line, an item and a triage row are soft rows on their sheet, no rules between them
++   (the rhythm and the room part them); hover lays a warm wash with round corners, inset by the
++   sheet's own padding, and the open one takes your move's tint. Nothing moves */
+ .line,
+ .item,
+ .triage {
+-  border-radius: 0;
+   background: transparent;
+   transition: background-color var(--dur-fast) ease;
+ }
+-.item {
+-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+-}
+ .row:is(.line, .item, .triage):is(:hover, :has(:focus-visible)) {
+   background: var(--list-hover);
+ }
+-/* triage: its hairline runs between the list's gutters, under the words, not to the sheet's edge */
+-.triage::after {
+-  content: "";
+-  position: absolute;
+-  inset: auto var(--list-pad) 0 var(--list-inset);
+-  height: var(--line-1);
+-  background: var(--list-rule);
+-}
++/* the open one: a slip of paper lifted a little off its sheet */
+ .row:is(.line, .item).open {
+-  background: var(--list-open);
++  background: var(--raised);
++  box-shadow: var(--shadow-lift);
++}
++/* a run of open ones (a selection) is one slip, not a stack of them: the joins lose their corners
++   and the lower one's edge over the join */
++.row.open:has(+ .open) {
++  border-bottom-left-radius: 0;
++  border-bottom-right-radius: 0;
++}
++.row.open + .open {
++  border-top-left-radius: 0;
++  border-top-right-radius: 0;
++  clip-path: inset(
++    0 calc((var(--sp-10) + var(--sp-10)) * -1) calc((var(--sp-10) + var(--sp-10)) * -1)
++  );
+ }
+ 
+ .rack:is(:hover, :has(:focus-visible)) > .inner {
+@@ -74,7 +77,6 @@
+ .item > .inner,
+ .triage > .inner {
+   column-gap: var(--sp-6);
+-  border-radius: 0;
+ }
+ /* a list row's first cell starts at the inset, under its group head's glyph; its cells sit a
+    step closer, as Linear packs a row's end */
+@@ -110,13 +112,17 @@
+ .cell[data-keep="true"] {
+   min-width: auto;
+ }
++/* a line's buttons ahead of its quiet end (My queue's gates) keep room after them, so the line
++   reads title, then what you can do, then where it is, not one run-on line */
++.line .cell[data-keep="true"]:not(:last-child):has(button, a) {
++  padding-right: var(--sp-9);
++}
+ .rest {
+   grid-column-end: -1;
+ }
+ .more {
+   margin: 0 var(--list-pad) 0 var(--list-inset);
+-  padding: var(--sp-7) 0 var(--sp-8);
+-  border-top: var(--line-1) solid var(--list-rule);
++  padding: var(--sp-6) 0 var(--sp-8);
+ }
+ .alert {
+   margin: 0;
+@@ -143,17 +149,22 @@
+   min-height: calc(var(--h-row) + var(--line-2));
+ }
+ 
+-/* band: a board's swimlane (Linear's board grouped by team), out to the sheet's edges. Its first
+-   cell is its head, a list's group band edge to edge, its glyph over the cards' keys; under it each stage's cell holds its items
+-   as cards on the bare sheet, a hairline before every stage but the first, so the stages read as
+-   columns down the board and an empty one is blank sheet. columns: the board's column head, the
+-   stage names on the same grid and hairlines, held at the board's top on a rule. */
+-.band {
+-  border-radius: 0;
++/* band: a board's swimlane (Linear's board grouped by team), a sheet of its own on the desk, a
++   step under the last. Its first cell is its head, the sheet's first line, its glyph over the
++   cards' own words; under it each stage's cell holds its items as cards on the sheet, the stages
++   parted by room alone, so they read as columns down the board and an empty one is bare paper.
++   columns: the board's column head on the desk, the stage names on the same grid over the cards'
++   words, held at the board's top. */
++.band:not(.columns) {
++  --ground: var(--tk-card);
++  margin-bottom: var(--sheets);
++  border-radius: var(--r-6);
++  background: var(--tk-card);
++  box-shadow: var(--shadow-sheet);
+ }
+ .band > .inner {
+   align-items: stretch;
+-  column-gap: 0;
++  column-gap: var(--sp-8);
+   padding: 0 var(--list-pad);
+   border-radius: 0;
+ }
+@@ -162,29 +173,19 @@
+   align-items: stretch;
+   justify-content: flex-start;
+   gap: var(--sp-4);
+-  padding: var(--sp-6) var(--sp-5) var(--sp-9);
+-  box-shadow: inset var(--line-1) 0 0 var(--list-rule);
++  padding: 0 0 var(--sp-8);
+ }
+ .band:not(.columns) .cell:first-child {
+   grid-column: 1 / -1;
+   justify-content: center;
+   min-height: var(--h-group);
+-  margin: 0 calc(var(--list-pad) * -1);
+-  padding: 0 var(--list-pad) 0 calc(var(--list-pad) + var(--line-1) + var(--sp-6));
+-  background: var(--list-band);
+-  box-shadow: none;
+-}
+-.band:not(.columns) .cell:nth-child(2),
+-.band.columns .cell:first-child {
+-  padding-left: 0;
+-  box-shadow: none;
++  padding: 0 0 0 calc(var(--line-1) + var(--sp-6));
+ }
+ .band.columns {
+   position: sticky;
+   top: 0;
+   z-index: var(--z-sticky);
+   background: var(--ground);
+-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+ }
+ /* the stage names sit over the cards' own text, inset as the cards' keys are */
+ .band.columns > .inner {
+@@ -192,8 +193,5 @@
+ }
+ .band.columns .cell {
+   justify-content: center;
+-  padding: 0 calc(var(--sp-5) + var(--line-1) + var(--sp-6));
+-}
+-.band.columns .cell:first-child {
+-  padding-left: calc(var(--line-1) + var(--sp-6));
++  padding: 0 0 0 calc(var(--line-1) + var(--sp-6));
+ }
+diff --git a/web/src/kit/Row.tsx b/web/src/kit/Row.tsx
+index acebf4f..f60f5fc 100644
+--- a/web/src/kit/Row.tsx
++++ b/web/src/kit/Row.tsx
+@@ -1,6 +1,7 @@
+-// One item of a list: its cells on the Table's columns. A line, an item and a triage row are flat,
+-// washed full width on hover and focus (a line unruled, the others on a hairline). A rack is a bare
+-// entry; a band a board's swimlane (its head, then its cells). A card on its own surface is a Card. Nothing changes size.
++// One item of a list: its cells on the Table's columns. A line, an item and a triage row are soft
++// unruled rows on their sheet, washed on hover and focus, the open one raised paper. A rack is a
++// bare entry; a band a board's swimlane on its own sheet (its head, then its cells). A card on its
++// own surface is a Card. Nothing changes size.
+ import { Children, type ReactNode } from "react";
+ 
+ import { Opener, openOnClick } from "./opener";
+@@ -19,9 +20,9 @@ export interface RowProps {
+    *  not drawn. Outside a table they stack. */
+   children: ReactNode;
+   /** line: a list's one-line row (Compact, My queue, the library); item: a roomy two-line row (a
+-   *  ticket's context); triage: a tight two-line row led by a face, its hairline between the
+-   *  gutters (Intake); rack: a bare entry (a run's stage); band: a board's swimlane, its first cell
+-   *  a head line across the board and then a cell per column; columns: the board's column head,
++   *  ticket's context); triage: a tight two-line row led by a face (Intake); rack: a bare entry (a
++   *  run's stage); band: a board's swimlane on a sheet of its own, its first cell a head line
++   *  across the board and then a cell per column; columns: the board's column head on the desk,
+    *  one short line of stage names over the swimlanes, on the same grid. */
+   kind?: "line" | "item" | "triage" | "rack" | "band" | "columns";
+   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
+diff --git a/web/src/kit/Segmented.module.css b/web/src/kit/Segmented.module.css
+index fd0c36c..389c801 100644
+--- a/web/src/kit/Segmented.module.css
++++ b/web/src/kit/Segmented.module.css
+@@ -1,6 +1,6 @@
+-/* Filter chips as Linear's view tabs: a row of separate small rounded chips a little apart, bare
+-   words in secondary ink but for the pressed one, filled a firm step on a lit hairline in primary
+-   ink (so the bar holds one box, not a row of them); hover lights a chip's fill.
++/* Filter chips as view tabs: a row of separate round pills a little apart, bare words in secondary
++   ink but for the pressed one, a slip of paper lifted off the desk in primary ink (so the bar
++   holds one box, not a row of them); hover lights a pill's fill.
+    Each state glyph keeps its state's colour, so the filter reads as the list's groups do; counts
+    recede. The row takes the bar's free room and never wraps or clips: what doesn't fit goes into
+    the last chip's popover. */
+@@ -28,7 +28,7 @@
+   height: var(--h-control-sm);
+   padding: 0 var(--sp-4);
+   border: var(--line-1) solid transparent;
+-  border-radius: var(--r-3);
++  border-radius: var(--r-pill);
+   background: none;
+   font-size: var(--fs-3);
+   font-weight: 500;
+@@ -48,9 +48,8 @@
+   color: var(--ink-1);
+ }
+ .pill:is([aria-pressed="true"], [data-current="true"]) {
+-  background: var(--chip-on);
+-  border-color: var(--chip-on-edge);
+-  box-shadow: var(--ctl-shadow);
++  background: var(--ctl);
++  box-shadow: var(--shadow-sheet);
+   color: var(--ink-1);
+ }
+ .pill em {
+diff --git a/web/src/kit/Segmented.tsx b/web/src/kit/Segmented.tsx
+index 4900508..c408bf8 100644
+--- a/web/src/kit/Segmented.tsx
++++ b/web/src/kit/Segmented.tsx
+@@ -1,5 +1,5 @@
+-// Filter chips, Linear's view chips: one row of equal chips (one height and radius), bare words
+-// but for the pressed one, filled on a hairline. When the bar can't hold them all, the ones that
++// Filter chips, as view chips: one row of equal round pills (one height), bare words but for the
++// pressed one, a slip of paper lifted off the desk. When the bar can't hold them all, the ones that
+ // don't fit go into a last chip ("+N" and a chevron) that opens the kit's popover (Base UI's
+ // combobox, as the other pickers: its filter field, then the rows); while the pressed one is
+ // among them, that chip is the pressed one (filled, its name and the chevron). The popover holds
+diff --git a/web/src/kit/Select.module.css b/web/src/kit/Select.module.css
+index 2fa49e3..4401870 100644
+--- a/web/src/kit/Select.module.css
++++ b/web/src/kit/Select.module.css
+@@ -1,6 +1,7 @@
+ /* The trigger: a borderless property chip (face, name, chevron) in the type of its neighbours in
+-   a properties row (it takes the row's size, weight and ink), 28px with the chip's padding; hover
+-   lights it like a Linear property button, open fills it a step firmer */
++   a properties row (it takes the row's size, weight and ink), 28px with the chip's padding. It
++   rests as a soft slip of faint ink, so a value you can change reads apart from the plain values
++   beside it; hover and open firm it a step */
+ .trigger {
+   display: inline-flex;
+   align-items: center;
+@@ -10,8 +11,8 @@
+   height: var(--h-control-sm);
+   padding: 0 var(--sp-4);
+   border: 0;
+-  border-radius: var(--r-2);
+-  background: none;
++  border-radius: var(--r-3);
++  background: var(--list-chip-fill);
+   color: inherit;
+   font-family: inherit;
+   font-size: inherit;
+@@ -21,10 +22,11 @@
+   transition: background-color var(--dur-fast) ease;
+ }
+ .trigger:hover {
+-  background: var(--chip-hover);
++  background: var(--chip-on);
+ }
+ .trigger[data-popup-open] {
+   background: var(--chip-on);
++  box-shadow: inset 0 0 0 var(--line-1) var(--chip-on-edge);
+ }
+ .text {
+   min-width: 0;
+diff --git a/web/src/kit/Stepper.module.css b/web/src/kit/Stepper.module.css
+index f03df17..9bce842 100644
+--- a/web/src/kit/Stepper.module.css
++++ b/web/src/kit/Stepper.module.css
+@@ -111,9 +111,9 @@
+   background: var(--track);
+   box-shadow: inset 0 0 0 var(--line-mark) var(--rule-strong);
+ }
+-/* in the run card a ring of the card's ground keeps the diamond off the bars either side */
++/* in the run card a ring of the well keeps the diamond off the bars either side */
+ .card .knot {
+-  outline: var(--line-2) solid var(--page);
++  outline: var(--line-2) solid var(--tk-well);
+ }
+ .knot[data-state="passed"] {
+   background: var(--progress);
+@@ -183,27 +183,27 @@
+   font-size: var(--fs-2);
+ }
+ 
+-/* the run card: the stages and what happens now in one card, as Linear's latest update: the page's
+-   own ground on a hairline, a larger radius */
++/* the run card: the stages and what happens now in one well set into the sheet, no edge */
+ .card {
+-  padding: var(--sp-7) var(--sp-8) 0;
+-  border: var(--line-1) solid var(--tk-card-edge);
++  --track: var(--rule-strong);
++  padding: var(--sp-8) var(--sp-8) var(--sp-3);
+   border-radius: var(--r-5);
++  background: var(--tk-well);
+ }
+ .card .bar {
+   margin-top: var(--sp-2);
+ }
+-/* the now row: the card's foot, a tinted band under the stages edge to edge, ruled off, so the
+-   live run reads as the card's status bar; the run's meter on it long enough to read, its steps to
+-   come on a firmer track */
++/* the now row: a slip of paper laid in the well under the stages, its words on theirs, so the live
++   run reads as the card's one object; the run's meter on it long enough to read, its steps to come
++   on a firmer track */
+ .now {
+   grid-column: 1 / -1;
+   min-width: 0;
+-  margin: var(--sp-7) calc(var(--sp-8) * -1) 0;
+-  padding: var(--sp-6) var(--sp-8);
+-  border-top: var(--line-1) solid var(--tk-card-edge);
+-  border-radius: 0 0 var(--r-5) var(--r-5);
+-  background: var(--tk-well);
++  margin: var(--sp-7) calc(var(--sp-5) * -1) 0;
++  padding: var(--sp-6) var(--sp-5);
++  border-radius: var(--r-4);
++  background: var(--page);
++  box-shadow: var(--ctl-shadow);
+   --w-meter: var(--w-tk-meter);
+   --track: var(--rule-strong);
+ }
+diff --git a/web/src/kit/Surface.module.css b/web/src/kit/Surface.module.css
+index 542aa85..fa98df5 100644
+--- a/web/src/kit/Surface.module.css
++++ b/web/src/kit/Surface.module.css
+@@ -3,26 +3,16 @@
+   min-width: 0;
+   padding: var(--pad);
+ }
++/* the view's zone: the desk itself, its sheets laid on it */
+ .recess {
+   --ground: var(--recess);
+-  background: var(--recess);
+-  box-shadow: var(--shadow-recess);
+-  border-radius: var(--r-5);
+ }
+-/* a sheet is Linear's card: one hairline, a near-flat fill, no lift */
++/* a sheet: paper on the desk, large soft corners and a gentle drop, no hairline */
+ .sheet {
+   --ground: var(--tk-card);
+   background: var(--tk-card);
+-  box-shadow: 0 0 0 var(--line-1) var(--tk-card-edge);
+-  border-radius: var(--r-4);
+-}
+-/* a run of a list under its own head (an Intake query): no card, flush with the list's edges; the
+-   next run's band parts it, so its last line takes no hairline */
+-.list > :last-child {
+-  box-shadow: none;
+-}
+-.list > :last-child::after {
+-  content: none;
++  box-shadow: var(--shadow-sheet);
++  border-radius: var(--r-6);
+ }
+ .fill {
+   flex: 1;
+diff --git a/web/src/kit/Surface.tsx b/web/src/kit/Surface.tsx
+index 60b0ced..2ce4bd7 100644
+--- a/web/src/kit/Surface.tsx
++++ b/web/src/kit/Surface.tsx
+@@ -5,8 +5,8 @@ import { cx, type Space, space, vars } from "./vars";
+ 
+ export interface SurfaceProps {
+   children: ReactNode;
+-  /** recess: the one sunken zone per view; sheet: a raised panel resting on it; list: a run of a
+-   *  list under its own head (an Intake query), no card, parted from the next by room. */
++  /** recess: the view's zone, the desk itself; sheet: a sheet of paper laid on it; list: a run of
++   *  a list under its own head, named as a region, with no paper of its own. */
+   level?: "recess" | "sheet" | "list";
+   /** Fill the page's height; only the content inside scrolls. */
+   fill?: boolean;
+diff --git a/web/src/kit/Table.module.css b/web/src/kit/Table.module.css
+index cf23c4a..4825314 100644
+--- a/web/src/kit/Table.module.css
++++ b/web/src/kit/Table.module.css
+@@ -12,6 +12,7 @@
+   scrollbar-gutter: stable;
+   scrollbar-width: thin;
+ }
++/* the column head: the quiet labels over their columns, the first line of the list's sheet */
+ .head {
+   flex: none;
+   overflow: hidden;
+@@ -22,7 +23,6 @@
+   align-items: center;
+   height: var(--h-list-head);
+   padding: 0 var(--list-pad) 0 var(--list-inset);
+-  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+   font-size: var(--fs-2);
+   font-weight: 500;
+   color: var(--ink-3);
+@@ -38,53 +38,55 @@
+ .list {
+   min-height: 0;
+ }
++/* a scrolling list on a sheet (Compact's groups): run out a step into the gutters, so the sheet's
++   soft drop isn't clipped; room under the last when scrolled to the end, so it doesn't sit on the
++   foot, and what passes under the foot fades out rather than being sliced by it */
+ .scroll > .list {
+   flex: 1;
+   overflow: hidden auto;
+-  /* rows run edge to edge (their focus ring sits inside); room under the last row when scrolled to
+-     the end, so it doesn't sit on the surface's foot */
+-  padding: 0 0 var(--sp-10);
+-  /* rows passing under the foot fade out rather than being sliced by it */
++  margin-inline: calc(var(--sp-6) * -1);
++  padding: var(--sp-1) var(--sp-6) var(--sp-10);
++  /* the sheets keep the bar's edges: the fade under the foot says there is more, not a bar */
++  scrollbar-gutter: auto;
++  scrollbar-width: none;
+   mask-image: linear-gradient(var(--ink-1) calc(100% - var(--sp-10)), transparent);
+ }
+-/* the foot keeps the list's scrollbar gutter, so its far end lines up with the rows' */
++/* the foot: on the desk under the list, its words on the bar's edge */
+ .foot {
+   flex: none;
+   display: flex;
+   align-items: center;
+   gap: var(--sp-8);
+   min-height: var(--h-control-lg);
+-  padding: var(--sp-5) var(--list-pad);
++  padding: var(--sp-5) var(--sp-2) var(--sp-6);
+   overflow: hidden;
+-  scrollbar-gutter: stable;
+-  scrollbar-width: thin;
+-  border-top: var(--line-1) solid var(--list-rule);
+   font-size: var(--fs-2);
+   color: var(--ink-3);
+   white-space: nowrap;
+ }
+-/* bleed: through the surface's padding to its edges; first or last in it, to its top or foot */
+-.bleed {
+-  margin-inline: calc(var(--pad) * -1);
++/* in a list that fills the window it is the pane's foot, pinned to its bottom, however short the
++   sheet over it */
++.scroll > .foot {
++  margin-top: auto;
+ }
+-.bleed:first-child {
+-  margin-top: calc(var(--pad) * -1);
++/* edge: the list on a sheet of its own under the bar, its column head the sheet's first line,
++   hugging its rows (they scroll inside it when they outgrow the window); the foot on the desk */
++.sheet {
++  --ground: var(--tk-card);
++  display: flex;
++  flex-direction: column;
++  min-height: 0;
++  padding: var(--list-in);
++  border-radius: var(--r-6);
++  background: var(--tk-card);
++  box-shadow: var(--shadow-sheet);
+ }
+-.bleed:last-child {
+-  margin-bottom: calc(var(--pad) * -1);
++.scroll > .sheet {
++  flex: 0 1 auto;
+ }
+-/* edge: out through the sheet's gutter, no surface; each row's first cell under the bar's title, the
+-   head a group's grey band (Linear's) with its labels a step up, the foot flush with the page's
+-   foot, or right under the last row when the list doesn't fill the page */
+-.edge {
+-  --list-pad: var(--gutter);
+-  --list-inset: var(--gutter);
++.scroll > .sheet > .list {
++  overflow: hidden auto;
+ }
+-/* its rules run to the sheet's edge: no gutter kept for a scrollbar a short list never shows */
+-.edge > * {
++.sheet > * {
+   scrollbar-gutter: auto;
+ }
+-.edge > .head {
+-  background: var(--list-band);
+-  color: var(--ink-2);
+-}
+diff --git a/web/src/kit/Table.tsx b/web/src/kit/Table.tsx
+index da082ee..b429b9e 100644
+--- a/web/src/kit/Table.tsx
++++ b/web/src/kit/Table.tsx
+@@ -53,38 +53,36 @@ export interface TableProps {
+   head?: boolean;
+   /** Fill the surface and scroll inside it (default); off for a list in a longer page. */
+   scroll?: boolean;
+-  /** A bar under the list: key hints, a summary. */
++  /** A bar under the list, on the desk: key hints, a summary. */
+   foot?: ReactNode;
+-  /** Run through the padding of the surface it sits in, edge to edge (My queue's lists, whose
+-   *  surface pads only the agents' cards). */
+-  bleed?: boolean;
+-  /** Out to the main sheet's edges with no surface of its own, under a head on a grey band, its
+-   *  first cell under the bar's title (Linear's lists: the library's, Intake's, All teams'). */
++  /** On a sheet of its own under the bar, its column head the sheet's first line, hugging its
++   *  rows (the library's lists, All teams' board). */
+   edge?: boolean;
+   children: ReactNode;
+ }
+ 
+ export function Table(props: TableProps) {
+-  const { columns, head = true, scroll = true, foot, bleed, edge, children } = props;
++  const { columns, head = true, scroll = true, foot, edge, children } = props;
+   const cols = columns.map(track);
++  const body = (
++    <>
++      {head ? (
++        <div className={s.head} aria-hidden="true">
++          {columns.map((c, i) => (
++            <span key={i} data-end={c.end}>
++              {c.label}
++            </span>
++          ))}
++        </div>
++      ) : null}
++      <div className={s.list}>{children}</div>
++    </>
++  );
+   return (
+     <Columns.Provider value={columns}>
+       <Scrolling.Provider value={scroll}>
+-        <div
+-          className={cx(s.table, scroll && s.scroll, bleed && s.bleed, edge && s.edge)}
+-          style={vars({ "--cols": cols.join(" ") })}
+-          data-edge={edge}
+-        >
+-          {head ? (
+-            <div className={s.head} aria-hidden="true">
+-              {columns.map((c, i) => (
+-                <span key={i} data-end={c.end}>
+-                  {c.label}
+-                </span>
+-              ))}
+-            </div>
+-          ) : null}
+-          <div className={s.list}>{children}</div>
++        <div className={cx(s.table, scroll && s.scroll)} style={vars({ "--cols": cols.join(" ") })}>
++          {edge ? <div className={s.sheet}>{body}</div> : body}
+           {foot ? <footer className={s.foot}>{foot}</footer> : null}
+         </div>
+       </Scrolling.Provider>
+diff --git a/web/src/kit/Tabs.module.css b/web/src/kit/Tabs.module.css
+index ab77019..7d84a27 100644
+--- a/web/src/kit/Tabs.module.css
++++ b/web/src/kit/Tabs.module.css
+@@ -1,30 +1,32 @@
+-/* Underline tabs on one hairline across the column: plain words, the current one in the strong ink
+-   on a 2px ink rule that sits on the hairline, so a tab never reads as a button beside the real
+-   ones; a count trails each in the quiet ink */
++/* Tabs as a soft tray: the tabs' words set in a well as wide as they need, the current one a slip
++   of paper lifted in it in the strong ink, the rest in the quiet ink; a count trails each */
+ .list {
+   display: flex;
+-  align-items: stretch;
+-  gap: var(--sp-9);
+-  border-bottom: var(--line-1) solid var(--tk-card-edge);
++  align-items: center;
++  gap: var(--sp-1);
++  align-self: flex-start;
++  width: fit-content;
++  padding: var(--sp-1);
++  border-radius: var(--r-4);
++  background: var(--tk-well);
+ }
+ .tab {
+   display: inline-flex;
+   align-items: center;
+   gap: var(--sp-3);
+-  height: var(--h-control);
+-  margin-bottom: calc(var(--line-1) * -1);
+-  padding: 0;
++  height: var(--h-tab);
++  padding: 0 var(--sp-6);
+   border: 0;
+-  border-bottom: var(--line-2) solid transparent;
++  border-radius: var(--r-3);
+   background: none;
+   color: var(--ink-3);
+-  font-size: var(--fs-tk);
++  font-size: var(--fs-3);
+   font-weight: 500;
+   white-space: nowrap;
+   cursor: pointer;
+   transition:
+     color var(--dur-fast),
+-    border-color var(--dur-fast);
++    background-color var(--dur-fast);
+ }
+ .tab:hover {
+   color: var(--ink-1);
+@@ -34,11 +36,12 @@
+   outline-offset: var(--focus-tight);
+ }
+ .tab[data-active] {
++  background: var(--page);
++  box-shadow: var(--ctl-shadow);
+   color: var(--ink-1);
+-  border-bottom-color: var(--ink-1);
+ }
+ .count {
+-  font-size: var(--fs-3);
++  font-size: var(--fs-2);
+   font-weight: 400;
+   color: var(--tk-label);
+   font-variant-numeric: tabular-nums;
+diff --git a/web/src/kit/Tabs.tsx b/web/src/kit/Tabs.tsx
+index a6eabca..8da878a 100644
+--- a/web/src/kit/Tabs.tsx
++++ b/web/src/kit/Tabs.tsx
+@@ -1,4 +1,5 @@
+-// Underline tabs on one hairline: Base UI does the roving focus and arrow keys; the look is ours.
++// Tabs in a soft tray, the current one lifted: Base UI does the roving focus and arrow keys; the
++// look is ours.
+ import { Tabs as Base } from "@base-ui/react/tabs";
+ import type { ReactNode } from "react";
+ 
+diff --git a/web/src/kit/Thread.module.css b/web/src/kit/Thread.module.css
+index 89e3a89..a83239b 100644
+--- a/web/src/kit/Thread.module.css
++++ b/web/src/kit/Thread.module.css
+@@ -70,7 +70,7 @@
+ .last .who {
+   font-size: var(--fs-3);
+ }
+-/* mine: on the right, a raised bubble, no face */
++/* mine: on the right, in a soft well, no face */
+ .mine {
+   grid-template-columns: minmax(0, 1fr);
+ }
+@@ -92,8 +92,7 @@
+ }
+ .mine .bubble {
+   max-width: 88%;
+-  padding: var(--sp-4) var(--sp-6);
+-  border-radius: var(--r-4);
++  padding: var(--sp-5) var(--sp-7);
++  border-radius: var(--r-5) var(--r-5) var(--r-1) var(--r-5);
+   background: var(--tk-mine);
+-  box-shadow: inset 0 0 0 var(--line-1) var(--tk-mine-edge);
+ }
+diff --git a/web/src/kit/choice.tsx b/web/src/kit/choice.tsx
+index 8ac6e58..10e641b 100644
+--- a/web/src/kit/choice.tsx
++++ b/web/src/kit/choice.tsx
+@@ -72,7 +72,7 @@ export function Choice<T extends ChoiceItem>(props: ChoiceProps<T>) {
+           className={p.layer}
+           side={side}
+           align="start"
+-          sideOffset={() => tokenPx("--sp-2")}
++          sideOffset={() => tokenPx("--sp-3")}
+         >
+           <Base.Popup className={cx(p.sheet, sheet)} aria-label={label}>
+             <Base.Input
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 7319ffe..e06c83b 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -184,14 +184,14 @@
+           "why": "Stages, agents at work and board tickets are cards in three places.",
+           "values": {
+             "stage": "A workflow stage on the lane: a flat card over the axis (its edge parts it from the next, inside a loop's band too; a disabled one on a dashed edge), its face on the axis, ringed as it opens in place to its settings (the default).",
+-            "agent": "An agent at work (My queue): a faint slab set into the sheet, running or queued alike, its lines down to the card's foot, its steps a still Meter across the foot.",
++            "agent": "An agent at work (My queue): a sheet of its own on the desk, running or queued alike, lifted a little further under the pointer, its lines down to the card's foot, its steps a still Meter across the foot.",
+             "ticket": "A ticket on a board (All teams): two tight lines on a hairline card, its key with its state's pill at the line's end, then its title (Linear's board card)."
+           }
+         }
+       }
+     },
+     "Chip": {
+-      "why": "The kit's one tag, a flat fill with no outline, or in a list's row Linear's label pill on a hairline: a stage, a repo, a skill on a stage, a property, an agent's state (Badge's tag and prop pills and Mark's chip folded into it).",
++      "why": "The kit's one tag, a soft round pill of faint ink with no outline: a stage, a repo, a skill on a stage, a property, an agent's state (Badge's tag and prop pills and Mark's chip folded into it).",
+       "props": {
+         "label": {
+           "why": "Its words (tests, AGENTS.md, Implement, northwind/web)."
+@@ -218,7 +218,7 @@
+         "tone": {
+           "why": "Most chips are muted words on a faint fill; a few stand out.",
+           "values": {
+-            "line": "A faint fill, no outline: the default; in a list's row, a pill on a hairline.",
++            "line": "A faint fill, no outline, in a list's row as anywhere: the default.",
+             "fill": "A firmer fill: a stage's phase, and a list line's one tag (Compact's Now: the agent and its step, who it waits on).",
+             "edge": "A round pill on a hairline, no fill: a board card's state on its key's line (Linear's card pill), so it reads on the card in every theme.",
+             "blocked": "The words in the blocked ink: a conflict."
+@@ -292,7 +292,7 @@
+           "why": "The peek reads beside the list; editing always gets the whole window (the owner's rule).",
+           "values": {
+             "side": "The peek: a sheet floated at the right edge on the full look's scrim, so the one thing lifted is the one to read; its sections one document between its bar and foot, fading out under both (the default).",
+-            "full": "A full-window editor over the page (a ticket's workflow or item): the app's sheet lifted over the window on a scrim, a Page in it, so the editor is framed as on its own screen, the close at its bar's end where the peek's is."
++            "full": "A full-window editor over the page (a ticket's workflow or item): a desk of its own lifted over the window on a scrim, a Page laying its bar and sheets on it as on the app's desk, so the editor is framed as on its own screen, the close at its bar's end where the peek's is."
+           }
+         },
+         "ask": {
+@@ -404,7 +404,7 @@
+       }
+     },
+     "Frame": {
+-      "why": "The app's frame: the labelled sidebar in three groups (the views; the headed sections; Settings and the theme at the foot) under its head (the Space's switcher, then search, which takes you to the view's search field, and new ticket, inert until W4 as the page's own button is, as Linear's two icon buttons), and the main column flush beside it on the page, ruled off by one hairline (a view's recess lies flush on it: one plane, no card in a sheet). It holds the app's one tooltip (every title the kit takes is drawn as Linear's tooltip, Base UI's) and its toasts (useToast: a short word that something was done, Base UI's); a Dialog holds its own of each, in the top layer with it.",
++      "why": "The app's frame: the labelled sidebar in three groups (the views; the headed sections; Settings and the theme at the foot) under its head (the Space's switcher, then search, which takes you to the view's search field, and new ticket, inert until W4 as the page's own button is, as Linear's two icon buttons), and the main column beside it on the same desk with no rule between them, where a view lays its sheets of paper. It holds the app's one tooltip (every title the kit takes is drawn as Linear's tooltip, Base UI's) and its toasts (useToast: a short word that something was done, Base UI's); a Dialog holds its own of each, in the top layer with it.",
+       "single": "There is one frame: the app's layout draws it around every screen.",
+       "props": {
+         "space": {
+@@ -460,7 +460,7 @@
+           "why": "A status glyph or a project key before the name."
+         },
+         "tone": {
+-          "why": "The group's state: its count is written in that hue beside the glyph; the band stays one neutral grey (a band per hue striped the list) and the name in ink.",
++          "why": "The group's state: its count is written in that hue beside the glyph; the name stays in ink and the sheet is paper (a sheet per hue would stripe the list).",
+           "values": {
+             "neutral": "The default.",
+             "you": "Needs you.",
+@@ -478,9 +478,9 @@
+         "level": {
+           "why": "Three heads over a list's runs.",
+           "values": {
+-            "zone": "A band run through its surface's padding, edge to edge (My queue's Agents at work, over its cards).",
+-            "group": "A list's band edge to edge (Linear's group head): Compact's fold, My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
+-            "line": "A query's head (Intake's queries): Linear's group band, a grey fill edge to edge that parts one run from the next, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first in the faces' column, so its key starts where the titles do; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
++            "zone": "On the desk over a run of sheets (My queue's Agents at work, over its cards), its glyph on the line of the glyphs in the sheets beside it.",
++            "group": "A group's first line (Compact's groups fold, My queue's runs don't): on its own sheet (My queue) the sheet gathers the group, so there is no band; in a scrolling list of groups on one sheet (Compact) it is a soft round band that stays at the top while its rows pass under it; the glyph sits over the rows' first cell.",
++            "line": "A query's head (Intake's queries): its sheet's first line, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first in the faces' column, so its key starts where the titles do; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
+           }
+         },
+         "fold": {
+@@ -554,6 +554,9 @@
+         "total": {
+           "why": "Steps in all."
+         },
++        "waiting": {
++          "why": "A queued run's tile keeps the running tiles' foot: its track drawn faint and empty, nothing sweeping, so a row of tiles ends on one line."
++        },
+         "size": {
+           "why": "Two places draw a run's progress.",
+           "values": {
+@@ -644,7 +647,7 @@
+           "why": "Quiet after the title: the Space, a scope, who."
+         },
+         "counters": {
+-          "why": "The bar's counts; a zero recedes, a non-zero need-you takes the accent's ink, with no fill.",
++          "why": "The bar's counts; a zero recedes, a non-zero need-you is the bar's one soft pill, in the accent's tint and ink.",
+           "items": {
+             "mark": {
+               "why": "The state the count is of (MarkKind)."
+@@ -661,7 +664,7 @@
+           "why": "The bar's buttons at its right end (New ticket; the ticket's actions)."
+         },
+         "side": {
+-          "why": "A full-height column beside the body, as Linear's issue sidebar: a tinted rail ruled off by one hairline, run out to the sheet's edge; or, its look doc, none, and the body one centred document.",
++          "why": "A full-height column beside the body: the document and its column two sheets of paper a step apart on the desk, each scrolling on its own; or, its look doc, none, and the body one centred document on a sheet the main column's width.",
+           "items": {
+             "look": {
+               "why": "Whether the column is there.",
+@@ -678,7 +681,7 @@
+       }
+     },
+     "Row": {
+-      "why": "One item of a list: its cells on the table's columns; a flat row on a hairline (Linear's list), a card or a swimlane.",
++      "why": "One item of a list: its cells on the table's columns; a soft unruled row on its sheet, a card or a swimlane.",
+       "props": {
+         "children": {
+           "why": "The cells."
+@@ -686,12 +689,12 @@
+         "kind": {
+           "why": "The shapes the app's lists take.",
+           "values": {
+-            "line": "A list's row (Compact, My queue, the library's four lists): one dense line edge to edge with no rule (Linear's list: its rhythm and the group bands part the rows), its first cell under the group head's glyph; hover and open wash its full width.",
+-            "item": "A two-line row (a ticket's context): roomy, on a hairline, washed on hover.",
+-            "triage": "Intake's triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; its hairline runs between the gutters, under the words.",
++            "line": "A list's row (Compact, My queue, the library's four lists): one line with no rule (the rhythm and the sheet part the rows), its first cell under the group head's glyph; hover lays a soft round wash, and the open one is a slip of raised paper lifted off its sheet.",
++            "item": "A two-line row (a ticket's context): roomy, unruled, washed on hover.",
++            "triage": "Intake's triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; unruled, parted from the next by room.",
+             "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
+-            "band": "A board's swimlane (All teams), out to the sheet's edges: its head, a group band across the board (the repo, its team, what is in flight), then a cell per stage holding ticket Cards on the bare sheet, a hairline between stages, so an empty stage is blank.",
+-            "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid and hairlines, held at the board's top."
++            "band": "A board's swimlane (All teams), a sheet of its own on the desk: its head the sheet's first line (the repo, its team, what is in flight), then a cell per stage holding ticket Cards, the stages parted by room alone, so an empty stage is bare paper.",
++            "columns": "A board's column head on the desk: one short line of stage names over the swimlanes' sheets, on their grid, held at the board's top."
+           }
+         },
+         "action": {
+@@ -709,7 +712,7 @@
+       }
+     },
+     "Segmented": {
+-      "why": "Filter chips, one row on the bar that never clips: Linear's view tabs, separate small rounded chips, bare words but for the pressed one, filled on a lit hairline; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
++      "why": "Filter chips, one row on the bar that never clips: view tabs as separate round pills, bare words but for the pressed one, a slip of paper lifted off the desk; what doesn't fit goes into a last chip (+N and a chevron), which names the pressed one when it is among them and opens the kit's popover (a combobox, as the other pickers) on its filter field, listing only those hidden filters, each with its count, the pressed one ticked (Compact's top bar).",
+       "single": "Compact's filter, and a stage's Maker | Check in the workflow editor (one of two, said on screen, where a switch's off would need decoding); Settings › Mappings' Try it and the settings nav use it in W8 and W9.",
+       "props": {
+         "label": {
+@@ -907,17 +910,17 @@
+       }
+     },
+     "Surface": {
+-      "why": "The one recessed zone per view, and the sheets that rest on it.",
++      "why": "The view's zone, the desk itself, and the sheets of paper laid on it.",
+       "props": {
+         "children": {
+           "why": "What it holds."
+         },
+         "level": {
+-          "why": "Sunken zone or raised panel.",
++          "why": "The desk or a sheet on it.",
+           "values": {
+-            "recess": "The view's sunken zone.",
+-            "sheet": "A hairline card, as Linear's latest-update card.",
+-            "list": "A run of a list under its own head (an Intake query), named as a region: no card, flush with the list's edges, parted from the next run by that run's band, its last line on no hairline."
++            "recess": "The view's zone: the desk itself, which its sheets are laid on (the default).",
++            "sheet": "A sheet of paper on the desk: large soft corners and a gentle drop, no hairline (Compact's one list of groups, each of Intake's queries, each of My queue's runs).",
++            "list": "A run of a list under its own head, named as a region, with no paper of its own (the twins' runs, on the sheet that holds them)."
+           }
+         },
+         "fill": {
+@@ -964,21 +967,18 @@
+           "why": "Fill the surface and scroll inside it (the rows fading under its foot), or sit in a longer page."
+         },
+         "foot": {
+-          "why": "The bar under the list: key hints, a summary."
++          "why": "The bar under the list, on the desk: key hints, a summary (All teams' legend); in a list that fills the window, pinned to its foot however short the list."
+         },
+         "children": {
+           "why": "The groups and rows."
+         },
+-        "bleed": {
+-          "why": "Run through the padding of the surface it sits in, edge to edge, flush at its top and foot (My queue's lists, whose surface pads the agents' cards)."
+-        },
+         "edge": {
+-          "why": "Out to the main sheet's edges with no surface of its own, as Linear's lists run: the column labels on a group's grey band, each row's first cell under the bar's title (the library's four lists, Intake's queries without a head, and All teams' board, its legend in the foot)."
++          "why": "A list on a sheet of paper of its own under the bar, its column labels the sheet's first line, hugging its rows and scrolling them inside it when they outgrow the window (the library's four lists; Linear's triage twin)."
+         }
+       }
+     },
+     "Tabs": {
+-      "why": "Underline tabs on one hairline (plain words, the current one in ink on a 2px rule), so a tab never reads as a button beside the real ones: Base UI's roving focus and arrow keys, our look.",
++      "why": "Tabs as a soft tray: the words in a well as wide as they need, the current one in ink on a slip of paper lifted in it, the rest quiet, so the tabs read as one control and never as buttons beside the real ones: Base UI's roving focus and arrow keys, our look.",
+       "single": "The ticket page's sections today; Settings' areas use them in W8.",
+       "props": {
+         "label": {
+@@ -1069,7 +1069,7 @@
+           "why": "Its least height in lines (a prompt's few, an editor's many)."
+         },
+         "head": {
+-          "why": "An item editor's content is a section of its document, as Linear writes a description under its properties: a hairline over a head strip (its title and length; a block's fold and name), the text under it as tall as its lines, read at rest as a document (paragraphs, lists, `code` chips, front matter and a fenced block in mono) over its hidden source, which a click edits in place, the hairline lit while it has the focus; popped out, it is the plain box at a readable measure."
++          "why": "An item editor's content is a section of its document, as Linear writes a description under its properties: a soft well set into the sheet, a head strip (its title and length; a block's fold and name) over the text, the well as tall as its lines, read at rest as a document (paragraphs, lists, `code` chips, front matter and a fenced block in mono) over its hidden source, which a click edits in place, the well ringed while it has the focus; popped out, it is the plain box at a readable measure."
+         },
+         "tools": {
+           "why": "A block's controls at its head's end (its moves, then its handle): the moves show while the block is in use, so a head at rest is its name and its handle."
+diff --git a/web/src/kit/theme.ts b/web/src/kit/theme.ts
+index e0b42b6..410b604 100644
+--- a/web/src/kit/theme.ts
++++ b/web/src/kit/theme.ts
+@@ -5,9 +5,9 @@ export type ThemeId = "light" | "mist" | "dark" | "midnight" | "harbour" | "plum
+ const KEY = "agentos-theme";
+ 
+ export const THEMES: readonly { id: ThemeId; name: string; mode: string }[] = [
+-  { id: "light", name: "Paper", mode: "Light · white" },
++  { id: "light", name: "Paper", mode: "Light · warm linen" },
+   { id: "mist", name: "Mist", mode: "Light · cool grey" },
+-  { id: "dark", name: "Carbon", mode: "Dark · warm graphite" },
++  { id: "dark", name: "Carbon", mode: "Dark · warm umber" },
+   { id: "midnight", name: "Midnight", mode: "Dark · near-black" },
+   { id: "harbour", name: "Harbour", mode: "Dark · lifted navy" },
+   { id: "plum", name: "Plum", mode: "Dark · aubergine" },
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 47e4bc7..46fc86d 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -1,322 +1,286 @@
+ /* The design tokens: the ONLY file with raw values (Stylelint refuses them everywhere else).
+-   V1's sizes (its web/src/styles/tokens.css) under fewer names, with a flatter, neutral palette:
+-   near-duplicates folded into one, in-between sizes (12.5, 13.5, 14.5, 11.5px) into the nearest
+-   step. Themes are plain attribute selectors, so a subtree can carry its own theme (the kit sheet
+-   and the theme menu's swatches do). index.html sets the attribute on <html> before first paint.
++   The warm direction: paper and ink on a desk. The app's ground is the desk (--side), a warm
++   linen in the light and a deep roast in the dark; the sidebar lies straight on it, with no rule.
++   What a view says sits on sheets of paper (--page) laid on the desk: a list's groups each on a
++   sheet of their own, a document (a ticket, an editor) on one sheet, a column beside it on
++   another, all with large soft corners and a gentle drop rather than hairlines. Inside paper, a
++   well (--tk-well, the desk's tint) holds what belongs together (the run card, the reply box,
++   your own message). Space and grouping part things, not lines; a line is the last resort.
++   Themes are plain attribute selectors, so a subtree can carry its own theme (the kit sheet and
++   the theme menu's swatches do). index.html sets the attribute on <html> before first paint.
+    Hue rules: --you is the theme's own accent (your move, the open row, the current step, focus:
+-   indigo on Paper, Mist and Carbon, orchid on Plum, teal on Harbour, royal blue on Midnight,
+-   each with white on it), orange = running, red = blocked, green = done, amber = a warning. The
+-   ink button is ink: only Dispatch run and the logo. The --id-* hues are people's faces; project
+-   keys are neutral. Metadata chips (a row's stage, repo, status) carry no outline: borders are
+-   for controls. Text pairs keep >= 4.5:1.
++   a warm iris on Paper and Carbon, a slate blue on Mist, orchid on Plum, teal on Harbour, royal
++   blue on Midnight, each with white on it), orange = running, red = blocked, green = done, amber
++   a warning. The ink button is ink: only Dispatch run and the logo. The --id-* hues are people's
++   faces, softened earth tones; project keys are neutral. Metadata chips carry no outline: borders
++   are for controls. Text pairs keep >= 4.5:1 on paper and on the desk.
+    Themes (kit/theme.ts lists them, index.html allows them): two light, four dark, all on the same
+-   names. Each light theme takes the Paper block and each dark one the Carbon block, whose other
+-   colours are mixed from a few steps (side, page, recess, surface, raised), inks and, in the dark,
+-   two washes (--wash for fills, --hair for lines); a theme further down sets those and its accent
+-   and so gets its own hue top to bottom. Each dark theme has its own ladder (page, panel, band,
+-   hover, hairline about 3.5 CIE L* apart, the hairline the top step so it shows on a band) at its
+-   own depth and hue, so each reads from its background alone: Midnight a neutral near-black,
+-   Plum a deep aubergine, Carbon a warm graphite, Harbour a lifted navy. The frame is Linear's:
+-   the sidebar's ground ruled off the page by a hairline, the main column flush on the page, and a
+-   view's recess (the panel) lies flush on it there. A new colour token is likewise a color-mix of
+-   those, or white or black at low alpha, never a raw neutral. */
++   names. Each light theme takes the Paper block and each dark one the Carbon block; a dark theme
++   sets its paper and inks, and its desk is that paper with black mixed in, so every theme keeps
++   the same layering at its own hue. A new colour token is a color-mix of those, or white or black
++   at low alpha, never a raw neutral. */
+ 
+-/* Paper · light · default: neutral zinc greys, one indigo for your move, flat surfaces on
+-   hairlines instead of shadows; colour only where it means a state. */
++/* Paper · light · default: warm white paper on a linen desk, espresso inks, a warm iris for your
++   move; sheets lifted by a soft brown drop instead of hairlines. */
+ :root:not([data-theme]),
+ [data-theme="light"],
+ [data-theme="mist"] {
+   color-scheme: light;
+-  /* themes · the ladder's own steps: the page (the main column), the panel (a recess, flush on the
+-     page in the frame), a surface (a card); the sidebar's ground is --side below */
+-  --page: #ffffff;
+-  --recess: #f9f9fa;
+-  --surface: #ffffff;
++  /* themes · the ladder: the desk (--side, under the sidebar and round the sheets), the paper (a
++     sheet), a control's paper, a raised paper (a field, a popover) */
++  --side: #f3eee5;
++  --page: #fffdf9;
++  --surface: #fffdf9;
+   --raised: #ffffff;
+   /* ink */
+-  --ink-1: #0f0f12;
+-  --ink-2: #3f3f46;
+-  --ink-3: #66666f;
+-  --ink-hover: #27272a;
+-  --focus: #5e6ad2;
+-  /* themes · everything below is mixed from the steps and inks above, so a theme that takes this
+-     block and sets only those gets its own tint everywhere */
++  --ink-1: #2a241f;
++  --ink-2: #544a42;
++  --ink-3: #72675d;
++  --ink-hover: #3d352e;
++  --focus: #6a5fd6;
++  /* themes · everything below is mixed from the steps and inks above */
+   --field: color-mix(in srgb, var(--ink-1) 4%, var(--page));
+-  --track: color-mix(in srgb, var(--ink-1) 10%, var(--page));
+-  --rule: color-mix(in srgb, var(--ink-1) 10%, var(--page));
+-  --rule-strong: color-mix(in srgb, var(--ink-1) 17%, var(--page));
+-  /* rows (Linear lists): flat rows on hairlines, every group on one grey band, a faint wash on
+-     hover */
+-  --list-rule: color-mix(in srgb, var(--ink-1) 6.5%, transparent);
+-  --list-hover: color-mix(in srgb, var(--ink-1) 3%, transparent);
+-  --list-open: color-mix(in srgb, var(--you) 7%, transparent);
+-  --list-band: color-mix(in srgb, var(--ink-1) 4%, transparent);
+-  /* themes · a list's label chip (and a keycap): Linear's pill on a hairline, no fill */
++  --track: color-mix(in srgb, var(--ink-1) 9%, var(--page));
++  --rule: color-mix(in srgb, var(--ink-1) 9%, var(--page));
++  --rule-strong: color-mix(in srgb, var(--ink-1) 16%, var(--page));
++  /* rows: soft rows on paper, no rules; a warm wash on hover (the open one is raised paper) */
++  --list-hover: color-mix(in srgb, var(--ink-1) 4%, transparent);
++  --list-band: color-mix(in srgb, var(--ink-1) 4.5%, transparent);
++  /* themes · a keycap: a pill on a faint edge */
+   --list-chip-edge: color-mix(in srgb, var(--ink-1) 11%, transparent);
+-  /* rows: a row's label chips, a flat tag of faint ink with no outline (Chip), and the one
+-     neutral face of rows and pickers */
+-  --list-chip-fill: color-mix(in srgb, var(--ink-1) 5%, transparent);
++  /* rows: a row's label chips, a soft tag of faint ink (Chip), and the one neutral face */
++  --list-chip-fill: color-mix(in srgb, var(--ink-1) 5.5%, transparent);
+   --face: color-mix(in srgb, var(--ink-1) 9%, var(--surface));
+   --face-ink: var(--ink-2);
+-  /* rows: a row's face, its hue at full strength; a line's title at Linear's medium weight */
+   --face-id: 100%;
+   /* accent: Dispatch run and the logo */
+   --accent: var(--ink-1);
+   --accent-hover: var(--ink-hover);
+   --accent-ink: var(--page);
+-  /* live: running agents */
+-  --live: #e8590c;
+-  --live-text: #b53b0b;
+-  --live-past: #f5a878;
+-  /* you: Linear's softer indigo */
+-  --you: #5e6ad2;
+-  --you-text: #4a54bd;
++  /* live: running agents, a warm orange */
++  --live: #e0640f;
++  --live-text: #ad4a0c;
++  --live-past: #f2b289;
++  /* you: a warm iris */
++  --you: #6157d0;
++  --you-text: #4f45b9;
+   --you-ink: #ffffff;
+   --you-lift: color-mix(in srgb, var(--you) 88%, var(--ink-1));
+-  /* blocked, warning */
+-  --blocked: #c92a2a;
+-  /* done */
+-  --done: #15803d;
++  /* blocked */
++  --blocked: #c4372c;
++  /* done: a garden green */
++  --done: #2f8a4c;
+   --done-ink: #ffffff;
+-  --done-text: #137337;
+-  --progress: #16a34a;
+-  /* ticket types and priority */
+-  /* sidebar: a grey ground a step (about 3 L*) under the page, ruled off from it by a hairline,
+-     as Linear's light sidebar is; labels near the ink, the nav's weight */
+-  --side: color-mix(in srgb, var(--ink-1) 4%, var(--page));
+-  --side-ink: color-mix(in srgb, var(--ink-1) 88%, var(--side));
+-  --side-hover: color-mix(in srgb, var(--ink-1) 4%, transparent);
+-  --side-on: color-mix(in srgb, var(--ink-1) 7.5%, transparent);
++  --done-text: #24713b;
++  --progress: #3e9e5c;
++  /* sidebar: labels near the ink on the desk; the current view a sheet of paper lifted off it */
++  --side-ink: color-mix(in srgb, var(--ink-1) 86%, var(--side));
++  --side-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
++  --side-on: var(--page);
+   --side-on-ink: var(--ink-1);
+-  /* sidebar: new ticket's ring */
+   --side-tool-ring: color-mix(in srgb, var(--ink-1) 14%, transparent);
+-  /* ticket: the ticket page and the peek (Linear's issue page), mixed from the theme's own hues */
++  /* ticket: the ticket page and the peek */
+   --tk-hover: color-mix(in srgb, var(--ink-1) 4.5%, transparent);
+-  --tk-card: var(--surface);
+-  --tk-card-edge: color-mix(in srgb, var(--ink-1) 9%, transparent);
+-  --tk-mine: color-mix(in srgb, var(--ink-1) 6%, var(--surface));
+-  --tk-mine-edge: color-mix(in srgb, var(--ink-1) 6%, transparent);
+-  --tk-side: var(--surface);
+-  --tk-scrim: color-mix(in srgb, var(--ink-1) 24%, transparent);
++  --tk-card: var(--page);
++  --tk-card-edge: color-mix(in srgb, var(--ink-1) 8%, transparent);
++  --tk-side: var(--page);
++  --tk-scrim: color-mix(in srgb, #3a2a1a 16%, transparent);
+   --tk-ink: var(--ink-1); /* body-size text: a property, a plan item, a message */
+   --tk-label: var(--ink-3); /* a property's head, a section head: clearly under the values */
+-  --tk-well: color-mix(in srgb, var(--ink-1) 4.5%, var(--surface)); /* the rail: Linear's sidebar */
+-  /* depth: hairlines, almost no shadow */
+-  --shadow-recess: inset 0 0 0 1px rgba(9, 9, 11, 0.06);
+-  --shadow-float: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 24px 64px -24px rgba(9, 9, 11, 0.35);
++  /* depth: paper lifted off the desk by a soft warm drop (a hair of edge for the light's sake);
++     a hovered tile lifted a little further; the floating layers (a popover, the peek) furthest */
++  --shadow-sheet:
++    0 0 0 1px rgba(80, 52, 24, 0.045), 0 1px 2px rgba(80, 52, 24, 0.05),
++    0 10px 28px -16px rgba(80, 52, 24, 0.16);
++  --shadow-lift:
++    0 0 0 1px rgba(80, 52, 24, 0.06), 0 2px 4px rgba(80, 52, 24, 0.06),
++    0 16px 36px -16px rgba(80, 52, 24, 0.26);
++  --shadow-float: 0 0 0 1px rgba(80, 52, 24, 0.06), 0 32px 80px -24px rgba(60, 36, 14, 0.42);
+   --shadow-accent: none;
+-  /* controls: buttons, filter pills, menus and pickers (Linear's quiet filled controls) */
+-  --ctl: var(--surface);
+-  --ctl-lift: color-mix(in srgb, var(--ink-1) 2%, var(--surface));
+-  --ctl-edge: color-mix(in srgb, var(--ink-1) 10%, transparent);
+-  --ctl-edge-hover: color-mix(in srgb, var(--ink-1) 17%, transparent);
+-  --ctl-hover: color-mix(in srgb, var(--ink-1) 4.5%, transparent);
+-  --ctl-shadow: 0 1px 2px rgba(9, 9, 11, 0.05);
+-  /* controls · the popover: white on a crisp hairline, lifted by a soft two-layer drop */
+-  --pop: var(--surface);
+-  --pop-edge: color-mix(in srgb, var(--ink-1) 11%, transparent);
++  /* controls: buttons, filter pills, menus and pickers, paper on a soft edge */
++  --ctl: var(--raised);
++  --ctl-lift: color-mix(in srgb, var(--ink-1) 2.5%, var(--raised));
++  --ctl-edge: color-mix(in srgb, var(--ink-1) 11%, transparent);
++  --ctl-edge-hover: color-mix(in srgb, var(--ink-1) 18%, transparent);
++  --ctl-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
++  --ctl-shadow: 0 1px 2px rgba(80, 52, 24, 0.07);
++  /* controls · the popover: raised paper, lifted by a soft warm drop */
++  --pop: var(--raised);
++  --pop-edge: color-mix(in srgb, var(--ink-1) 8%, transparent);
+   --pop-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
+   --pop-rule: color-mix(in srgb, var(--ink-1) 7%, transparent);
+-  --shadow-pop: 0 2px 4px rgba(9, 9, 11, 0.04), 0 12px 32px rgba(9, 9, 11, 0.12);
+-  /* agents: My queue's agent tiles, a faint slab of ink set into the sheet, its edge barely there */
+-  --tile: color-mix(in srgb, var(--ink-1) 2.5%, var(--surface));
+-  --tile-edge: color-mix(in srgb, var(--ink-1) 5%, transparent);
+-  --tile-hover: color-mix(in srgb, var(--ink-1) 4.5%, var(--surface));
+-  --tile-hover-edge: color-mix(in srgb, var(--ink-1) 10%, transparent);
+-  --tile-lift: 0 0 0 transparent;
+-  /* teams: All teams' item cards, white on a firm ink hairline with a soft drop, so each card is
+-     its own object on the white sheet; the titles in ink */
+-  --teams-card: var(--surface);
+-  --teams-card-edge: color-mix(in srgb, var(--ink-1) 11%, transparent);
+-  --teams-card-hover-edge: color-mix(in srgb, var(--ink-1) 18%, transparent);
+-  --teams-card-shadow: 0 1px 2px rgba(9, 9, 11, 0.06), 0 1px 1px rgba(9, 9, 11, 0.03);
++  --shadow-pop:
++    0 1px 3px rgba(80, 52, 24, 0.06), 0 6px 14px -4px rgba(80, 52, 24, 0.08),
++    0 24px 48px -16px rgba(80, 52, 24, 0.24);
++  /* agents: My queue's agent tiles, each a sheet of its own on the desk */
++  --tile: var(--page);
++  --tile-hover: var(--raised);
++  /* teams: All teams' item cards, paper on the board's sheet, on a soft edge and a small drop */
++  --teams-card: var(--raised);
++  --teams-card-edge: color-mix(in srgb, var(--ink-1) 9%, transparent);
++  --teams-card-hover-edge: color-mix(in srgb, var(--ink-1) 16%, transparent);
++  --teams-card-shadow: 0 1px 2px rgba(80, 52, 24, 0.06), 0 3px 8px -4px rgba(80, 52, 24, 0.08);
+ }
+ 
+-/* Carbon · dark · default: a warm neutral grey (page L* 7.5, panel 10.5), your move Linear's
+-   indigo. The ladder: the page (the main column), the sidebar's ground a step over it, then a
+-   row's hover (+3.5 L*), a group's band and an agent's card (+5.5) and the hairline (+9 to 11),
+-   each the theme's wash (--wash for fills, --hair for lines) over the page; an open row takes a
+-   wash of your move, so it reads as a level of its own. Midnight, Harbour and Plum take this
+-   block and set its steps, washes, inks and accent. */
++/* Carbon · dark · default: a roast, not a black. Paper a warm umber (L* 14), the desk the same
++   with black mixed in (L* 9), inks a warm cream; your move a luminous iris. Midnight, Harbour and
++   Plum take this block and set its paper, washes, inks and accent. */
+ [data-theme="dark"],
+ [data-theme="midnight"],
+ [data-theme="plum"],
+ [data-theme="harbour"] {
+   color-scheme: dark;
+-  /* themes · the ladder's own steps: Carbon's warm neutral grey (CIE L* page 7.5, panel 10.5,
+-     surface 15, raised 18; the faintest warmth, no hue to speak of) */
+-  --page: #171615;
+-  --recess: #1d1c1b;
+-  --surface: #262524;
+-  --raised: #2d2c2b;
+-  --ink-1: #edebe8;
+-  --ink-2: #bdbab6;
+-  --ink-3: #a9a5a1;
+-  --ink-hover: #d6d3cf;
+-  --wash: #ece6e0;
+-  --hair: #ece6e0;
+-  /* themes · mixed from the steps, washes and inks */
+-  --field: color-mix(in srgb, var(--wash) 5%, var(--recess));
+-  --track: color-mix(in srgb, var(--hair) 14%, var(--recess));
++  /* themes · the paper, a control's step and a raised step (each about 3 L* over the last) */
++  --page: #282420;
++  --surface: #2f2a25;
++  --raised: #36312b;
++  --ink-1: #f3ede5;
++  --ink-2: #cbc1b5;
++  --ink-3: #a99d90;
++  --ink-hover: #e0d8ce;
++  --wash: #f5e9db;
++  --hair: #f5e9db;
++  /* themes · the desk: the paper with black mixed in, so each theme's desk is its own hue */
++  --side: color-mix(in srgb, #000000 30%, var(--page));
++  --field: color-mix(in srgb, var(--wash) 5%, var(--page));
++  --track: color-mix(in srgb, var(--hair) 14%, var(--page));
+   --rule: color-mix(in srgb, var(--hair) 11%, var(--page));
+   --rule-strong: color-mix(in srgb, var(--hair) 19%, var(--page));
+-  /* rows (Linear lists): on the panel a row's hover climbs about 3.5 L*, a group's band about
+-     5.5 (so a head reads as a level of its own, as Linear's do) and the hairline about 9-11 (so
+-     a line still shows against a band); an open row a wash of your move */
+-  --list-rule: color-mix(in srgb, var(--hair) 11%, transparent);
+-  --list-hover: color-mix(in srgb, var(--wash) 3.8%, transparent);
+-  --list-open: color-mix(in srgb, var(--you) 14%, transparent);
+-  --list-band: color-mix(in srgb, var(--wash) 5.8%, transparent);
++  /* rows: on paper a row's hover a soft wash (the open one is raised paper) */
++  --list-hover: color-mix(in srgb, var(--wash) 4.5%, transparent);
++  --list-band: color-mix(in srgb, var(--wash) 6%, transparent);
+   --list-chip-edge: color-mix(in srgb, var(--hair) 14%, transparent);
+-  /* rows: a label chip's fill, the neutral face */
+-  --list-chip-fill: color-mix(in srgb, var(--ink-1) 7%, transparent);
++  --list-chip-fill: color-mix(in srgb, var(--ink-1) 8%, transparent);
+   --face: color-mix(in srgb, var(--ink-1) 15%, var(--surface));
+   --face-ink: var(--ink-1);
+-  /* rows: a row's face toned a little into the page; a line's title a weight lighter, as light on
+-     dark reads a weight heavier (so both themes' lists read the same) */
+-  --face-id: 84%;
++  /* rows: a row's face toned a little into the page (light on dark reads a weight heavier) */
++  --face-id: 86%;
+   --accent: var(--ink-1);
+   --accent-hover: var(--ink-hover);
+   --accent-ink: var(--page);
+   --live: #fb923c;
+   --live-text: #fdba74;
+   --live-past: #9a5a2e;
+-  /* you: the theme's accent, a solid indigo with white on it (Approve, YOU, the current step), a
+-     lighter indigo for its words and the focus ring */
+-  --you: #5e6ad2;
+-  --you-text: #a8aff8;
++  /* you: the theme's accent, a solid iris with white on it, a lighter iris for its words */
++  --you: #6d61dc;
++  --you-text: #b9b2f6;
+   --you-ink: #ffffff;
+-  --focus: #8a94f2;
+-  --you-lift: color-mix(in srgb, var(--you) 90%, #000000);
+-  --blocked: #fc8a8a;
+-  --done: #4ade80;
+-  --done-ink: #052e14;
+-  --done-text: #86efac;
+-  --progress: #4ade80;
+-  /* sidebar: the ground a step over the page (about 2.5 L*), as Linear's dark sidebar sits a
+-     shade lighter than the flush list beside it, the hairline between them */
+-  --side: color-mix(in srgb, var(--wash) 3.5%, var(--page));
+-  --side-ink: color-mix(in srgb, var(--ink-1) 85%, var(--side));
++  --focus: #9b92f0;
++  --you-lift: color-mix(in srgb, var(--you) 88%, #ffffff);
++  --blocked: #f99088;
++  --done: #5bc27c;
++  --done-ink: #0c2a16;
++  --done-text: #93dfa9;
++  --progress: #5bc27c;
++  /* sidebar: labels on the desk; the current view a sheet of paper lifted off it */
++  --side-ink: color-mix(in srgb, var(--ink-1) 84%, var(--side));
+   --side-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
+-  --side-on: color-mix(in srgb, var(--ink-1) 9%, transparent);
++  --side-on: var(--page);
+   --side-on-ink: var(--ink-1);
+-  /* sidebar: new ticket's ring */
+   --side-tool-ring: color-mix(in srgb, var(--ink-1) 16%, transparent);
+   /* ticket */
+   --tk-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
+-  --tk-card: color-mix(in srgb, var(--ink-1) 2.5%, var(--page));
+-  --tk-card-edge: color-mix(in srgb, var(--ink-1) 8%, transparent);
+-  --tk-mine: color-mix(in srgb, var(--ink-1) 8%, var(--page));
+-  --tk-mine-edge: color-mix(in srgb, var(--ink-1) 7%, transparent);
+-  --tk-side: color-mix(in srgb, var(--ink-1) 3%, var(--page));
+-  --tk-well: color-mix(in srgb, var(--ink-1) 4%, var(--page));
+-  --tk-scrim: color-mix(in srgb, #000000 72%, transparent);
+-  --tk-label: color-mix(in srgb, var(--ink-3) 70%, var(--page)); /* dark ink-3 sits near ink-2 */
++  --tk-card: var(--page);
++  --tk-card-edge: color-mix(in srgb, var(--ink-1) 9%, transparent);
++  --tk-side: var(--page);
++  --tk-scrim: color-mix(in srgb, #000000 50%, transparent);
++  --tk-label: color-mix(in srgb, var(--ink-3) 78%, var(--page)); /* dark ink-3 sits near ink-2 */
+   /* light on dark reads a weight heavier */
+   --tk-ink: color-mix(in srgb, var(--ink-1) 55%, var(--ink-2));
+-  --shadow-recess: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+-  --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 64px -24px rgba(0, 0, 0, 0.9);
++  /* depth: the paper's lit top edge over a dark ring and a deep soft drop */
++  --shadow-sheet:
++    inset 0 1px 0 rgba(255, 244, 230, 0.045), 0 0 0 1px rgba(0, 0, 0, 0.42),
++    0 12px 30px -16px rgba(0, 0, 0, 0.75);
++  --shadow-lift:
++    inset 0 1px 0 rgba(255, 244, 230, 0.08), inset 0 0 0 1px rgba(255, 244, 230, 0.05),
++    0 0 0 1px rgba(0, 0, 0, 0.45), 0 18px 38px -16px rgba(0, 0, 0, 0.85);
++  --shadow-float:
++    inset 0 1px 0 rgba(255, 244, 230, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.5),
++    0 32px 80px -24px rgba(0, 0, 0, 0.9);
+   --shadow-accent: none;
+-  /* controls: buttons, filter pills, menus and pickers (Linear's quiet filled controls) */
+-  --ctl: color-mix(in srgb, var(--ink-1) 6%, var(--recess));
+-  --ctl-lift: color-mix(in srgb, var(--ink-1) 9%, var(--recess));
++  /* controls: a step up off the paper, a lit top edge */
++  --ctl: color-mix(in srgb, var(--wash) 7%, var(--page));
++  --ctl-lift: color-mix(in srgb, var(--wash) 10%, var(--page));
+   --ctl-edge: color-mix(in srgb, var(--ink-1) 9%, transparent);
+   --ctl-edge-hover: color-mix(in srgb, var(--ink-1) 15%, transparent);
+   --ctl-hover: color-mix(in srgb, var(--ink-1) 6%, transparent);
+-  --ctl-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 1px rgba(0, 0, 0, 0.3); /* lit top */
+-  /* controls · the popover: Linear's lifted layer, a clear step (about 6 L*) over anything it
+-     opens on, a lit hairline inside a dark ring, a lit top edge and a deep drop; a row lights an
+-     8% tint */
+-  --pop: color-mix(in srgb, var(--wash) 9.5%, var(--recess));
+-  --pop-edge: color-mix(in srgb, var(--hair) 12%, transparent);
++  --ctl-shadow: inset 0 1px 0 rgba(255, 244, 230, 0.05), 0 1px 2px rgba(0, 0, 0, 0.35);
++  /* controls · the popover: a clear step over the paper it opens on, a lit top edge, a deep drop */
++  --pop: color-mix(in srgb, var(--wash) 8%, var(--page));
++  --pop-edge: color-mix(in srgb, var(--hair) 10%, transparent);
+   --pop-hover: color-mix(in srgb, var(--wash) 8%, transparent);
+   --pop-rule: color-mix(in srgb, var(--hair) 9%, transparent);
+   --shadow-pop:
+-    inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.5),
+-    0 8px 16px rgba(0, 0, 0, 0.35), 0 24px 56px rgba(0, 0, 0, 0.6);
+-  /* agents: a raised card a step over the panel (about band height) on a firm hairline */
+-  --tile: color-mix(in srgb, var(--wash) 6%, var(--recess));
+-  --tile-edge: color-mix(in srgb, var(--hair) 12%, transparent);
+-  --tile-hover: color-mix(in srgb, var(--wash) 9%, var(--recess));
+-  --tile-hover-edge: color-mix(in srgb, var(--hair) 19%, transparent);
+-  --tile-lift: 0 0 0 transparent;
+-  /* teams: All teams' item cards a step above their lane on a lit hairline (Linear's dark board
+-     card: the edge does the lifting, the fill a little) */
+-  --teams-card: color-mix(in srgb, var(--wash) 7%, var(--page));
+-  --teams-card-edge: color-mix(in srgb, var(--hair) 14%, transparent);
+-  --teams-card-hover-edge: color-mix(in srgb, var(--hair) 20%, transparent);
+-  --teams-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
++    inset 0 1px 0 rgba(255, 244, 230, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.5),
++    0 8px 18px rgba(0, 0, 0, 0.35), 0 28px 56px -12px rgba(0, 0, 0, 0.6);
++  /* agents: each tile a sheet on the desk */
++  --tile: var(--page);
++  --tile-hover: color-mix(in srgb, var(--wash) 3.5%, var(--page));
++  /* teams: All teams' item cards a step above the board's sheet */
++  --teams-card: color-mix(in srgb, var(--wash) 6%, var(--page));
++  --teams-card-edge: color-mix(in srgb, var(--hair) 11%, transparent);
++  --teams-card-hover-edge: color-mix(in srgb, var(--hair) 18%, transparent);
++  --teams-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+ }
+ 
+-/* themes · Mist · light: Linear's Ash. A cool blue-grey sidebar ruled off a white page, where
+-   Paper's ground is a neutral grey; inks lean slate; your move is a deeper, bluer indigo. Takes
+-   the Paper block and sets only its ground and hues. */
++/* themes · Mist · light: a cool stone. Soft blue-grey paper on a slate desk, inks leaning slate,
++   your move a deep slate blue. Takes the Paper block and sets only its desk, paper and hues. */
+ [data-theme="mist"] {
+-  --side: #edeef3;
+-  --ink-1: #1a1f2e;
++  --side: #e9ecf1;
++  --page: #fcfdfe;
++  --surface: #fcfdfe;
++  --ink-1: #1d2230;
+   --ink-2: #474e61;
+-  --ink-3: #545c6f;
++  --ink-3: #555d70;
+   --ink-hover: #2a3042;
+-  --focus: #4352ad;
+-  --you: #4352ad;
+-  --you-text: #3c4a9e;
+-  /* the greyer ground needs the status inks a step deeper */
++  --focus: #4a58b5;
++  --you: #4a58b5;
++  --you-text: #3e4ba3;
+   --live-text: #a8390b;
+   --done-text: #116a33;
+   --blocked: #b42323;
+-  /* the white panel needs its band a step firmer to read off the rows (about 4 L* under them) */
+-  --list-band: color-mix(in srgb, var(--ink-1) 5.5%, transparent);
+-  --list-hover: color-mix(in srgb, var(--ink-1) 3.8%, transparent);
++  --tk-scrim: color-mix(in srgb, #1d2230 16%, transparent);
++  --shadow-sheet:
++    0 0 0 1px rgba(30, 40, 70, 0.05), 0 1px 2px rgba(30, 40, 70, 0.05),
++    0 10px 28px -16px rgba(30, 40, 70, 0.16);
++  --shadow-lift:
++    0 0 0 1px rgba(30, 40, 70, 0.06), 0 2px 4px rgba(30, 40, 70, 0.06),
++    0 16px 36px -16px rgba(30, 40, 70, 0.26);
+ }
+ 
+-/* themes · Midnight · dark: a cool blue-black, the deepest theme. A black page (L* 2.5) beside a
+-   slate ground a shade lighter, then hover, band and cards, hairline, all leaning blue (hue about
+-   250°) and washed with a cold steel; inks run whiter. Your move is a royal blue with white on
+-   it. */
++/* themes · Midnight · dark: a cool blue-black, the deepest theme. Near-black slate paper on a
++   blacker desk, leaning blue (hue about 250°) and washed with a cold steel; inks run whiter. Your
++   move is a royal blue with white on it. */
+ [data-theme="midnight"] {
+-  --page: #08090b;
+-  --recess: #0e1014;
+-  --surface: #171a20;
+-  --raised: #1d2028;
++  --page: #15171d;
++  --surface: #1b1e25;
++  --raised: #21252d;
+   --ink-1: #eef1f7;
+   --ink-2: #b2b8c5;
+   --ink-3: #9da4b3;
+   --ink-hover: #d6dbe5;
+   --wash: #c8d4ec;
+   --hair: #c8d4ec;
+-  --list-rule: color-mix(in srgb, var(--hair) 11%, transparent);
+-  --list-band: color-mix(in srgb, var(--wash) 6%, transparent);
+-  --list-hover: color-mix(in srgb, var(--wash) 4.2%, transparent);
+-  --list-open: color-mix(in srgb, var(--you) 14%, transparent);
+-  --tile: color-mix(in srgb, var(--wash) 6%, var(--recess));
+-  --tile-edge: color-mix(in srgb, var(--hair) 12%, transparent);
+-  --tile-hover: color-mix(in srgb, var(--wash) 9%, var(--recess));
+-  --you: #2563eb;
+-  --you-text: #9db9ff;
++  --side: color-mix(in srgb, #000000 46%, var(--page));
++  --you: #2f6bed;
++  --you-text: #a4bfff;
+   --focus: #5b8cff;
+ }
+ 
+-/* themes · Harbour · dark: a lifted navy, the lightest dark theme. Every step a navy (hue about
+-   215°) a good way up from black: page L* 15, panel 18.5, hover 22, band and cards 24, hairline
+-   28. Washed and lined with a sky blue. Your move is a deep
+-   harbour teal with white on it. */
++/* themes · Harbour · dark: a lifted navy, the lightest dark theme. Navy paper (hue about 215°, L*
++   18) on a deeper navy desk, washed and lined with a sky blue. Your move is a deep harbour teal
++   with white on it. */
+ [data-theme="harbour"] {
+-  --page: #182739;
+-  --recess: #1f2e41;
+-  --surface: #2a394d;
+-  --raised: #304054;
++  --page: #1f2f43;
++  --surface: #26374c;
++  --raised: #2d3e54;
+   --ink-1: #e2ebf7;
+   --ink-2: #b9c6d6;
+   --ink-3: #adbacb;
+   --ink-hover: #ccd7e6;
+   --wash: #b7d8fb;
+   --hair: #b7d8fb;
+-  --list-rule: color-mix(in srgb, var(--hair) 13%, transparent);
+-  --list-band: color-mix(in srgb, var(--wash) 7.2%, transparent);
+-  --list-hover: color-mix(in srgb, var(--wash) 4.8%, transparent);
+-  --tile: color-mix(in srgb, var(--wash) 7.2%, var(--recess));
+-  --tile-edge: color-mix(in srgb, var(--hair) 14%, transparent);
+-  --tile-hover: color-mix(in srgb, var(--wash) 10.5%, var(--recess));
++  --side: color-mix(in srgb, #000000 30%, var(--page));
+   /* the lifted navy needs blocked's red a step lighter on a popover */
+   --blocked: #ffa0a0;
+   --you: #0e7c7b;
+@@ -324,13 +288,11 @@
+   --focus: #3fbfb5;
+ }
+ 
+-/* themes · Plum · dark: aubergine velvet, deep and warm. Every step a deep red-violet (hue about
+-   300°): page L* 5.5, panel 8.5, hover 12, band 14, hairline 19.5, washed and lined with orchid;
+-   the agents' cards stand clearly raised off the page; inks
+-   lean pink. Your move is an orchid with white on it, well clear of running's orange. */
++/* themes · Plum · dark: aubergine velvet, deep and warm. Red-violet paper (hue about 300°, L* 9)
++   on a deeper desk, washed with orchid; inks lean pink. Your move is an orchid with white on it,
++   well clear of running's orange. */
+ [data-theme="plum"] {
+-  --page: #1e0b1d;
+-  --recess: #251224;
++  --page: #271326;
+   --surface: #301c2e;
+   --raised: #382336;
+   --ink-1: #fbe8f9;
+@@ -339,13 +301,7 @@
+   --ink-hover: #ebd9e7;
+   --wash: #f2c7ed;
+   --hair: #f2c7ed;
+-  --list-rule: color-mix(in srgb, var(--hair) 12.5%, transparent);
+-  --list-band: color-mix(in srgb, var(--wash) 6.2%, transparent);
+-  --list-hover: color-mix(in srgb, var(--wash) 4%, transparent);
+-  --tile: color-mix(in srgb, var(--wash) 8%, var(--recess));
+-  --tile-edge: color-mix(in srgb, var(--hair) 10%, transparent);
+-  --tile-hover: color-mix(in srgb, var(--wash) 12%, var(--recess));
+-  --list-open: color-mix(in srgb, var(--you) 11%, transparent);
++  --side: color-mix(in srgb, #000000 34%, var(--page));
+   --you: #9333c0;
+   --you-text: #e3b0f5;
+   --focus: #d08cf0;
+@@ -355,10 +311,16 @@
+    theme (the swatches, the kit sheet) mixes its own. */
+ :root:not([data-theme]),
+ [data-theme] {
++  /* the view's zone is the desk itself; a well in the paper takes the desk's tint, a little
++     softer, so what it holds reads as set into the sheet (the run card, the reply box, your own
++     message, a code block) */
++  --recess: var(--side);
++  --tk-well: color-mix(in srgb, var(--side) 62%, var(--page));
++  --tk-mine: var(--tk-well);
+   --ring-you: color-mix(in srgb, var(--you) 20%, transparent);
+   --sweep-live: color-mix(in srgb, var(--live) 30%, transparent);
+   --ring-ink: color-mix(in srgb, var(--ink-1) 22%, transparent);
+-  /* sidebar: the hairline that rules it off the page */
++  /* sidebar: what a hairline off the desk would be (the theme swatch's edge) */
+   --side-edge: color-mix(in srgb, var(--ink-1) 8%, var(--side));
+   /* rows: a row's Chip, its grey dot or glyph; Unassigned's dashed ring */
+   --prop-mark: color-mix(in srgb, var(--ink-3) 72%, transparent);
+@@ -366,16 +328,15 @@
+   /* intake · Notice: a failed query's halo, the blocked dot's disc in the faces' column */
+   --notice-halo: color-mix(in srgb, var(--blocked) 15%, transparent);
+   --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
+-  /* themes · faces: a hue each, the same in every theme (a person reads the same everywhere), white
+-     initials on it */
+-  --id-violet: #7c3aed;
+-  --id-blue: #2563eb;
+-  --id-rose: #db2777;
+-  --id-teal: #0f766e;
+-  --id-slate: #4b5b78;
++  /* themes · faces: a hue each, the same in every theme (a person reads the same everywhere),
++     softened earth tones rather than candy, white initials on them */
++  --id-violet: #7457c2;
++  --id-blue: #3d69b0;
++  --id-rose: #bf4b72;
++  --id-teal: #2c7a6c;
++  --id-slate: #6b6058;
+   --id-on: #ffffff;
+-  /* rows: each face toned into the page by the theme's --face-id (full on light, a touch less on
+-     dark) */
++  /* rows: each face toned into the page by the theme's --face-id */
+   --id-violet-row: color-mix(in srgb, var(--id-violet) var(--face-id), var(--page));
+   --id-blue-row: color-mix(in srgb, var(--id-blue) var(--face-id), var(--page));
+   --id-rose-row: color-mix(in srgb, var(--id-rose) var(--face-id), var(--page));
+@@ -384,21 +345,18 @@
+   /* agents: a card's meter, the step under way a soft live */
+   --tile-meter-now: color-mix(in srgb, var(--live) 38%, transparent);
+   /* controls: chips (filter chips, a picker's trigger, a tag): a light fill on hover, a firmer
+-     one when on, and a pill's lit hairline */
++     one when on, and a pill's soft edge */
+   --chip-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
+-  --chip-on: color-mix(in srgb, var(--ink-1) 9%, transparent);
+-  --chip-on-edge: color-mix(in srgb, var(--ink-1) 14%, transparent);
+-  /* controls · a popover row's aside (a descriptor, a count), its section label and its filter's
+-     placeholder: a step under ink-3 on the popover's own surface, so the names lead */
++  --chip-on: color-mix(in srgb, var(--ink-1) 8%, transparent);
++  --chip-on-edge: color-mix(in srgb, var(--ink-1) 12%, transparent);
++  /* controls · a popover row's aside, its section label and its filter's placeholder */
+   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
+-  /* form: a field's fill, a hair off the page, on the controls' hairline (Linear's inputs); a
+-     switch's track off (a firm grey, so an off switch still reads as a control) and its knob,
+-     white on either track in every theme */
++  /* form: a field's fill, a hair off the paper on the controls' edge; a switch's track off and
++     its knob, white on either track in every theme */
+   --input: color-mix(in srgb, var(--ink-1) 2%, var(--page));
+   --switch-off: color-mix(in srgb, var(--ink-1) 20%, var(--page));
+   --switch-knob: #ffffff;
+-  /* drag: a drop target's wash under the ring of your move, the drop line in it, and a dragged
+-     source left behind at half strength */
++  /* drag: a drop target's wash under the ring of your move, the drop line in it */
+   --drop-fill: color-mix(in srgb, var(--you) 7%, transparent);
+   --drop-line: var(--you);
+   /* compare: a version conflict's changed lines, yours on your move's tint and theirs on a grey
+@@ -418,7 +376,7 @@
+   --fs-3: 13px; /* ui: rows, controls */
+   --fs-4: 14px; /* row titles, body */
+   --fs-5: 15px; /* headings, counter numbers */
+-  --fs-6: 20px; /* titles */
++  --fs-6: 22px; /* a view's title */
+   --track-snug: -0.01em;
+   --track-caps: 0.06em;
+ 
+@@ -433,13 +391,16 @@
+   --sp-8: 16px;
+   --sp-9: 24px;
+   --sp-10: 32px;
++  --sp-11: 40px; /* a document's margin inside its sheet */
++  --doc-foot: 64px; /* the room under a document's last line, where its sheet's veil rests */
+ 
+-  /* radii */
+-  --r-1: 4px;
+-  --r-2: 6px;
+-  --r-3: 8px;
+-  --r-4: 10px;
+-  --r-5: 12px;
++  /* radii: generous; a sheet's corner the largest, a control's a soft square */
++  --r-1: 5px;
++  --r-2: 7px;
++  --r-3: 9px;
++  --r-4: 12px;
++  --r-5: 14px;
++  --r-6: 18px; /* a sheet of paper */
+   --r-pill: 999px;
+ 
+   /* lines */
+@@ -456,16 +417,18 @@
+   --h-control-lg: 40px;
+   --h-row-flat: 38px; /* settled rows, column heads */
+   --h-row: 42px;
+-  /* rows (Linear lists): a line, a two-line item, a group's band, a row's chip, the status
+-     glyphs, a face's initials */
++  /* rows: a line, a two-line item, a group's head on its sheet, a column head, a row's chip */
+   --h-line: 36px;
+-  --h-list-item: 44px;
+-  --h-group: 36px;
+-  --h-list-head: 32px;
+-  --h-list-chip: 20px;
+-  --list-pad: 24px; /* a list row's inset from the surface edge */
++  --h-list-item: 46px;
++  --h-group: 40px;
++  --h-band: 32px; /* a group's banded head on a dense view's one sheet (Compact) */
++  --h-list-head: 38px;
++  --h-list-chip: 22px;
++  --list-pad: 16px; /* a list row's inset from its sheet's edge */
+   --list-inset: calc(var(--list-pad) + var(--sp-4)); /* where a row's first cell starts */
+-  --gutter: var(--sp-9); /* the main sheet's sides (an edge Table runs out through it) */
++  --list-in: var(--sp-3); /* a row's wash, inset from its sheet's edge */
++  --gutter: var(--sp-10); /* the main column's sides: the desk round the sheets */
++  --sheets: var(--sp-7); /* the room between two sheets */
+   --glyph-run: 50%; /* a running glyph's pie with no step count */
+   --h-face-sm: 16px; /* a small face: a run's starter */
+   --fs-face-sm: 8.5px;
+@@ -475,17 +438,17 @@
+   --glyph-check-w: 3.5px;
+   --glyph-check-h: 7px;
+   --glyph-bar: 7px;
+-  --fs-face: 9.5px;
+-  --h-top: 58px;
++  --fs-face: 9px;
++  --h-top: 56px;
+   --h-avatar-lg: 30px;
+   --w-menu: 268px; /* menus, the search field */
+   --w-peek: 640px;
+-  --w-talk-min: 400px; /* the ticket page's Talk column */
+-  --w-talk-max: 500px;
++  --w-talk-min: 340px; /* the ticket page's Talk column */
++  --w-talk-max: 380px;
+   --w-meter: 48px; /* a run meter inline in a row */
+   --col-xs: 44px; /* rows: an age (as wide as "3h 10m"), a run's or a version's number */
+   --prop-dot: 7px; /* rows: a property chip's dot */
+-  --h-face: 18px; /* rows: a face in a row or a picker */
++  --h-face: 20px; /* rows: a face in a row or a picker */
+   --col-sm: 76px; /* rows: a key, a stage, a source, a verdict */
+   --col-md: 112px;
+   --col-lg: 128px;
+@@ -498,10 +461,10 @@
+   --notice-measure: 72ch;
+   /* intake · Notice: a failed query's dot, centred in its halo */
+   --notice-dot: 6px;
+-  /* intake: a triage row, a face over two tight lines; the faces' column, which the query heads'
+-     chevron and the notices' glyphs share, so every line's words start on one edge */
+-  --h-triage: 52px;
+-  --triage-face: var(--sp-9);
++  /* intake: a triage row, a face over two lines with room; the faces' column, which the query
++     heads' chevron and the notices' glyphs share, so every line's words start on one edge */
++  --h-triage: 56px;
++  --triage-face: 28px;
+   /* controls */
+   --w-pop: 304px; /* the theme menu */
+   --w-pop-filter: 220px; /* a picker's list, a filter chip's overflow popover */
+@@ -509,9 +472,9 @@
+   --w-swatch: 34px;
+   --h-swatch: 22px;
+   --w-swatch-side: 9px;
+-  --h-pop-item: 32px; /* a menu's or picker's row, Linear's 13px on 32 */
+-  --h-pop-find: 40px; /* a picker's filter field */
+-  --h-pop-head: 28px; /* a menu's section label */
++  --h-pop-item: 34px; /* a menu's or picker's row */
++  --h-pop-find: 42px; /* a picker's filter field */
++  --h-pop-head: 30px; /* a menu's section label */
+ 
+   /* motion: transform and opacity only, and only on live things */
+   --dur-fast: 0.16s;
+@@ -519,57 +482,57 @@
+   --dur-sweep: 1.7s; /* a running meter's sweep */
+   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+ 
+-  /* sidebar: Linear's dense labelled sidebar: 228px wide, items 28px tall 1px apart, three groups
+-     (the views, the sections, the foot) 20px apart, a section's label hugging its entries */
+-  --w-side: 228px;
+-  --h-side-item: 28px;
+-  --h-side-title: 26px; /* a section's heading, 6px of it open above the label */
+-  --side-title-open: 6px;
+-  --side-tile: 18px; /* the Space's tile */
+-  --side-gap: 20px;
+-  --side-head-pull: -14px;
++  /* sidebar: a calm labelled list on the desk: 236px wide, items 32px tall 2px apart, three
++     groups (the views, the sections, the foot) 22px apart, a section's label hugging its entries */
++  --w-side: 236px;
++  --h-side-item: 32px;
++  --h-side-title: 28px; /* a section's heading, 8px of it open above the label */
++  --side-title-open: 8px;
++  --side-tile: 20px; /* the Space's tile */
++  --side-gap: 22px;
++  --side-head-pull: -12px;
+   /* the muted step: a section's label and a view's count, quieter than the labels (AA on --side) */
+-  --side-title: color-mix(in srgb, var(--side-ink) 72%, var(--side));
++  --side-title: color-mix(in srgb, var(--side-ink) 74%, var(--side));
+   --side-icon: color-mix(in srgb, var(--side-ink) 72%, var(--side)); /* a glyph, under its label */
+-  --side-tool: 28px; /* the head's search and new-ticket buttons */
++  --side-tool: 30px; /* the head's search and new-ticket buttons */
+   --side-account-w: 224px; /* the switcher's sheet */
+-  /* sidebar · Icon: grey, as Linear's: a priority's lit and unlit bars, a type's faint square and
+-     its glyph, so a row's status glyph is its one colour */
++  /* sidebar · Icon: grey: a priority's lit and unlit bars, a type's faint square and its glyph,
++     so a row's status glyph is its one colour */
+   --priority-on: var(--ink-2);
+   --priority-off: color-mix(in srgb, var(--ink-1) 16%, transparent);
+   --priority-none: color-mix(in srgb, var(--ink-1) 34%, transparent); /* normal's three dashes */
+   --type-square: color-mix(in srgb, var(--ink-1) 8%, transparent);
+   --type-glyph: var(--ink-2);
+ 
+-  /* ticket: Linear's issue-page measures: a large title over a dense body at the lists' row type */
++  /* ticket: a document's measures: a calm title over a body at the lists' row type */
+   --fs-ticket: 28px; /* the ticket's title */
+   --fs-ticket-lead: 15px; /* the ticket's description */
+   --fs-tk: 14px; /* the page's body: a property, a stage, a plan item, a message */
+   --w-fact-label: 104px; /* the properties row's head column */
+-  --h-fact: 30px; /* a property row */
+-  --h-check: 34px; /* a plan row */
+-  --h-check-sm: 30px; /* a plan row in the peek */
++  --h-fact: 32px; /* a property row */
++  --h-check: 36px; /* a plan row */
++  --h-check-sm: 32px; /* a plan row in the peek */
+   --h-compose: 24px; /* the composer's text, one line beside Send; it grows as you type */
+   --w-ticket: 760px; /* the ticket body's reading width */
+-  --h-tab: 28px; /* a view tab, a quiet button */
++  --h-tab: 30px; /* a view tab */
+   --w-tk-meter: 120px; /* the run's step meter, on the stepper's now line */
+ 
+   /* form: a field's height (a row's control), a code line's height in a text area, a number
+      field's digits, a form row's label column; the switch's track and knob */
+-  --h-field: 30px;
++  --h-field: 32px;
+   --code-line: 20px;
+   --w-number: 5ch;
+   --w-form-label: 128px;
+-  --w-switch: 28px;
+-  --h-switch: 16px;
++  --w-switch: 30px;
++  --h-switch: 18px;
+   --switch-inset: 2px;
+-  --h-box: 14px; /* a checkbox's box, a radio's ring */
++  --h-box: 15px; /* a checkbox's box, a radio's ring */
+   --h-pip: 6px; /* the dot in a chosen radio */
+   /* overlay: the full-window editor's question (unsaved changes) */
+   --w-ask: 400px;
+   --w-editor: 960px; /* a popped-out text area's measure */
+   --w-form-col: 280px; /* a form's two columns fold to one below this each */
+-  --ground: var(--page); /* what a sticky head paints over, where no Surface sets its own */
++  --ground: var(--side); /* what a sticky head paints over, where no Surface sets its own */
+   --z-raise: 1; /* a piece over its siblings (a drop's tag, a drop line) */
+   --z-sticky: 2; /* a list's sticky group heads, over its rows */
+   --z-pop: 10; /* the kit's popups, over everything on the page (sticky heads included) */
+@@ -590,7 +553,7 @@
+    at its foot. */
+ :root:not([data-theme]),
+ [data-theme] {
+-  --lane-line: color-mix(in srgb, var(--ink-1) 20%, transparent);
++  --lane-line: color-mix(in srgb, var(--ink-1) 18%, transparent);
+   --card-open-ring: color-mix(in srgb, var(--you) 22%, transparent);
+   --card-problem: color-mix(in srgb, var(--blocked) 8%, transparent);
+   --card-problem-edge: color-mix(in srgb, var(--blocked) 45%, var(--teams-card-edge));
+@@ -610,8 +573,7 @@
+ 
+ /* library: a workflow at a glance in a list row (Strip): a segment per stage in its phase's hue
+    (plan violet, build sky, verify teal, review pink, clear of the state hues), a gate's solid
+-   diamond, a loop's bracket under its stages; an item editor's side column of settings (Page), a
+-   narrower rail than the ticket's Talk */
++   diamond, a loop's bracket under its stages */
+ :root:not([data-theme]),
+ [data-theme] {
+   --phase-plan: color-mix(in srgb, #8b5cf6 82%, var(--page));

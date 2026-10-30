@@ -1,0 +1,15 @@
+// One-off: the ledger for Menu merged into Select (step 2 of the kit consolidation).
+import { readFileSync, writeFileSync } from "node:fs";
+
+const path = process.argv[2];
+const led = JSON.parse(readFileSync(path, "utf8"));
+const c = led.components;
+delete c.Menu;
+c.Select.why =
+  "A picker, one of a list (a ticket's owner, an agent's runtime, the theme): Base UI's keyboard, filtering and placement, our look; Menu folded into it.";
+c.Select.props.look.values.side =
+  "A sidebar row (the theme at the sidebar's foot): its glyph, the word, the current choice, opening upward.";
+c.Select.props.icon = { why: "The sidebar row's glyph (IconName)." };
+c.Select.props.label.why = "Its accessible name, the filter's placeholder, and the sidebar row's word.";
+writeFileSync(path, JSON.stringify(led, null, 2) + "\n", { encoding: "utf8" });
+console.log(JSON.stringify(c.Select, null, 1));

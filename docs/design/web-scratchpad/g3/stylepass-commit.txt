@@ -1,0 +1,27 @@
+gauntlet: separate by edge, not grey (the two style reviews)
+
+An Opus and a Codex reviewer compared our screens with Linear's
+(.review/gauntlet3/style). Their shared finding: Carbon drew controls,
+tags, fields and open panels as +13 fills with no edge, where Linear
+draws a +2..4 fill inside a hairline. Everything either raised is in;
+on their three disagreements, Opus's call.
+
+- Carbon: buttons, fields, search and picker chips a faint fill on a
+  hairline; tags and keycaps their outline alone; hover still fills.
+- Open rows and open runs: a card (the sheet's tone, a hairline), not a
+  slab.
+- The run card's Now foot and a popover's filter: a hairline, no band.
+- Your own message: the card's tone on a hairline.
+- The sheet has a rim: in Carbon a hairline, in Paper a line a step
+  darker than the sidebar (Linear's Ash: #e3e4ec on #edeef3).
+- Pressed filters: a control's face on a firm hairline, full ink, the
+  accent in the count. Compose: a hairline circle.
+- Paper: tag edges firm (white on the sheet was invisible); fields stay
+  white under the pointer, their edge firming; bands lighter and less
+  round; a lighter scrim; the off switch white on an edge.
+- Library rows keep their kind's hue; ticket types lose the grey square;
+  Intake's "+5" and failed query take an edge instead of a fill.
+- Kept, per Opus: the group bands, the popover's shadow, code's fill.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

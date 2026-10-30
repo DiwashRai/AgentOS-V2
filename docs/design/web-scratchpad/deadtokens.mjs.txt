@@ -1,0 +1,25 @@
+// One-off: tokens defined in tokens.css that nothing in web/src references (by var(--x), or by name
+// in TS, as tokenPx("--x") does), and, with --remove, delete their declarations.
+import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const [src, remove] = process.argv.slice(2);
+const walk = (d) => readdirSync(d).flatMap((n) => (statSync(join(d, n)).isDirectory() ? walk(join(d, n)) : [join(d, n)]));
+const files = walk(src).filter((f) => /\.(css|tsx?)$/.test(f));
+const tokensPath = files.find((f) => f.endsWith("tokens.css"));
+const tokens = readFileSync(tokensPath, "utf8");
+const defined = [...new Set([...tokens.matchAll(/^\s*(--[\w-]+)\s*:/gm)].map((m) => m[1]))];
+const everything = files.map((f) => readFileSync(f, "utf8")).join("\n");
+const dead = defined.filter((t) => !t.startsWith("--col-")).filter((t) => {
+  const uses = everything.split(t).length - 1;
+  const defs = [...tokens.matchAll(new RegExp(`^\\s*${t.replace(/[-]/g, "\\-")}\\s*:`, "gm"))].length;
+  // used only where defined: every occurrence is a declaration
+  return uses <= defs || !new RegExp(`(var\\(${t}[),\\s]|["'\`]${t}["'\`])`).test(everything);
+});
+console.log(dead.join(" "));
+if (remove === "--remove") {
+  let out = tokens;
+  for (const t of dead) out = out.replace(new RegExp(`^\\s*${t.replace(/[-]/g, "\\-")}\\s*:[^;]*;[^\\n]*\\n`, "gm"), "");
+  writeFileSync(tokensPath, out);
+  console.log(`removed ${String(dead.length)}`);
+}

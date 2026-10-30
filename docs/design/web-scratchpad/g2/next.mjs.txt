@@ -1,0 +1,38 @@
+// Folds a finished round into state.json and writes the next round's args.
+// Usage: node next.mjs <round> <commit> <next mode> [extra note per piece as key=text ...]
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+const G = "C:\\code\\AgentOS-V2-web\\.review\\gauntlet2";
+const HERE = "C:\\Users\\diwash\\AppData\\Local\\Temp\\claude\\C--code-AgentOS-V2-web\\6d0fdab0-5ae2-4898-99b9-b3d2c29ccdad\\scratchpad\\g2";
+const [roundArg, commit, nextMode, ...extra] = process.argv.slice(2);
+const round = Number(roundArg);
+const res = JSON.parse(readFileSync(join(G, `r${round}`, "result.json"), "utf8"));
+const state = JSON.parse(readFileSync(join(G, "state.json"), "utf8"));
+state.rounds = state.rounds.filter((r) => r.round !== round);
+state.rounds.push({
+  round, mode: res.mode, commit,
+  verdicts: res.verdicts.map((v) => ({ key: v.key, kept: v.kept, linear: v.linear, best: v.best, cand: v.cand, gap: v.gap, problems: v.problems, summary: v.summary })),
+});
+state.stopped ??= [];
+// a piece stops when its kept-best scores over its last 3 rounds span 0.5 or less
+for (const key of res.verdicts.map((v) => v.key)) {
+  const kept = state.rounds.map((r) => r.verdicts.find((v) => v.key === key)).filter((v) => v && typeof v.best === "number").map((v) => (v.kept ? v.cand : v.best));
+  const last = kept.slice(-3);
+  if (last.length === 3 && Math.max(...last) - Math.min(...last) <= 0.5 && !state.stopped.includes(key)) state.stopped.push(key);
+}
+const notes = Object.fromEntries(extra.map((e) => [e.slice(0, e.indexOf("=")), e.slice(e.indexOf("=") + 1)]));
+const pieces = res.verdicts.filter((v) => !state.stopped.includes(v.key)).map((v) => {
+  const dir = join(G, `r${round}`, "best", v.key);
+  const best = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".png")).sort().map((f) => join(dir, f)) : [];
+  const note = [`The critic's biggest gap in the current best: ${v.gap}`, v.problems ? `Problems it flagged: ${v.problems}` : "", notes[v.key] || ""].filter(Boolean).join("\n");
+  const ndir = join(G, `r${round + 1}`, "notes");
+  mkdirSync(ndir, { recursive: true });
+  const file = join(ndir, `${v.key}.md`);
+  writeFileSync(file, note + "\n");
+  return { key: v.key, best, note: file };
+});
+writeFileSync(join(G, "state.json"), JSON.stringify(state, null, 1));
+const args = { round: round + 1, mode: nextMode, base: commit, pieces };
+writeFileSync(join(HERE, `args-r${round + 1}.json`), JSON.stringify(args));
+console.log(`round ${round + 1} (${nextMode}): ${pieces.map((p) => `${p.key}[${p.best.length}]`).join(" ")}; stopped: ${state.stopped.join(", ") || "none"}`);

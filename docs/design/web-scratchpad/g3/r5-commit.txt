@@ -1,0 +1,15 @@
+gauntlet: regular titles on Carbon, quieter trailing words
+
+Round four's judges, nearly all of them: dark row titles read bold and
+their trailing words sat at the title's size.
+
+- Text: on Carbon a medium title and a label set regular (light on dark
+  reads a weight heavier); a group's name keeps its medium and rank.
+- A row's trailing words (what it waits on) a size down from its title.
+- Normal priority draws nothing, its room kept; a key's digits are
+  proportional (tabular figures spaced "ENG - 619" wide).
+- Carbon's popover a clearer step over the sheet; a repo band loses its
+  list glyph; a run stage's state sits beside its name.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

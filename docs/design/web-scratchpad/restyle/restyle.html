@@ -1,0 +1,166 @@
+<title>Kit Restyle: Graphite</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one wide comparison stage. Controls above (screen, theme), a draggable divider between
+   the current look and Graphite, then what changed. */
+:root {
+  --bg: #ffffff; --panel: #fafafa; --ink-1: #09090b; --ink-2: #52525b; --ink-3: #6b6b74;
+  --rule: #e4e4e7; --chip: #f4f4f5; --you: #4f46e5; --you-tint: #eef0ff;
+  --f-body: "Geist", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #09090b; --panel: #111114; --ink-1: #fafafa; --ink-2: #a1a1aa; --ink-3: #8b8b94; --rule: #27272a; --chip: #18181b; --you: #818cf8; --you-tint: rgba(129,140,248,.12); color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #09090b; --panel: #111114; --ink-1: #fafafa; --ink-2: #a1a1aa; --ink-3: #8b8b94; --rule: #27272a; --chip: #18181b; --you: #818cf8; --you-tint: rgba(129,140,248,.12); color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink-1); font: 400 14px/1.55 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 36px 72px; }
+.wrap { max-width: 1480px; margin: 0 auto; display: grid; gap: 28px; }
+h1 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -.025em; text-wrap: balance; }
+h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+p { margin: 0; }
+code { font-family: var(--f-mono); font-size: .9em; }
+.eyebrow { font: 500 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.lead { color: var(--ink-2); max-width: 70ch; font-size: 15px; }
+header { display: grid; gap: 10px; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.seg { display: flex; flex-wrap: wrap; gap: 2px; background: var(--chip); padding: 3px; border-radius: 8px; border: 1px solid var(--rule); }
+.seg button { font: 500 13px/1 var(--f-body); border: 0; background: transparent; color: var(--ink-2); padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--ink-1); box-shadow: 0 0 0 1px var(--rule), 0 1px 2px rgba(0,0,0,.06); }
+.seg button:focus-visible, #split:focus-visible { outline: 2px solid var(--you); outline-offset: 2px; }
+.stage { position: relative; border-radius: 10px; overflow: hidden; border: 1px solid var(--rule); background: var(--panel); aspect-ratio: 1440 / 900; max-width: 100%; user-select: none; touch-action: pan-y; }
+.stage img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.stage .after { clip-path: inset(0 0 0 var(--cut, 50%)); }
+.divider { position: absolute; top: 0; bottom: 0; left: var(--cut, 50%); width: 2px; margin-left: -1px; background: var(--you); pointer-events: none; }
+.divider::after { content: ""; position: absolute; top: 50%; left: 50%; width: 28px; height: 28px; margin: -14px 0 0 -14px; border-radius: 50%; background: var(--you); box-shadow: 0 0 0 4px var(--you-tint); }
+.tag { position: absolute; top: 12px; font: 500 11px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 6px 8px; border-radius: 5px; background: rgba(9,9,11,.78); color: #fafafa; pointer-events: none; }
+.tag.l { left: 12px; } .tag.r { right: 12px; background: var(--you); color: #ffffff; }
+.slider { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; color: var(--ink-3); font-size: 12px; }
+#split { width: 100%; accent-color: var(--you); }
+.changes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.change { border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; background: var(--panel); }
+.change h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.change p { color: var(--ink-2); font-size: 13px; }
+.swatches { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.sw { display: inline-flex; align-items: center; gap: 6px; font: 400 11.5px/1 var(--f-mono); color: var(--ink-2); padding: 4px 8px 4px 4px; border: 1px solid var(--rule); border-radius: 999px; }
+.sw i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(127,127,127,.25); }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 24px; color: var(--ink-2); font-size: 13px; }
+.facts b { color: var(--ink-1); font-weight: 600; font-variant-numeric: tabular-nums; }
+footer { color: var(--ink-3); font-size: 12px; max-width: 90ch; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Branch web-restyle · from web-w0 · a design spike</span>
+    <h1>Graphite: a flatter, more neutral kit</h1>
+    <p class="lead">The same six screens on the same fixtures. Only the kit's tokens and four of its CSS files changed; no screen code was touched. Drag the divider: the current look is on the left, Graphite on the right.</p>
+    <div class="facts">
+      <span><b>0</b> screen files changed</span>
+      <span><b>5</b> kit CSS files changed (tokens and 4 modules)</span>
+      <span><b>−26</b> kit lines (4,068 → 4,042)</span>
+      <span>Gates: <b>pass</b></span>
+    </div>
+  </header>
+
+  <div class="bar">
+    <div class="seg" id="screens" role="group" aria-label="Screen"></div>
+    <div class="seg" id="themes" role="group" aria-label="Theme">
+      <button type="button" data-theme="light">Light</button>
+      <button type="button" data-theme="dark">Dark</button>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <img class="before" id="imgBefore" alt="">
+    <img class="after" id="imgAfter" alt="">
+    <span class="tag l">Current</span>
+    <span class="tag r">Graphite</span>
+    <div class="divider"></div>
+  </div>
+  <div class="slider">
+    <span>Current</span>
+    <input type="range" id="split" min="0" max="100" value="50" aria-label="Divider position">
+    <span>Graphite</span>
+  </div>
+
+  <section style="display:grid;gap:14px" aria-labelledby="what">
+    <h2 id="what">What changed</h2>
+    <div class="changes">
+      <div class="change">
+        <h3>Neutral greys, one accent</h3>
+        <p>Zinc greys replace the warm, tinted neutrals. Indigo means "your move" and focus, and nothing else. Orange, red and green stay, but only on marks, ticks and meters.</p>
+        <div class="swatches">
+          <span class="sw"><i style="background:#09090b"></i>ink</span>
+          <span class="sw"><i style="background:#71717a"></i>muted</span>
+          <span class="sw"><i style="background:#e4e4e7"></i>rule</span>
+          <span class="sw"><i style="background:#4f46e5"></i>you</span>
+          <span class="sw"><i style="background:#f76b15"></i>live</span>
+          <span class="sw"><i style="background:#dc2626"></i>blocked</span>
+          <span class="sw"><i style="background:#16a34a"></i>done</span>
+        </div>
+      </div>
+      <div class="change">
+        <h3>Flat on hairlines</h3>
+        <p>Rows and panels sit on 1px hairlines with at most a 1–2px shadow. Rows no longer lift on hover; they light up. The grey well is now a faint tint, and the needs-you gradient is gone.</p>
+      </div>
+      <div class="change">
+        <h3>Quieter rows</h3>
+        <p>The status edge is a short 2px tick, drawn only for your move, running and blocked. Done and queued rows have none. The open row gets a soft lifted ring instead of a black outline.</p>
+      </div>
+      <div class="change">
+        <h3>Neutral keys, crisper faces</h3>
+        <p>Project keys are plain mono on grey, no longer cream or pastel. Faces keep one saturated hue each: violet, blue, pink, teal, slate.</p>
+      </div>
+      <div class="change">
+        <h3>Ink as the accent</h3>
+        <p>Dispatch run and the logo use ink: black in light, white in dark. Buttons are 500 weight with a 6px radius, and Approve is flat indigo without its glow ring.</p>
+      </div>
+      <div class="change">
+        <h3>A light rail</h3>
+        <p>The rail matches the page and is ruled off with a hairline, where it used to be a dark navy band in both themes.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>Screenshots at 1440 × 900 against the fixtures' fixed clock. The current look is the committed baselines on <code>web-w0</code>; Graphite was rendered from <code>web-restyle</code>. It isn't committed or pushed yet.</footer>
+</div>
+
+<script>
+const SCREENS = [["my-queue","My queue"],["my-queue-peek","Peek"],["compact-expanded","Compact"],["intake","Intake"],["ticket","Ticket"],["all-teams","All teams"]];
+const prefersDark = () => {
+  const t = document.documentElement.getAttribute("data-theme");
+  if (t) return t === "dark";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+};
+let state = { screen: "my-queue", theme: prefersDark() ? "dark" : "light" };
+const sBox = document.getElementById("screens");
+for (const [id, label] of SCREENS) {
+  const b = document.createElement("button");
+  b.type = "button"; b.dataset.id = id; b.textContent = label;
+  b.addEventListener("click", () => { state.screen = id; draw(); });
+  sBox.append(b);
+}
+for (const b of document.querySelectorAll("#themes button")) b.addEventListener("click", () => { state.theme = b.dataset.theme; draw(); });
+function draw() {
+  for (const b of sBox.children) b.setAttribute("aria-pressed", String(b.dataset.id === state.screen));
+  for (const b of document.querySelectorAll("#themes button")) b.setAttribute("aria-pressed", String(b.dataset.theme === state.theme));
+  const label = SCREENS.find((s) => s[0] === state.screen)[1];
+  const a = document.getElementById("imgBefore"), z = document.getElementById("imgAfter");
+  a.src = `before/${state.screen}-${state.theme}.png`; a.alt = `${label}, current look, ${state.theme}`;
+  z.src = `after/${state.screen}-${state.theme}.png`; z.alt = `${label}, Graphite, ${state.theme}`;
+}
+const stage = document.getElementById("stage"), split = document.getElementById("split");
+const setCut = (pct) => { pct = Math.max(0, Math.min(100, pct)); stage.style.setProperty("--cut", pct + "%"); split.value = String(Math.round(pct)); };
+split.addEventListener("input", () => setCut(Number(split.value)));
+let dragging = false;
+const fromEvent = (e) => { const r = stage.getBoundingClientRect(); setCut(((e.clientX - r.left) / r.width) * 100); };
+stage.addEventListener("pointerdown", (e) => { dragging = true; stage.setPointerCapture(e.pointerId); fromEvent(e); });
+stage.addEventListener("pointermove", (e) => { if (dragging) fromEvent(e); });
+stage.addEventListener("pointerup", () => { dragging = false; });
+stage.addEventListener("pointercancel", () => { dragging = false; });
+draw();
+</script>

@@ -1,0 +1,186 @@
+/* Graphite · light · default: neutral zinc greys, one indigo for your move, flat surfaces on
+   hairlines instead of shadows; colour only where it means a state. */
+:root:not([data-theme]),
+[data-theme="light"] {
+  color-scheme: light;
+  /* surfaces */
+  --page: #ffffff;
+  --recess: #f8f8f9;
+  --surface: #ffffff;
+  --raised: #ffffff;
+  --field: #f4f4f5;
+  --track: #e4e4e7;
+  /* ink */
+  --ink-1: #09090b;
+  --ink-2: #52525b;
+  --ink-3: #6b6b74;
+  --ink-hover: #27272a;
+  --focus: #4f46e5;
+  /* rules */
+  --rule-soft: #f0f0f2;
+  --rule: #e4e4e7;
+  --rule-strong: #d4d4d8;
+  /* rows: raised = actionable, flat = settled; they light up on hover and focus */
+  --row-raised: #ffffff;
+  --row-raised-edge: rgba(9, 9, 11, 0.08);
+  --row-flat: transparent;
+  --row-flat-edge: rgba(9, 9, 11, 0.06);
+  --row-hover: #ffffff;
+  --row-hover-edge: rgba(9, 9, 11, 0.2);
+  /* accent: Dispatch run and the logo */
+  --accent: #09090b;
+  --accent-hover: #27272a;
+  --accent-ink: #ffffff;
+  /* live: running agents */
+  --live: #f76b15;
+  --live-text: #c2410c;
+  --live-past: #f5a878;
+  /* you */
+  --you: #4f46e5;
+  --you-text: #4338ca;
+  --you-ink: #ffffff;
+  --you-tint: #eef0ff;
+  /* blocked, warning */
+  --blocked: #dc2626;
+  --warn: #b45309;
+  /* done */
+  --done: #16a34a;
+  --done-ink: #ffffff;
+  --done-text: #15803d;
+  --done-tint: #ecfdf3;
+  --progress: #16a34a;
+  --progress-soft: #a7e3bd;
+  --pending: #e4e4e7;
+  /* ticket types and priority */
+  --type-feature: #8b5cf6;
+  --type-bug: #ef4444;
+  --type-improvement: #f59e0b;
+  --type-task: #14b8a6;
+  --type-ink: #ffffff;
+  --priority-high: #ea580c;
+  --priority-low: #94a3b8;
+  /* identity: faces keep a hue each; keys are neutral mono */
+  --id-violet: #7c3aed;
+  --id-violet-text: #3f3f46;
+  --id-violet-tint: #f4f4f5;
+  --id-plum: #2563eb;
+  --id-plum-text: #3f3f46;
+  --id-plum-tint: #f4f4f5;
+  --id-rose: #db2777;
+  --id-rose-text: #3f3f46;
+  --id-rose-tint: #f4f4f5;
+  --id-gold: #0d9488;
+  --id-gold-text: #3f3f46;
+  --id-gold-tint: #f4f4f5;
+  --id-olive: #475569;
+  --id-olive-text: #3f3f46;
+  --id-olive-tint: #f4f4f5;
+  --id-on: #ffffff;
+  --id-gold-on: #ffffff;
+  /* the rail: the page's own neutral, ruled off */
+  --rail: #fafafa;
+  --rail-edge: #ececef;
+  --rail-ink: #71717a;
+  --rail-on: rgba(9, 9, 11, 0.06);
+  --rail-on-ink: #09090b;
+  /* talk */
+  --bubble: #f4f4f5;
+  --bubble-ink: #18181b;
+  --bubble-mine: #18181b;
+  --bubble-mine-ink: #fafafa;
+  --mention: #fde68a;
+  /* depth: hairlines, almost no shadow */
+  --scrim: rgba(255, 255, 255, 0.6);
+  --shadow-recess: inset 0 0 0 1px rgba(9, 9, 11, 0.06);
+  --shadow-surface: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 1px 2px rgba(9, 9, 11, 0.04);
+  --shadow-row: 0 1px 2px rgba(9, 9, 11, 0.04);
+  --shadow-halo: 0 1px 3px rgba(9, 9, 11, 0.06);
+  --shadow-float: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 16px 40px -16px rgba(9, 9, 11, 0.25);
+  --shadow-accent: none;
+}
+
+/* Graphite · dark */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #09090b;
+  --recess: #0d0d10;
+  --surface: #111114;
+  --raised: #18181b;
+  --field: #18181b;
+  --track: #27272a;
+  --ink-1: #fafafa;
+  --ink-2: #a1a1aa;
+  --ink-3: #8b8b94;
+  --ink-hover: #e4e4e7;
+  --focus: #818cf8;
+  --rule-soft: #18181b;
+  --rule: #27272a;
+  --rule-strong: #3f3f46;
+  --row-raised: #131316;
+  --row-raised-edge: rgba(255, 255, 255, 0.07);
+  --row-flat: transparent;
+  --row-flat-edge: rgba(255, 255, 255, 0.05);
+  --row-hover: #18181b;
+  --row-hover-edge: rgba(255, 255, 255, 0.18);
+  --accent: #fafafa;
+  --accent-hover: #e4e4e7;
+  --accent-ink: #09090b;
+  --live: #fb923c;
+  --live-text: #fdba74;
+  --live-past: #9a5a2e;
+  --you: #818cf8;
+  --you-text: #a5b4fc;
+  --you-ink: #0b0b1a;
+  --you-tint: rgba(129, 140, 248, 0.12);
+  --blocked: #f87171;
+  --warn: #fbbf24;
+  --done: #4ade80;
+  --done-ink: #052e14;
+  --done-text: #86efac;
+  --done-tint: rgba(74, 222, 128, 0.1);
+  --progress: #4ade80;
+  --progress-soft: #1f6b3a;
+  --pending: #3f3f46;
+  --type-feature: #a78bfa;
+  --type-bug: #f87171;
+  --type-improvement: #fbbf24;
+  --type-task: #2dd4bf;
+  --type-ink: #09090b;
+  --priority-high: #fb923c;
+  --priority-low: #94a3b8;
+  --id-violet: #a78bfa;
+  --id-violet-text: #d4d4d8;
+  --id-violet-tint: #1c1c20;
+  --id-plum: #60a5fa;
+  --id-plum-text: #d4d4d8;
+  --id-plum-tint: #1c1c20;
+  --id-rose: #f472b6;
+  --id-rose-text: #d4d4d8;
+  --id-rose-tint: #1c1c20;
+  --id-gold: #2dd4bf;
+  --id-gold-text: #d4d4d8;
+  --id-gold-tint: #1c1c20;
+  --id-olive: #94a3b8;
+  --id-olive-text: #d4d4d8;
+  --id-olive-tint: #1c1c20;
+  --id-on: #09090b;
+  --id-gold-on: #09090b;
+  --rail: #09090b;
+  --rail-edge: #1c1c1f;
+  --rail-ink: #71717a;
+  --rail-on: rgba(255, 255, 255, 0.06);
+  --rail-on-ink: #fafafa;
+  --bubble: #18181b;
+  --bubble-ink: #e4e4e7;
+  --bubble-mine: #fafafa;
+  --bubble-mine-ink: #09090b;
+  --mention: #78350f;
+  --scrim: rgba(9, 9, 11, 0.7);
+  --shadow-recess: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-surface: 0 0 0 1px rgba(255, 255, 255, 0.07);
+  --shadow-row: 0 1px 0 rgba(0, 0, 0, 0.3);
+  --shadow-halo: 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 40px -16px rgba(0, 0, 0, 0.8);
+  --shadow-accent: none;
+}
+

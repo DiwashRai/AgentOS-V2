@@ -1,0 +1,495 @@
+diff --git a/web/src/features/compact/CompactView.tsx b/web/src/features/compact/CompactView.tsx
+index 73659c6..ff92885 100644
+--- a/web/src/features/compact/CompactView.tsx
++++ b/web/src/features/compact/CompactView.tsx
+@@ -54,7 +54,8 @@ const COLUMNS: readonly Column[] = [
+ 
+ const PLAN_MAX = 6;
+ 
+-/** A group's band takes its state's hue: the ones that call for a look; the waiting ones stay ink. */
++/** A group's count takes its state's hue (its band stays grey): the ones that call for a look; the
++ *  waiting ones stay ink. */
+ const TONE: Record<Group, "neutral" | "you" | "live" | "blocked" | "done"> = {
+   needs_you: "you",
+   blocked: "blocked",
+diff --git a/web/src/features/queue/QueueView.tsx b/web/src/features/queue/QueueView.tsx
+index a8f1dc8..97281d0 100644
+--- a/web/src/features/queue/QueueView.tsx
++++ b/web/src/features/queue/QueueView.tsx
+@@ -5,6 +5,7 @@ import type { Person, TicketRow } from "../../api/types";
+ import { groupOf, stageModel, stepText } from "../../domain/board";
+ import { age, elapsed, matches } from "../../domain/format";
+ import {
++  Avatar,
+   Badge,
+   Button,
+   Card,
+@@ -84,20 +85,17 @@ function Item({ t, me, now, onOpen }: ItemProps) {
+   );
+ }
+ /** A card's state, top right, as Linear's agent pill: the words (the agent and that it runs, or
+- *  that it is queued), then inside the pill the agent's own glyph on its live disc (a running card's;
+- *  a queued one has no agent yet) and the face of whose ticket it is. */
++ *  that it is queued) and a running one's agent glyph on its live disc; then, outside the pill at a
++ *  row's size, the face of whose ticket it is. */
+ function AgentChip({ t }: { t: TicketRow }) {
+   const a = t.attention;
+   const what = a.kind === "running" ? `${a.agent} running` : "Queued";
+-  const whose = t.owner ? `, for ${t.owner.name}` : "";
+-  const face = t.owner ? { name: t.owner.name, seed: String(t.owner.id) } : undefined;
+-  const who =
+-    a.kind === "running"
+-      ? { after: { agent: true as const, ...(face ? { face } : {}) } }
+-      : face
+-        ? { after: { face } }
+-        : {};
+-  return <Chip label={what} title={`${what}${whose}`} {...who} />;
++  return (
++    <Stack dir="row" gap={3} align="center">
++      <Chip label={what} {...(a.kind === "running" ? { after: { agent: true } } : {})} />
++      {t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} /> : null}
++    </Stack>
++  );
+ }
+ 
+ /** "Implement", or "Implement · round 2 of 3" in a later round (in words, so it never reads as the
+@@ -184,8 +182,8 @@ function Chips({ t, me }: { t: TicketRow; me: Person | null }) {
+   const running = t.attention.kind === "running";
+   return (
+     <Stack dir="row" gap={3} align="center" wrap>
+-      {stage ? <Chip tone="fill" dot={running ? "live" : "neutral"} label={stage} /> : null}
+-      {t.repo ? <Chip tone="fill" lead="repo" label={t.repo} /> : null}
++      {stage ? <Chip dot={running ? "live" : "neutral"} label={stage} /> : null}
++      {t.repo ? <Chip lead="repo" label={t.repo} /> : null}
+     </Stack>
+   );
+ }
+@@ -199,7 +197,6 @@ function AgentCard({ t, me, now, onOpen }: ItemProps) {
+     <Card
+       look="agent"
+       label={`Peek at ${t.key}: ${t.title}`}
+-      off={a.kind === "queued"}
+       onOpen={() => {
+         onOpen(t.key);
+       }}
+@@ -252,7 +249,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
+             nothing running, nothing queued
+           </Notice>
+         ) : (
+-          <Stack gap={4}>
++          <Stack gap={6}>
+             <Head
+               level="zone"
+               icon={<Mark kind="run" glyph name={false} />}
+diff --git a/web/src/kit/Button.module.css b/web/src/kit/Button.module.css
+index 208faf6..d65fdc7 100644
+--- a/web/src/kit/Button.module.css
++++ b/web/src/kit/Button.module.css
+@@ -70,15 +70,12 @@
+ .btn[aria-disabled="true"] .glyph {
+   color: inherit;
+ }
+-/* ink: a primary that isn't a gate, a firmer neutral fill (the solid one is accent's alone) */
++/* ink: a primary that isn't a gate, the default's fill on a firmer edge in a firmer weight (the
++   solid one is accent's alone) */
+ .ink {
+-  background: var(--ctl-strong);
+   border-color: var(--ctl-edge-hover);
+   font-weight: 600;
+ }
+-.ink:hover {
+-  background: var(--ctl-strong-hover);
+-}
+ .you,
+ .you:hover {
+   background: var(--you);
+diff --git a/web/src/kit/Card.module.css b/web/src/kit/Card.module.css
+index 93c0ab4..0217132 100644
+--- a/web/src/kit/Card.module.css
++++ b/web/src/kit/Card.module.css
+@@ -127,22 +127,19 @@
+   gap: var(--sp-2);
+ }
+ 
+-/* agent: an agent's card, a flat slab of the band's grey with no outline, as tall as its
+-   neighbours, its lines one under another down to its foot; a queued one is no slab, only a dashed
+-   outline, as its glyph is a dashed ring */
++/* agent: an agent's tile, the surface on a hairline (one treatment, running or queued: the glyph
++   says which), as tall as its neighbours, its lines one under another down to its foot */
+ .card[data-look="agent"] {
+   align-self: stretch;
+-  border-color: transparent;
+-  background: var(--list-band);
+-  box-shadow: none;
+-}
+-.card[data-look="agent"][data-off] {
+-  border: var(--line-1) dashed var(--tile-edge);
+-  background: transparent;
++  border-color: var(--tile-edge);
++  border-radius: var(--r-3);
++  background: var(--tile);
++  box-shadow: var(--tile-lift);
+ }
+ .card[data-look="agent"][data-edit]:hover,
+ .card[data-look="agent"]:has(.hit:focus-visible) {
+-  background: var(--chip-on);
++  border-color: var(--tile-hover-edge);
++  background: var(--tile-hover);
+ }
+ .card[data-look="agent"] .summary {
+   height: 100%;
+diff --git a/web/src/kit/Card.tsx b/web/src/kit/Card.tsx
+index e6765ca..e6be23d 100644
+--- a/web/src/kit/Card.tsx
++++ b/web/src/kit/Card.tsx
+@@ -4,7 +4,7 @@
+ //   summary beside it; the summary selects it, and selected it opens in place to its settings (no
+ //   dialog). A disabled stage is dimmed; a problem with it is said at its foot.
+ // - agent: an agent at work (My queue): its lines one under another, filling the card's height so
+-//   cards in a row line up, on a flat grey slab; a queued one recedes to a dashed outline.
++//   cards in a row line up, on a tile on a hairline, running or queued alike (its glyph says which).
+ // - ticket: a ticket on a board (All teams): its lines one under another on a hairline card.
+ // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
+ // ring round the card, and a click anywhere on it for a pointer. What the lines say is the
+@@ -41,8 +41,7 @@ export type CardProps = Common &
+         look: "agent";
+         /** A click (or Enter) opens what the card is of (a peek). */
+         onOpen: () => void;
+-        /** A queued agent: receded to a dashed outline. */
+-        off?: boolean;
++        off?: never;
+         face?: never;
+         open?: never;
+         problem?: never;
+@@ -77,8 +76,7 @@ const flag = (on: boolean) => on || undefined;
+ /** What a card draws, by its case: a stage's face, settings and problem, and its button's words. */
+ function caseOf(props: CardProps) {
+   if (props.look === "agent" || props.look === "ticket") {
+-    const off = props.look === "agent" && props.off === true;
+-    return { face: undefined, open: undefined, off, problem: undefined, say: props.label };
++    return { face: undefined, open: undefined, off: false, problem: undefined, say: props.label };
+   }
+   const opened = props.open !== undefined;
+   return {
+diff --git a/web/src/kit/Chip.module.css b/web/src/kit/Chip.module.css
+index a6a70a1..c3098ef 100644
+--- a/web/src/kit/Chip.module.css
++++ b/web/src/kit/Chip.module.css
+@@ -21,6 +21,12 @@
+ .chip[data-lead] {
+   padding-left: var(--sp-3);
+ }
++/* in a list's row or an agent's card: Linear's label chip, a pill on a hairline with no fill */
++:where([data-row], [data-look="agent"]) .chip[data-tone="line"] {
++  border: var(--line-1) solid var(--list-chip-edge);
++  border-radius: var(--r-pill);
++  background: none;
++}
+ .chip[data-tone="fill"] {
+   background: var(--chip-on);
+ }
+diff --git a/web/src/kit/Head.module.css b/web/src/kit/Head.module.css
+index 069df34..0177f58 100644
+--- a/web/src/kit/Head.module.css
++++ b/web/src/kit/Head.module.css
+@@ -6,27 +6,12 @@
+   white-space: nowrap;
+ }
+ 
+-/* group: a dense list's band, edge to edge, rows straight under it (Linear's group head), washed
+-   in its state's hue (a neutral one in ink); the band alone parts one run of rows from the next */
+-.head {
+-  --band: var(--band-ink);
+-}
+-.head[data-tone="you"] {
+-  --band: var(--band-you);
+-}
+-.head[data-tone="live"] {
+-  --band: var(--band-live);
+-}
+-.head[data-tone="blocked"] {
+-  --band: var(--band-blocked);
+-}
+-.head[data-tone="done"] {
+-  --band: var(--band-done);
+-}
++/* group: a dense list's band, edge to edge, rows straight under it (Linear's group head): one
++   neutral grey for every group, so the list never stripes; the state is the glyph and the count */
+ .group {
+   height: var(--h-group);
+   padding: 0 var(--list-pad);
+-  background: var(--band);
++  background: var(--list-band);
+ }
+ .group .toggle {
+   /* the chevron hangs in the inset, so the glyph lines up with the rows' first cell */
+@@ -42,7 +27,7 @@
+   height: var(--h-group);
+   margin-inline: calc(var(--pad) * -1);
+   padding: 0 var(--list-pad) 0 var(--list-inset);
+-  background: var(--band);
++  background: var(--list-band);
+ }
+ /* a fold's heading is no box: its button lays out as the head's own child */
+ .holds {
+@@ -88,10 +73,7 @@
+ }
+ .name {
+   font-size: var(--fs-3);
+-  font-weight: 600;
+-  color: var(--list-band-ink);
+-}
+-.zone .name {
++  font-weight: 500;
+   color: var(--ink-1);
+ }
+ /* the spacer between the title and the summary */
+@@ -158,5 +140,5 @@
+   position: sticky;
+   top: 0;
+   z-index: var(--z-sticky);
+-  background: linear-gradient(var(--band), var(--band)), var(--ground);
++  background: linear-gradient(var(--list-band), var(--list-band)), var(--ground);
+ }
+diff --git a/web/src/kit/Head.tsx b/web/src/kit/Head.tsx
+index fc983ab..2994d97 100644
+--- a/web/src/kit/Head.tsx
++++ b/web/src/kit/Head.tsx
+@@ -15,8 +15,8 @@ export interface HeadProps {
+   count?: number | undefined;
+   /** Before the name: a status glyph, or a project key. */
+   icon?: ReactNode;
+-  /** The group's state: its band is washed in that hue and its count written in it (you: Needs
+-   *  you; live: running; blocked; done). The name stays in ink. */
++  /** The group's state: its count is written in that hue (you: Needs you; live: running; blocked;
++   *  done). The band stays one neutral grey and the name in ink. */
+   tone?: "neutral" | "you" | "live" | "blocked" | "done";
+   /** Quiet, right after the count ("Longest wait first"). */
+   note?: string | undefined;
+@@ -88,7 +88,6 @@ export function Head(props: HeadProps) {
+   return (
+     <div
+       className={cx(s.head, s[level], sticky && s.sticky)}
+-      data-tone={tone}
+       data-row={level === "line" ? "" : undefined}
+     >
+       <Lead fold={fold} title={title} />
+diff --git a/web/src/kit/Row.module.css b/web/src/kit/Row.module.css
+index 0fe92ae..b7af41c 100644
+--- a/web/src/kit/Row.module.css
++++ b/web/src/kit/Row.module.css
+@@ -8,21 +8,14 @@
+     transform var(--dur-fast) var(--ease-out);
+ }
+ 
+-/* lists: an item is a flat row edge to edge on a hairline; a line has no hairline, its group's
+-   band parts it from the next run, and its wash (hover, open) is a rounded slab held a step in
+-   from the edges. No card, no shadow, nothing moves */
++/* lists: a line and an item are flat rows edge to edge, each on its hairline (Linear's list), the
++   wash (hover, open) running the full width. No card, no shadow, nothing moves */
+ .line,
+ .item {
+   border-radius: 0;
+   background: transparent;
+-  transition: background-color var(--dur-fast) ease;
+-}
+-.item {
+   box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+-}
+-.line {
+-  margin-inline: var(--sp-3);
+-  border-radius: var(--r-2);
++  transition: background-color var(--dur-fast) ease;
+ }
+ .row:is(.line, .item):is(:hover, :has(:focus-visible)) {
+   background: var(--list-hover);
+@@ -75,7 +68,7 @@
+ .line > .inner {
+   column-gap: var(--sp-5);
+   min-height: var(--h-line);
+-  padding: 0 calc(var(--list-pad) - var(--sp-3)) 0 calc(var(--list-inset) - var(--sp-3));
++  padding: 0 var(--list-pad) 0 var(--list-inset);
+ }
+ .item > .inner {
+   min-height: var(--h-list-item);
+@@ -104,7 +97,7 @@
+   grid-column-end: -1;
+ }
+ .more {
+-  margin: 0 calc(var(--list-pad) - var(--sp-3)) 0 calc(var(--list-inset) - var(--sp-3));
++  margin: 0 var(--list-pad) 0 var(--list-inset);
+   padding: var(--sp-7) 0 var(--sp-8);
+   border-top: var(--line-1) solid var(--list-rule);
+ }
+diff --git a/web/src/kit/Row.tsx b/web/src/kit/Row.tsx
+index 2a5c47a..f851f1a 100644
+--- a/web/src/kit/Row.tsx
++++ b/web/src/kit/Row.tsx
+@@ -1,6 +1,6 @@
+-// One item of a list: its cells on the Table's columns. An item is a flat row on a hairline; a line
+-// has none (its group's band parts the runs), its hover, focus and open wash a rounded slab. A rack is a bare
+-// entry; a band a board's swimlane. A card on its own surface is a Card. Nothing changes size.
++// One item of a list: its cells on the Table's columns. A line and an item are flat rows on a
++// hairline, washed full width on hover, focus and open. A rack is a bare entry; a band a board's
++// swimlane. A card on its own surface is a Card. Nothing changes size.
+ import { Children, type ReactNode } from "react";
+ 
+ import { Opener, openOnClick } from "./opener";
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 1edf31c..43ece16 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -125,7 +125,7 @@
+           "why": "V1's gate primacy: at most one strong button per group.",
+           "values": {
+             "default": "A filled button on a hairline edge.",
+-            "ink": "A primary that isn't a gate (Retry): a firmer neutral fill.",
++            "ink": "A primary that isn't a gate (Retry): the default's fill on a firmer edge in a firmer weight, so it sits with its neighbours.",
+             "you": "The gate primary (Approve).",
+             "accent": "Only Dispatch run, only on a ticket.",
+             "quiet": "A borderless button (+N, icon buttons in a bar).",
+@@ -176,7 +176,7 @@
+           "why": "A click (or Enter) anywhere but its own controls: selects a stage (none: read only), or opens a peek at the agent's or ticket's ticket."
+         },
+         "off": {
+-          "why": "A disabled stage is dimmed, still in its place; a queued agent recedes to a dashed outline, as its glyph is a dashed ring."
++          "why": "A disabled stage is dimmed, still in its place; an agent's tile takes none (its glyph says queued)."
+         },
+         "problem": {
+           "why": "A stage's inline validation (a gate inside a loop, a prompt naming an unknown field), at its foot in the blocked ink."
+@@ -185,14 +185,14 @@
+           "why": "Stages, agents at work and board tickets are cards in three places.",
+           "values": {
+             "stage": "A workflow stage on the lane: words on the page, its face on the axis, rising onto the card's surface as it opens in place to its settings (the default).",
+-            "agent": "An agent at work (My queue): a flat slab of the band's grey, its lines down to the card's foot, a still Meter beside its step count.",
++            "agent": "An agent at work (My queue): a tile on a hairline, running or queued alike, its lines down to the card's foot, a still Meter beside its step count.",
+             "ticket": "A ticket on a board (All teams): its key, title and state chip on a hairline card."
+           }
+         }
+       }
+     },
+     "Chip": {
+-      "why": "The kit's one tag, a flat fill with no outline (borders are for controls): a stage, a repo, a skill on a stage, a property, an agent's state (Badge's tag and prop pills and Mark's chip folded into it).",
++      "why": "The kit's one tag, a flat fill with no outline, or in a list's row and an agent's tile Linear's label pill on a hairline: a stage, a repo, a skill on a stage, a property, an agent's state (Badge's tag and prop pills and Mark's chip folded into it).",
+       "props": {
+         "label": {
+           "why": "Its words (tests, AGENTS.md, Implement, northwind/web)."
+@@ -219,8 +219,8 @@
+         "tone": {
+           "why": "Most chips are muted words on a faint fill; a few stand out.",
+           "values": {
+-            "line": "A faint fill, no outline: the default.",
+-            "fill": "A firmer fill: an agent card's chips (on its grey slab), a board card's state, a stage's phase.",
++            "line": "A faint fill, no outline: the default; in a row or an agent's tile, a pill on a hairline.",
++            "fill": "A firmer fill: a board card's state, a stage's phase.",
+             "blocked": "The words in the blocked ink: a conflict."
+           }
+         },
+@@ -464,7 +464,7 @@
+           "why": "A status glyph or a project key before the name."
+         },
+         "tone": {
+-          "why": "The group's state: its band is washed in that hue and its count written in it, so the list's colour says where each run starts; the name stays in ink.",
++          "why": "The group's state: its count is written in that hue beside the glyph; the band stays one neutral grey (a band per hue striped the list) and the name in ink.",
+           "values": {
+             "neutral": "The default.",
+             "you": "Needs you.",
+@@ -691,7 +691,7 @@
+         "kind": {
+           "why": "The shapes the app's lists take.",
+           "values": {
+-            "line": "A list's row (Compact, My queue): one line with no hairline (its group's band parts the runs), its first cell under the group head's glyph; hover and open wash it as a rounded slab held a step in from the edges.",
++            "line": "A list's row (Compact, My queue, the library): one line on a hairline edge to edge (Linear's list), its first cell under the group head's glyph; hover and open wash its full width.",
+             "item": "A two-line row (Intake): roomy, on a hairline, washed on hover.",
+             "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
+             "band": "A board's swimlane (All teams): the team, then its stage lanes to the board's edge, each holding ticket Cards.",
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index c3c885b..79e08e2 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -44,17 +44,14 @@
+   --track: color-mix(in srgb, var(--ink-1) 10%, var(--page));
+   --rule: color-mix(in srgb, var(--ink-1) 10%, var(--page));
+   --rule-strong: color-mix(in srgb, var(--ink-1) 17%, var(--page));
+-  /* rows: raised = actionable, flat = settled; they light up on hover and focus */
+-  /* rows (Linear lists): flat rows on hairlines, a group on a band, a faint wash on hover */
++  /* rows (Linear lists): flat rows on hairlines, every group on one grey band, a faint wash on
++     hover */
+   --list-rule: color-mix(in srgb, var(--ink-1) 6.5%, transparent);
+-  --list-hover: color-mix(in srgb, var(--ink-1) 4%, transparent);
++  --list-hover: color-mix(in srgb, var(--ink-1) 3%, transparent);
+   --list-open: color-mix(in srgb, var(--you) 7%, transparent);
+-  --list-band: color-mix(in srgb, var(--ink-1) 5.5%, transparent);
+-  --list-band-ink: color-mix(in srgb, var(--ink-1) 80%, var(--page));
+-  --band-tint: 6%; /* how much of its state's hue a group's band takes */
+-  /* themes · a metadata chip's edge: none, so the chip reads as quiet text and the ladder parts
+-     the rows (a keycap keeps its field) */
+-  --list-chip-edge: transparent;
++  --list-band: color-mix(in srgb, var(--ink-1) 4%, transparent);
++  /* themes · a list's label chip (and a keycap): Linear's pill on a hairline, no fill */
++  --list-chip-edge: color-mix(in srgb, var(--ink-1) 11%, transparent);
+   /* rows: a row's label chips, a flat tag of faint ink with no outline (Chip), and the one
+      neutral face of rows and pickers */
+   --list-chip-fill: color-mix(in srgb, var(--ink-1) 5%, transparent);
+@@ -109,7 +106,6 @@
+   --tk-ink: var(--ink-1); /* body-size text: a property, a plan item, a message */
+   --tk-label: var(--ink-3); /* a property's head, a section head: clearly under the values */
+   --tk-well: color-mix(in srgb, var(--ink-1) 4.5%, var(--surface)); /* the rail: Linear's sidebar */
+-  --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
+   /* depth: hairlines, almost no shadow */
+   --shadow-recess: inset 0 0 0 1px rgba(9, 9, 11, 0.06);
+   --shadow-float: 0 0 0 1px rgba(9, 9, 11, 0.08), 0 24px 64px -24px rgba(9, 9, 11, 0.35);
+@@ -128,8 +124,8 @@
+   --pop-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);
+   --pop-rule: color-mix(in srgb, var(--ink-1) 7%, transparent);
+   --shadow-pop: 0 2px 4px rgba(9, 9, 11, 0.04), 0 12px 32px rgba(9, 9, 11, 0.12);
+-  /* agents: My queue's agent cards, a shade off the surface on a hairline */
+-  --tile: color-mix(in srgb, var(--ink-1) 1.5%, var(--surface));
++  /* agents: My queue's agent tiles, the surface on a hairline */
++  --tile: var(--surface);
+   --tile-edge: color-mix(in srgb, var(--ink-1) 12%, transparent);
+   --tile-hover: color-mix(in srgb, var(--ink-1) 2.5%, var(--surface));
+   --tile-hover-edge: color-mix(in srgb, var(--ink-1) 18%, transparent);
+@@ -177,9 +173,7 @@
+   --list-hover: color-mix(in srgb, var(--wash) 3.8%, transparent);
+   --list-open: color-mix(in srgb, var(--you) 14%, transparent);
+   --list-band: color-mix(in srgb, var(--wash) 5.8%, transparent);
+-  --list-band-ink: color-mix(in srgb, var(--ink-1) 88%, var(--page));
+-  --band-tint: 8%;
+-  --list-chip-edge: transparent;
++  --list-chip-edge: color-mix(in srgb, var(--hair) 14%, transparent);
+   /* rows: a label chip's fill, the neutral face */
+   --list-chip-fill: color-mix(in srgb, var(--ink-1) 7%, transparent);
+   --face: color-mix(in srgb, var(--ink-1) 15%, var(--surface));
+@@ -385,12 +379,7 @@
+   /* rows: a row's Chip, its grey dot or glyph; Unassigned's dashed ring */
+   --prop-mark: color-mix(in srgb, var(--ink-3) 72%, transparent);
+   --face-dashed: color-mix(in srgb, var(--ink-3) 75%, transparent);
+-  /* rows: a group's band washed in its state's hue, so the list's colour says where each run starts */
+-  --band-ink: color-mix(in srgb, var(--ink-1) calc(var(--band-tint) * 0.6), transparent);
+-  --band-you: color-mix(in srgb, var(--you) var(--band-tint), transparent);
+-  --band-live: color-mix(in srgb, var(--live) var(--band-tint), transparent);
+-  --band-blocked: color-mix(in srgb, var(--blocked) var(--band-tint), transparent);
+-  --band-done: color-mix(in srgb, var(--done) var(--band-tint), transparent);
++  --tk-skip: color-mix(in srgb, var(--ink-1) 32%, transparent); /* a skipped stage's dashes */
+   /* themes · faces: a hue each, the same in every theme (a person reads the same everywhere), white
+      initials on it */
+   --id-violet: #7c3aed;
+@@ -425,8 +414,6 @@
+   /* controls · a popover row's aside (a descriptor, a count), its section label and its filter's
+      placeholder: a step under ink-3 on the popover's own surface, so the names lead */
+   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
+-  --ctl-strong: color-mix(in srgb, var(--ink-1) 10%, var(--ctl));
+-  --ctl-strong-hover: color-mix(in srgb, var(--ink-1) 15%, var(--ctl));
+   /* form: a field's fill, a hair off the page, on the controls' hairline (Linear's inputs); a
+      switch's track off (a firm grey, so an off switch still reads as a control) and its knob,
+      white on either track in every theme */
+@@ -494,7 +481,7 @@
+   --h-row: 42px;
+   /* rows (Linear lists): a line, a two-line item, a group's band, a row's chip, the status
+      glyphs, a face's initials */
+-  --h-line: 40px;
++  --h-line: 42px;
+   --h-list-item: 44px;
+   --h-group: 36px;
+   --h-list-head: 32px;

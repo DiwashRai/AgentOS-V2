@@ -1,0 +1,16 @@
+web: credit only code the app reaches; props follow type parameters
+
+Two screens that each held only `export const keep = [Who, G]` were
+credited with Who, G and the kit inside them: reach started from every
+top-level unit of a screen, run or not. It now starts from main.tsx and
+the app's routes and frame, and a screen counts from the units of its
+own the app reaches, so an export nothing imports earns nothing. The
+real web's credits are unchanged.
+
+`G<T extends Tone>({ tone }: { tone: T })` passed the props check: the
+walk didn't follow a type parameter. It now follows the declaration's
+constraint (and default), and the type's base constraint.
+
+Both are in the tree test.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

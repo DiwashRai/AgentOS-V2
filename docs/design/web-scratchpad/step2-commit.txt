@@ -1,0 +1,14 @@
+kit: fold Menu into Select
+
+Step 2 of the kit consolidation. Menu was a second single-choice combobox (the
+theme picker) built on the same Base UI combobox as Select, with the same
+current-item lookup, filter, list, tick and popover. Select now has a "side"
+look (a sidebar row that opens upward), an icon, and options with a muted
+detail and their own picture (the theme swatches); Frame's theme picker uses
+it, and Menu is gone. The sidebar trigger names itself ("Theme: Paper"), and
+an unassigned option uses Avatar's empty face instead of Select's own ring.
+
+The kit is 39 of 40 components and 7,242 lines.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

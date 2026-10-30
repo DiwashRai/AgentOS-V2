@@ -1,0 +1,97 @@
+diff --git a/web/src/kit/Row.module.css b/web/src/kit/Row.module.css
+index e64181c..931ff58 100644
+--- a/web/src/kit/Row.module.css
++++ b/web/src/kit/Row.module.css
+@@ -144,17 +144,20 @@
+ }
+ 
+ /* band: a board's swimlane (Linear's board grouped by team), out to the sheet's edges. Its first
+-   cell is its head, a list's group band edge to edge, its glyph over the cards' keys; under it each stage's cell holds its items
+-   as cards on the bare sheet, a hairline before every stage but the first, so the stages read as
+-   columns down the board and an empty one is blank sheet. columns: the board's column head, the
+-   stage names on the same grid and hairlines, held at the board's top on a rule. */
++   cell is its head, one line edge to edge on a hairline, its glyph over the cards' keys; under it
++   each stage's cell holds its items as cards on the bare sheet. Every stage keeps the same half
++   gap on both sides, so cards sit one gap apart and the board's outer ones the same gap from the
++   sheet's edges (Linear's board: no rules between columns, one rhythm). columns: the board's
++   column head, the stage names on the same grid, held at the board's top on a rule. */
+ .band {
++  --half: var(--sp-6);
++
+   border-radius: 0;
+ }
+ .band > .inner {
+   align-items: stretch;
+   column-gap: 0;
+-  padding: 0 var(--list-pad);
++  padding: 0 calc(var(--list-pad) - var(--half));
+   border-radius: 0;
+ }
+ .band .cell {
+@@ -162,21 +165,17 @@
+   align-items: stretch;
+   justify-content: flex-start;
+   gap: var(--sp-4);
+-  padding: var(--sp-6) var(--sp-5) var(--sp-9);
+-  box-shadow: inset var(--line-1) 0 0 var(--list-rule);
++  padding: var(--sp-6) var(--half) var(--sp-9);
+ }
+ .band:not(.columns) .cell:first-child {
+   grid-column: 1 / -1;
+   justify-content: center;
+   min-height: var(--h-group);
+-  margin: 0 calc(var(--list-pad) * -1);
++  margin: 0 calc((var(--list-pad) - var(--half)) * -1);
+   padding: 0 var(--list-pad) 0 calc(var(--list-pad) + var(--line-1) + var(--sp-6));
+-  background: var(--list-band);
+-  box-shadow: none;
++  box-shadow: inset 0 var(--line-1) 0 var(--list-rule);
+ }
+-.band:not(.columns) .cell:nth-child(2),
+-.band.columns .cell:first-child {
+-  padding-left: 0;
++.band.columns + .band .cell:first-child {
+   box-shadow: none;
+ }
+ .band.columns {
+@@ -192,8 +191,5 @@
+ }
+ .band.columns .cell {
+   justify-content: center;
+-  padding: 0 calc(var(--sp-5) + var(--line-1) + var(--sp-6));
+-}
+-.band.columns .cell:first-child {
+-  padding-left: calc(var(--line-1) + var(--sp-6));
++  padding: 0 calc(var(--half) + var(--line-1) + var(--sp-6));
+ }
+diff --git a/web/src/kit/Row.tsx b/web/src/kit/Row.tsx
+index acebf4f..7d45a70 100644
+--- a/web/src/kit/Row.tsx
++++ b/web/src/kit/Row.tsx
+@@ -21,8 +21,9 @@ export interface RowProps {
+   /** line: a list's one-line row (Compact, My queue, the library); item: a roomy two-line row (a
+    *  ticket's context); triage: a tight two-line row led by a face, its hairline between the
+    *  gutters (Intake); rack: a bare entry (a run's stage); band: a board's swimlane, its first cell
+-   *  a head line across the board and then a cell per column; columns: the board's column head,
+-   *  one short line of stage names over the swimlanes, on the same grid. */
++   *  a head line across the board on a hairline and then a cell per column, each the same gap on
++   *  both sides; columns: the board's column head, one short line of stage names over the
++   *  swimlanes, on the same grid. */
+   kind?: "line" | "item" | "triage" | "rack" | "band" | "columns";
+   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
+    *  names what it opens, for assistive tech. */
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index c22a739..8885c26 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -690,8 +690,8 @@
+             "item": "A two-line row (a ticket's context): roomy, on a hairline, washed on hover.",
+             "triage": "Intake's triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; its hairline runs between the gutters, under the words.",
+             "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
+-            "band": "A board's swimlane (All teams), out to the sheet's edges: its head, a group band across the board (the repo, its team, what is in flight), then a cell per stage holding ticket Cards on the bare sheet, a hairline between stages, so an empty stage is blank.",
+-            "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid and hairlines, held at the board's top."
++            "band": "A board's swimlane (All teams), out to the sheet's edges: its head, one line across the board on a hairline (the repo, its team, what is in flight), then a cell per stage holding ticket Cards on the bare sheet, every stage the same half gap on both sides, so cards sit one even gap apart and from the sheet's edges (Linear's board), and an empty stage is blank.",
++            "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid, each over its cards' keys, held at the board's top."
+           }
+         },
+         "action": {

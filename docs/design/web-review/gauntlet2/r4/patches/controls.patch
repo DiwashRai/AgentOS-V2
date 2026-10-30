@@ -1,0 +1,29 @@
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 421a207..a66ac53 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -224,16 +224,18 @@
+   --ctl-edge-hover: color-mix(in srgb, var(--ink-1) 15%, transparent);
+   --ctl-hover: color-mix(in srgb, var(--ink-1) 6%, transparent);
+   --ctl-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 1px rgba(0, 0, 0, 0.3); /* lit top */
+-  /* controls · the popover: Linear's lifted layer, a clear step (about 6 L*) over anything it
+-     opens on, a lit hairline inside a dark ring, a lit top edge and a deep drop; a row lights an
+-     8% tint */
+-  --pop: color-mix(in srgb, var(--wash) 9.5%, var(--recess));
++  /* controls · the popover: Linear's lifted layer, a clear step (about 7 L*) over anything it
++     opens on, a lit hairline inside a dark ring, a lit top edge and a drop deep enough to shade
++     what it covers (a close contact shadow, then a wide falloff), so it reads as a layer above
++     the page, not a box drawn on it; a row lights an 8% tint */
++  --pop: color-mix(in srgb, var(--wash) 11%, var(--recess));
+   --pop-edge: color-mix(in srgb, var(--hair) 12%, transparent);
+   --pop-hover: color-mix(in srgb, var(--wash) 8%, transparent);
+   --pop-rule: color-mix(in srgb, var(--hair) 9%, transparent);
+   --shadow-pop:
+-    inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.5),
+-    0 8px 16px rgba(0, 0, 0, 0.35), 0 24px 56px rgba(0, 0, 0, 0.6);
++    inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.6),
++    0 4px 12px rgba(0, 0, 0, 0.45), 0 16px 40px 4px rgba(0, 0, 0, 0.6),
++    0 32px 96px 16px rgba(0, 0, 0, 0.55);
+   /* agents: a raised card a step over the panel (about band height) on a firm hairline */
+   --tile: color-mix(in srgb, var(--wash) 6%, var(--recess));
+   --tile-edge: color-mix(in srgb, var(--hair) 12%, transparent);

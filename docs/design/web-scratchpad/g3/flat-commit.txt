@@ -1,0 +1,25 @@
+gauntlet: the flat direction
+
+The language exploration's winner, chosen by the owner. Four directions
+(flat, precise, colour, warm) restyled the real screens. In blind
+head-to-heads on our own screens, each beat the current screens. Warm
+won the bracket and flat came second. After a fix round for both, flat
+beat warm 3-1 and the current screens 4-0.
+
+Flat and quiet:
+- The main column is a sheet inset into the ground.
+- Groups are separated by space, heavier headings and hairline rules,
+  not bands.
+- Compact and Intake are column-headed tables. Intake is one line per
+  row, with the failed query in a tinted banner.
+- Queued agent cards are dashed, and the header counts carry their
+  glyphs.
+- Editable properties rest on chips, popovers have an edge and a soft
+  shadow, and Save is the clear primary.
+- One restrained accent; state colour only where it means something.
+
+The kit is 44/45 components and 8,532/9,000 lines. The screenshot
+baselines are regenerated.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

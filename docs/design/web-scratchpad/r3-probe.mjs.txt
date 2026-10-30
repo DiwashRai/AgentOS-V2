@@ -1,0 +1,89 @@
+// One-off: check the kit review's round-3 fixes in Chrome. Starts Vite on 5191 and stops it.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 700 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const go = async (path) => { await page.goto(base + path); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(250); };
+
+  // Codex 3: Compare is a table: two column heads, a row per line pair, changes said in words
+  await go("/library/agents/builder?still=conflict");
+  const table = page.getByRole("table");
+  say("C3 tables, column heads, rows", [await table.count(), await page.getByRole("columnheader").count(), await page.getByRole("row").count()]);
+  say("C3 first changed cell / first gap", await page.evaluate(() => {
+    const cells = [...document.querySelectorAll("[role=cell]")];
+    return [cells.find((c) => c.textContent.startsWith("changed"))?.textContent ?? "(none)", cells.find((c) => c.textContent === "no line")?.textContent ?? "(none)"];
+  }));
+
+  // Codex 4: dismissing the close question puts focus back where it was
+  await go("/kit");
+  await page.getByRole("button", { name: "Open the full-window overlay" }).click();
+  await page.waitForTimeout(300);
+  const box = page.locator("dialog[open] textarea, dialog[open] input, dialog[open] button").last();
+  await box.focus();
+  const before = await box.evaluate((e) => e.outerHTML.slice(0, 60));
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(200);
+  say("C4 asking: focus in alertdialog", await page.evaluate(() => !!document.activeElement?.closest("[role=alertdialog]")));
+  await page.getByRole("button", { name: "Keep editing" }).click();
+  await page.waitForTimeout(200);
+  say("C4 back on the same box", await page.evaluate((b) => document.activeElement?.outerHTML.slice(0, 60) === b, before));
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(150);
+  await page.getByRole("button", { name: "Discard" }).click().catch(() => {});
+
+  // Codex must-fix: a popup is over the sticky heads; Head sticks itself in a scrolling list
+  await go("/compact");
+  say("M1 group head position", await page.evaluate(() => {
+    const h = [...document.querySelectorAll("main [class*='sticky']")];
+    return [h.length, h[0] ? getComputedStyle(h[0]).position : "(none)"];
+  }));
+  await go("/t/NW-17");
+  await page.getByRole("combobox").first().click();
+  await page.waitForTimeout(250);
+  say("M1 popup z-index", await page.evaluate(() => [...document.querySelectorAll("[class*='layer']")].map((e) => getComputedStyle(e).zIndex)));
+  await page.keyboard.press("Escape");
+
+  // N6: the search box names its shortcut, its keycap unread
+  say("N6 keyshortcuts, keycap hidden", await page.evaluate(() => {
+    const i = document.querySelector("input[type=search]");
+    return [i?.getAttribute("aria-keyshortcuts"), !!i?.parentElement?.querySelector("[aria-hidden=true] kbd, [aria-hidden=true]")];
+  }));
+
+  // S8: the owner's fact is a picker; the others draw their muted glyph
+  say("S8 owner picker, glyphs", await page.evaluate(() => [
+    !!document.querySelector("[data-picker] [role=combobox], [data-picker] button"),
+    document.querySelectorAll("dl dd svg").length,
+  ]));
+
+  // N12: a library card is a button only while a click does something
+  await go("/library/workflows/standard");
+  say("N12 drag card role (no stage chosen)", await page.evaluate(() => document.querySelector("[draggable=true]")?.getAttribute("role") ?? "none"));
+
+  // N11: a row's opener covers the row and takes no pointer
+  await go("/compact");
+  say("N11 opener size = row size, pointer-events", await page.evaluate(() => {
+    const b = document.querySelector("main [data-row] button[aria-label][class*='hit']");
+    if (!b) return "(none)";
+    const r = b.getBoundingClientRect(), p = b.closest("[data-row]").getBoundingClientRect();
+    return [Math.round(r.width) === Math.round(p.width), Math.round(r.height) === Math.round(p.height), getComputedStyle(b).pointerEvents];
+  }));
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

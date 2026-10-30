@@ -1,0 +1,511 @@
+diff --git a/web/src/features/teams/TeamsView.tsx b/web/src/features/teams/TeamsView.tsx
+index 44a6a29..e509531 100644
+--- a/web/src/features/teams/TeamsView.tsx
++++ b/web/src/features/teams/TeamsView.tsx
+@@ -11,13 +11,13 @@ import type { Person, Phase, TicketRow } from "../../api/types";
+ import { groupOf, isMyMove, markOf, STATE_WORD, stepText } from "../../domain/board";
+ import { firstName, plural, repoShort } from "../../domain/format";
+ import {
+-  Avatar,
+   Badge,
+   Card,
+   Button,
+   Chip,
+   type ChipDot,
+   type Column,
++  Icon,
+   Mark,
+   type MarkKind,
+   Notice,
+@@ -82,6 +82,24 @@ const LEGEND = [
+   ["queued", "Queued"],
+ ] as const;
+ 
++/** The board's foot: where the rest of the work lives, and what each glyph says. */
++function Legend() {
++  return (
++    <>
++      <Text variant="meta">Inbox and merged work live in each repo&apos;s list.</Text>
++      <Stack grow />
++      {LEGEND.map(([kind, word]) => (
++        <Stack key={kind} dir="row" gap={3} align="center">
++          <Mark kind={kind} glyph name={false} />
++          <Text variant="meta" tone="2">
++            {word}
++          </Text>
++        </Stack>
++      ))}
++    </>
++  );
++}
++
+ /** Work in flight: inbox and merged work live in each repo's list. */
+ function inFlight(t: TicketRow): boolean {
+   return t.attention.kind !== "inbox" && t.attention.kind !== "done";
+@@ -98,7 +116,7 @@ function parkedAt(t: TicketRow, ask: string): string {
+ interface ItemBadge {
+   kind: MarkKind;
+   text: string;
+-  /** A running agent's steps, for its glyph's pie. */
++  /** A running agent's steps, for its glyph's pie and the pill's quieter count. */
+   progress?: { done: number; total: number } | null;
+ }
+ 
+@@ -125,7 +143,7 @@ function itemBadge(t: TicketRow, me: Person | null): ItemBadge {
+   const a = t.attention;
+   if (a.kind === "running") {
+     const p = a.progress;
+-    return { kind: "run", text: p ? `${a.agent} ${stepText(p)}` : a.agent, progress: p };
++    return { kind: "run", text: a.agent, progress: p };
+   }
+   if (a.kind === "waiting") return waitingBadge(t, a, me);
+   const m = markOf(a, me);
+@@ -133,19 +151,21 @@ function itemBadge(t: TicketRow, me: Person | null): ItemBadge {
+ }
+ 
+ /** A pill's dot: the state's hue, so the pill says it as the glyph does. */
+-const DOT: Partial<Record<MarkKind, ChipDot>> = { you: "you", blk: "blocked", done: "done" };
++const DOT: Partial<Record<MarkKind, ChipDot>> = {
++  run: "live",
++  you: "you",
++  blk: "blocked",
++  done: "done",
++};
+ 
+-/** The pill on the key's line: a running agent's name and steps, then its glyph on the live disc
+- *  and whose ticket it is (Linear's "Working…" pill); any other state's words after its dot. */
+-function Pill({ badge, owner }: { badge: ItemBadge; owner: Person | null }) {
++/** The pill on the key's line, its state's words after its dot (Linear's "Working…" pill): a
++ *  running agent's name, its step a quieter count after it. */
++function Pill({ badge }: { badge: ItemBadge }) {
+   if (badge.text === "") return null;
+-  if (badge.kind === "run") {
+-    const face = owner ? { name: owner.name, seed: String(owner.id) } : undefined;
+-    return (
+-      <Chip tone="edge" label={badge.text} after={face ? { agent: true, face } : { agent: true }} />
+-    );
+-  }
+-  return <Chip tone="edge" dot={DOT[badge.kind] ?? "neutral"} label={badge.text} />;
++  const dot = DOT[badge.kind] ?? "neutral";
++  const p = badge.progress;
++  if (p) return <Chip tone="edge" dot={dot} label={badge.text} after={{ text: stepText(p) }} />;
++  return <Chip tone="edge" dot={dot} label={badge.text} />;
+ }
+ 
+ /** One item, two lines (Linear's board card): its key (12px, muted) with its state's pill at the
+@@ -173,7 +193,7 @@ function Item({
+         <Badge kind="key" size="sm">
+           {t.key}
+         </Badge>
+-        <Pill badge={badge} owner={t.owner} />
++        <Pill badge={badge} />
+       </Stack>
+       <Stack dir="row" gap={4} align="baseline">
+         <Mark kind={badge.kind} glyph still name={badgeSays(badge)} progress={badge.progress} />
+@@ -218,18 +238,23 @@ function Cell({
+   );
+ }
+ 
+-/** A swimlane's head, one line across the board: the repo, its full name, who works there, how
+- *  many of its tickets are in flight (or that none are), and its list at the line's end. */
++/** A swimlane's head, one line across the board (Linear's group head): the repo's glyph and name,
++ *  then one quiet line of its full name, who works there (first names, read at a glance where a
++ *  row of tiny faces isn't) and how many of its tickets are in flight (or that none are); its list
++ *  at the line's end. */
+ function LaneHead({ repo, people, n }: { repo: string; people: readonly Person[]; n: number }) {
++  const team = people.map((p) => firstName(p.name)).join(", ");
++  const flight = n > 0 ? `${String(n)} in flight` : "Nothing in flight";
+   return (
+-    <Stack dir="row" gap={5} align="center">
++    <Stack dir="row" gap={4} align="center">
++      <Text variant="meta">
++        <Icon name="repo" />
++      </Text>
+       <Text variant="label" weight={600} as="h2" truncate>
+         {repoShort(repo)}
+       </Text>
+-      <Text variant="meta">{repo}</Text>
+-      <Avatar people={people.map((p) => ({ name: p.name, seed: String(p.id) }))} />
+-      <Text variant="meta" tabular>
+-        {n > 0 ? `${String(n)} in flight` : "Nothing in flight"}
++      <Text variant="meta" truncate tabular>
++        {[repo, team, flight].filter(Boolean).join(" · ")}
+       </Text>
+       <Stack grow />
+       <Button
+@@ -277,47 +302,33 @@ export function TeamsView() {
+       ]}
+       search={search}
+     >
+-      <Stack gap={6}>
+-        {board.pending ? <Notice kind="status">Loading</Notice> : null}
+-        {board.error ? (
+-          <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
+-        ) : null}
+-        <Table columns={columnsOf(counts)} head={false} scroll={false}>
+-          <Head counts={counts} />
+-          {repos.map((repo) => {
+-            const work = shown.filter((t) => t.repo === repo.name && inFlight(t));
+-            const owners = rows.flatMap((t) => (t.repo === repo.name && t.owner ? [t.owner] : []));
+-            const people = [...new Map(owners.map((p) => [p.id, p])).values()];
+-            return (
+-              <Row key={repo.name} kind="band">
+-                <LaneHead repo={repo.name} people={people} n={work.length} />
+-                {work.length === 0
+-                  ? null
+-                  : STAGES.map((st) => (
+-                      <Cell
+-                        key={st.phase}
+-                        items={work.filter((t) => t.phase === st.phase)}
+-                        me={me}
+-                        onOpen={open}
+-                      />
+-                    ))}
+-              </Row>
+-            );
+-          })}
+-        </Table>
+-        <Stack dir="row" gap={8} align="center">
+-          <Text variant="meta">Inbox and merged work live in each repo&apos;s list.</Text>
+-          <Stack grow />
+-          {LEGEND.map(([kind, word]) => (
+-            <Stack key={kind} dir="row" gap={3} align="center">
+-              <Mark kind={kind} glyph name={false} />
+-              <Text variant="meta" tone="2">
+-                {word}
+-              </Text>
+-            </Stack>
+-          ))}
+-        </Stack>
+-      </Stack>
++      {board.pending ? <Notice kind="status">Loading</Notice> : null}
++      {board.error ? (
++        <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
++      ) : null}
++      <Table columns={columnsOf(counts)} head={false} edge foot={<Legend />}>
++        <Head counts={counts} />
++        {repos.map((repo) => {
++          const work = shown.filter((t) => t.repo === repo.name && inFlight(t));
++          const owners = rows.flatMap((t) => (t.repo === repo.name && t.owner ? [t.owner] : []));
++          const people = [...new Map(owners.map((p) => [p.id, p])).values()];
++          return (
++            <Row key={repo.name} kind="band">
++              <LaneHead repo={repo.name} people={people} n={work.length} />
++              {work.length === 0
++                ? null
++                : STAGES.map((st) => (
++                    <Cell
++                      key={st.phase}
++                      items={work.filter((t) => t.phase === st.phase)}
++                      me={me}
++                      onOpen={open}
++                    />
++                  ))}
++            </Row>
++          );
++        })}
++      </Table>
+     </Page>
+   );
+ }
+diff --git a/web/src/kit/Avatar.module.css b/web/src/kit/Avatar.module.css
+index e11c65f..6493b22 100644
+--- a/web/src/kit/Avatar.module.css
++++ b/web/src/kit/Avatar.module.css
+@@ -10,7 +10,7 @@
+   color: var(--id-on);
+   background: var(--id);
+ }
+-/* inside a pill a face is one neutral disc (initials say who) */
++/* small, a face is one neutral disc (initials say who) */
+ .sm {
+   color: var(--face-ink);
+   background: var(--face);
+diff --git a/web/src/kit/Avatar.tsx b/web/src/kit/Avatar.tsx
+index 6aa89a0..82a522e 100644
+--- a/web/src/kit/Avatar.tsx
++++ b/web/src/kit/Avatar.tsx
+@@ -7,7 +7,7 @@ type Size = "sm" | "md" | "lg" | "talk" | "tile";
+ 
+ /** One of: a person's face; a row of faces; or an empty slot. */
+ export type AvatarProps = {
+-  /** sm is a neutral disc (in a pill); md (rows, pickers, a team), talk and lg keep the person's
++  /** sm is a neutral disc (a run's starter); md (rows, pickers), talk and lg keep the person's
+    *  hue; tile is a rounded square in it (an agent leading a library row). */
+   size?: Size;
+ } & (
+@@ -63,7 +63,7 @@ function Face({ name, seed, size, beside }: FaceProps) {
+   );
+ }
+ 
+-/** A person's face (a neutral disc in a pill, their own hue in rows, pickers, a team and the
++/** A person's face (a small neutral disc, their own hue in rows, pickers, a team and the
+  *  conversation), a row of faces (named together by the row), or an empty slot. */
+ export function Avatar({ name, seed, size = "md", beside = false, dashed, people }: AvatarProps) {
+   if (people) {
+diff --git a/web/src/kit/Card.module.css b/web/src/kit/Card.module.css
+index 95089f8..5fba395 100644
+--- a/web/src/kit/Card.module.css
++++ b/web/src/kit/Card.module.css
+@@ -117,18 +117,18 @@
+   border-top: var(--line-1) solid var(--teams-card-edge);
+ }
+ 
+-/* ticket: a ticket on a board, its two lines tight under one another, each the card's width */
++/* ticket: a ticket on a board, its two lines under one another, each the card's width */
+ .card[data-look="ticket"] {
+   border-radius: var(--r-3);
+ }
+ .card[data-look="ticket"] .summary {
+-  padding: var(--sp-4) var(--sp-5);
++  padding: var(--sp-5) var(--sp-6) var(--sp-6);
+   border-radius: calc(var(--r-3) - var(--line-1));
+ }
+ .card[data-look="ticket"] .main {
+   display: flex;
+   flex-direction: column;
+-  gap: var(--sp-2);
++  gap: var(--sp-3);
+ }
+ 
+ /* agent: an agent's tile, the surface on a hairline (one treatment, running or queued: the glyph
+diff --git a/web/src/kit/Chip.module.css b/web/src/kit/Chip.module.css
+index d056dd8..a6ff214 100644
+--- a/web/src/kit/Chip.module.css
++++ b/web/src/kit/Chip.module.css
+@@ -68,19 +68,13 @@
+   overflow: hidden;
+   text-overflow: ellipsis;
+ }
+-/* after the words: a quieter count; or who works on it, the agent's glyph on its live disc and
+-   the face of whose ticket it is, tucked to the pill's end */
++/* after the words: a quieter count; or the agent's glyph on its live disc, tucked to the pill's
++   end */
+ .count {
+   flex: none;
+   color: var(--ink-3);
+   font-variant-numeric: tabular-nums;
+ }
+-.who {
+-  display: inline-flex;
+-  flex: none;
+-  align-items: center;
+-  gap: var(--sp-1);
+-}
+ .agent {
+   display: inline-grid;
+   place-items: center;
+diff --git a/web/src/kit/Chip.tsx b/web/src/kit/Chip.tsx
+index 8d66195..263c98d 100644
+--- a/web/src/kit/Chip.tsx
++++ b/web/src/kit/Chip.tsx
+@@ -1,13 +1,12 @@
+ // The kit's one tag: a stage, a repo, a skill on a stage, a property, an agent's state. A flat
+ // tag of faint ink with no outline (borders are for controls), regular muted words cut at their end, led by a small glyph
+ // or a dot in a state's hue (one or the other), with something quieter after the words (a step
+-// count, or an agent's glyph on its live disc and a face), and, where it can be taken off, a
++// count, or an agent's glyph on its live disc), and, where it can be taken off, a
+ // remove at its end. A chip that was just added (or clicked for again) scrolls into view and
+ // flashes once, so a click far from it shows where it landed. What a chip says is the screen's
+ // to decide; the chip only draws it.
+ import { useEffect, useRef } from "react";
+ 
+-import { Avatar } from "./Avatar";
+ import s from "./Chip.module.css";
+ import { Icon, type IconName } from "./Icon";
+ import { Tip } from "./tip";
+@@ -16,19 +15,9 @@ import { tokenPx } from "./vars";
+ /** A state's hue for a chip's dot. */
+ export type ChipDot = "neutral" | "live" | "you" | "blocked" | "done";
+ 
+-/** A person's face: their name and the seed of their hue. */
+-interface Face {
+-  name: string;
+-  seed: string;
+-}
+-
+-/** After the words, one of: a count; or who works on it, an agent's glyph (the words name the
+- *  agent; with whose ticket it is) or a person's face alone. Never a count and a who together,
+- *  never a who with no one. */
+-export type ChipAfter =
+-  | { text: string; agent?: never; face?: never }
+-  | { agent: true; face?: Face; text?: never }
+-  | { face: Face; agent?: never; text?: never };
++/** After the words, one of: a count; or that an agent works on it, its glyph (the words name the
++ *  agent). Never both. */
++export type ChipAfter = { text: string; agent?: never } | { agent: true; text?: never };
+ 
+ export type ChipProps = {
+   /** Its words (tests, AGENTS.md, Implement, northwind/web). */
+@@ -81,17 +70,12 @@ function Remove({ label, onRemove }: { label: string; onRemove: () => void }) {
+   );
+ }
+ 
+-/** After the words: a quieter count, or the agent's glyph on its live disc and a face. */
++/** After the words: a quieter count, or the agent's glyph on its live disc. */
+ function After({ after }: { after: ChipAfter }) {
+   if (after.text !== undefined) return <span className={s.count}>{after.text}</span>;
+   return (
+-    <span className={s.who}>
+-      {after.agent ? (
+-        <span className={s.agent}>
+-          <Icon name="agents" label="agent" />
+-        </span>
+-      ) : null}
+-      {after.face ? <Avatar name={after.face.name} seed={after.face.seed} size="sm" /> : null}
++    <span className={s.agent}>
++      <Icon name="agents" label="agent" />
+     </span>
+   );
+ }
+diff --git a/web/src/kit/Row.module.css b/web/src/kit/Row.module.css
+index e77295b..aa83646 100644
+--- a/web/src/kit/Row.module.css
++++ b/web/src/kit/Row.module.css
+@@ -126,46 +126,57 @@
+   min-height: calc(var(--h-row) + var(--line-2));
+ }
+ 
+-/* band: a board's swimlane (Linear's board grouped by team). Its first cell is its head, one line
+-   across the board; under it each stage's lane is a faint slab with its items stacked on it as
+-   cards (an empty lane is the bare slab), so the stages read as columns down the board. columns:
+-   the board's column head, one short line of stage names over the lanes, on the same grid. */
+-.band,
+-.row.band:is(:hover, :has(:focus-visible)) {
+-  z-index: auto;
+-  background: none;
+-  box-shadow: none;
++/* band: a board's swimlane (Linear's board grouped by team), out to the sheet's edges. Its first
++   cell is its head, a list's group band edge to edge, its glyph over the cards' keys; under it each stage's cell holds its items
++   as cards on the bare sheet, a hairline before every stage but the first, so the stages read as
++   columns down the board and an empty one is blank sheet. columns: the board's column head, the
++   stage names on the same grid and hairlines, held at the board's top on a rule. */
++.band {
+   border-radius: 0;
+ }
+ .band > .inner {
+   align-items: stretch;
+-  column-gap: var(--sp-4);
+-  padding: 0 0 var(--sp-7);
++  column-gap: 0;
++  padding: 0 var(--list-pad);
+   border-radius: 0;
+ }
+ .band .cell {
+   flex-direction: column;
+   align-items: stretch;
+   justify-content: flex-start;
+-  gap: var(--sp-3);
+-  padding: var(--sp-3);
+-  border-radius: var(--r-4);
+-  background: var(--teams-lane);
++  gap: var(--sp-4);
++  padding: var(--sp-6) var(--sp-5) var(--sp-9);
++  box-shadow: inset var(--line-1) 0 0 var(--list-rule);
+ }
+ .band:not(.columns) .cell:first-child {
+   grid-column: 1 / -1;
+   justify-content: center;
+-  min-height: var(--h-list-head);
+-  padding: 0 var(--sp-2);
+-  background: none;
++  min-height: var(--h-group);
++  margin: 0 calc(var(--list-pad) * -1);
++  padding: 0 var(--list-pad) 0 calc(var(--list-pad) + var(--line-1) + var(--sp-6));
++  background: var(--list-band);
++  box-shadow: none;
++}
++.band:not(.columns) .cell:nth-child(2),
++.band.columns .cell:first-child {
++  padding-left: 0;
++  box-shadow: none;
++}
++.band.columns {
++  position: sticky;
++  top: 0;
++  z-index: var(--z-sticky);
++  background: var(--ground);
++  box-shadow: inset 0 calc(var(--line-1) * -1) 0 var(--list-rule);
+ }
+ /* the stage names sit over the cards' own text, inset as the cards' keys are */
+ .band.columns > .inner {
+-  align-items: center;
+   min-height: var(--h-list-head);
+-  padding: 0;
+ }
+ .band.columns .cell {
+-  padding: 0 var(--sp-8);
+-  background: none;
++  justify-content: center;
++  padding: 0 calc(var(--sp-5) + var(--line-1) + var(--sp-6));
++}
++.band.columns .cell:first-child {
++  padding-left: calc(var(--line-1) + var(--sp-6));
+ }
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index af2487b..7ed3b01 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -49,7 +49,7 @@
+       }
+     },
+     "Avatar": {
+-      "why": "A person's face: a disc with initials, neutral in a pill (so a chip's own colour leads), in the person's own hue in rows, pickers, a team and the conversation; an empty slot; or a row of faces.",
++      "why": "A person's face: a disc with initials, neutral when small (a run's starter), in the person's own hue in rows, pickers and the conversation; an empty slot; or a row of faces.",
+       "props": {
+         "name": {
+           "why": "Initials on the face and its accessible name (one person's face)."
+@@ -60,8 +60,8 @@
+         "size": {
+           "why": "Five places draw faces at five sizes and shapes.",
+           "values": {
+-            "sm": "16px: a face in a pill (a running board card's state chip), a run's starter.",
+-            "md": "Rows, heads, a swimlane's team and pickers (18px): Linear's small face, a disc in the person's own hue.",
++            "sm": "16px, one neutral disc: a run's starter.",
++            "md": "Rows, heads and pickers (18px): Linear's small face, a disc in the person's own hue.",
+             "lg": "The signed-in face in the sidebar's account popover (30px).",
+             "talk": "The conversation, the sidebar head's signed-in face and who last changed a library item (24px), on the person's hue.",
+             "tile": "An agent leading its library row (32px): a rounded square in its hue, the shape and size of the glyph tiles that lead the other library lists, so the four read as one family."
+@@ -229,7 +229,7 @@
+           "why": "The full text on hover, when it says more than the words."
+         },
+         "after": {
+-          "why": "Quieter, after the words, one of: a step count; an agent's glyph on its live disc, with the face of whose ticket it is; or a person's face alone."
++          "why": "Quieter, after the words, one of: a step count (a running board card's agent); or an agent's glyph on its live disc (My queue's running rows)."
+         }
+       }
+     },
+@@ -693,8 +693,8 @@
+             "line": "A list's row (Compact, My queue, the library): one line on a hairline edge to edge (Linear's list), its first cell under the group head's glyph; hover and open wash its full width.",
+             "item": "A two-line row (Intake, the library's lists): roomy, on a hairline, washed on hover.",
+             "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
+-            "band": "A board's swimlane (All teams): its head, one line across the board (the repo, its team, what is in flight), then its stage lanes, each a faint slab holding ticket Cards.",
+-            "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid."
++            "band": "A board's swimlane (All teams), out to the sheet's edges: its head, a group band across the board (the repo, its team, what is in flight), then a cell per stage holding ticket Cards on the bare sheet, a hairline between stages, so an empty stage is blank.",
++            "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid and hairlines, held at the board's top."
+           }
+         },
+         "action": {
+@@ -979,7 +979,7 @@
+           "why": "Run through the padding of the surface it sits in, edge to edge, flush at its top and foot (My queue's lists, whose surface pads the agents' cards)."
+         },
+         "edge": {
+-          "why": "Out to the main sheet's edges with no surface of its own, as Linear's index runs: bare column labels between two rules, spaced for its two-line item rows, each row's first cell under the bar's title (the library's four lists, and Intake's queries without a head)."
++          "why": "Out to the main sheet's edges with no surface of its own, as Linear's index runs: bare column labels between two rules, spaced for its two-line item rows, each row's first cell under the bar's title (the library's four lists, Intake's queries without a head, and All teams' board, its legend in the foot)."
+         }
+       }
+     },
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 1d5ae5d..5617ef9 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -394,9 +394,6 @@
+      live tint) */
+   --tile-meter-now: color-mix(in srgb, var(--live) 38%, transparent);
+   --tile-agent: color-mix(in srgb, var(--live) 16%, var(--surface));
+-  /* teams: All teams' item cards (their fill, edge and drop are per theme, above) stand on a
+-     stage's lane, a faint slab of ink under them (Linear's board column) */
+-  --teams-lane: color-mix(in srgb, var(--ink-1) 3%, transparent);
+   /* controls: chips (filter chips, a picker's trigger, a tag): a light fill on hover, a firmer
+      one when on, and a pill's lit hairline */
+   --chip-hover: color-mix(in srgb, var(--ink-1) 5%, transparent);

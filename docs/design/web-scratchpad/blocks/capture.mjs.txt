@@ -1,0 +1,151 @@
+// One-off: render each screen in Chrome, screenshot it, and record every kit component instance
+// (found by walking React's fibers and matching each fiber's type against the kit's exports) with
+// its box on the screen. Starts Vite on 5191 and stops it.
+import { spawn } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+mkdirSync(join(out, "shots"), { recursive: true });
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+
+const STATES = [
+  { id: "my-queue", title: "My queue", path: "/" },
+  { id: "my-queue-peek", title: "My queue, peek open", path: "/?peek=NW-17" },
+  { id: "compact", title: "Compact", path: "/compact" },
+  { id: "compact-expanded", title: "Compact, a row expanded", path: "/compact?open=NW-17" },
+  { id: "intake", title: "Intake", path: "/intake" },
+  { id: "all-teams", title: "All teams", path: "/teams" },
+  { id: "ticket", title: "Ticket: Overview", path: "/t/NW-17" },
+  { id: "ticket-runs", title: "Ticket: Runs", path: "/t/NW-17?tab=runs" },
+  { id: "ticket-context", title: "Ticket: Context", path: "/t/NW-17?tab=context" },
+  { id: "ticket-workflow", title: "Ticket: Workflow", path: "/t/NW-17?tab=workflow" },
+  { id: "ticket-workflow-edit", title: "Ticket: workflow editor overlay", path: "/t/NW-17?tab=workflow&edit=workflow" },
+  { id: "ticket-item-edit", title: "Ticket: context item overlay", path: "/t/NW-17?tab=context", click: /^Edit /, scope: "main" },
+  { id: "ticket-missing", title: "Ticket not found", path: "/t/NW-404" },
+  { id: "workflows", title: "Library: Workflows", path: "/library/workflows" },
+  { id: "workflow-editor", title: "Library: workflow editor", path: "/library/workflows/standard" },
+  { id: "agents", title: "Library: Agents", path: "/library/agents" },
+  { id: "agent-editor", title: "Library: agent editor", path: "/library/agents/builder" },
+  { id: "skills", title: "Library: Skills", path: "/library/skills" },
+  { id: "skill-editor", title: "Library: skill editor", path: "/library/skills/ticket" },
+  { id: "files", title: "Library: Files", path: "/library/files" },
+  { id: "file-editor", title: "Library: file editor", path: "/library/files/agents-md" },
+];
+
+// Runs in the page: every kit instance, its nesting, a few of its props, and its box.
+async function collect() {
+  const kit = await import("/src/kit/index.ts");
+  const byType = new Map();
+  for (const [n, v] of Object.entries(kit)) if (/^[A-Z]/.test(n) && v) byType.set(v, n);
+  const container = document.getElementById("root");
+  const key = Object.keys(container).find((k) => k.startsWith("__reactContainer$"));
+  const top = container[key].stateNode.current;
+  const W = innerWidth, H = innerHeight;
+  const hosts = (f, acc) => {
+    for (let c = f.child; c; c = c.sibling) {
+      if (c.tag === 5 || c.tag === 6) acc.push(c.stateNode);
+      else if (c.tag !== 4) hosts(c, acc);
+    }
+    return acc;
+  };
+  const rectsOf = (node, acc) => {
+    if (node.nodeType === 3) {
+      const r = document.createRange();
+      r.selectNodeContents(node);
+      acc.push(r.getBoundingClientRect());
+      return acc;
+    }
+    if (node.checkVisibility && !node.checkVisibility({ visibilityProperty: true })) return acc;
+    const r = node.getBoundingClientRect();
+    if (r.width * r.height === 0) for (const k of node.childNodes) rectsOf(k, acc);
+    else acc.push(r);
+    return acc;
+  };
+  const union = (rs) => {
+    const ok = rs.filter((r) => r.width >= 3 && r.height >= 3);
+    if (!ok.length) return null;
+    let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+    for (const r of ok) { x1 = Math.min(x1, r.left); y1 = Math.min(y1, r.top); x2 = Math.max(x2, r.right); y2 = Math.max(y2, r.bottom); }
+    x1 = Math.max(0, x1); y1 = Math.max(0, y1); x2 = Math.min(W, x2); y2 = Math.min(H, y2);
+    if (x2 - x1 < 3 || y2 - y1 < 3) return null;
+    return [Math.round(x1), Math.round(y1), Math.round(x2 - x1), Math.round(y2 - y1)];
+  };
+  const props = (p) => {
+    const o = {};
+    for (const [k, v] of Object.entries(p ?? {})) {
+      if (k === "children" || k === "key") continue;
+      if (typeof v === "string") o[k] = v.length > 40 ? v.slice(0, 39) + "…" : v;
+      else if (typeof v === "number" || typeof v === "boolean") o[k] = v;
+      else if (Array.isArray(v)) o[k] = `[${v.length}]`;
+      else if (typeof v === "function") o[k] = "ƒ";
+      else if (v && typeof v === "object") o[k] = v.$$typeof ? "<…>" : "{…}";
+    }
+    return o;
+  };
+  const list = [];
+  const walk = (f, chain) => {
+    for (let c = f.child; c; c = c.sibling) {
+      const name = byType.get(c.type) ?? byType.get(c.elementType);
+      let next = chain;
+      const parent = chain[chain.length - 1];
+      if (name && !(parent && parent.fiber === c.return && parent.name === name)) {
+        const box = union(hosts(c, []).flatMap((n) => rectsOf(n, [])));
+        const item = { id: list.length, name, depth: chain.length, parent: parent ? parent.id : null, box, props: props(c.memoizedProps) };
+        list.push(item);
+        next = [...chain, { fiber: c, name, id: item.id }];
+      }
+      walk(c, next);
+    }
+  };
+  walk(top, []);
+  const chain = (i) => (i.parent === null ? [] : [...chain(list[i.parent]), list[i.parent].name]);
+  return list.filter((i) => i.box).map((i) => ({ name: i.name, depth: i.depth, box: i.box, props: i.props, in: chain(i).filter((n) => n !== "Stack" && n !== "Text").slice(-3).join(" › ") }));
+}
+
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 1200 }, deviceScaleFactor: 1 });
+  await ctx.addInitScript(() => localStorage.setItem("agentos-theme", "light"));
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const screens = [];
+  for (const s of STATES) {
+    await page.goto(base + s.path);
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(400);
+    if (s.follow) {
+      const href = await page.evaluate((pre) => [...document.querySelectorAll("a[href]")].map((a) => a.getAttribute("href")).find((h) => h.startsWith(pre) && h.length > pre.length), s.follow);
+      if (!href) { console.log(`${s.id}: no link under ${s.follow}`); continue; }
+      await page.goto(base + href);
+      await page.evaluate(() => document.fonts.ready);
+      await page.waitForTimeout(400);
+      s.path = href;
+    }
+    if (s.click) {
+      await page.locator(s.scope).getByRole("button", { name: s.click }).first().focus();
+      await page.keyboard.press("Enter");
+      await page.waitForTimeout(500);
+      s.path = new URL(page.url()).pathname + new URL(page.url()).search;
+    }
+    await page.mouse.move(0, 1199);
+    const items = await page.evaluate(collect);
+    await page.screenshot({ path: join(out, "shots", `${s.id}.png`) });
+    screens.push({ id: s.id, title: s.title, path: s.path, items });
+    console.log(`${s.id}: ${items.length} instances, ${items.filter((i) => i.box).length} on screen`);
+  }
+  writeFileSync(join(out, "blocks.json"), JSON.stringify({ viewport: [1440, 1200], screens }));
+  console.log("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

@@ -1,0 +1,20 @@
+gauntlet: bands to the sheet's edges, a firmer rim and card edge
+
+The owner's notes after the style pass, measured against Linear.
+
+- Head: a group's band is square and runs to the sheet's edges, as
+  Linear's do; the page body and a surface's list keep the gutter's room
+  at their sides for it. Paper's band at Linear's strength (about 8
+  levels under the sheet).
+- Frame: Paper's rim is 2px.
+- Carbon cards: Linear's comment card sits about 7 levels over its sheet
+  inside an edge about 26 over; ours were 3 and 19. Card tones about
+  doubled, and a card edge of its own (13% of the hair). Paper's card
+  edge a step firmer.
+- Thread: in a card, a hairline parts one person's message from the
+  next, from the words' edge to the card's.
+- Surface: a sheet inside a sheet lies flat, a step lighter, no line
+  (Linear's chat bubble and change card in its agent panel).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

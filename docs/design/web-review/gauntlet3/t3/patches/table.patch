@@ -1,0 +1,973 @@
+diff --git a/web/src/features/teams/TeamsView.tsx b/web/src/features/teams/TeamsView.tsx
+index bc2624a..6805691 100644
+--- a/web/src/features/teams/TeamsView.tsx
++++ b/web/src/features/teams/TeamsView.tsx
+@@ -1,79 +1,53 @@
+-// All teams (new in V2): every repo by stage, as Linear's board grouped by team. The stages are the
+-// board's columns, Plan · Build · Verify · Review; each repo is a swimlane across them, its head one
+-// line (the repo, who works there, how much is in flight, a way to its list) over a column per stage
+-// holding its tickets' cards (an empty stage across the board folds narrow; a repo with nothing in
+-// flight is its head alone). Inbox and done work live in each repo's list. Click an item to peek.
+-import { useState } from "react";
++// All teams (new in V2): every ticket in flight across the org's repos, as one table (Linear's list
++// grouped by team). Each ticket is a line on the page's column grid, its facts reading down the
++// list as a ledger: the key; its state's glyph and the title; the stage it is at; its state in
++// words (a running agent's steps on a still meter); its owner; how long it has been so. The repos
++// are its groups, in the Space's order, each under a head that carries the repo, its path, who
++// works there, how many of its tickets are in flight and a tally of their states (what needs you
++// in the accent), with its list at the head's end; inside a group the rows run down the stages.
++// A repo with nothing in flight is one quiet line at the foot. Click a row to peek.
+ import { useSearchParams } from "react-router";
+ 
+ import { useSettings } from "../../api/queries";
+-import type { Person, Phase, TicketRow } from "../../api/types";
+-import { groupOf, isMyMove, markOf, STATE_WORD, stepText } from "../../domain/board";
+-import { firstName, plural, repoShort } from "../../domain/format";
++import type { Person, TicketRow } from "../../api/types";
++import { groupOf, markOf, stageModel, STATE_WORD } from "../../domain/board";
++import { age, firstName, plural, repoShort } from "../../domain/format";
+ import {
++  Age,
++  Avatar,
+   Badge,
+-  Card,
+   Button,
+-  Chip,
+-  type ChipDot,
+   type Column,
++  Head,
+   Icon,
+   Mark,
+-  type MarkKind,
++  Meter,
+   Notice,
+   Page,
+   Row,
+   Stack,
++  Surface,
+   Table,
+   Text,
+ } from "../../kit";
++import { stageWord } from "../compact/model";
+ import { contextOf, useBoard, useSpace } from "../shared/board";
+ import { NewTicket } from "../shared/NewTicket";
+ import { useSearch } from "../shared/useSearch";
++import { groupsOf, type RepoGroup, STAGE, stageCounts, stateOf, type Tally } from "./model";
+ 
+-const STAGES: readonly { phase: Phase; name: string }[] = [
+-  { phase: "plan", name: "Plan" },
+-  { phase: "build", name: "Build" },
+-  { phase: "verify", name: "Verify" },
+-  { phase: "review", name: "Review" },
++// The page's one grid, labelled once over the groups: the key, the title taking what the plain
++// columns leave, then the stage, the state (wide enough for a run's agent, steps and meter), the
++// owner's face and name, the age.
++const COLUMNS: readonly Column[] = [
++  { label: "Key", width: "sm" },
++  { label: "Ticket", width: "fill", min: "2xl" },
++  { label: "Stage", width: "sm" },
++  { label: "State", width: "2xl" },
++  { label: "Owner", width: "md" },
++  { label: "Age", width: "xs", end: true },
+ ];
+ 
+-/** How many in-flight cards each stage holds, across the board. */
+-function countsOf(work: readonly TicketRow[]): Record<Phase, number> {
+-  const n: Record<Phase, number> = { inbox: 0, plan: 0, build: 0, verify: 0, review: 0, done: 0 };
+-  for (const t of work) n[t.phase] += 1;
+-  return n;
+-}
+-
+-/** A column per stage in order: a stage holding cards takes an equal share of the board's width
+- *  (Linear's board columns); an empty one folds to a narrow lane, as Linear folds an empty column,
+- *  so its neighbours' cards get the room. */
+-function columnsOf(counts: Record<Phase, number>): readonly Column[] {
+-  return STAGES.map((st): Column => ({
+-    label: st.name,
+-    width: counts[st.phase] > 0 ? "fill" : "md",
+-  }));
+-}
+-
+-/** The board's column head, on the lanes' own grid: each stage's name and how many cards it holds
+- *  (Linear's board heads); an empty stage's name muted over its folded lane. */
+-function Head({ counts }: { counts: Record<Phase, number> }) {
+-  return (
+-    <Row kind="columns">
+-      {STAGES.map((st) => (
+-        <Stack key={st.phase} dir="row" gap={3} align="center">
+-          <Text weight={500} tone={counts[st.phase] > 0 ? "1" : "3"}>
+-            {st.name}
+-          </Text>
+-          <Text tone="3" tabular>
+-            {String(counts[st.phase])}
+-          </Text>
+-        </Stack>
+-      ))}
+-    </Row>
+-  );
+-}
+-
+ const LEGEND = [
+   ["run", "Running"],
+   ["wait", "Waiting on someone"],
+@@ -82,10 +56,25 @@ const LEGEND = [
+   ["queued", "Queued"],
+ ] as const;
+ 
+-/** The board's foot: where the rest of the work lives, and what each glyph says. */
+-function Legend() {
++/** The table's foot: how much is at each stage across the repos (where work piles up), where the
++ *  rest of the work lives, and what each glyph says. */
++function Legend({ stages }: { stages: readonly { name: string; n: number }[] }) {
+   return (
+     <>
++      <Text variant="meta" tone="2" tabular>
++        <Text weight={600} tone="1">
++          {String(stages.reduce((n, st) => n + st.n, 0))}
++        </Text>
++        {" in flight"}
++        {stages.map((st) => (
++          <Text key={st.name} tone={st.n > 0 ? "2" : "3"}>
++            {` · ${st.name} `}
++            <Text weight={600} tone={st.n > 0 ? "1" : "3"}>
++              {String(st.n)}
++            </Text>
++          </Text>
++        ))}
++      </Text>
+       <Text variant="meta">Inbox and merged work live in each repo&apos;s list.</Text>
+       <Stack grow />
+       {LEGEND.map(([kind, word]) => (
+@@ -100,178 +89,199 @@ function Legend() {
+   );
+ }
+ 
+-/** Work in flight: inbox and merged work live in each repo's list. */
+-function inFlight(t: TicketRow): boolean {
+-  return t.attention.kind !== "inbox" && t.attention.kind !== "done";
+-}
+-
+-const CAP = 3;
+-
+-/** What a waiting ticket is parked at: its gate's short name, else the ask. */
+-function parkedAt(t: TicketRow, ask: string): string {
+-  return t.rail.find((s) => s.gate?.state === "waiting")?.gate?.short ?? ask;
+-}
+-
+-/** An item's pill: the live agent and its progress, or what it waits on. */
+-interface ItemBadge {
+-  kind: MarkKind;
+-  text: string;
+-  /** A running agent's steps, for its glyph's pie and the pill's quieter count. */
+-  progress?: { done: number; total: number } | null;
+-}
+-
+-type Waiting = Extract<TicketRow["attention"], { kind: "waiting" }>;
+-
+-/** A waiting item's pill: on you, its gate and You (else the ask); on someone else, where it is
+- *  parked and who. */
+-function waitingBadge(t: TicketRow, a: Waiting, me: Person | null): ItemBadge {
+-  if (isMyMove(a.on, me)) {
+-    const gate = t.rail.find((s) => s.gate?.state === "waiting")?.gate?.short;
+-    return { kind: "you", text: gate ? `${gate} · You` : a.ask };
+-  }
+-  const who = firstName(a.on?.name ?? "someone");
+-  return { kind: "wait", text: `${parkedAt(t, a.ask)} · ${who}` };
++/** The state's glyph and the title, firm; a queued run's title recedes a step, as My queue's: nothing
++ *  is at work on it yet. */
++function TitleCell({ t, me }: { t: TicketRow; me: Person | null }) {
++  const a = t.attention;
++  const kind = markOf(a, me).kind;
++  return (
++    <Stack dir="row" gap={4} align="center">
++      <Mark
++        kind={kind}
++        glyph
++        name={STATE_WORD[kind]}
++        progress={a.kind === "running" ? a.progress : null}
++      />
++      <Text weight={500} tone={a.kind === "queued" ? "2" : "1"} truncate title={t.title}>
++        {t.title}
++      </Text>
++    </Stack>
++  );
+ }
+ 
+-/** The glyph's name: a running or waiting item's pill names who, so its glyph says the state;
+- *  any other pill says the state itself, and its glyph is drawing alone. */
+-function badgeSays(badge: ItemBadge): string | false {
+-  return badge.kind === "run" || badge.kind === "wait" ? STATE_WORD[badge.kind] : false;
+-}
++const INK = { you: "you", firm: "1", live: "2", plain: "2", quiet: "3" } as const;
+ 
+-function itemBadge(t: TicketRow, me: Person | null): ItemBadge {
+-  const a = t.attention;
+-  if (a.kind === "running") {
+-    const p = a.progress;
+-    return { kind: "run", text: a.agent, progress: p };
+-  }
+-  if (a.kind === "waiting") return waitingBadge(t, a, me);
+-  const m = markOf(a, me);
+-  return { kind: m.kind, text: m.kind === "you" ? "" : m.name };
++/** The state in words: your move in the accent; a running agent firm, its step count quieter and
++ *  its still meter at the column's end (a queued run's dashed), so the meters line up. */
++function StateCell({ t, me }: { t: TicketRow; me: Person | null }) {
++  const st = stateOf(t, me);
++  const run = st.run;
++  return (
++    <Stack dir="row" gap={5} align="center" justify="between" grow>
++      <Text
++        tone={INK[st.tone]}
++        {...(st.tone === "plain" || st.tone === "quiet" ? {} : { weight: 500 as const })}
++        truncate
++        title={st.say}
++      >
++        {st.text}
++        {run !== null && run !== "queued" && run.step ? (
++          <Text tone="3" weight={400} tabular>{`\u2002${run.step}`}</Text>
++        ) : null}
++      </Text>
++      {run === "queued" ? <Meter size="list" queued /> : null}
++      {run !== null && run !== "queued" && run.progress ? (
++        <Meter size="list" done={run.progress.done} total={run.progress.total} />
++      ) : null}
++    </Stack>
++  );
+ }
+ 
+-/** A pill's dot: the state's hue, so the pill says it as the glyph does. */
+-const DOT: Partial<Record<MarkKind, ChipDot>> = {
+-  run: "live",
+-  you: "you",
+-  blk: "blocked",
+-  done: "done",
+-};
+-
+-/** The pill on the key's line, its state's words after its dot (Linear's "Working…" pill): a
+- *  running agent's name, its step a quieter count after it. */
+-function Pill({ badge }: { badge: ItemBadge }) {
+-  if (badge.text === "") return null;
+-  const dot = DOT[badge.kind] ?? "neutral";
+-  const p = badge.progress;
+-  if (p) return <Chip tone="edge" dot={dot} label={badge.text} after={{ text: stepText(p) }} />;
+-  return <Chip tone="edge" dot={dot} label={badge.text} />;
++/** Who owns it: their face and first name; nobody, a dashed ring. */
++function OwnerCell({ owner }: { owner: Person | null }) {
++  return (
++    <Stack dir="row" gap={4} align="center">
++      {owner ? <Avatar name={owner.name} seed={String(owner.id)} beside /> : <Avatar dashed />}
++      <Text tone={owner ? "2" : "3"} truncate>
++        {owner ? firstName(owner.name) : "Nobody"}
++      </Text>
++    </Stack>
++  );
+ }
+ 
+-/** One item, two lines (Linear's board card): its key (12px, muted) with its state's pill at the
+- *  line's end; then the state's glyph (Linear's status circle, a running agent's pie showing its
+- *  progress) and the title (14px, regular, up to two lines). */
+-function Item({
++function TicketLine({
+   t,
+   me,
++  now,
+   onOpen,
+ }: {
+   t: TicketRow;
+   me: Person | null;
++  now: number;
+   onOpen: (key: string) => void;
+ }) {
+-  const badge = itemBadge(t, me);
++  const stage = stageWord(stageModel(t, me));
+   return (
+-    <Card
+-      look="ticket"
+-      label={`Peek at ${t.key}: ${t.title}`}
+-      onOpen={() => {
+-        onOpen(t.key);
++    <Row
++      action={{
++        label: `Peek at ${t.key}: ${t.title}`,
++        run: () => {
++          onOpen(t.key);
++        },
+       }}
+     >
+-      <Stack dir="row" gap={4} align="center" justify="between">
+-        <Badge kind="key" size="sm">
+-          {t.key}
+-        </Badge>
+-        <Pill badge={badge} />
+-      </Stack>
+-      <Stack dir="row" gap={4} align="baseline">
+-        <Mark kind={badge.kind} glyph still name={badgeSays(badge)} progress={badge.progress} />
+-        <Text variant="label" weight={400} tone="1" truncate={2} title={t.title}>
+-          {t.title}
+-        </Text>
+-      </Stack>
+-    </Card>
++      <Badge kind="key">{t.key}</Badge>
++      <TitleCell t={t} me={me} />
++      <Text tone="2" truncate title={stage.path}>
++        {STAGE[t.phase] ?? stage.word}
++      </Text>
++      <StateCell t={t} me={me} />
++      <OwnerCell owner={t.owner} />
++      <Text variant="meta" tone="3">
++        <Age text={age(t.since, now)} />
++      </Text>
++    </Row>
++  );
++}
++
++/** A repo's tally: each state its tickets are in, its glyph and how many; your move's in the
++ *  accent. */
++function TallyLine({ tally }: { tally: readonly Tally[] }) {
++  return (
++    <Stack dir="row" gap={7} align="center">
++      {tally.map((s) => (
++        <Stack key={s.mark} dir="row" gap={3} align="center">
++          <Mark kind={s.mark} glyph small name={false} />
++          <Text variant="meta" tone={s.mark === "you" ? "you" : "2"} tabular>
++            <Text weight={600} tone={s.mark === "you" ? "you" : "1"}>
++              {String(s.n)}
++            </Text>
++            {` ${s.word}`}
++          </Text>
++        </Stack>
++      ))}
++    </Stack>
++  );
++}
++
++function OpenList({ repo }: { repo: string }) {
++  return (
++    <Button
++      variant="link"
++      icon="compact"
++      href={`/compact?repo=${encodeURIComponent(repo)}`}
++      title={`Every ticket in ${repoShort(repo)}`}
++    >
++      Open list
++    </Button>
+   );
+ }
+ 
+-function Cell({
+-  items,
++/** Who works there, by first name (read at a glance where a row of tiny faces isn't). */
++const teamOf = (people: readonly Person[]) => people.map((p) => firstName(p.name)).join(", ");
++
++/** A repo's group: its head (the repo, how many in flight, its path and people, its tally and its
++ *  list), then a line per ticket. */
++function RepoSection({
++  g,
+   me,
++  now,
+   onOpen,
+ }: {
+-  items: readonly TicketRow[];
++  g: RepoGroup;
+   me: Person | null;
++  now: number;
+   onOpen: (key: string) => void;
+ }) {
+-  const [all, setAll] = useState(false);
+-  const shown = all ? items : items.slice(0, CAP);
+   return (
+-    <>
+-      {shown.map((t) => (
+-        <Item key={t.key} t={t} me={me} onOpen={onOpen} />
++    <Surface level="list" label={repoShort(g.repo)}>
++      <Head
++        icon={<Icon name="repo" />}
++        name={repoShort(g.repo)}
++        count={g.rows.length}
++        note={[g.repo, teamOf(g.people)].filter(Boolean).join(" · ")}
++        summary={
++          <Stack dir="row" gap={9} align="center">
++            <TallyLine tally={g.tally} />
++            <OpenList repo={g.repo} />
++          </Stack>
++        }
++      />
++      {g.rows.map((t) => (
++        <TicketLine key={t.key} t={t} me={me} now={now} onOpen={onOpen} />
+       ))}
+-      {items.length > CAP ? (
+-        <Stack dir="row">
+-          <Button
+-            variant="quiet"
+-            size="xs"
+-            onClick={() => {
+-              setAll((v) => !v);
+-            }}
+-          >
+-            {all ? "Show less" : `+${String(items.length - CAP)}`}
+-          </Button>
+-        </Stack>
+-      ) : null}
+-    </>
++    </Surface>
+   );
+ }
+ 
+-/** A swimlane's head, one line across the board (Linear's group head): the repo's glyph and name,
+- *  then one quiet line of its full name, who works there (first names, read at a glance where a
+- *  row of tiny faces isn't) and how many of its tickets are in flight (or that none are); its list
+- *  at the line's end. */
+-function LaneHead({ repo, people, n }: { repo: string; people: readonly Person[]; n: number }) {
+-  const team = people.map((p) => firstName(p.name)).join(", ");
+-  const flight = n > 0 ? `${String(n)} in flight` : "Nothing in flight";
++/** The repos with nothing in flight, one quiet line each: the repo, its path and people, its list. */
++function QuietSection({ quiet }: { quiet: readonly RepoGroup[] }) {
+   return (
+-    <Stack dir="row" gap={4} align="center">
+-      <Text variant="meta">
+-        <Icon name="repo" />
+-      </Text>
+-      <Text variant="label" weight={600} as="h2" truncate>
+-        {repoShort(repo)}
+-      </Text>
+-      <Text variant="meta" truncate tabular>
+-        {[repo, team, flight].filter(Boolean).join(" · ")}
+-      </Text>
+-      <Stack grow />
+-      <Button
+-        variant="quiet"
+-        size="xs"
+-        icon="compact"
+-        href={`/compact?repo=${encodeURIComponent(repo)}`}
+-      >
+-        Open list
+-      </Button>
+-    </Stack>
++    <Surface level="list" label="Quiet repos">
++      <Head name="Quiet repos" count={quiet.length} note="Nothing in flight" />
++      {quiet.map((g) => (
++        <Row key={g.repo}>
++          <Stack dir="row" gap={4} align="center">
++            <Text variant="meta">
++              <Icon name="repo" />
++            </Text>
++            <Text weight={500} tone="2" truncate>
++              {repoShort(g.repo)}
++            </Text>
++          </Stack>
++          <Text tone="3" truncate>
++            {[g.repo, teamOf(g.people)].filter(Boolean).join(" · ")}
++          </Text>
++          <OpenList repo={g.repo} />
++        </Row>
++      ))}
++    </Surface>
+   );
+ }
+ 
+ export function TeamsView() {
+   const board = useBoard();
+-  const { rows, me } = board;
++  const { rows, me, now } = board;
+   const repos = useSettings().data?.repos.value ?? [];
+   const space = useSpace();
+   const { query, search } = useSearch("Jump to a repo or ticket");
+@@ -286,10 +296,12 @@ export function TeamsView() {
+   const live = rows.filter((t) => t.attention.kind === "running").length;
+   const queued = rows.filter((t) => t.attention.kind === "queued").length;
+   const needYou = rows.filter((t) => groupOf(t, me) === "needs_you").length;
+-  const shown = rows.filter((t) =>
+-    query.every((q) => `${t.key} ${t.title}`.toLowerCase().includes(q)),
++  const { active, quiet } = groupsOf(
++    rows,
++    repos.map((r) => r.name),
++    me,
++    query,
+   );
+-  const counts = countsOf(shown.filter(inFlight));
+   return (
+     <Page
+       title="All teams"
+@@ -302,32 +314,15 @@ export function TeamsView() {
+       ]}
+       search={search}
+     >
+-      {board.pending ? <Notice kind="status">Loading</Notice> : null}
+-      {board.error ? (
+-        <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
+-      ) : null}
+-      <Table columns={columnsOf(counts)} head={false} edge foot={<Legend />}>
+-        <Head counts={counts} />
+-        {repos.map((repo) => {
+-          const work = shown.filter((t) => t.repo === repo.name && inFlight(t));
+-          const owners = rows.flatMap((t) => (t.repo === repo.name && t.owner ? [t.owner] : []));
+-          const people = [...new Map(owners.map((p) => [p.id, p])).values()];
+-          return (
+-            <Row key={repo.name} kind="band">
+-              <LaneHead repo={repo.name} people={people} n={work.length} />
+-              {work.length === 0
+-                ? null
+-                : STAGES.map((st) => (
+-                    <Cell
+-                      key={st.phase}
+-                      items={work.filter((t) => t.phase === st.phase)}
+-                      me={me}
+-                      onOpen={open}
+-                    />
+-                  ))}
+-            </Row>
+-          );
+-        })}
++      <Table columns={COLUMNS} edge foot={<Legend stages={stageCounts(active)} />}>
++        {board.pending ? <Notice kind="status">Loading</Notice> : null}
++        {board.error ? (
++          <Notice kind="status" error>{`Can't reach the server · ${board.error.message}`}</Notice>
++        ) : null}
++        {active.map((g) => (
++          <RepoSection key={g.repo} g={g} me={me} now={now} onOpen={open} />
++        ))}
++        {quiet.length > 0 ? <QuietSection quiet={quiet} /> : null}
+       </Table>
+     </Page>
+   );
+diff --git a/web/src/features/teams/model.test.ts b/web/src/features/teams/model.test.ts
+new file mode 100644
+index 0000000..26490a2
+--- /dev/null
++++ b/web/src/features/teams/model.test.ts
+@@ -0,0 +1,84 @@
++import { describe, expect, it } from "vitest";
++
++import type { Attention, Person, Phase, TicketRow } from "../../api/types";
++import { groupsOf, stateOf } from "./model";
++
++const person = (id: number, name: string): Person => ({
++  id,
++  name,
++  avatar: null,
++  role: "writer",
++  disabled: false,
++});
++const ADA = person(1, "Ada Park");
++const BEA = person(2, "Bea Quinn");
++
++const ticket = (
++  key: string,
++  repo: string,
++  phase: Phase,
++  attention: Attention,
++  owner: Person | null = ADA,
++): TicketRow => ({
++  key,
++  title: key,
++  type: "task",
++  priority: "normal",
++  state: "open",
++  owner,
++  repo,
++  source: null,
++  phase,
++  rail: [],
++  attention,
++  since: "2026-10-23T09:00:00Z",
++  now: "",
++  plan: null,
++  messages: 0,
++  actions: [],
++  updated_at: "2026-10-23T09:00:00Z",
++});
++
++const RUN: Attention = { kind: "running", run_id: 1, agent: "Builder", step: "", progress: null };
++const BLOCKED: Attention = { kind: "blocked", reason: "Tests failed" };
++const MINE: Attention = { kind: "waiting", on: ADA, ask: "Plan sign-off" };
++
++describe("All teams' groups", () => {
++  it("runs a repo's tickets in flight down the stages, what needs you first in a stage", () => {
++    const rows = [
++      ticket("NW-3", "web", "review", RUN),
++      ticket("NW-2", "web", "build", RUN),
++      ticket("NW-1", "web", "build", BLOCKED),
++      ticket("NW-4", "web", "build", MINE),
++      ticket("NW-5", "web", "inbox", { kind: "inbox" }, BEA),
++    ];
++    const [web] = groupsOf(rows, ["web"], ADA, []).active;
++    expect(web?.rows.map((t) => t.key)).toEqual(["NW-4", "NW-1", "NW-2", "NW-3"]);
++    expect(web?.tally.map((s) => [s.word, s.n])).toEqual([
++      ["need you", 1],
++      ["blocked", 1],
++      ["running", 2],
++    ]);
++    expect(web?.people.map((p) => p.name)).toEqual(["Ada Park", "Bea Quinn"]);
++  });
++
++  it("calls a repo with nothing in flight quiet, whatever the search leaves", () => {
++    const rows = [
++      ticket("NW-1", "web", "build", RUN),
++      ticket("NW-2", "docs", "inbox", { kind: "inbox" }),
++    ];
++    const { active, quiet } = groupsOf(rows, ["web", "docs"], ADA, ["nomatch"]);
++    expect(active.map((g) => [g.repo, g.rows.length])).toEqual([["web", 0]]);
++    expect(quiet.map((g) => g.repo)).toEqual(["docs"]);
++  });
++});
++
++describe("a ticket's state in words", () => {
++  it("says your move in the accent and someone else's by name", () => {
++    expect(stateOf(ticket("NW-1", "web", "plan", MINE), ADA)).toMatchObject({ tone: "you" });
++    expect(stateOf(ticket("NW-1", "web", "plan", MINE), BEA)).toMatchObject({
++      text: "Plan sign-off · Ada",
++      tone: "plain",
++    });
++  });
++});
+diff --git a/web/src/features/teams/model.ts b/web/src/features/teams/model.ts
+new file mode 100644
+index 0000000..5e70e42
+--- /dev/null
++++ b/web/src/features/teams/model.ts
+@@ -0,0 +1,167 @@
++// Pure selection for All teams: every ticket in flight (inbox and merged work live in each repo's
++// list), one group per repo in the Space's order. A group's rows run down the stages (Plan, Build,
++// Verify, Review), and inside a stage what needs you leads, then blocked, running, waiting and
++// queued. Its head carries who works there and its tally of states; a repo with nothing in flight
++// is quiet.
++import type { Attention, Person, Phase, Progress, TicketRow } from "../../api/types";
++import { type Group, groupOf, isMyMove, stepText } from "../../domain/board";
++import { firstName } from "../../domain/format";
++
++/** Work in flight: inbox and merged work live in each repo's list. */
++export function inFlight(t: TicketRow): boolean {
++  return t.attention.kind !== "inbox" && t.attention.kind !== "done";
++}
++
++/** The stages a ticket in flight is at, in order, by the board's names. */
++export const STAGE: Partial<Record<Phase, string>> = {
++  plan: "Plan",
++  build: "Build",
++  verify: "Verify",
++  review: "Review",
++};
++
++const PHASE_AT: Record<Phase, number> = {
++  inbox: 0,
++  plan: 1,
++  build: 2,
++  verify: 3,
++  review: 4,
++  done: 5,
++};
++
++/** A tally's states, in the order they call for a look; each with its glyph and word. */
++export const TALLY = [
++  { group: "needs_you", mark: "you", word: "need you" },
++  { group: "blocked", mark: "blk", word: "blocked" },
++  { group: "running", mark: "run", word: "running" },
++  { group: "waiting", mark: "wait", word: "waiting" },
++  { group: "queued", mark: "queued", word: "queued" },
++] as const;
++
++const URGENCY: Record<Group, number> = {
++  needs_you: 0,
++  blocked: 1,
++  running: 2,
++  waiting: 3,
++  queued: 4,
++  inbox: 5,
++  done: 6,
++};
++
++export interface Tally {
++  mark: (typeof TALLY)[number]["mark"];
++  word: string;
++  n: number;
++}
++
++export interface RepoGroup {
++  repo: string;
++  /** Who works there: everyone who owns one of its tickets, in flight or not. */
++  people: Person[];
++  /** Its tickets in flight that the search leaves, down the stages. */
++  rows: TicketRow[];
++  tally: Tally[];
++}
++
++/** Each repo's group: its tickets in flight (the search's), in stage order, what needs you first. */
++export function groupsOf(
++  rows: readonly TicketRow[],
++  repos: readonly string[],
++  me: Person | null,
++  query: readonly string[],
++): { active: RepoGroup[]; quiet: RepoGroup[] } {
++  const found = (t: TicketRow) =>
++    query.every((q) => `${t.key} ${t.title}`.toLowerCase().includes(q));
++  const order = (a: TicketRow, b: TicketRow) =>
++    PHASE_AT[a.phase] - PHASE_AT[b.phase] ||
++    URGENCY[groupOf(a, me)] - URGENCY[groupOf(b, me)] ||
++    a.key.localeCompare(b.key, "en", { numeric: true });
++  const groups = repos.map((repo): RepoGroup & { flying: number } => {
++    const own = rows.filter((t) => t.repo === repo);
++    const owners = own.flatMap((t) => (t.owner ? [t.owner] : []));
++    const flying = own.filter(inFlight);
++    const shown = flying.filter(found).sort(order);
++    return {
++      repo,
++      people: [...new Map(owners.map((p) => [p.id, p])).values()],
++      rows: shown,
++      flying: flying.length,
++      tally: TALLY.map((s) => ({
++        mark: s.mark,
++        word: s.word,
++        n: shown.filter((t) => groupOf(t, me) === s.group).length,
++      })).filter((s) => s.n > 0),
++    };
++  });
++  return {
++    active: groups.filter((g) => g.flying > 0),
++    quiet: groups.filter((g) => g.flying === 0),
++  };
++}
++
++/** How many of the shown tickets are at each stage, across the repos: where work piles up. */
++export function stageCounts(groups: readonly RepoGroup[]): { name: string; n: number }[] {
++  const rows = groups.flatMap((g) => g.rows);
++  return Object.entries(STAGE).map(([phase, name]) => ({
++    name,
++    n: rows.filter((t) => t.phase === phase).length,
++  }));
++}
++
++/** The State column: what a ticket in flight is doing or waits on, in words. */
++export interface StateWords {
++  text: string;
++  /** you: your move (the accent); firm: blocked (the first ink); live: an agent at work (the
++   *  second, a weight up); plain: it waits on someone; quiet: nothing is at work on it yet. */
++  tone: "you" | "firm" | "live" | "plain" | "quiet";
++  /** A running agent's steps, for its count and meter; a queued run has a dashed one. */
++  run: { progress: Progress | null; step: string | null } | "queued" | null;
++  /** The whole of it, on hover: what the agent is doing, why it is blocked, the ask. */
++  say: string;
++}
++
++/** The short name of the gate a waiting ticket is parked at, if it is at one. */
++function gateOf(t: TicketRow): string | undefined {
++  return t.rail.find((s) => s.gate?.state === "waiting")?.gate?.short;
++}
++
++type Running = Extract<Attention, { kind: "running" }>;
++type Waiting = Extract<Attention, { kind: "waiting" }>;
++
++/** An agent at work: its name, its step of all, the run and what it is doing on hover. */
++function running(a: Running): StateWords {
++  const step = a.progress ? stepText(a.progress) : null;
++  const run = `${a.agent} · run #${String(a.run_id)}`;
++  return {
++    text: a.agent,
++    tone: "live",
++    run: { progress: a.progress, step },
++    say: [run, step ? `step ${step}` : null, a.step].filter(Boolean).join(" · "),
++  };
++}
++
++/** On you: its gate and You (else the ask); on someone else: where it is parked and who. */
++function waiting(t: TicketRow, a: Waiting, me: Person | null): StateWords {
++  const gate = gateOf(t);
++  if (isMyMove(a.on, me))
++    return { text: gate ? `${gate} · You` : a.ask, tone: "you", run: null, say: a.ask };
++  const who = firstName(a.on?.name ?? "someone");
++  return { text: `${gate ?? a.ask} · ${who}`, tone: "plain", run: null, say: `${a.ask} · ${who}` };
++}
++
++export function stateOf(t: TicketRow, me: Person | null): StateWords {
++  const a = t.attention;
++  switch (a.kind) {
++    case "running":
++      return running(a);
++    case "waiting":
++      return waiting(t, a, me);
++    case "queued":
++      return { text: "Queued", tone: "quiet", run: "queued", say: `Run #${String(a.run_id)}` };
++    case "blocked":
++      return { text: "Blocked", tone: "firm", run: null, say: `Blocked · ${a.reason}` };
++    case "inbox":
++    case "done":
++      return { text: "", tone: "quiet", run: null, say: "" };
++  }
++}
+diff --git a/web/src/kit/Card.tsx b/web/src/kit/Card.tsx
+index 800c617..dceb59f 100644
+--- a/web/src/kit/Card.tsx
++++ b/web/src/kit/Card.tsx
+@@ -3,7 +3,8 @@
+ // - stage: a workflow stage on the lane: its face in the slot the lane's axis runs through, its
+ //   summary beside it; the summary selects it, and selected it opens in place to its settings (no
+ //   dialog). A disabled stage is dimmed; a problem with it is said at its foot.
+-// - ticket: a ticket on a board (All teams): two tight lines on a card lifted off its lane by tone.
++// - ticket: a ticket on a board (the board twin): two tight lines on a card lifted off its lane by
++//   tone.
+ // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
+ // ring round the card, and a click anywhere on it for a pointer. What the lines say is the
+ // screen's.
+diff --git a/web/src/kit/Row.module.css b/web/src/kit/Row.module.css
+index 96d34ee..a74af93 100644
+--- a/web/src/kit/Row.module.css
++++ b/web/src/kit/Row.module.css
+@@ -165,43 +165,3 @@
+   height: auto;
+   min-height: calc(var(--h-row) + var(--line-2));
+ }
+-
+-/* band: a board's swimlane, out to the sheet's edges. Its first cell is its head, a heading line
+-   across the board with room above it (no band); under it each stage's cell is a column of its
+-   items' cards straight on the sheet, tiles of tone (no lane, no line), the stages parted by room,
+-   so an empty one is bare sheet. columns: the board's column head, the stage names on the same
+-   grid over the cards' own text, held at the board's top. */
+-.band {
+-  border-radius: 0;
+-}
+-.band > .inner {
+-  align-items: stretch;
+-  column-gap: var(--sp-6);
+-  padding: 0 var(--list-inset);
+-  border-radius: 0;
+-}
+-.band .cell {
+-  flex-direction: column;
+-  align-items: stretch;
+-  justify-content: flex-start;
+-  gap: var(--sp-4);
+-}
+-.band:not(.columns) .cell:first-child {
+-  grid-column: 1 / -1;
+-  justify-content: center;
+-  min-height: var(--h-group);
+-  margin-top: var(--group-gap);
+-}
+-.band.columns {
+-  position: sticky;
+-  top: 0;
+-  z-index: var(--z-sticky);
+-  background: var(--ground);
+-}
+-.band.columns > .inner {
+-  min-height: var(--h-list-head);
+-}
+-.band.columns .cell {
+-  justify-content: center;
+-  padding: 0 var(--sp-6);
+-}
+diff --git a/web/src/kit/Row.tsx b/web/src/kit/Row.tsx
+index e201051..1f13aab 100644
+--- a/web/src/kit/Row.tsx
++++ b/web/src/kit/Row.tsx
+@@ -1,7 +1,7 @@
+ // One item of a list: its cells on the Table's columns. A line, an item and a triage row are flat,
+ // a rounded patch on the list's column edge (its words inset) washed on hover, focus and open; a
+-// list out at the sheet's edges rules them apart faintly. A rack is a bare entry; a band a board's
+-// swimlane (its head, then its lanes). A card on its own surface is a Card. Nothing changes size.
++// list out at the sheet's edges rules them apart faintly. A rack is a bare entry. A card on its
++// own surface is a Card. Nothing changes size.
+ import { Children, type ReactNode } from "react";
+ 
+ import { Opener, openOnClick } from "./opener";
+@@ -19,12 +19,10 @@ export interface RowProps {
+   /** The cells, one per column; with fewer, the last spans the rest, and one past the columns is
+    *  not drawn. Outside a table they stack. */
+   children: ReactNode;
+-  /** line: a list's one-line row (Compact, My queue, the library); item: a roomy two-line row (a
+-   *  ticket's context); triage: a tight two-line row led by a face (Intake); rack: a bare entry (a
+-   *  run's stage); band: a board's swimlane, its first cell a head line across the board and then
+-   *  a lane per column; columns: the board's column head,
+-   *  one short line of stage names over the swimlanes, on the same grid. */
+-  kind?: "line" | "item" | "triage" | "rack" | "band" | "columns";
++  /** line: a list's one-line row (Compact, My queue, All teams, the library); item: a roomy
++   *  two-line row (a ticket's context); triage: a tight two-line row led by a face (Intake); rack:
++   *  a bare entry (a run's stage). */
++  kind?: "line" | "item" | "triage" | "rack";
+   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
+    *  names what it opens, for assistive tech. */
+   action?: Action;
+@@ -35,14 +33,13 @@ export interface RowProps {
+   alert?: string;
+ }
+ 
+-/** `lead`: a band's head, a line of its own across every column before the cells that sit on them. */
+-function useCells(children: ReactNode, stack: boolean, lead: number): ReactNode[] {
++function useCells(children: ReactNode, stack: boolean): ReactNode[] {
+   const columns = useColumns();
+   const cells = Children.toArray(children);
+   if (stack) return cells;
+-  return cells.slice(0, columns.length + lead).map((cell, i) => {
+-    const last = i === cells.length - 1 && i - lead < columns.length - 1;
+-    const column = last ? columns[columns.length - 1] : columns[i - lead];
++  return cells.slice(0, columns.length).map((cell, i) => {
++    const last = i === cells.length - 1 && i < columns.length - 1;
++    const column = last ? columns[columns.length - 1] : columns[i];
+     return (
+       <span
+         key={i}
+@@ -110,17 +107,9 @@ export function Row(props: RowProps) {
+   const { children, kind = "line", action, open = false, more, alert } = props;
+   const columns = useColumns();
+   const stack = columns.length === 0;
+-  const cells = useCells(children, stack, kind === "band" ? 1 : 0);
++  const cells = useCells(children, stack);
+   return (
+-    <div
+-      className={cx(
+-        s.row,
+-        s[kind === "columns" ? "band" : kind],
+-        kind === "columns" && s.columns,
+-        open && s.open,
+-      )}
+-      data-row=""
+-    >
++    <div className={cx(s.row, s[kind], open && s.open)} data-row="">
+       <Inner action={action} stack={stack} open={open} more={more}>
+         {cells}
+       </Inner>
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 63ed0e7..70f3b53 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -184,7 +184,7 @@
+           "why": "Stages and board tickets are cards in two places.",
+           "values": {
+             "stage": "A workflow stage on the lane: a card of tone over the axis (its tone parts it from the next, inside a loop's bracket too; a disabled one no tone, a dashed outline alone), its face on the axis, ringed in the accent as it opens in place to its settings (the default).",
+-            "ticket": "A ticket on a board (All teams): two tight lines on a tile of tone straight on the sheet (no lane under it), its key with its state's pill at the line's end, then its title (Linear's board card)."
++            "ticket": "A ticket on a board (the board twin): two tight lines on a tile of tone straight on the sheet (no lane under it), its key with its state's pill at the line's end, then its title (Linear's board card)."
+           }
+         }
+       }
+@@ -679,7 +679,7 @@
+       }
+     },
+     "Row": {
+-      "why": "One item of a list: its cells on the table's columns; a flat row (Linear's list) with its words on the list's column edge and its wash reaching past it, a card or a swimlane.",
++      "why": "One item of a list: its cells on the table's columns; a flat row (Linear's list) with its words on the list's column edge and its wash reaching past it.",
+       "props": {
+         "children": {
+           "why": "The cells."
+@@ -687,12 +687,10 @@
+         "kind": {
+           "why": "The shapes the app's lists take.",
+           "values": {
+-            "line": "A list's row (Compact, My queue, Intake, the library's four lists): one dense line, its rhythm and the room above each heading parting the rows (a faint hairline under its words in a list out at the sheet's edges); its words on the column edge the group head's glyph and the bar's title stand on; hover and open wash a rounded patch reaching a little past that edge, so the words keep it.",
++            "line": "A list's row (Compact, My queue, Intake, All teams, the library's four lists): one dense line, its rhythm and the room above each heading parting the rows (a faint hairline under its words in a list out at the sheet's edges); its words on the column edge the group head's glyph and the bar's title stand on; hover and open wash a rounded patch reaching a little past that edge, so the words keep it.",
+             "item": "A two-line row (a ticket's context): roomy, unruled, washed on hover.",
+             "triage": "A triage row (Linear's inbox): a face leading two tight lines, the key in the second, the age across from them; washed on hover.",
+-            "rack": "A bare entry: a run's stage in the Runs tab, lit on hover.",
+-            "band": "A board's swimlane (All teams), out to the sheet's edges: its head, a heading across the board (the repo, its team, what is in flight), then a cell per stage, a column of ticket Cards straight on the sheet, the stages parted by room, so an empty stage is bare sheet.",
+-            "columns": "A board's column head: one short line of stage names over the swimlanes, on their grid, held at the board's top."
++            "rack": "A bare entry: a run's stage in the Runs tab, lit on hover."
+           }
+         },
+         "action": {
+@@ -971,7 +969,7 @@
+           "why": "The groups and rows."
+         },
+         "edge": {
+-          "why": "Out to the main sheet's edges with no surface of its own, as Linear's lists run: the column labels quiet over the rows, no band, each row's first cell under the bar's title (the library's four lists, Intake's queries without a head, and All teams' board, its legend in the foot)."
++          "why": "Out to the main sheet's edges with no surface of its own, as Linear's lists run: the column labels quiet over the rows, no band, each row's first cell under the bar's title (the library's four lists, Intake's queries without a head, and All teams' table, its legend in the foot)."
+         }
+       }
+     },

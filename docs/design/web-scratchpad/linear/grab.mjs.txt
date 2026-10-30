@@ -1,0 +1,49 @@
+// One-off: viewport screenshots down Linear's public pages, plus its big product images, as
+// candidates for the gauntlet's bar. Usage: node grab.mjs <web dir> <out dir>
+import { mkdirSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+mkdirSync(join(out, "raw"), { recursive: true });
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const PAGES = ["/", "/intake", "/plan", "/build", "/ai", "/agents", "/insights", "/asks", "/customer-requests", "/coding-sessions", "/method", "/changelog"];
+const browser = await chromium.launch({ channel: "chrome" });
+const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+const page = await ctx.newPage();
+const imgs = new Set();
+const log = [];
+for (const p of PAGES) {
+  const slug = p === "/" ? "home" : p.slice(1);
+  try {
+    await page.goto(`https://linear.app${p}`, { waitUntil: "networkidle", timeout: 45000 });
+  } catch (e) {
+    log.push(`${p}: ${e.message.split("\n")[0]}`);
+    continue;
+  }
+  const h = await page.evaluate(() => document.body.scrollHeight);
+  for (let y = 0, i = 0; y < Math.min(h, 12000); y += 800, i++) {
+    await page.evaluate((yy) => window.scrollTo(0, yy), y);
+    await page.waitForTimeout(700);
+    await page.screenshot({ path: join(out, "raw", `${slug}-${String(i).padStart(2, "0")}.png`) });
+  }
+  const big = await page.evaluate(() =>
+    [...document.images].filter((i) => i.naturalWidth >= 1000).map((i) => i.currentSrc || i.src),
+  );
+  big.forEach((s) => imgs.add(s));
+  log.push(`${p}: height ${h}, ${big.length} big images`);
+}
+let n = 0;
+for (const src of imgs) {
+  try {
+    const r = await fetch(src);
+    const type = r.headers.get("content-type") ?? "";
+    const ext = type.includes("png") ? "png" : type.includes("webp") ? "webp" : type.includes("avif") ? "avif" : "jpg";
+    writeFileSync(join(out, "raw", `img-${String(n++).padStart(2, "0")}.${ext}`), Buffer.from(await r.arrayBuffer()));
+  } catch (e) {
+    log.push(`img ${src}: ${e.message}`);
+  }
+}
+await browser.close();
+writeFileSync(join(out, "log.txt"), [...log, ...[...imgs].map((s, i) => `img-${i}: ${s}`)].join("\n"));
+console.log(log.join("\n"));

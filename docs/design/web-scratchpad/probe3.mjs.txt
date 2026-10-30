@@ -1,0 +1,58 @@
+import { rmSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+
+const T = "C:/code/AgentOS-V2-web/web/tools/";
+const imp = (f) => import(pathToFileURL(T + f).href);
+const { tree } = await imp("tree.mjs");
+const { layerProblems } = await imp("layers.mjs");
+const { open, readModules } = await imp("reach.mjs");
+const { readWeb } = await imp("uses.mjs");
+const { patternProblems, knobProblems } = await imp("patterns.mjs");
+
+const KIT = [
+  `export interface ChecklistProps { items: string[]; look?: "bare" | "roomy" | "snug" }`,
+  `export function Checklist(p: ChecklistProps) { return p.look ?? null; }`,
+  `export function Text(p: { tone?: "1" | "2" }) { return p.tone ?? null; }`,
+  ``,
+].join("\n");
+
+const FILES = {
+  "main.tsx": `import { App } from "./app/App";\nexport { App };\n`,
+  "app/App.tsx": `import { E } from "../features/e/E";\nimport { F } from "../features/f/F";\nexport const App = () => [E(), F()];\n`,
+  "kit/index.ts": KIT,
+  // codex round 2
+  "patterns/codex.tsx": [
+    `import React, { Component } from "react";`,
+    `const h = React.createElement;`,
+    `export const Raw = ({ on }: { on: boolean }) => { const Div: "div" | "span" = on ? "div" : "span"; return [h("p"), <Div />]; };`,
+    `export class Klass extends Component<{ n: number }> { override render() { return this.props.n; } }`,
+    ``,
+  ].join("\n"),
+  "patterns/alias.tsx": [
+    `import { Checklist as List } from "../kit";`,
+    `export const Al = ({ look }: { look: "roomy" | "snug" }) => <List items={[]} look={look} />;`,
+    ``,
+  ].join("\n"),
+  // a rest spread forwards a look; a map holds the kit
+  "patterns/spread.tsx": [
+    `import { Checklist, Text } from "../kit";`,
+    `export function Plan({ items, ...rest }: { items: string[]; look: "roomy" | "snug" }) { return <Checklist items={items} {...rest} />; }`,
+    `const CELL = { text: Text };`,
+    `export function Cell({ tone }: { tone: "1" | "2" }) { return <CELL.text tone={tone} />; }`,
+    ``,
+  ].join("\n"),
+  "features/e/E.tsx": `import { Plan, Cell } from "../../patterns/spread";\nexport const E = () => [<Plan items={[]} look="roomy" />, <Cell tone="1" />];\n`,
+  "features/f/F.tsx": `import { Plan, Cell } from "../../patterns/spread";\nexport const F = () => [<Plan items={[]} look="snug" />, <Cell tone="2" />];\n`,
+};
+
+const root = tree(FILES);
+try {
+  console.log("LAYERS:\n" + layerProblems(readModules(open(root))).join("\n"));
+  const web = readWeb(root);
+  console.log("PATTERNS:\n" + patternProblems(web.patterns, 8).filter((p) => !p.includes("used by 0")).join("\n"));
+  console.log("KNOBS:\n" + knobProblems(web.knobs).join("\n"));
+  console.log("CREDIT:", web.patterns.map((p) => `${p.name}=${p.screens.join(",")}`).join(" "));
+  console.log("KIT USED:", [...web.used.keys()].join(" "));
+} finally {
+  rmSync(root, { recursive: true, force: true });
+}

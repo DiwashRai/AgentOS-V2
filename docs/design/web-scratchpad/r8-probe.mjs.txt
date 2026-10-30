@@ -1,0 +1,71 @@
+// One-off: check the kit review's round-8 fixes in Chrome. Starts Vite on 5191 and stops it.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const go = async (path) => { await page.goto(base + path); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(300); };
+  const question = () => page.evaluate(() => {
+    const a = document.querySelector("[role=alertdialog]");
+    const by = (attr) => document.getElementById(a?.getAttribute(attr) ?? "")?.textContent ?? null;
+    return a ? [by("aria-labelledby"), by("aria-describedby"), document.activeElement?.textContent] : null;
+  });
+
+  // S1: the overflow chip is named when the pressed filter is in it
+  await go("/compact?f=done");
+  say("S1 overflow", (await page.locator("main").ariaSnapshot()).split("\n").filter((l) => /combobox/.test(l)).map((l) => l.trim()));
+
+  // S2: the question is drawn by the kit: named and described, on the workflow overlay and the kit sheet
+  await go("/t/NW-17?tab=workflow&edit=workflow");
+  await page.getByRole("button", { name: "Edit Implement" }).focus();
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(300);
+  await page.getByRole("textbox", { name: "Name" }).click();
+  await page.keyboard.type(" x");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+  say("S2 workflow question", await question());
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(200);
+  say("dismissed: focus", await page.evaluate(() => document.activeElement?.getAttribute("aria-label")));
+  const prompt = page.getByRole("textbox", { name: "Prompt" });
+  await prompt.hover();
+  await page.getByRole("button", { name: /Prompt in the whole window/ }).first().click();
+  await page.waitForTimeout(300);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(300);
+  say("nested Esc: dialogs, asking", await page.evaluate(() => [document.querySelectorAll("dialog[open]").length, !!document.querySelector("[role=alertdialog]")]));
+
+  await go("/kit");
+  await page.getByRole("button", { name: "Open the full-window overlay" }).click();
+  await page.waitForTimeout(300);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+  say("S2 kit sheet question", await question());
+  // N3: Esc again: focus goes back to the dialog, not the close the browser landed on
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+  say("N3 focus after dismiss", await page.evaluate(() => [document.activeElement?.tagName, document.activeElement?.getAttribute("title") ?? document.activeElement?.getAttribute("aria-label")]));
+
+  // N1: bookend rows' glyphs are drawing; the stage chip says it
+  await go("/");
+  say("N1 done rows", (await page.locator("main").ariaSnapshot()).split("\n").filter((l) => /img "(Done|Abandoned|Inbox)"/.test(l)).length);
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

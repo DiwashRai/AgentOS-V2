@@ -1,0 +1,16 @@
+"""Compare two PNGs: how many pixels differ, by how much at most, and the bounding box of the change."""
+
+import sys
+
+from PIL import Image, ImageChops
+
+a = Image.open(sys.argv[1]).convert("RGB")
+b = Image.open(sys.argv[2]).convert("RGB")
+if a.size != b.size:
+    print("size", a.size, b.size)
+    sys.exit()
+d = ImageChops.difference(a, b)
+px = d.getdata()
+n = sum(1 for p in px if max(p) > 0)
+mx = max(max(p) for p in px)
+print(f"{n} px differ, max channel delta {mx}, box {d.getbbox()}")

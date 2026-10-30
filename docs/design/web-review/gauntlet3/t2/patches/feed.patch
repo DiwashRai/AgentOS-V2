@@ -1,0 +1,1016 @@
+diff --git a/web/src/features/queue/QueueView.tsx b/web/src/features/queue/QueueView.tsx
+index 64fa93b..3d95bf9 100644
+--- a/web/src/features/queue/QueueView.tsx
++++ b/web/src/features/queue/QueueView.tsx
+@@ -2,13 +2,11 @@
+ import { useSearchParams } from "react-router";
+ 
+ import type { Person, TicketRow } from "../../api/types";
+-import { groupOf, stageModel, stepText } from "../../domain/board";
+-import { age, elapsed, matches } from "../../domain/format";
++import { groupOf, stepText } from "../../domain/board";
++import { elapsed, matches } from "../../domain/format";
+ import {
+-  Avatar,
+   Badge,
+   Button,
+-  Card,
+   type Column,
+   Head,
+   Icon,
+@@ -28,7 +26,7 @@ import { ActionButton, rowActions } from "../shared/Actions";
+ import { contextOf, useBoard, useSpace } from "../shared/board";
+ import { NewTicket } from "../shared/NewTicket";
+ import { useSearch } from "../shared/useSearch";
+-import { atWorkNote, CAP, shipped, type Zones, zones } from "./model";
++import { atWorkNote, type BoardRun, CAP, shipped, type Zones, zones } from "./model";
+ 
+ // Linear's list, as Compact's: the key and the title on the left, what it waits on receding after
+ // the title; a row's buttons where Compact has its Now tag, hugging the plain properties at the
+@@ -42,13 +40,17 @@ const ITEM: readonly Column[] = [
+   ...LINE_END,
+ ];
+ 
+-type Open = (key: string) => void;
++/** The peek: the ticket it is open at (its line is the open one), and opening it at another. */
++interface Peek {
++  at: string | null;
++  open: (key: string) => void;
++}
+ 
+ interface ItemProps {
+   t: TicketRow;
+   me: Person | null;
+   now: number;
+-  onOpen: Open;
++  peek: Peek;
+ }
+ 
+ /** The item's buttons: a gate's on a Needs-you item, Retry alone on a blocked one. */
+@@ -66,15 +68,16 @@ function Buttons({ t, me }: { t: TicketRow; me: Person | null }) {
+   );
+ }
+ 
+-function Item({ t, me, now, onOpen }: ItemProps) {
++function Item({ t, me, now, peek }: ItemProps) {
+   return (
+     <Row
+       action={{
+         label: `Peek at ${t.key}: ${t.title}`,
+         run: () => {
+-          onOpen(t.key);
++          peek.open(t.key);
+         },
+       }}
++      open={peek.at === t.key}
+     >
+       <KeyCell t={t} />
+       <TitleCell t={t} me={me} after={nowLine(t, me).after} />
+@@ -83,118 +86,108 @@ function Item({ t, me, now, onOpen }: ItemProps) {
+     </Row>
+   );
+ }
+-/** "Implement", or "Implement · round 2 of 3" in a later round (in words, so it never reads as the
+- *  step count). */
+-function stageText(t: TicketRow, me: Person | null): string {
+-  const m = stageModel(t, me);
+-  return m.round ? `${m.label} · round ${String(m.round.n)} of ${String(m.round.of)}` : m.label;
+-}
+ 
+-/** A tile's top line, quiet: the key, its run and how long it has run or waited; at the end who
+- *  works it (the agent in ink, or that it waits in the queue, muted), then the face of whose
+- *  ticket it is. No pill: the tile's one colour is its glyph and its meter. */
+-function Top({
+-  t,
+-  now,
+-  run,
+-}: {
+-  t: TicketRow;
+-  now: number;
+-  run: { id: number; agent: string | null };
+-}) {
+-  const how = run.agent ? "running" : "queued";
++// The agents' live board: a run a line, read like a status board, not a list of tickets. What its
++// agent is doing now leads, in the ink a list's title takes, after who is at work (its state glyph,
++// the agent and its run, quiet); then how far it is, the ticket it is on, and the line end every
++// zone shares, so the stage, source, age and face read down the whole page on one edge. Fixed
++// columns up to the ticket, so each part stands on its own edge in every line.
++const BOARD: readonly Column[] = [
++  { label: "Agent", width: "lg" },
++  { label: "Now", width: "2xl" },
++  { label: "Progress", width: "md" },
++  { label: "Ticket", width: "fill", min: "md" },
++  ...LINE_END,
++];
++
++/** A run the board shows: at work, or queued for a runner. */
++type AtWork = BoardRun["run"];
++
++/** Who works it: the state glyph (Linear's in-progress ring, its pie as far as the run is; a
++ *  dashed one queued), the agent (or that it is queued, muted), its run number quiet. */
++function Who({ a, since, now }: { a: AtWork; since: string; now: number }) {
++  const running = a.kind === "running";
++  const run = `Run #${String(a.run_id)}, ${running ? "running" : "queued"} for ${elapsed(since, now)}`;
+   return (
+     <Stack dir="row" gap={4} align="center">
+-      <Badge kind="key" size="sm">
+-        {t.key}
+-      </Badge>
+-      <Stack grow>
+-        <Text
+-          variant="meta"
+-          tone="3"
+-          tabular
+-          truncate
+-          title={`Run #${String(run.id)}, ${how} for ${elapsed(t.since, now)}`}
+-        >
+-          {`run #${String(run.id)} · ${age(t.since, now)}`}
+-        </Text>
+-      </Stack>
+-      <Text variant="meta" weight={500} tone={run.agent ? "1" : "3"}>
+-        {run.agent ?? "Queued"}
++      <Mark
++        kind={running ? "run" : "queued"}
++        glyph
++        still
++        name={running ? "Running" : "Queued"}
++        progress={running ? a.progress : null}
++      />
++      <Text weight={500} tone={running ? "2" : "3"}>
++        {running ? a.agent : "Queued"}
+       </Text>
+-      {t.owner ? <Avatar name={t.owner.name} seed={String(t.owner.id)} /> : <Avatar dashed />}
++      <Text variant="meta" tone="3" tabular title={run}>{`#${String(a.run_id)}`}</Text>
+     </Stack>
+   );
+ }
+ 
+-/** A tile's body: its state glyph (Linear's in-progress ring, a dashed one queued) hanging before
+- *  the title, and under the title where it is (the stage and the repo, plain words). A queued
+- *  tile's title is muted, so the state reads down the left edge. */
+-function Body({ t, me }: { t: TicketRow; me: Person | null }) {
+-  const running = t.attention.kind === "running";
+-  const where = [stageText(t, me), t.repo ?? ""].filter(Boolean).join(" · ");
++/** What it is doing now, the line's lead; a queued run waits for a runner, muted. */
++function Doing({ a }: { a: AtWork }) {
++  const step = a.kind === "running" ? a.step : "Waiting for a runner";
+   return (
+-    <Stack dir="row" gap={4} align="baseline">
+-      <Mark kind={running ? "run" : "queued"} glyph still name={false} />
+-      <Stack gap={2}>
+-        <Text variant="label" tone={running ? "1" : "2"} truncate={2} title={t.title}>
+-          {t.title}
+-        </Text>
+-        <Text variant="meta" tone="3" truncate title={where}>
+-          {where}
+-        </Text>
+-      </Stack>
+-    </Stack>
++    <Text weight={500} tone={a.kind === "running" ? "1" : "3"} truncate title={step}>
++      {step}
++    </Text>
+   );
+ }
+ 
+-/** A tile's foot: what it is doing (or that it waits for a runner) and a running one's step count;
+- *  under them its steps, the tile's whole width. */
+-function Progress({ t }: { t: TicketRow }) {
+-  const a = t.attention;
+-  const step = a.kind === "running" ? a.step : "Waiting for a runner";
++/** How far it is: the step it is on, then its steps, still (a board of them would sweep all at
++ *  once); a queued run has none yet. */
++function Steps({ a }: { a: AtWork }) {
+   const p = a.kind === "running" ? a.progress : null;
++  if (!p) return <Stack />;
++  return (
++    <Stack dir="row" gap={4} align="center">
++      <Text variant="meta" tone="3" tabular>
++        {stepText(p)}
++      </Text>
++      <Meter size="board" done={p.done} total={p.total} />
++    </Stack>
++  );
++}
++
++/** The ticket it is on: its key, then its title a step under the activity. */
++function On({ t, queued }: { t: TicketRow; queued: boolean }) {
+   return (
+-    <Stack gap={3}>
+-      <Stack dir="row" gap={4} align="center">
+-        <Stack grow>
+-          <Text variant="meta" tone="2" truncate title={step}>
+-            {step}
+-          </Text>
+-        </Stack>
+-        {p ? (
+-          <Text variant="meta" tone="3" tabular>
+-            {stepText(p)}
+-          </Text>
+-        ) : null}
+-      </Stack>
+-      {p ? <Meter size="tile" done={p.done} total={p.total} /> : null}
++    <Stack dir="row" gap={4} align="center">
++      <Badge kind="key">{t.key}</Badge>
++      <Text tone={queued ? "3" : "2"} truncate title={t.title}>
++        {t.title}
++      </Text>
+     </Stack>
+   );
+ }
+ 
+-/** An agent's tile, Linear's lines each in its own space: the key, its run and who works it; the
+- *  state glyph, the title and where it is; then its progress at the foot. */
+-function AgentCard({ t, me, now, onOpen }: ItemProps) {
+-  const a = t.attention;
+-  if (a.kind !== "running" && a.kind !== "queued") return null;
++interface RunLineProps {
++  r: BoardRun;
++  me: Person | null;
++  now: number;
++  peek: Peek;
++}
++
++/** A run's line on the board; a click, Enter or Space peeks at its ticket. */
++function RunLine({ r, me, now, peek }: RunLineProps) {
++  const { t, run: a } = r;
+   return (
+-    <Card
+-      look="agent"
+-      label={`Peek at ${t.key}: ${t.title}`}
+-      off={a.kind === "queued"}
+-      onOpen={() => {
+-        onOpen(t.key);
++    <Row
++      action={{
++        label: `Peek at ${t.key}: ${t.title}`,
++        run: () => {
++          peek.open(t.key);
++        },
+       }}
++      open={peek.at === t.key}
+     >
+-      {/* the top line and the body take the free height, so the progress sinks to the foot and
+-          lines up across a row of tiles */}
+-      <Stack grow gap={5}>
+-        <Top t={t} now={now} run={{ id: a.run_id, agent: a.kind === "running" ? a.agent : null }} />
+-        <Body t={t} me={me} />
+-      </Stack>
+-      <Progress t={t} />
+-    </Card>
++      <Who a={a} since={t.since} now={now} />
++      <Doing a={a} />
++      <Steps a={a} />
++      <On t={t} queued={a.kind === "queued"} />
++      {lineEnd({ t, me, now })}
++    </Row>
+   );
+ }
+ 
+@@ -202,13 +195,14 @@ interface ZoneListProps {
+   z: Zones;
+   me: Person | null;
+   now: number;
+-  open: Open;
++  peek: Peek;
+ }
+ 
+-function ZoneList({ z, me, now, open }: ZoneListProps) {
++function ZoneList({ z, me, now, peek }: ZoneListProps) {
+   const n = shipped(z.done);
+-  // each zone a section: no band and no card; one after another parts by room and a hairline, the
+-  // cards on the column edge the heads hang on
++  // each zone a section: no band and no card; one after another parts by room and a hairline, its
++  // lines on the column edge the heads hang on. The agents' lines lie on a board of one tone: the
++  // one zone that is happening now, told from the lists around it by tone alone
+   return (
+     <Stack>
+       <Surface level="list" label="Your move">
+@@ -226,7 +220,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
+               tone="you"
+             />
+             {z.yourMove.map((t) => (
+-              <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
++              <Item key={t.key} t={t} me={me} now={now} peek={peek} />
+             ))}
+           </Table>
+         )}
+@@ -237,26 +231,30 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
+             nothing running, nothing queued
+           </Notice>
+         ) : (
+-          <Stack gap={4}>
++          <Table columns={BOARD} head={false} scroll={false}>
+             <Head
+-              level="zone"
+               icon={<Mark kind="run" glyph name={false} />}
+               name="Agents at work"
+               tone="live"
+               count={z.agents.length}
+-              note={atWorkNote(z)}
++              note="Newest first"
++              summary={
++                <Text variant="meta" tone="2">
++                  {atWorkNote(z)}
++                </Text>
++              }
+             />
+-            <Stack cols={3} gap={5}>
+-              {z.agents.slice(0, CAP.agents).map((t) => (
+-                <AgentCard key={t.key} t={t} me={me} now={now} onOpen={open} />
++            <Surface level="board">
++              {z.agents.slice(0, CAP.agents).map((r) => (
++                <RunLine key={r.t.key} r={r} me={me} now={now} peek={peek} />
+               ))}
+-            </Stack>
++            </Surface>
+             {z.agents.length > CAP.agents ? (
+               <Button variant="link" href="/compact">
+                 {`+${String(z.agents.length - CAP.agents)} more running or queued`}
+               </Button>
+             ) : null}
+-          </Stack>
++          </Table>
+         )}
+       </Surface>
+       {z.ready.length > 0 ? (
+@@ -269,7 +267,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
+               note="Oldest first"
+             />
+             {z.ready.map((t) => (
+-              <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
++              <Item key={t.key} t={t} me={me} now={now} peek={peek} />
+             ))}
+           </Table>
+         </Surface>
+@@ -300,7 +298,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
+               }
+             />
+             {z.done.slice(0, CAP.done).map((t) => (
+-              <Item key={t.key} t={t} me={me} now={now} onOpen={open} />
++              <Item key={t.key} t={t} me={me} now={now} peek={peek} />
+             ))}
+             {z.done.length > CAP.done ? (
+               <Notice kind="more" lead={`+${String(z.done.length - CAP.done)} more`} />
+@@ -315,7 +313,7 @@ function ZoneList({ z, me, now, open }: ZoneListProps) {
+ export function QueueView() {
+   const board = useBoard();
+   const { rows, me, now } = board;
+-  const [, setParams] = useSearchParams();
++  const [params, setParams] = useSearchParams();
+   const space = useSpace();
+   const { query, search } = useSearch();
+   const z = zones(
+@@ -323,12 +321,15 @@ export function QueueView() {
+     me,
+     now,
+   );
+-  const open: Open = (key) => {
+-    setParams((p) => {
+-      const out = new URLSearchParams(p);
+-      out.set("peek", key);
+-      return out;
+-    });
++  const peek: Peek = {
++    at: params.get("peek"),
++    open: (key) => {
++      setParams((p) => {
++        const out = new URLSearchParams(p);
++        out.set("peek", key);
++        return out;
++      });
++    },
+   };
+   return (
+     <Page
+@@ -349,7 +350,7 @@ export function QueueView() {
+         ) : board.pending ? (
+           <Notice kind="status">Loading</Notice>
+         ) : (
+-          <ZoneList z={z} me={me} now={now} open={open} />
++          <ZoneList z={z} me={me} now={now} peek={peek} />
+         )}
+       </Surface>
+     </Page>
+diff --git a/web/src/features/queue/model.test.ts b/web/src/features/queue/model.test.ts
+new file mode 100644
+index 0000000..41ae0e6
+--- /dev/null
++++ b/web/src/features/queue/model.test.ts
+@@ -0,0 +1,47 @@
++import { describe, expect, it } from "vitest";
++
++import type { Attention, TicketRow } from "../../api/types";
++import { zones } from "./model";
++
++const NOW = Date.parse("2026-10-14T10:00:00Z");
++
++/** A ticket in the given state, since the given minutes ago. */
++const ticket = (key: string, attention: Attention, minutes: number): TicketRow => ({
++  key,
++  title: key,
++  type: "feature",
++  priority: "normal",
++  state: "open",
++  owner: null,
++  repo: null,
++  source: null,
++  phase: "build",
++  rail: [],
++  attention,
++  since: new Date(NOW - minutes * 60_000).toISOString(),
++  now: "",
++  plan: null,
++  messages: 0,
++  actions: [],
++  updated_at: new Date(NOW - minutes * 60_000).toISOString(),
++});
++
++const running = (run_id: number): Attention => ({
++  kind: "running",
++  run_id,
++  agent: "Builder",
++  step: "Running the tests",
++  progress: null,
++});
++
++describe("the agents' board", () => {
++  it("leads with the newest run at work and keeps the runs waiting for a runner last", () => {
++    const rows = [
++      ticket("A", running(1), 12),
++      ticket("B", { kind: "queued", run_id: 2 }, 1),
++      ticket("C", running(3), 3),
++      ticket("D", { kind: "inbox" }, 2),
++    ];
++    expect(zones(rows, null, NOW).agents.map((r) => r.t.key)).toEqual(["C", "A", "B"]);
++  });
++});
+diff --git a/web/src/features/queue/model.ts b/web/src/features/queue/model.ts
+index 26ec616..4c772a2 100644
+--- a/web/src/features/queue/model.ts
++++ b/web/src/features/queue/model.ts
+@@ -1,7 +1,8 @@
+ // Pure selection for My queue: only what is the viewer's. Your move (waiting on me or nobody, or
+-// blocked and mine or nobody's), Agents at work (every running and queued run as one card: mine
+-// first, then the team's by repo), Ready to start (my inbox), Done recently (mine, last 7 days).
+-import type { Person, TicketRow } from "../../api/types";
++// blocked and mine or nobody's), Agents at work (every running and queued run as one line of its
++// board: the runs at work newest first, then the ones waiting for a runner), Ready to start (my
++// inbox), Done recently (mine, last 7 days).
++import type { Attention, Person, TicketRow } from "../../api/types";
+ import { isMine, isYourMove } from "../../domain/board";
+ import { minutesSince } from "../../domain/format";
+ 
+@@ -12,11 +13,16 @@ const longestFirst = (a: TicketRow, b: TicketRow) =>
+   sinceMs(a) - sinceMs(b) || a.key.localeCompare(b.key);
+ const newestFirst = (a: TicketRow, b: TicketRow) => sinceMs(b) - sinceMs(a);
+ 
++/** A run on the agents' board: its ticket, and what it is (at work, or queued for a runner). */
++export interface BoardRun {
++  t: TicketRow;
++  run: Extract<Attention, { kind: "running" | "queued" }>;
++}
++
+ export interface Zones {
+   yourMove: TicketRow[];
+-  /** Every running and queued run, one card each: running before queued, mine before the team's,
+-   *  the team's by repo. */
+-  agents: TicketRow[];
++  /** Every running and queued run, one line each: running before queued, each newest first. */
++  agents: BoardRun[];
+   ready: TicketRow[];
+   done: TicketRow[];
+   running: number;
+@@ -24,15 +30,17 @@ export interface Zones {
+   mine: number;
+ }
+ 
+-function agentsOf(rows: readonly TicketRow[], me: Person | null): TicketRow[] {
+-  const rank = (t: TicketRow) => Number(t.attention.kind === "queued") * 2 + Number(!isMine(t, me));
++/** The live board's order: what is at work before what waits for a runner, each newest first (the
++ *  run that started last leads, as a feed does). */
++function agentsOf(rows: readonly TicketRow[]): BoardRun[] {
++  const queued = (r: BoardRun) => Number(r.run.kind === "queued");
+   return rows
+-    .filter((t) => t.attention.kind === "running" || t.attention.kind === "queued")
++    .flatMap((t): BoardRun[] => {
++      const a = t.attention;
++      return a.kind === "running" || a.kind === "queued" ? [{ t, run: a }] : [];
++    })
+     .sort(
+-      (a, b) =>
+-        rank(a) - rank(b) ||
+-        (a.repo ?? "").localeCompare(b.repo ?? "") ||
+-        a.key.localeCompare(b.key),
++      (a, b) => queued(a) - queued(b) || newestFirst(a.t, b.t) || a.t.key.localeCompare(b.t.key),
+     );
+ }
+ 
+@@ -41,7 +49,7 @@ export function zones(rows: readonly TicketRow[], me: Person | null, now: number
+   const yourMove = rows.filter((t) => isYourMove(t, me)).sort(longestFirst);
+   return {
+     yourMove,
+-    agents: agentsOf(rows, me),
++    agents: agentsOf(rows),
+     ready: mine.filter((t) => t.attention.kind === "inbox").sort(longestFirst),
+     done: mine
+       .filter((t) => t.attention.kind === "done" && minutesSince(t.since, now) < 7 * 1440)
+diff --git a/web/src/features/sheet/KitSheet.tsx b/web/src/features/sheet/KitSheet.tsx
+index ede3a58..d74ad28 100644
+--- a/web/src/features/sheet/KitSheet.tsx
++++ b/web/src/features/sheet/KitSheet.tsx
+@@ -476,7 +476,7 @@ function OverlaySheet() {
+ function Block({ name, children }: { name: string; children: ReactNode }) {
+   return (
+     <Stack gap={5}>
+-      <Head level="zone" name={name} />
++      <Head name={name} />
+       {children}
+     </Stack>
+   );
+diff --git a/web/src/kit/Card.module.css b/web/src/kit/Card.module.css
+index 32ede8e..4890272 100644
+--- a/web/src/kit/Card.module.css
++++ b/web/src/kit/Card.module.css
+@@ -1,7 +1,7 @@
+ /* Card: one object as a step of tone on the sheet, no edge and no shadow; under the pointer it takes
+    a step more. A stage lies on the lane, its summary washed on hover like a row; selected, the
+-   accent rings it, its settings under the summary on the sheet's own white. An agent's and a
+-   ticket's looks follow below. */
++   accent rings it, its settings under the summary on the sheet's own white. A ticket's look
++   follows below. */
+ .card {
+   --ground: var(--teams-card);
+   position: relative;
+@@ -125,30 +125,3 @@
+   flex-direction: column;
+   gap: var(--sp-3);
+ }
+-
+-/* agent: an agent's tile, as tall as its neighbours, its lines one under another down to its foot.
+-   Running, a tile of tone; queued, nothing at work yet: no tone, a dashed outline (the kit's "not
+-   here now"), the tone only under the pointer */
+-.card[data-look="agent"] {
+-  align-self: stretch;
+-  border-radius: var(--r-4);
+-  background: var(--tile);
+-}
+-.card[data-look="agent"][data-off]:not(:hover) {
+-  --ground: var(--page);
+-  background: none;
+-}
+-.card[data-look="agent"][data-off]:not(:has(.hit:focus-visible)) {
+-  outline: var(--line-1) dashed var(--ctl-edge-hover);
+-  outline-offset: calc(var(--line-1) * -1);
+-}
+-.card[data-look="agent"] .summary {
+-  height: 100%;
+-  padding: var(--sp-7) var(--sp-8) var(--sp-8);
+-}
+-.card[data-look="agent"] .main {
+-  display: flex;
+-  flex-direction: column;
+-  gap: var(--sp-4);
+-  height: 100%;
+-}
+diff --git a/web/src/kit/Card.tsx b/web/src/kit/Card.tsx
+index b122bd5..81251ef 100644
+--- a/web/src/kit/Card.tsx
++++ b/web/src/kit/Card.tsx
+@@ -1,10 +1,8 @@
+-// A card: one object on its own surface, the whole of it one button. Three looks, one surface and
++// A card: one object on its own surface, the whole of it one button. Two looks, one surface and
+ // one activation:
+ // - stage: a workflow stage on the lane: its face in the slot the lane's axis runs through, its
+ //   summary beside it; the summary selects it, and selected it opens in place to its settings (no
+ //   dialog). A disabled stage is dimmed; a problem with it is said at its foot.
+-// - agent: an agent at work (My queue): its lines one under another, filling the card's height so
+-//   cards in a row line up; running, a tile of tone; queued, no tone and a dashed outline.
+ // - ticket: a ticket on a board (All teams): two tight lines on a card lifted off its lane by tone.
+ // It opens as a whole (./opener): one real button for the keyboard and assistive tech, the focus
+ // ring round the card, and a click anywhere on it for a pointer. What the lines say is the
+@@ -15,9 +13,9 @@ import s from "./Card.module.css";
+ import { Opener, openOnClick } from "./opener";
+ 
+ interface Common {
+-  /** What it is: a stage's says "Edit Implement"; the others say this whole ("Peek at …"). */
++  /** What it is: a stage's says "Edit Implement"; a ticket's says this whole ("Peek at …"). */
+   label: string;
+-  /** Its lines: a stage's summary, an agent's or a ticket's lines. */
++  /** Its lines: a stage's summary, or a ticket's lines. */
+   children: ReactNode;
+ }
+ 
+@@ -37,18 +35,9 @@ export type CardProps = Common &
+         /** What's wrong with it (a gate inside a loop), at its foot in the blocked ink. */
+         problem?: string;
+       }
+-    | {
+-        look: "agent";
+-        /** A click (or Enter) opens what the card is of (a peek). */
+-        onOpen: () => void;
+-        /** Queued, waiting for a runner: no tone, a dashed outline (nothing at work here yet). */
+-        off?: boolean;
+-        face?: never;
+-        open?: never;
+-        problem?: never;
+-      }
+     | {
+         look: "ticket";
++        /** A click (or Enter) opens what the card is of (a peek). */
+         onOpen: () => void;
+         face?: never;
+         open?: never;
+@@ -76,10 +65,8 @@ const flag = (on: boolean) => on || undefined;
+ 
+ /** What a card draws, by its case: a stage's face, settings and problem, and its button's words. */
+ function caseOf(props: CardProps) {
+-  if (props.look === "agent" || props.look === "ticket") {
+-    const off = props.look === "agent" && props.off === true;
+-    return { face: undefined, open: undefined, off, problem: undefined, say: props.label };
+-  }
++  if (props.look === "ticket")
++    return { face: undefined, open: undefined, off: false, problem: undefined, say: props.label };
+   const opened = props.open !== undefined;
+   return {
+     face: props.face,
+diff --git a/web/src/kit/Head.module.css b/web/src/kit/Head.module.css
+index e36b8e5..90cbde3 100644
+--- a/web/src/kit/Head.module.css
++++ b/web/src/kit/Head.module.css
+@@ -11,14 +11,12 @@
+    the rows' words, tiles and panels stand, so it heads them; its end on the rows' end; a
+    fold's chevron after its count. One look for every group, so the list never stripes; the state
+    is the glyph */
+-.group,
+-.zone {
++.group {
+   height: var(--h-group);
+   margin-top: var(--group-gap);
+   padding: 0 var(--list-inset);
+ }
+-.group:first-child,
+-.zone:first-child {
++.group:first-child {
+   margin-top: 0;
+ }
+ .group .chev {
+@@ -26,11 +24,6 @@
+   width: var(--sp-8);
+   margin-left: calc(var(--sp-2) * -1);
+ }
+-/* zone: My queue's heading over its agents' cards, run through its surface's padding to the list's
+-   edges, so its glyph stands on the rows' first edge */
+-.zone {
+-  margin-inline: calc(var(--pad) * -1);
+-}
+ /* a fold's heading is no box: its button lays out as the head's own child */
+ .holds {
+   display: contents;
+diff --git a/web/src/kit/Head.tsx b/web/src/kit/Head.tsx
+index d9543ea..7bddc73 100644
+--- a/web/src/kit/Head.tsx
++++ b/web/src/kit/Head.tsx
+@@ -1,7 +1,7 @@
+-// The head over a group (Compact, My queue's lists), a zone (My queue's cards) or a list's run of
+-// lines (Intake): name, count, note, and a summary slot at the far end. Every head is a heading set
+-// apart by room, never a band. A head with `fold` collapses its group; the screen then leaves the
+-// group's rows out.
++// The head over a group (Compact, My queue's lists and its agents' board) or a list's run of lines
++// (Intake): name, count, note, and a summary slot at the far end. Every head is a heading set apart
++// by room, never a band. A head with `fold` collapses its group; the screen then leaves the group's
++// rows out.
+ import { type ReactNode, useContext } from "react";
+ 
+ import { Badge } from "./Badge";
+@@ -23,12 +23,11 @@ export interface HeadProps {
+   /** At the far end: a stat, links. */
+   summary?: ReactNode;
+   /** group: a list's heading, parted from the group before by room, no band (with or without a
+-   *  fold), its glyph hung on the list's column edge, the rows' words inset under it; zone: the
+-   *  same heading run through its surface's padding (over My queue's agent cards); line: a query's
+-   *  head, parted from the run before by room, held at the list's top, lit on hover like a row (it
+-   *  is the row a Swap in its summary answers to), its fold reaching across it, the chevron on the
+-   *  column edge (Intake's). */
+-  level?: "zone" | "group" | "line";
++   *  fold), its glyph hung on the list's column edge, the rows' words inset under it; line: a
++   *  query's head, parted from the run before by room, held at the list's top, lit on hover like a
++   *  row (it is the row a Swap in its summary answers to), its fold reaching across it, the
++   *  chevron on the column edge (Intake's). */
++  level?: "group" | "line";
+   /** Collapsible: whether the group is open, and how to flip it. */
+   fold?: { open: boolean; toggle: () => void };
+ }
+diff --git a/web/src/kit/Meter.module.css b/web/src/kit/Meter.module.css
+index 5ff573b..8175c75 100644
+--- a/web/src/kit/Meter.module.css
++++ b/web/src/kit/Meter.module.css
+@@ -40,22 +40,31 @@
+     opacity: 0.9;
+   }
+ }
+-/* row: inline beside a step count; tile: an agent's card's whole width at its foot, still (a grid
+-   of cards would sweep all at once), the step under way a soft live */
+-.row {
++/* row: inline beside a step count; board: the same on a line of the agents' board, a little longer
++   so its steps read apart, still (a board of them would sweep all at once), its steps done in the
++   live hue, the step under way a soft one */
++.row,
++.board {
+   flex: none;
+   gap: var(--line-2);
++}
++.row {
+   width: var(--w-meter);
+ }
+-.tile {
+-  gap: var(--line-2);
++.board {
++  width: var(--w-meter-board);
++}
++/* its steps to come a see-through grey, so they keep showing on a line's wash (hover, the open
++   one) */
++.board .seg {
++  background: var(--meter-still-track);
+ }
+-.tile .seg[data-seg="done"] {
++.board .seg[data-seg="done"] {
+   background: var(--live);
+ }
+-.tile .seg[data-seg="now"] {
+-  background: var(--tile-meter-now);
++.board .seg[data-seg="now"] {
++  background: var(--meter-still-now);
+ }
+-.tile .seg[data-seg="now"]::after {
++.board .seg[data-seg="now"]::after {
+   content: none;
+ }
+diff --git a/web/src/kit/Meter.tsx b/web/src/kit/Meter.tsx
+index 48b102e..edcfc1f 100644
+--- a/web/src/kit/Meter.tsx
++++ b/web/src/kit/Meter.tsx
+@@ -1,5 +1,6 @@
+-// A run's progress: one segment per step; the step in progress sweeps. One form, two sizes: inline
+-// in a row (the default), and still beside the step count of the agent Card it is in.
++// A run's progress: one segment per step; the step in progress sweeps. One form, two ways: live
++// inline in a row (the default), and still, a little longer, on the agents' board after its step
++// count.
+ import s from "./Meter.module.css";
+ import { cx } from "./vars";
+ 
+@@ -7,7 +8,7 @@ export interface MeterProps {
+   /** Steps finished. */
+   done: number;
+   total: number;
+-  size?: "row" | "tile";
++  size?: "row" | "board";
+ }
+ 
+ type Seg = "done" | "now" | "next";
+diff --git a/web/src/kit/Row.tsx b/web/src/kit/Row.tsx
+index e201051..c9d8d03 100644
+--- a/web/src/kit/Row.tsx
++++ b/web/src/kit/Row.tsx
+@@ -28,7 +28,7 @@ export interface RowProps {
+   /** It opens something (a peek, its expansion): a click, Enter or Space anywhere on it. `label`
+    *  names what it opens, for assistive tech. */
+   action?: Action;
+-  /** It is the open one: selected, with `more` under it. */
++  /** It is the open one: selected (a peek open at it), with `more` under it when it expands. */
+   open?: boolean;
+   more?: ReactNode;
+   /** One line under it, said at once (a failed action). */
+diff --git a/web/src/kit/Stack.tsx b/web/src/kit/Stack.tsx
+index 48bd506..782ba00 100644
+--- a/web/src/kit/Stack.tsx
++++ b/web/src/kit/Stack.tsx
+@@ -13,8 +13,8 @@ export interface StackProps {
+   wrap?: boolean;
+   /** Take the free space, and let the content shrink below its own width. */
+   grow?: boolean;
+-  /** Lay the children out in equal columns instead: 3, the agents' cards; 2, a form's settings
+-   *  side by side, one under another where the column is too narrow for two. */
++  /** Lay the children out in equal columns instead: 3, a twin's columns of Linear's; 2, a form's
++   *  settings side by side, one under another where the column is too narrow for two. */
+   cols?: 2 | 3;
+ }
+ 
+diff --git a/web/src/kit/Surface.module.css b/web/src/kit/Surface.module.css
+index 71dae45..4b2e6e8 100644
+--- a/web/src/kit/Surface.module.css
++++ b/web/src/kit/Surface.module.css
+@@ -39,6 +39,16 @@
+   height: var(--line-1);
+   background: var(--rule);
+ }
++/* a live board under its head (My queue's agents at work): its lines on one tone lying flat on the
++   sheet (no edge, no shadow), reaching --list-in past the column edge as a row's wash does, so the
++   lines' words keep the edge and their wash fills it side to side */
++.board {
++  --ground: var(--board);
++  margin: var(--sp-2) var(--list-pad) 0;
++  padding: var(--sp-3) var(--list-in);
++  border-radius: var(--r-4);
++  background: var(--board);
++}
+ .fill {
+   flex: 1;
+   min-height: 0;
+diff --git a/web/src/kit/Surface.tsx b/web/src/kit/Surface.tsx
+index 76f7900..aa70e39 100644
+--- a/web/src/kit/Surface.tsx
++++ b/web/src/kit/Surface.tsx
+@@ -7,8 +7,10 @@ export interface SurfaceProps {
+   children: ReactNode;
+   /** recess: the one zone per view, flush on the sheet; sheet: a panel of tone held over it (a
+    *  hairline, a soft shadow); list: a section of a view under its own head (a zone of My queue,
+-   *  an Intake query), no card, parted from the one before by room and a hairline. */
+-  level?: "recess" | "sheet" | "list";
++   *  an Intake query), no card, parted from the one before by room and a hairline; board: a live
++   *  board's lines under its head (My queue's agents at work), one tone lying flat on the sheet a
++   *  little past the column edge, so its words keep the edge. */
++  level?: "recess" | "sheet" | "list" | "board";
+   /** Fill the page's height; only the content inside scrolls. */
+   fill?: boolean;
+   pad?: Space;
+diff --git a/web/src/kit/ledger.json b/web/src/kit/ledger.json
+index 5e62c40..f817e47 100644
+--- a/web/src/kit/ledger.json
++++ b/web/src/kit/ledger.json
+@@ -67,7 +67,7 @@
+           }
+         },
+         "dashed": {
+-          "why": "An empty slot drawn dashed: the owner picker's Unassigned choice, an unowned ticket on a list's line, an agent's tile or an Intake row (without it, the invisible slot that keeps a row's missing owner in its column)."
++          "why": "An empty slot drawn dashed: the owner picker's Unassigned choice, an unowned ticket on a list's line (the agents' board's too) or an Intake row (without it, the invisible slot that keeps a row's missing owner in its column)."
+         },
+         "people": {
+           "why": "Who works on a repo, who is in a conversation: one row, named together."
+@@ -95,7 +95,7 @@
+         "size": {
+           "why": "Keys sit in rows, group heads and the ticket kicker.",
+           "values": {
+-            "sm": "Compact's foot and the cards' keys (an agent's, a board's).",
++            "sm": "Compact's foot and a board card's key.",
+             "md": "Rows."
+           }
+         },
+@@ -107,7 +107,7 @@
+           "values": {
+             "neutral": "The default.",
+             "you": "Needs-you heads.",
+-            "live": "Running heads (Compact's Running, My queue's Agents at work): a step firmer in ink.",
++            "live": "Running heads (Compact's Running, My queue's Agents at work over its board): a step firmer in ink.",
+             "blocked": "Blocked heads: a step firmer in ink.",
+             "done": "Done heads: a step firmer in ink."
+           }
+@@ -157,34 +157,33 @@
+       }
+     },
+     "Card": {
+-      "why": "A card: one object on its own surface, the whole of it one button. Three looks on one surface and one activation (a workflow stage, an agent at work, a ticket on a board).",
++      "why": "A card: one object on its own surface, the whole of it one button. Two looks on one surface and one activation (a workflow stage, a ticket on a board).",
+       "props": {
+         "label": {
+-          "why": "What it is: a stage's button says Edit Implement or Close Implement; an agent's or a ticket's says what it opens (Peek at NW-17: …)."
++          "why": "What it is: a stage's button says Edit Implement or Close Implement; a ticket's says what it opens (Peek at NW-17: …)."
+         },
+         "face": {
+           "why": "A stage's face (an agent's, or a shell's glyph), in the slot the lane's axis runs through."
+         },
+         "children": {
+-          "why": "Its lines: a stage's summary; an agent's key and who works it, title and where, and progress; a ticket's key, title and state."
++          "why": "Its lines: a stage's summary; a ticket's key, title and state."
+         },
+         "open": {
+           "why": "The selected stage's settings, drawn in place under the summary (the owner's rule: no dialog, every field visible)."
+         },
+         "onOpen": {
+-          "why": "A click (or Enter) anywhere but its own controls: selects a stage (none: read only), or opens a peek at the agent's or ticket's ticket."
++          "why": "A click (or Enter) anywhere but its own controls: selects a stage (none: read only), or opens a peek at a board card's ticket."
+         },
+         "off": {
+-          "why": "A disabled stage is dimmed, still in its place; a queued agent's card loses its tone for a dashed outline, so running and queued read apart at a glance."
++          "why": "A disabled stage is dimmed, still in its place, its dashed outline saying the rest."
+         },
+         "problem": {
+           "why": "A stage's inline validation (a gate inside a loop, a prompt naming an unknown field), at its foot in the blocked ink."
+         },
+         "look": {
+-          "why": "Stages, agents at work and board tickets are cards in three places.",
++          "why": "Stages and board tickets are cards in two places.",
+           "values": {
+             "stage": "A workflow stage on the lane: a card of tone over the axis (its tone parts it from the next, inside a loop's bracket too; a disabled one no tone, a dashed outline alone), its face on the axis, ringed in the accent as it opens in place to its settings (the default).",
+-            "agent": "An agent at work (My queue): a tile of tone while it runs, a dashed outline with no tone while it is queued (nothing at work there yet), its lines down to the card's foot, its steps a still Meter across the foot.",
+             "ticket": "A ticket on a board (All teams): two tight lines on a tile of tone straight on the sheet (no lane under it), its key with its state's pill at the line's end, then its title (Linear's board card)."
+           }
+         }
+@@ -448,7 +447,7 @@
+       }
+     },
+     "Head": {
+-      "why": "The head over a list's run: a zone (My queue's cards), a group (Compact's, My queue's lists), or a line (Intake's queries).",
++      "why": "The head over a list's run: a group (Compact's, My queue's lists and its agents' board), or a line (Intake's queries).",
+       "props": {
+         "name": {
+           "why": "What the group is."
+@@ -476,9 +475,8 @@
+           "why": "The right slot at the head's far end: a stat, links, a JQL."
+         },
+         "level": {
+-          "why": "Three heads over a list's runs.",
++          "why": "Two heads over a list's runs.",
+           "values": {
+-            "zone": "A heading run through its surface's padding to the list's edge, room above it, no band (My queue's Agents at work, over its cards).",
+             "group": "A list's heading, parted from the group before by room, no band: Compact's fold (its chevron after the count), My queue's lists' don't; the glyph sits over the rows' first cell; in a scrolling list it stays at the top while its rows pass under it.",
+             "line": "A query's head (Intake's queries): a heading parted from the run before by room, held at the list's top while its run scrolls, lit like a row, its fold across it with the chevron first on the list's column edge; a note is the query's failure, in the blocked colour; the row a Swap in its summary answers to."
+           }
+@@ -546,7 +544,7 @@
+       }
+     },
+     "Meter": {
+-      "why": "A run's progress, one segment per step, the current one sweeping (V1's RunMeter).",
++      "why": "A run's progress, one segment per step, the current one sweeping (V1's RunMeter); still where many stand together.",
+       "props": {
+         "done": {
+           "why": "Steps finished."
+@@ -555,10 +553,10 @@
+           "why": "Steps in all."
+         },
+         "size": {
+-          "why": "Two places draw a run's progress.",
++          "why": "Two places draw a run's progress, live or still.",
+           "values": {
+-            "row": "Inline (48px), the default: the ticket's Now line, where the stepper widens it to 120px.",
+-            "tile": "An agent Card's: the card's whole width at its foot, under its step count, still (a grid of cards would sweep all at once)."
++            "row": "Inline (48px), the default: the ticket's Now line, where the stepper widens it to 120px; the step under way sweeps.",
++            "board": "A line of My queue's agents' board, after its step count, still (a board of them would sweep all at once): its steps done in the live hue, the step under way a soft one."
+           }
+         }
+       }
+@@ -698,7 +696,7 @@
+           "why": "It opens something (a peek, its expansion): a button under the cells, named by its label."
+         },
+         "open": {
+-          "why": "It is the open one (selected): it and its expansion one panel of tone, no colour."
++          "why": "It is the open one (selected: expanded in place, or the line a peek is open at): it and its expansion one panel of tone, no colour."
+         },
+         "more": {
+           "why": "Its expansion."
+@@ -830,7 +828,7 @@
+           "why": "A grid instead of a line.",
+           "values": {
+             "2": "A form's settings two side by side (each at least half the width), one under the other where a column would be narrower than a form column.",
+-            "3": "Equal columns: the agents' cards (three at most)."
++            "3": "Equal columns, three: the twins' boards and displays (Linear's columns side by side)."
+           }
+         }
+       }
+@@ -917,7 +915,8 @@
+           "values": {
+             "recess": "The view's zone, flush on the sheet (no tone, no line).",
+             "sheet": "A panel held over the page, a step of tone on the popover's hairline and soft shadow (Linear's options panels, its agent panel and latest-update card).",
+-            "list": "A section of a view under its own head (a zone of My queue, an Intake query), named as a region: no card, flush with the list's edges, parted from the one before by room and one hairline on the column edge, so a busy screen reads as its sections."
++            "list": "A section of a view under its own head (a zone of My queue, an Intake query), named as a region: no card, flush with the list's edges, parted from the one before by room and one hairline on the column edge, so a busy screen reads as its sections.",
++            "board": "A live board's lines under its head (My queue's Agents at work): one tone lying flat on the sheet (no edge, no shadow), reaching as far past the column edge as a row's wash, so its words keep the edge; the one zone that is happening now told from the plain lists by tone, not a card per run."
+           }
+         },
+         "fill": {
+diff --git a/web/src/kit/tokens.css b/web/src/kit/tokens.css
+index 007ccb0..acc6318 100644
+--- a/web/src/kit/tokens.css
++++ b/web/src/kit/tokens.css
+@@ -265,9 +265,9 @@
+   --chip-rest: var(--fill-1); /* a property you can change, at rest (a picker's chip) */
+   --pop-edge: var(--edge);
+   --pop-aside: color-mix(in srgb, var(--ink-3) 72%, var(--pop));
+-  /* surfaces on the sheet: an agent's tile and a board's card one tone, a step more under the
+-     pointer; the run card and the peek's ground */
+-  --tile: var(--tone-2);
++  /* surfaces on the sheet: the agents' live board and a board's card one tone, a card a step more
++     under the pointer; the run card and the peek's ground */
++  --board: var(--tone-2);
+   --tile-hover: var(--tone-3);
+   --teams-card: var(--tone-2);
+   --tk-card: var(--tone-2);
+@@ -291,8 +291,10 @@
+   --id-rose-row: color-mix(in srgb, var(--id-rose) var(--face-id), var(--page));
+   --id-teal-row: color-mix(in srgb, var(--id-teal) var(--face-id), var(--page));
+   --id-slate-row: color-mix(in srgb, var(--id-slate) var(--face-id), var(--page));
+-  /* agents: a card's meter, the step under way a soft live */
+-  --tile-meter-now: color-mix(in srgb, var(--live) 38%, transparent);
++  /* agents: a still meter on the agents' board, the step under way a soft live, the steps to come
++     a see-through grey that shows on a line's wash too */
++  --meter-still-now: color-mix(in srgb, var(--live) 38%, transparent);
++  --meter-still-track: var(--fill-3);
+   /* form: a switch's track off (a firm grey, so an off switch still reads) and its white knob */
+   --input: var(--fill-2);
+   --switch-off: color-mix(in srgb, var(--ink-1) 20%, var(--page));
+@@ -407,6 +409,7 @@
+   --w-talk-min: 400px; /* the ticket page's Talk column */
+   --w-talk-max: 500px;
+   --w-meter: 48px; /* a run meter inline in a row */
++  --w-meter-board: 72px; /* a still one on a line of the agents' board, its steps read apart */
+   --col-xs: 44px; /* rows: an age (as wide as "3h 10m"), a run's or a version's number */
+   --prop-dot: 7px; /* rows: a property chip's dot */
+   --h-face: 18px; /* rows: a face in a row or a picker */

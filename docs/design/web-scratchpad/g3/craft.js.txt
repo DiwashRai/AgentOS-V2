@@ -1,0 +1,152 @@
+export const meta = {
+  name: 'gauntlet3-craft',
+  description: 'One craft round: a kit challenger per lever, judged head to head on the Linear twins (Linear shown as the standard) and guarded on the screens it changed; the winners integrated and committed',
+  phases: [
+    { title: 'Build', detail: 'one kit challenger per lever, in its own worktree, saved as a patch' },
+    { title: 'Judge', detail: 'four blind judges on the twins it changed (with Linear as the standard), four on the screens it changed (a regression guard)' },
+    { title: 'Integrate', detail: 'apply the winners, all checks, baselines, commit, shoot the new incumbent' },
+  ],
+}
+
+// args: { round, base: '<commit>', inc: '<incumbent shots dir name>', next: '<dir name for the new incumbent>',
+//         levers: [{ key, dir: '<neutral dir name>', area, brief }] }
+const ROOT = 'C:\\code\\AgentOS-V2-web'
+const G3 = 'C:\\Users\\diwash\\AppData\\Local\\Temp\\claude\\C--code-AgentOS-V2-web\\6d0fdab0-5ae2-4898-99b9-b3d2c29ccdad\\scratchpad\\g3'
+const GSHOTS = 'C:\\Users\\diwash\\AppData\\Local\\Temp\\claude\\C--code-AgentOS-V2-web\\6d0fdab0-5ae2-4898-99b9-b3d2c29ccdad\\scratchpad\\g2\\gshots.mjs'
+const REF = ROOT + '\\.review\\linear-bar'
+const G = ROOT + '\\.review\\gauntlet3\\'
+const K = `${G}k${args.round}\\`
+const INC = K + args.inc + '\\'
+const MAX_SCREENS = 6
+
+const SETUP = (port) => `You are in your own git worktree (your current directory), a copy of ${ROOT}. Set it up first:
+1. \`git rev-parse HEAD\` must be ${args.base}; if it isn't, run \`git checkout --detach ${args.base}\` (in this worktree only).
+2. Link the installed packages, one junction per package, with the fonts copied for real (Vite refuses to serve files through a junction that leads outside the worktree, and the page then falls back to another font), in PowerShell from the worktree root:
+   \`New-Item -ItemType Directory web\\node_modules | Out-Null; Get-ChildItem ${ROOT}\\web\\node_modules -Force | Where-Object { $_.Name -ne '.vite' } | ForEach-Object { if ($_.Name -eq '@fontsource') { Copy-Item $_.FullName web\\node_modules\\@fontsource -Recurse } else { New-Item -ItemType Junction -Path ('web\\node_modules\\' + $_.Name) -Target $_.FullName | Out-Null } }\`
+   The cameras fail if the Geist font didn't load: then fix the setup, never shoot without it.
+Your port for Vite is ${port}; use no other (never 8000, 5173 or 5174). Never commit, push or stash, and never touch ${ROOT} itself except to write under ${K}.`
+
+const BUILD_SCHEMA = { type: 'object', required: ['patch', 'summary', 'twins', 'screens', 'checks'], properties: {
+  patch: { type: 'string', description: 'Absolute path of the saved patch (empty if nothing changed)' },
+  summary: { type: 'string', description: 'What the challenger changes, in a few lines' },
+  twins: { type: 'array', items: { type: 'object', required: ['name', 'pixels'], properties: { name: { type: 'string' }, pixels: { type: 'number' } } }, description: 'The twins the change moved (from changed.mjs), each with its changed-pixel count' },
+  screens: { type: 'array', items: { type: 'object', required: ['path', 'pixels'], properties: { path: { type: 'string' }, pixels: { type: 'number' } } }, description: 'The screen shots the change moved (from changed.mjs; path relative to screens\\, e.g. lists\\1-my-queue-light.png), each with its count' },
+  checks: { type: 'string', description: 'Each check and its result' },
+  kitLines: { type: 'string', description: "The kit gate's line count after the change" },
+} }
+
+function buildPrompt(l, port) {
+  const out = K + l.dir + '\\'
+  return `You build one challenger in a contest that restyles the AgentOS V2 web kit (web/src/kit) towards Linear's craft: its look, never its features. Add no screen, feature or data the app doesn't have.
+
+${SETUP(port)}
+
+How it's judged. We keep "twins": Linear's reference screens redrawn with our kit, the same content at the same size (web/src/features/sheet/twins/, route /twins/<name>, development only), so their difference from Linear's is purely craft. Your challenger is judged head to head, by four blind judges, against the current kit on the twins your change moves, with Linear's crops shown as the standard both are held to. It wins only with at least 3 of 4 votes. The screens your change moves are judged too, against the current screens: if they get worse (3 of 4 judges prefer the current ones), your challenger is rejected however well its twins do. So make the kit better, not just more Linear-looking on the twins.
+
+Your lever: ${l.key}. ${l.brief}
+Work mainly in: ${l.area}. Three other challengers work on other levers this round; stay out of their areas where you can, so the winners can be combined.
+
+The evidence: the judges' notes on every twin against Linear, ${G}h2h\\s3\\summary.md (read the "Twin's gap" lines and the reasons); the twin builders' notes on what the kit can't draw, ${G}twins\\gaps\\*.md. Linear's crops and our current twins are side by side in ${INC}twins\\<name>\\ (linear.png, twin.png); our current screens are in ${INC}screens\\. Open them.
+
+The rules of the repo (AGENTS.md) hold:
+- Only web/src/kit renders elements or holds CSS. Raw values live only in tokens.css; a new colour is a token written from the base tokens (color-mix of --page, --ink-1, --you and so on), so every theme gets it. Check every theme you affect, light and dark.
+- Every kit component, prop and variant has a reason in web/src/kit/ledger.json. Keep the entries you touch true.
+- The budget: 45 components (44 used; add none) and 9,000 lines (about 8,570 used), shared by four challengers: add at most 60 kit lines net. Replace rather than add. Never change "budget" or "raises".
+- A twin draws Linear's content with the kit's nearest piece. If your change gives the kit a nearer piece for something a twin shows (a glyph, a look), update the twin to use it, the way a screen would; never restyle a twin by composition alone. Screens adopt a new piece where it means what they show.
+- Never weaken a check or a gate.
+
+See your work, from the worktree root:
+- the twins: \`node ${G3}\\tshots.mjs <worktree>\\web ${port} ${out}twins ${REF} all\`
+- the screens: \`node ${GSHOTS} <worktree>\\web ${port} ${out}screens all\`
+Look at them against Linear's and the current ones, and iterate as much as you need. When you're done, shoot both into exactly those folders (delete stale shots first), then list what moved:
+- \`node ${G3}\\changed.mjs <worktree>\\web ${INC}twins ${out}twins\` (a twin moved if its twin.png is listed)
+- \`node ${G3}\\changed.mjs <worktree>\\web ${INC}screens ${out}screens\`
+Report those lists exactly as printed.
+
+Before you finish, from web/: \`npx tsc -p . --noEmit\`, \`npx eslint src\`, \`node node_modules/stylelint/bin/stylelint.mjs "src/**/*.css"\`, \`npx prettier --write src\`, \`npx vitest run\`, then \`node tools/kit.mjs --check\` (all must pass). Save your change as a patch: from the worktree root, \`git add -A -- web/src\` then \`git diff --cached --binary ${args.base} -- web/src > ${K}patches\\${l.key}.patch\` (create the folder). Return the patch, a summary, the moved twins and screens with their pixel counts, and the checks.`
+}
+
+const JUDGE_SCHEMA = { type: 'object', required: ['pick', 'why', 'loserGap', 'winnerFlaw'], properties: {
+  pick: { type: 'string', enum: ['A', 'B', 'same'] },
+  why: { type: 'string', description: 'The deciding differences, in two or three sentences' },
+  loserGap: { type: 'string', description: "The losing one's single biggest gap to the winner, as one concrete instruction (if same: the bigger shared flaw)" },
+  winnerFlaw: { type: 'string', description: "The winner's own single biggest remaining flaw, as one concrete instruction" },
+  broken: { type: 'string', description: 'Anything broken in either: clipped or overlapping text, missing content, broken layout, unreadable contrast (say which, A or B)' },
+} }
+
+function judgePrompt(pairs, withRef) {
+  const list = pairs.map((p, i) => `Screen ${i + 1}: A ${p.a}, B ${p.b}${withRef ? `, the standard ${p.r}` : ''}`).join('\n')
+  const ref = withRef
+    ? `\nEach screen also has "the standard": the same content in a reference product both are held to. It is not a contestant; judge A and B by how close they come to its craft, and where both fall short, which falls shorter.\n`
+    : ''
+  return `You are a harsh product design critic. Praise is not useful.
+
+Two versions, A and B, of the same product screens, with their labels stripped: the same content, drawn two ways.
+${list}
+${ref}
+Open every image and study A and B side by side, part by part, screen by screen; then weigh all the screens together. Which is the better-crafted product UI? Judge the craft: visual hierarchy, typography, colour and contrast, density, spacing and alignment, separation and surfaces, glyphs, consistency, polish. Where one shows a picture (a logo, an emoji, a photo) and the other a stand-in for it, don't count that either way.
+
+Answer A, B, or same. Say "same" only when you genuinely can't tell them apart in quality, never as a hedge between two that differ. Then name the loser's single biggest gap to the winner and the winner's own biggest remaining flaw, each as one concrete instruction, and list anything broken. Do not edit any file.`
+}
+
+// four judges, two seeing the incumbent as A; returns { inc, cand, same, judges }
+async function match(label, pairs, withRef) {
+  const runs = await parallel([1, 2, 3, 4].map((k) => () => {
+    const flip = k > 2
+    const shown = pairs.map((p) => ({ a: flip ? p.cand : p.inc, b: flip ? p.inc : p.cand, r: p.ref }))
+    return agent(judgePrompt(shown, withRef), { label: `${label}:j${k}`, phase: 'Judge', schema: JUDGE_SCHEMA })
+      .then((v) => v && { judge: k, incIs: flip ? 'B' : 'A', ...v, vote: v.pick === 'same' ? 'same' : (v.pick === (flip ? 'B' : 'A') ? 'inc' : 'cand') })
+  }))
+  const js = runs.filter(Boolean)
+  return { inc: js.filter((j) => j.vote === 'inc').length, cand: js.filter((j) => j.vote === 'cand').length, same: js.filter((j) => j.vote === 'same').length, judges: js }
+}
+
+async function judge(l, b) {
+  if (!b || !b.patch) return { key: l.key, kept: false, reason: 'no challenger' }
+  const out = K + l.dir + '\\'
+  const twins = b.twins.map((t) => t.name.replace(/[\\/](twin|linear)\.png$/, '')).filter((n, i, a) => a.indexOf(n) === i)
+  const screens = b.screens.slice().sort((x, y) => y.pixels - x.pixels).map((s) => s.path)
+    .filter((p, i, a) => a.indexOf(p) === i).slice(0, MAX_SCREENS)
+  if (b.screens.length > MAX_SCREENS) log(`${l.key}: ${b.screens.length} screens moved; the guard judges the ${MAX_SCREENS} that moved most`)
+  const [tw, sc] = await Promise.all([
+    twins.length
+      ? match(`twins:${l.key}`, twins.map((n) => ({ inc: `${INC}twins\\${n}\\twin.png`, cand: `${out}twins\\${n}\\twin.png`, ref: `${INC}twins\\${n}\\linear.png` })), true)
+      : null,
+    screens.length
+      ? match(`screens:${l.key}`, screens.map((p) => ({ inc: `${INC}screens\\${p}`, cand: `${out}screens\\${p}` })), false)
+      : null,
+  ])
+  const kept = !!tw && tw.cand >= 3 && !(sc && sc.inc >= 3)
+  return { key: l.key, kept, twins: tw, screens: sc, twinNames: twins, screenPaths: screens, patch: b.patch, summary: b.summary, checks: b.checks, kitLines: b.kitLines }
+}
+
+phase('Build')
+const results = await pipeline(
+  args.levers,
+  (l, _, i) => agent(buildPrompt(l, 5241 + i), { label: `build:${l.key}`, phase: 'Build', schema: BUILD_SCHEMA, isolation: 'worktree' }),
+  (b, l) => judge(l, b),
+)
+
+const verdicts = results.filter(Boolean)
+for (const r of verdicts) log(`${r.key}: twins ${r.twins ? `cand ${r.twins.cand}, inc ${r.twins.inc}, same ${r.twins.same}` : '-'}; screens ${r.screens ? `cand ${r.screens.cand}, inc ${r.screens.inc}, same ${r.screens.same}` : '-'}${r.kept ? ' KEPT' : ''}`)
+const winners = verdicts.filter((r) => r.kept).sort((a, b) => b.twins.cand - a.twins.cand)
+
+phase('Integrate')
+const integ = winners.length ? await agent(`You integrate one craft round of a contest restyling the AgentOS V2 web kit, in ${ROOT} (branch web-restyle, at ${args.base}). Do not push, switch branches or stash.
+
+Apply these winning patches, in this order, each with \`git apply --3way <patch>\` from the repo root:
+${winners.map((w) => `- ${w.key}: ${w.patch} (${w.summary.replace(/\n/g, ' ')})`).join('\n')}
+
+Where two patches touch the same thing (tokens.css, a shared component, the ledger, a twin), resolve it so both changes hold. If a patch can't be made to fit, drop it and say which and why. Keep the screens' content and behaviour.
+
+Then make the tree sound, never by weakening a check: from the repo root, \`just check\`, \`just test\` and \`just gates\` all pass. The kit stays within its budget (45 components, 9,000 lines); make every ledger reason true to the code.
+
+Then \`just shots --update-snapshots\` (the screens changed on purpose; look at a few new baselines to be sure none is broken), and commit everything with a message file (\`git commit -F <file>\`): the subject "gauntlet: craft round ${args.round}", a line per kept lever, and the trailers "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" and "Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1". The pre-commit hook runs the checks: if it fails, fix and commit again. Never use --no-verify.
+
+Finally shoot the new incumbent: \`node ${GSHOTS} ${ROOT}\\web 5250 ${G}k${args.round + 1}\\${args.next}\\screens all\` and \`node ${G3}\\tshots.mjs ${ROOT}\\web 5250 ${G}k${args.round + 1}\\${args.next}\\twins ${REF} all\`. Return the commit, what was applied or dropped, the checks and the kit's numbers.`,
+  { label: `integrate:k${args.round}`, phase: 'Integrate', schema: { type: 'object', required: ['commit', 'applied', 'dropped', 'checks'], properties: {
+    commit: { type: 'string' }, applied: { type: 'array', items: { type: 'string' } }, dropped: { type: 'string' },
+    checks: { type: 'string' }, kit: { type: 'string' }, notes: { type: 'string' },
+  } } }) : null
+
+return { round: args.round, verdicts, integration: integ }

@@ -1,0 +1,25 @@
+kit: no hidden layout contracts, and the pieces screens were working around
+
+Step 4 of the kit consolidation.
+
+- Page's sidebar says its width: `side` is { look: "column" | "rail",
+  content }. Page used to switch to a narrow rail when it found a FormRow
+  anywhere in its sidebar (FormRow wrote a data-setting for it), so a form row
+  in any sidebar changed the page.
+- Head's unused "rack" level is now "line": a plain line of a list with its
+  fold across it. Intake's query labels use it instead of a clickable Row they
+  built themselves, so their fold says whether it is open.
+- Stack's unused five columns are now two, for a form's settings side by side
+  that fall to one column when narrow; a stage's settings use it.
+- Field has a search form (the glyph, Esc to clear), so the workflow editor's
+  library search looks and behaves like the page's.
+- Sortable keeps its handles' gutter itself (a Lane, which keeps one for its
+  loop bands, turns it off), so AGENTS.md's blocks drop the empty Stack that
+  made room for them.
+
+Not done: FormRow's label, help and problem are still not tied to the control
+programmatically (the reviewer's point 5 under the screens' workarounds); that
+is a change to every form control and is left for its own step.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

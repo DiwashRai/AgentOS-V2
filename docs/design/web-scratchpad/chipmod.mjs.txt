@@ -1,0 +1,53 @@
+// One-off codemod (step 3 of the kit consolidation): Badge's tag and prop pills become Chips, and a
+// Chip's `icon` becomes `lead={<Icon …/>}`. Usage: node chipmod.mjs <file>...
+// Pills whose children hold elements are left alone and reported, to do by hand.
+import { readFileSync, writeFileSync } from "node:fs";
+
+const TONE = { neutral: "strong", quiet: "line", fill: "fill", blocked: "blocked" };
+
+function attrs(src) {
+  const out = {};
+  for (const m of src.matchAll(/(\w+)=("[^"]*"|\{(?:[^{}]|\{[^{}]*\})*\})/g)) out[m[1]] = m[2];
+  return out;
+}
+
+const value = (v) => (v.startsWith("{") ? v.slice(1, -1) : v);
+
+for (const file of process.argv.slice(2)) {
+  let t = readFileSync(file, "utf8");
+  let n = 0;
+  t = t.replace(/<Badge\s+([^>]*?kind="(?:prop|tag)"[^>]*)>\s*([\s\S]*?)\s*<\/Badge>/g, (all, a, child) => {
+    if (/<\w/.test(child)) {
+      console.log(`${file}: by hand: ${all.slice(0, 80).replace(/\s+/g, " ")}`);
+      return all;
+    }
+    const at = attrs(a);
+    const label = child.startsWith("{") ? child : JSON.stringify(child.replace(/\s+/g, " "));
+    const parts = [];
+    if (at.key) parts.push(`key=${at.key}`);
+    if (at.icon) parts.push(`lead={<Icon name=${at.icon} />}`);
+    if (at.dot) parts.push(`dot=${at.dot}`);
+    const tone = at.kind === '"tag"' ? TONE[value(at.tone ?? '"neutral"').replace(/"/g, "")] : null;
+    if (tone && tone !== "line") parts.push(`tone="${tone}"`);
+    parts.push(`label=${label.startsWith("{") ? label : `{${label}}`}`);
+    if (at.title) parts.push(`title=${at.title}`);
+    n++;
+    return `<Chip ${parts.join(" ")} />`;
+  });
+  t = t.replace(/<Chip([^>]*?)\sicon=(\{[^}]*\}|"[^"]*")/g, (_, before, icon) => {
+    n++;
+    return `<Chip${before} lead={<Icon name=${icon} />}`;
+  });
+  if (n === 0) continue;
+  // the kit import: Chip and Icon in, Badge out if it no longer appears
+  t = t.replace(/import \{([^}]*)\} from "(\.\.\/)+kit";/, (imp, names) => {
+    const set = names.split(",").map((s) => s.trim()).filter(Boolean);
+    for (const want of ["Chip", "Icon"]) if (!set.includes(want) && t.includes(`<${want}`)) set.push(want);
+    const body = t.replace(imp, "");
+    const keep = set.filter((s) => s !== "Badge" || /<Badge\b/.test(body));
+    keep.sort((a, b) => a.replace(/^type /, "").localeCompare(b.replace(/^type /, "")));
+    return imp.replace(names, ` ${keep.join(", ")} `);
+  });
+  writeFileSync(file, t);
+  console.log(`${file}: ${String(n)} changed`);
+}

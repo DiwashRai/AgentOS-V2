@@ -1,0 +1,39 @@
+// One-off: the W0 screens in both themes, as the screenshot tests take them. Starts its own Vite on
+// 5191 and stops it. Usage: node screens.mjs <web dir> <out dir>
+import { spawn } from "node:child_process";
+import { mkdirSync } from "node:fs";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web, out] = process.argv.slice(2);
+mkdirSync(out, { recursive: true });
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const STATES = [
+  ["my-queue", "/"], ["my-queue-peek", "/?peek=NW-17"], ["compact-expanded", "/compact?open=NW-17"],
+  ["intake", "/intake"], ["ticket", "/t/NW-17"], ["all-teams", "/teams"],
+];
+const PORT = 5191;
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", String(PORT), "--strictPort"], { cwd: web, stdio: "ignore" });
+try {
+  const base = `http://127.0.0.1:${PORT}`;
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  for (const theme of ["light", "dark"]) {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, timezoneId: "Europe/London", locale: "en-GB" });
+    await ctx.addInitScript((t) => localStorage.setItem("agentos-theme", t), theme);
+    const page = await ctx.newPage();
+    for (const [name, path] of STATES) {
+      await page.goto(base + path);
+      await page.evaluate(() => document.fonts.ready);
+      await page.screenshot({ path: join(out, `${name}-${theme}.png`), animations: "disabled", caret: "hide" });
+    }
+    await ctx.close();
+  }
+  await browser.close();
+} finally {
+  vite.kill();
+}

@@ -1,0 +1,12 @@
+kit: Composer, the reply box, apart from Thread
+
+Step 5 of the kit consolidation. The peek drew `<Thread messages={[]}
+compose=…>` only to get a reply box, and Send was a span. The reply box is now
+Composer: its own text, a real Send button (it sends through `onSend` when the
+screens are wired; W0 is static), Ctrl/Cmd+Enter to send, pinned at a
+full-height column's foot. Thread draws only the messages. The slot Menu freed
+in step 2 pays for it: the kit is 40 of 40 components again, at 7,110 lines
+against 7,695 before the consolidation.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01URjkhxifqMEUWs9cmhsfG1

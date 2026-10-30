@@ -1,0 +1,83 @@
+// One-off: a toast raised while a full Dialog asks waits, then shows and is announced once the
+// question is answered; and the app's own toasts still work. Vite on 5191, stopped at the end.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, permissions: ["clipboard-read", "clipboard-write"] });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  await page.clock.install();
+  await page.goto(base + "/t/NW-17");
+  await page.waitForTimeout(600);
+
+  // the app's own toast still shows
+  await page.getByRole("button", { name: "More on NW-17" }).click();
+  await page.getByRole("menuitem", { name: "Copy key" }).click();
+  await page.waitForTimeout(300);
+  say("frame toast", await page.evaluate(() => [...document.querySelectorAll("[class*=_toast_]")].map((t) => t.textContent)));
+
+  // a full Dialog asking, with a child that raises a toast: rendered with the app's own React
+  await page.evaluate(async () => {
+    const dep = async (from, name) => {
+      const src = await (await fetch(from)).text();
+      const m = src.match(new RegExp(`from "(/node_modules/\\.vite/deps/${name}\\.js\\?v=[^"]+)"`));
+      return import(m[1]);
+    };
+    const R = await dep("/src/kit/Dialog.tsx", "react"); const React = R.createElement ? R : R.default;
+    const D = await dep("/src/main.tsx", "react-dom_client"); const createRoot = D.createRoot ?? D.default.createRoot;
+    const kit = await import("/src/kit/index.ts");
+    const h = React.createElement;
+    function Child() {
+      const raise = kit.useToast();
+      window.__raise = raise;
+      return h("p", null, "the view");
+    }
+    function Probe() {
+      const [asking, setAsking] = React.useState(true);
+      window.__answer = () => setAsking(false);
+      return h(kit.Dialog, {
+        label: "Probe",
+        open: true,
+        onClose: () => undefined,
+        look: "full",
+        ask: asking ? { question: "Save?", actions: h(kit.Button, { onClick: () => setAsking(false) }, "Keep editing") } : undefined,
+      }, h(Child));
+    }
+    const div = document.createElement("div");
+    document.body.append(div);
+    createRoot(div).render(h(Probe));
+  });
+  await page.waitForTimeout(500);
+  const ax = async () => {
+    const snap = await page.locator("body").ariaSnapshot();
+    return snap.includes("Held result");
+  };
+  await page.evaluate(() => window.__raise("Held result"));
+  await page.waitForTimeout(300);
+  say("while asking: in the DOM, in the AX tree", [await page.evaluate(() => document.body.textContent.includes("Held result")), await ax()]);
+  await page.clock.runFor(8000);
+  await page.evaluate(() => window.__answer());
+  await page.waitForTimeout(400);
+  say("answered: shown, in the AX tree", [await page.evaluate(() => [...document.querySelectorAll("dialog [class*=_toast_]")].map((t) => t.textContent)), await ax()]);
+  await page.clock.runFor(8000);
+  await page.waitForTimeout(400);
+  say("its own time later: gone", await page.evaluate(() => [...document.querySelectorAll("dialog [class*=_toast_]")].map((t) => t.textContent)));
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}

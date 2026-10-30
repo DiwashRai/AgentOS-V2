@@ -1,0 +1,67 @@
+// One-off: check the kit review's round-4 fixes in Chrome. Starts Vite on 5191 and stops it.
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { join } from "node:path";
+
+const [web] = process.argv.slice(2);
+const { chromium } = createRequire(join(web, "package.json"))("@playwright/test");
+const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", "5191", "--strictPort"], { cwd: web, stdio: "ignore" });
+const say = (k, v) => console.log(`${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`);
+try {
+  const base = "http://127.0.0.1:5191";
+  for (let i = 0; ; i++) {
+    try { if ((await fetch(base)).ok) break; } catch {}
+    if (i > 100) throw new Error("vite did not start");
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  const browser = await chromium.launch({ channel: "chrome" });
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e)));
+  const go = async (path) => { await page.goto(base + path); await page.evaluate(() => document.fonts.ready); await page.waitForTimeout(300); };
+
+  // M1: an item editor's text fills the window
+  for (const path of ["/library/skills/ticket", "/library/agents/planner"]) {
+    await go(path);
+    say(`M1 ${path} textarea height`, await page.evaluate(() => Math.round(document.querySelector("main textarea")?.getBoundingClientRect().height ?? 0)));
+  }
+
+  // S1: Esc, Esc on the workflow overlay: focus back on the field, the dialog never closed
+  await go("/t/NW-17?tab=workflow&edit=workflow");
+  await page.getByRole("button", { name: "Edit Implement" }).focus();
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(400);
+  const closes = await page.evaluate(() => { window.__closes = 0; document.querySelector("dialog[open]")?.addEventListener("close", () => window.__closes++); return !!document.querySelector("dialog[open]"); });
+  const name = page.getByRole("textbox", { name: "Name" });
+  await name.click();
+  await name.press("End");
+  await page.keyboard.type(" x");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+  say("S1 asking (focus in alertdialog)", [closes, await page.evaluate(() => !!document.activeElement?.closest("[role=alertdialog]"))]);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+  say("S1 after Esc: question gone, closes, focus is the field", await page.evaluate(() => [
+    !document.querySelector("[role=alertdialog]"), window.__closes, document.activeElement?.tagName, document.activeElement?.closest("dialog") !== null,
+  ]));
+
+  // S2: the owner picker at the row's type; S3: the Theme glyph in the side icon's ink
+  await go("/t/NW-17");
+  say("S2 owner vs type fact (px, colour)", await page.evaluate(() => {
+    const st = (e) => { const c = getComputedStyle(e); return [c.fontSize, c.color]; };
+    const picker = document.querySelector("[data-picker] [role=combobox], [data-picker] button");
+    const value = [...document.querySelectorAll("dl dd")].find((d) => d.textContent.trim() === "Bug");
+    return [picker ? st(picker) : null, value ? st(value) : null];
+  }));
+  say("S3 Theme vs Settings glyph colour", await page.evaluate(() => {
+    const rows = [...document.querySelectorAll("nav *, aside *")];
+    const theme = rows.find((e) => e.textContent?.trim().startsWith("Theme") && e.matches("button"));
+    const settings = rows.find((e) => e.textContent?.trim() === "Settings" && e.matches("a"));
+    const ink = (e) => (e ? getComputedStyle(e.querySelector("svg")).color : null);
+    return [ink(theme), ink(settings)];
+  }));
+  say("errors", errors);
+  await browser.close();
+} finally {
+  vite.kill();
+}
