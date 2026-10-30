@@ -1,0 +1,171 @@
+"""Build the data for the two architecture maps from the real sources, and inject it into the
+HTML templates next to this script. Run: python gen.py <out_dir>"""
+
+import json
+import re
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).parent
+DOCS = Path(r"C:\code\AgentOS-V2-docs\docs")
+TICKETS = Path(r"C:\code\AgentOS-V2\docs\tickets.md")
+WEB = Path(r"C:\code\AgentOS-V2-web\web\src")
+MAIN = Path(r"C:\code\AgentOS-V2\src")
+BACKEND_WT = Path(r"C:\code\AgentOS-V2-backend\src")
+
+
+def lines(p: Path) -> int:
+    return len(p.read_text(encoding="utf-8").splitlines())
+
+
+# ---------------------------------------------------------------- tickets.md
+def parse_tickets() -> list[dict]:
+    text = TICKETS.read_text(encoding="utf-8")
+    out = []
+    for block in re.split(r"\n(?=## Ticket )", text):
+        m = re.match(r"## Ticket (W?\d+): (.+)", block)
+        if not m:
+            continue
+        pk = re.search(r"\*Packages:\*\s*(.+?)\.\s*\*Verify", block, re.S)
+        out.append({"id": m.group(1), "title": m.group(2).strip(), "packages": pk.group(1) if pk else ""})
+    return out
+
+
+WORKER_SUBS = ["core", "run", "client", "http", "git", "procs", "files"]
+
+
+def tickets_by_package(tickets: list[dict]) -> dict[str, list[str]]:
+    by: dict[str, list[str]] = {}
+    for t in tickets:
+        spec = t["packages"]
+        names = set(re.findall(r"`([a-z_]+)`", spec))
+        for n in names:
+            if n == "agentos_worker":
+                subs = re.findall(r"`agentos_worker`\s*\(([^)]*)\)", spec)
+                for s in ",".join(subs).split(","):
+                    s = s.strip()
+                    if s in WORKER_SUBS:
+                        by.setdefault("worker." + s, []).append(t["id"])
+            elif n == "agentos_protocol":
+                by.setdefault("protocol", []).append(t["id"])
+            else:
+                by.setdefault(n, []).append(t["id"])
+    return by
+
+
+# ---------------------------------------------------------------- backend
+def backend_data() -> dict:
+    tickets = parse_tickets()
+    by_pkg = tickets_by_package(tickets)
+    titles = {t["id"]: t["title"] for t in tickets if not t["id"].startswith("W")}
+
+    def status(pkg: str) -> dict:
+        main = MAIN / ("agentos_protocol" if pkg == "protocol" else f"agentos/{pkg}")
+        files = sorted(p for p in main.rglob("*.py")) if main.exists() else []
+        code = [p for p in files if p.name != "__init__.py" or lines(p) > 3]
+        wt = BACKEND_WT / f"agentos/{pkg}"
+        wip = sorted(p.name for p in wt.glob("*") if p.is_file()) if wt.exists() else []
+        if pkg == "db" and len(wip) > 1:
+            return {"kind": "wip", "text": "In progress, paused: ticket 1 on branch ticket-01-db, uncommitted ("
+                    + ", ".join(wip) + ")"}
+        if pkg == "app":
+            return {"kind": "built", "text": "Built in the skeleton: startup config, /api/health, the FastAPI app"}
+        if pkg == "protocol":
+            return {"kind": "built", "text": "Skeleton: PROTOCOL_VERSION only"}
+        n = sum(lines(p) for p in code)
+        return {"kind": "empty", "text": "Empty package (a docstring) until its first ticket" if n <= 3
+                else f"{n} lines"}
+
+    return {"tickets": titles, "byPackage": by_pkg, "status": {p: status(p) for p in [
+        "app", "board", "admin", "journal", "runs", "targets", "context", "tickets", "people",
+        "settings", "program", "jira", "github", "artifactory", "workflows", "protocol", "db"]}}
+
+
+# ---------------------------------------------------------------- web
+KIT_IMPORT = re.compile(r"import\s*\{([^}]*)\}\s*from\s*\"(?:\.\./)+kit\"", re.S)
+ANY_IMPORT = re.compile(r"from\s+\"(\.[^\"]+)\"")
+
+
+def web_data() -> dict:
+    ledger = json.loads((WEB / "kit/ledger.json").read_text(encoding="utf-8"))
+    comps = ledger["components"]
+    kit_lines = {}
+    for name in comps:
+        tsx = WEB / f"kit/{name}.tsx"
+        css = WEB / f"kit/{name}.module.css"
+        kit_lines[name] = {"tsx": lines(tsx) if tsx.exists() else 0, "css": lines(css) if css.exists() else 0}
+
+    screens = {
+        "queue": "My queue", "compact": "Compact", "intake": "Intake", "ticket": "Ticket page",
+        "teams": "All teams", "peek": "Peek", "shared": "Shared helpers", "sheet": "/kit sheet",
+        "layout": "App frame",
+    }
+    routes = {"queue": "/", "compact": "/compact", "intake": "/intake", "ticket": "/t/:key",
+              "teams": "/teams", "sheet": "/kit", "peek": "?peek=KEY", "shared": "", "layout": "every page"}
+    dirs = {k: WEB / "features" / k for k in screens}
+    dirs["layout"] = WEB / "app"
+    usage: dict[str, set[str]] = {}
+    feat_files = {}
+    feat_deps: dict[str, set[str]] = {}
+    for feat in screens:
+        files = sorted(dirs[feat].glob("*.ts*"))
+        feat_files[feat] = [{"name": f.name, "lines": lines(f)} for f in files]
+        used: set[str] = set()
+        deps: set[str] = set()
+        for f in files:
+            src = f.read_text(encoding="utf-8")
+            for m in KIT_IMPORT.finditer(src):
+                for ident in re.split(r"[,\s]+", m.group(1)):
+                    ident = ident.replace("type", "").strip()
+                    if ident in comps:
+                        used.add(ident)
+            for m in ANY_IMPORT.finditer(src):
+                spec = m.group(1)
+                for target in ("api", "domain"):
+                    if f"/{target}/" in spec:
+                        deps.add(target + "/" + spec.rsplit("/", 1)[1])
+                fm = re.match(r"\.\./(?:features/)?(\w+)/", spec)
+                if fm and fm.group(1) in screens and fm.group(1) != feat:
+                    deps.add("feature/" + fm.group(1))
+        usage[feat] = used
+        feat_deps[feat] = deps
+
+    tokens = re.findall(r"^\s*(--[a-z0-9-]+)\s*:", (WEB / "kit/tokens.css").read_text(encoding="utf-8"), re.M)
+    groups: dict[str, int] = {}
+    for t in dict.fromkeys(tokens):
+        g = t[2:].split("-")[0]
+        groups[g] = groups.get(g, 0) + 1
+
+    support = {}
+    for d in ("api", "domain", "app"):
+        support[d] = [{"name": f.name, "lines": lines(f)} for f in sorted((WEB / d).glob("*.ts*"))]
+
+    return {
+        "budget": ledger["budget"],
+        "vocab": ledger.get("vocab", {}),
+        "components": comps,
+        "kitLines": kit_lines,
+        "screens": screens,
+        "routes": routes,
+        "usage": {k: sorted(v) for k, v in usage.items()},
+        "featFiles": feat_files,
+        "featDeps": {k: sorted(v) for k, v in feat_deps.items()},
+        "tokenGroups": groups,
+        "tokenCount": len(dict.fromkeys(tokens)),
+        "kitTotal": sum(lines(p) for p in (WEB / "kit").iterdir()
+                        if p.is_file() and p.name != "ledger.json" and p.suffix in (".ts", ".tsx", ".css")),
+        "support": support,
+    }
+
+
+def inject(template: str, data: dict, out: Path) -> None:
+    html = (HERE / template).read_text(encoding="utf-8").replace("__DATA__", json.dumps(data))
+    out.write_text(html, encoding="utf-8", newline="\n")
+    print("wrote", out)
+
+
+if __name__ == "__main__":
+    out = Path(sys.argv[1])
+    out.mkdir(parents=True, exist_ok=True)
+    inject("backend.template.html", backend_data(), out / "backend-map.html")
+    inject("web.template.html", web_data(), out / "web-map.html")

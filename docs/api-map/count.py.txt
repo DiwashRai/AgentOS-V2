@@ -1,0 +1,66 @@
+"""Line counts for backend-state.md: total and non-blank, by area, for main and each in-flight change."""
+
+import subprocess
+import sys
+from pathlib import Path
+
+
+def git(repo: str, *args: str) -> str:
+    return subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True, encoding="utf-8").stdout
+
+
+def count_text(text: str) -> tuple[int, int]:
+    ls = text.splitlines()
+    return len(ls), sum(1 for x in ls if x.strip())
+
+
+def area(path: str) -> str:
+    if path.startswith("src/"):
+        return "src"
+    if path.startswith("tools/gates/test_"):
+        return "gates tests"
+    if path.startswith("tools/"):
+        return "gates code"
+    if path.startswith("tests/"):
+        return "tests"
+    if path.startswith("docs/") or path.endswith(".md"):
+        return "docs"
+    if path == "uv.lock":
+        return "uv.lock"
+    return "config"
+
+
+def main_counts(repo: str, ref: str) -> None:
+    files = git(repo, "ls-tree", "-r", "--name-only", ref).splitlines()
+    tot: dict[str, list[int]] = {}
+    for f in files:
+        if f.startswith("web/"):
+            continue
+        t, nb = count_text(git(repo, "show", f"{ref}:{f}"))
+        a = tot.setdefault(area(f), [0, 0])
+        a[0] += t
+        a[1] += nb
+    print(f"== {ref}")
+    for k, (t, nb) in sorted(tot.items()):
+        print(f"  {k:12} {t:6} total {nb:6} non-blank")
+
+
+def worktree_delta(repo: str, label: str) -> None:
+    print(f"== {label} ({repo})")
+    num = git(repo, "diff", "--numstat", "HEAD").splitlines()
+    for line in num:
+        a, d, p = line.split("\t")
+        print(f"  modified {p}: +{a} -{d}")
+    for p in git(repo, "ls-files", "--others", "--exclude-standard").splitlines():
+        t, nb = count_text((Path(repo) / p).read_text(encoding="utf-8", errors="replace"))
+        print(f"  new      {p}: {t} total, {nb} non-blank")
+
+
+if __name__ == "__main__":
+    v2 = r"C:\code\AgentOS-V2"
+    main_counts(v2, "origin/main")
+    worktree_delta(r"C:\code\AgentOS-V2-backend", "ticket-01-db, uncommitted")
+    worktree_delta(v2, "gates-self, uncommitted (plus docs/tickets.md)")
+    print("== docs/api vs main (PR #2, committed)")
+    print(git(v2, "diff", "--stat", "origin/main...origin/docs/api"))
+    worktree_delta(r"C:\code\AgentOS-V2-docs", "docs/api, uncommitted edit")

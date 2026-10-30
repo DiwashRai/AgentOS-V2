@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentOS V2 Backend Map</title>
+<style>
+:root {
+  --bg: #0f1216; --panel: #161a20; --panel2: #1c2128; --line: #2a313b; --ink: #e6e9ee; --muted: #8b95a3;
+  --accent: #7cc4ff; --warn: #f2b35b; --ok: #6fd39a; --bad: #ff7b7b;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); font: 13px/1.45 var(--sans); }
+.app { display: grid; grid-template-columns: 270px 1fr 340px; grid-template-rows: 1fr auto; height: 100vh; }
+aside, .detail { background: var(--panel); overflow: auto; padding: 14px; }
+aside { border-right: 1px solid var(--line); grid-row: 1 / 3; }
+.detail { border-left: 1px solid var(--line); grid-row: 1 / 3; grid-column: 3; }
+h1 { font-size: 15px; margin: 0 0 2px; }
+h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+.sub { color: var(--muted); font-size: 12px; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+button { font: inherit; color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.on { background: #1d3245; border-color: var(--accent); }
+label.row { display: flex; align-items: center; gap: 8px; padding: 2px 0; cursor: pointer; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex: none; }
+.ln { width: 22px; height: 0; border-top: 2px solid; display: inline-block; flex: none; }
+select { font: inherit; color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; width: 100%; }
+.stage { position: relative; overflow: hidden; background: var(--bg); }
+svg { width: 100%; height: 100%; display: block; cursor: grab; }
+.node rect { stroke-width: 1.2; }
+.node text { pointer-events: none; }
+.node { cursor: pointer; }
+.node.dim { opacity: .18; }
+.edge { fill: none; }
+.edge.dim { opacity: .07; }
+.zoom { position: absolute; right: 12px; top: 12px; display: flex; gap: 4px; }
+.legend { position: absolute; left: 12px; top: 12px; background: #161a20e6; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 11.5px; display: grid; gap: 3px; }
+.promptbar { grid-column: 2; border-top: 1px solid var(--line); background: var(--panel); padding: 10px 14px; }
+.promptbar pre { margin: 6px 0 0; white-space: pre-wrap; font: 12px/1.5 var(--mono); max-height: 150px; overflow: auto; color: #cfd6df; }
+.copy { float: right; }
+.kv { display: grid; grid-template-columns: 70px 1fr; gap: 4px 10px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+code, .mono { font-family: var(--mono); font-size: 12px; }
+.chip { display: inline-block; font: 11px var(--mono); padding: 1px 6px; border-radius: 10px; border: 1px solid var(--line); margin: 2px 3px 2px 0; background: var(--panel2); cursor: default; }
+.chip.t { cursor: help; }
+.status { padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel2); }
+textarea { width: 100%; min-height: 70px; font: inherit; color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 6px; resize: vertical; }
+.comment { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; background: var(--panel2); }
+.comment b { font-family: var(--mono); font-size: 12px; }
+.comment .x { float: right; padding: 0 6px; }
+.empty { color: var(--muted); font-style: italic; }
+.hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>AgentOS V2: backend</h1>
+    <div class="sub">The module map (docs/architecture.md › Modules), what each package owns, and where the build is.</div>
+
+    <h2>Views</h2>
+    <div class="presets" id="presets"></div>
+
+    <h2>Colour by</h2>
+    <select id="colourBy">
+      <option value="layer">Layer</option>
+      <option value="status">Status (what exists today)</option>
+      <option value="first">Build order (first ticket)</option>
+    </select>
+
+    <h2>Layers</h2>
+    <div id="layers"></div>
+
+    <h2>Connections</h2>
+    <div id="edgeTypes"></div>
+
+    <h2>Your comments (<span id="ccount">0</span>)</h2>
+    <div id="comments"><div class="empty">Click a package, then add a comment.</div></div>
+  </aside>
+
+  <div class="stage" id="stage">
+    <svg id="svg" viewBox="0 0 1240 1000">
+      <defs id="defs"></defs>
+      <g id="world"><g id="edges"></g><g id="nodes"></g></g>
+    </svg>
+    <div class="zoom"><button id="zin">+</button><button id="zout">−</button><button id="zreset">Reset</button></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="detail" id="detail"></div>
+
+  <div class="promptbar">
+    <button class="copy" id="copy">Copy prompt</button>
+    <b>Prompt</b> <span class="sub">(your comments and view, ready to paste back to Claude)</span>
+    <pre id="prompt"></pre>
+  </div>
+</div>
+
+<script>
+const DATA = __DATA__;
+
+const LAYERS = {
+  root:     { label: "Composition root", color: "#3b2f5c" },
+  usecase:  { label: "Use cases across features", color: "#3d3420" },
+  feature:  { label: "Features", color: "#1e3a2c" },
+  boundary: { label: "Boundary clients and the database", color: "#3b2430" },
+  pure:     { label: "Pure, shared", color: "#20343f" },
+  worker:   { label: "The worker", color: "#2b2f45" },
+  external: { label: "Outside AgentOS", color: "#2a2a2a" },
+};
+const STATUS = { built: ["#1e3a2c", "Built"], wip: ["#4a3b16", "In progress (paused)"], empty: ["#24282f", "Empty (docstring only)"], ext: ["#2a2a2a", "Outside AgentOS"] };
+
+const EDGE_TYPES = {
+  uses:     { label: "May import (the module map's \"uses\")", color: "#9aa4b2", dash: "", on: true },
+  implicit: { label: "Shared by everyone above (db, workflows, protocol)", color: "#5d6673", dash: "2 4", on: false },
+  http:     { label: "HTTP (browser and workers into the API)", color: "#7cc4ff", dash: "", on: true },
+  external: { label: "Calls outside AgentOS", color: "#f2b35b", dash: "6 4", on: true },
+};
+
+// x, y are the node's centre. Rows follow the module map: a package only uses rows below it.
+const NODES = [
+  { id: "web", label: "Browser (the web)", path: "web/ (its own track)", layer: "external", x: 470, y: 40, w: 170,
+    owns: "The V2 web app. Talks to the API and holds one /changes stream." },
+  { id: "app", label: "app", path: "src/agentos/app/", layer: "root", x: 470, y: 120, w: 170,
+    owns: "The composition root: the FastAPI app, startup config, the choice of target adapter, auth dependencies, the error handler, /health, /changes.",
+    routes: ["GET /api/health", "GET /api/changes (SSE)"], files: "config.py, main.py, model.py" },
+  { id: "board", label: "board", path: "src/agentos/board/", layer: "usecase", x: 280, y: 210, w: 150,
+    owns: "/tickets and /tickets/{key}: list and detail with derived fields (phase, rail, waiting on, now, plan progress) and the actions on offer; create and take in, with the starting context; edits; /jira/intake and its once-a-minute refresh.",
+    routes: ["GET/POST /api/tickets", "GET/PATCH /api/tickets/{key}", "GET /api/jira/intake"] },
+  { id: "admin", label: "admin", path: "src/agentos/admin/", layer: "usecase", x: 460, y: 210, w: 150,
+    owns: "Settings saves and checks that look across features (a repo, runtime or library item in use); /jira/fields.",
+    routes: ["PUT /api/settings/{area}", "POST /api/settings/{area}/check", "GET /api/jira/fields"] },
+  { id: "journal", label: "journal", path: "src/agentos/journal/", layer: "usecase", x: 680, y: 210, w: 160,
+    owns: "The worker side: /worker/* (the program, the job, binding and ingest, the output upload, the client lease and its gone reports) and the mailbox loop (watch the CI run, fetch the outbox, replay it through the same ingest).",
+    routes: ["GET /api/worker/program", "GET /api/worker/job", "POST /api/worker/journal", "PUT /api/worker/output", "POST /api/worker/lease"] },
+  { id: "runs", label: "runs", path: "src/agentos/runs/", layer: "feature", x: 560, y: 300, w: 170,
+    owns: "Run, job and stage-run states, the transition table, the actions a ticket offers (pure), dispatch, launch (building the package), the fence, cancel, the live reaper, /tickets/{key}/runs and /runs/*. Sets and clears the run lock; sets the workspace pin. The largest package: most of V1's hard logic.",
+    routes: ["POST/GET /api/tickets/{key}/runs", "GET /api/runs/{id}", "…/package, …/events, …/output", "POST /api/runs/{id}/cancel"] },
+  { id: "targets", label: "targets", path: "src/agentos/targets/", layer: "feature", x: 760, y: 380, w: 150,
+    owns: "The Target interface (start, cancel, status) and its adapters: GitHub Actions, and mailbox (Artifactory, then GitHub Actions), which also fetches, deletes and sweeps outboxes for journal. No database: callers store what it returns." },
+  { id: "context", label: "context", path: "src/agentos/context/", layer: "feature", x: 330, y: 400, w: 160,
+    owns: "Items and their versions, the library, drift, take and promote, size limits. The heart of V2: context is the product.",
+    routes: ["/api/tickets/{key}/items[/{name}]", "/api/library/items[/{name}]", "POST /api/tickets/{key}/take", "POST /api/tickets/{key}/promote"] },
+  { id: "tickets", label: "tickets", path: "src/agentos/tickets/", layer: "feature", x: 330, y: 490, w: 160,
+    owns: "Tickets: fields, keys, states, the run lock and the workspace pin, the conversation.",
+    routes: ["GET/POST /api/tickets/{key}/messages"] },
+  { id: "people", label: "people", path: "src/agentos/people/", layer: "feature", x: 330, y: 580, w: 160,
+    owns: "People, roles, sessions, sign-in, client tokens and whether one is online.",
+    routes: ["GET/POST/DELETE /api/session", "GET /api/people, PATCH /api/people/{id}", "/api/me/clients"] },
+  { id: "settings", label: "settings", path: "src/agentos/settings/", layer: "feature", x: 330, y: 670, w: 160,
+    owns: "The settings documents (one per area, versioned) and their typed reads; GET /settings.",
+    routes: ["GET /api/settings"] },
+  { id: "program", label: "program", path: "src/agentos/program/", layer: "feature", x: 760, y: 470, w: 150,
+    owns: "Builds the worker program's archives (7z for Windows, tar.gz for Linux) and their one content hash." },
+  { id: "jira", label: "jira", path: "src/agentos/jira/", layer: "boundary", x: 170, y: 770, w: 130,
+    owns: "The Jira HTTP client: sign-in checks, search, take-in, field discovery. Boundary only." },
+  { id: "github", label: "github", path: "src/agentos/github/", layer: "boundary", x: 760, y: 560, w: 130,
+    owns: "The GitHub HTTP client: workflow dispatch, status, cancel. Boundary only." },
+  { id: "artifactory", label: "artifactory", path: "src/agentos/artifactory/", layer: "boundary", x: 920, y: 560, w: 140,
+    owns: "The Artifactory HTTP client: mailbox uploads, outbox fetches, sweeps. Boundary only." },
+  { id: "workflows", label: "workflows", path: "src/agentos/workflows/", layer: "pure", x: 560, y: 770, w: 160,
+    owns: "Stage and loop rules, prompt templates (sandboxed Jinja), runtimes (argv, where context is placed, the usage-limit marker). Pure: no I/O." },
+  { id: "protocol", label: "agentos_protocol", path: "src/agentos_protocol/", layer: "pure", x: 760, y: 860, w: 180,
+    owns: "The job package and journal record types, the protocol version, the path rules. Stdlib only, shared by the server and the worker." },
+  { id: "db", label: "db", path: "src/agentos/db/", layer: "boundary", x: 330, y: 860, w: 160,
+    owns: "The Turso connection, the schema (one file), transactions, the change sequence that /changes reads." },
+  { id: "turso", label: "Turso", path: "data/agentos.db", layer: "external", x: 140, y: 940, w: 130, owns: "The database engine (D6)." },
+  { id: "jiraapi", label: "Jira", path: "Cloud or Data Center", layer: "external", x: 60, y: 690, w: 110, owns: "The team's Jira." },
+  { id: "ghapi", label: "GitHub", path: "API and Actions", layer: "external", x: 760, y: 650, w: 130, owns: "Repos, Actions runners, pull requests." },
+  { id: "artapi", label: "Artifactory", path: "work's store", layer: "external", x: 950, y: 650, w: 130, owns: "Where mailbox jobs and outboxes travel." },
+
+  { id: "worker.client", label: "worker: client", path: "agentos_worker/client/", layer: "worker", x: 1050, y: 120, w: 160, role: "shell",
+    owns: "The lease loop on your own machine: takes your runs, starts detached run workers, reports gone, restarts on a protocol change." },
+  { id: "worker.run", label: "worker: run", path: "agentos_worker/run/", layer: "worker", x: 1050, y: 210, w: 160, role: "shell",
+    owns: "One job: workspace, context, stages, loops, sync back, commit and push, the result. Also the mailbox mode (writes an outbox)." },
+  { id: "worker.http", label: "worker: http", path: "agentos_worker/http/", layer: "worker", x: 980, y: 310, w: 120, role: "boundary",
+    owns: "The journal client: buffer, flush, heartbeat, resend from the ack, backoff; the lease calls; the GitHub API publish path." },
+  { id: "worker.git", label: "worker: git", path: "agentos_worker/git/", layer: "worker", x: 1130, y: 310, w: 110, role: "boundary",
+    owns: "Clone and push safely; context never committed; hooks kept." },
+  { id: "worker.procs", label: "worker: procs", path: "agentos_worker/procs/", layer: "worker", x: 1130, y: 400, w: 120, role: "boundary",
+    owns: "Processes: Windows job objects, POSIX sessions, pipes, file-lock liveness." },
+  { id: "worker.files", label: "worker: files", path: "agentos_worker/files/", layer: "worker", x: 980, y: 400, w: 120, role: "boundary",
+    owns: "The workspace: instruction blocks, skills and agents placed per runtime, path rules, no links." },
+  { id: "worker.core", label: "worker: core", path: "agentos_worker/core/", layer: "worker", x: 1050, y: 490, w: 160, role: "core",
+    owns: "The job plan, verdicts and the stage order: pure, using agentos_protocol." },
+  { id: "clis", label: "Agent CLIs", path: "claude, copilot", layer: "external", x: 1150, y: 580, w: 130, owns: "The agent CLIs the worker runs as stages." },
+];
+
+const USES = {
+  app: ["board", "admin", "journal", "runs", "context", "tickets", "people", "settings", "targets"],
+  board: ["runs", "context", "tickets", "settings", "people", "jira"],
+  admin: ["context", "tickets", "settings", "jira"],
+  journal: ["runs", "context", "people", "targets", "program"],
+  runs: ["context", "tickets", "settings", "people", "targets", "program"],
+  targets: ["github", "artifactory"],
+  context: ["tickets", "settings"],
+  tickets: ["people", "settings"],
+  people: ["settings", "jira"],
+  workflows: ["protocol"],
+  "worker.client": ["worker.http", "worker.procs", "worker.core"],
+  "worker.run": ["worker.http", "worker.git", "worker.procs", "worker.files", "worker.core"],
+  "worker.core": ["protocol"],
+};
+const IMPLICIT = {
+  workflows: ["runs", "context"], protocol: ["runs", "journal", "context", "program"],
+  db: ["app", "people", "tickets", "context", "runs", "journal", "settings", "board", "admin"],
+};
+const HTTP = [["web", "app", "REST + /changes"], ["worker.http", "journal", "journal, job, output"], ["worker.client", "journal", "lease"]];
+const EXTERNAL = [["db", "turso"], ["jira", "jiraapi"], ["github", "ghapi"], ["artifactory", "artapi"], ["worker.git", "ghapi"], ["worker.procs", "clis"], ["worker.http", "ghapi"]];
+
+const EDGES = [];
+for (const [from, tos] of Object.entries(USES)) for (const to of tos) EDGES.push({ from, to, type: "uses" });
+for (const [to, froms] of Object.entries(IMPLICIT)) for (const from of froms) EDGES.push({ from, to, type: "implicit" });
+for (const [from, to, label] of HTTP) EDGES.push({ from, to, type: "http", label });
+for (const [from, to] of EXTERNAL) EDGES.push({ from, to, type: "external" });
+
+const PRESETS = {
+  "Everything": { layers: Object.keys(LAYERS), edges: ["uses", "http", "external"], focus: null },
+  "Server import rules": { layers: ["root", "usecase", "feature", "boundary", "pure"], edges: ["uses", "implicit"], focus: null },
+  "A run's path": { layers: Object.keys(LAYERS), edges: ["uses", "http", "external"],
+    focus: ["board", "runs", "targets", "journal", "program", "context", "workflows", "protocol", "github", "ghapi", "worker.client", "worker.run", "worker.http", "worker.git", "worker.procs", "worker.files", "worker.core", "clis", "app"] },
+  "Context and the library": { layers: Object.keys(LAYERS), edges: ["uses", "implicit", "http"],
+    focus: ["web", "app", "board", "admin", "context", "tickets", "settings", "people", "db", "workflows"] },
+  "The worker": { layers: ["worker", "pure", "usecase", "external"], edges: ["uses", "http", "external"], focus: null },
+};
+
+const DEFAULT = { preset: "Everything", colourBy: "layer" };
+const state = { preset: "Everything", colourBy: "layer", layers: new Set(Object.keys(LAYERS)),
+  edges: new Set(["uses", "http", "external"]), focus: null, selected: null, hover: null, comments: [], zoom: 1, pan: [0, 0] };
+
+const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
+const pkgKey = n => n.id === "protocol" ? "protocol" : n.id;
+const ticketsOf = n => (DATA.byPackage[pkgKey(n)] || []);
+const statusOf = n => n.layer === "external" ? { kind: "ext", text: "Outside AgentOS" }
+  : n.id.startsWith("worker.") ? { kind: "empty", text: "Not started: the worker track is tickets 33–42" }
+  : (DATA.status[n.id] || { kind: "empty", text: "" });
+
+function firstTicketColour(n) {
+  const t = ticketsOf(n).map(Number).filter(x => !isNaN(x));
+  if (!t.length) return "#24282f";
+  const f = Math.min(...t), k = Math.min(1, (f - 1) / 52);
+  const a = [32, 92, 70], b = [96, 52, 30]; // early: green, late: amber-brown
+  const c = a.map((v, i) => Math.round(v + (b[i] - v) * k));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+function fill(n) {
+  if (state.colourBy === "status") return STATUS[statusOf(n).kind][0];
+  if (state.colourBy === "first") return n.layer === "external" ? STATUS.ext[0] : firstTicketColour(n);
+  return LAYERS[n.layer].color;
+}
+
+const svg = document.getElementById("svg"), gE = document.getElementById("edges"), gN = document.getElementById("nodes");
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; }
+
+function defs() {
+  const d = document.getElementById("defs");
+  for (const [k, t] of Object.entries(EDGE_TYPES)) {
+    const m = el("marker", { id: "ar-" + k, markerWidth: 8, markerHeight: 6, refX: 7, refY: 3, orient: "auto" }, d);
+    el("polygon", { points: "0 0, 8 3, 0 6", fill: t.color }, m);
+  }
+  const m = el("marker", { id: "ar-hl", markerWidth: 8, markerHeight: 6, refX: 7, refY: 3, orient: "auto" }, d);
+  el("polygon", { points: "0 0, 8 3, 0 6", fill: "#ffffff" }, m);
+}
+const H = 46;
+function visible(n) { return state.layers.has(n.layer); }
+function anchor(n, toward) {
+  const dx = toward.x - n.x, dy = toward.y - n.y;
+  const hw = n.w / 2, hh = H / 2;
+  const s = Math.min(hw / Math.abs(dx || 1e-6), hh / Math.abs(dy || 1e-6));
+  return [n.x + dx * s, n.y + dy * s];
+}
+function related(id) {
+  const s = new Set([id]);
+  EDGES.forEach(e => { if (state.edges.has(e.type) && (e.from === id || e.to === id)) { s.add(e.from); s.add(e.to); } });
+  return s;
+}
+function render() {
+  gE.innerHTML = ""; gN.innerHTML = "";
+  const hot = state.hover || state.selected;
+  const rel = hot ? related(hot) : null;
+  for (const e of EDGES) {
+    if (!state.edges.has(e.type)) continue;
+    const a = byId[e.from], b = byId[e.to];
+    if (!visible(a) || !visible(b)) continue;
+    const [x1, y1] = anchor(a, b), [x2, y2] = anchor(b, a);
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, bend = (x2 - x1) * 0.12;
+    const t = EDGE_TYPES[e.type];
+    const on = hot && (e.from === hot || e.to === hot);
+    const dim = (state.focus && !(state.focus.includes(e.from) && state.focus.includes(e.to))) || (hot && !on);
+    const p = el("path", { d: `M${x1},${y1} Q${mx - bend},${my + bend} ${x2},${y2}`, class: "edge" + (dim ? " dim" : ""),
+      stroke: on ? "#ffffff" : t.color, "stroke-width": on ? 2 : 1.3, "stroke-dasharray": t.dash, "marker-end": `url(#ar-${on ? "hl" : e.type})` }, gE);
+    if (e.label && (on || !hot)) { const tx = el("text", { x: mx, y: my - 4, "text-anchor": "middle", fill: t.color, "font-size": 10.5 }, gE); tx.textContent = e.label; }
+  }
+  for (const n of NODES) {
+    if (!visible(n)) continue;
+    const dim = (state.focus && !state.focus.includes(n.id)) || (rel && !rel.has(n.id));
+    const g = el("g", { class: "node" + (dim ? " dim" : ""), transform: `translate(${n.x - n.w / 2},${n.y - H / 2})` }, gN);
+    const commented = state.comments.some(c => c.target === n.id);
+    el("rect", { width: n.w, height: H, rx: 9, fill: fill(n),
+      stroke: n.id === state.selected ? "#ffffff" : commented ? "#f2b35b" : "#3a4350", "stroke-width": n.id === state.selected || commented ? 2 : 1.2,
+      "stroke-dasharray": n.layer === "external" ? "4 3" : "" }, g);
+    const t1 = el("text", { x: n.w / 2, y: 19, "text-anchor": "middle", fill: "#e6e9ee", "font-size": 13, "font-weight": 600 }, g); t1.textContent = n.label;
+    const t2 = el("text", { x: n.w / 2, y: 35, "text-anchor": "middle", fill: "#9aa4b2", "font-size": 10.5, "font-family": "ui-monospace, Consolas, monospace" }, g);
+    const tk = ticketsOf(n);
+    t2.textContent = n.layer === "external" ? n.path : (tk.length ? `${tk.length} ticket${tk.length > 1 ? "s" : ""}` : "no ticket yet");
+    if (commented) el("circle", { cx: n.w - 8, cy: 8, r: 4, fill: "#f2b35b" }, g);
+    g.addEventListener("click", ev => { ev.stopPropagation(); state.selected = n.id; updateAll(); });
+    g.addEventListener("mouseenter", () => { state.hover = n.id; render(); });
+    g.addEventListener("mouseleave", () => { state.hover = null; render(); });
+  }
+  document.getElementById("world").setAttribute("transform", `translate(${state.pan[0]},${state.pan[1]}) scale(${state.zoom})`);
+  renderLegend();
+}
+function renderLegend() {
+  const L = document.getElementById("legend");
+  if (state.colourBy === "status") L.innerHTML = Object.values(STATUS).map(([c, t]) => `<span><span class="sw" style="background:${c}"></span> ${t}</span>`).join("");
+  else if (state.colourBy === "first") L.innerHTML = `<span><span class="sw" style="background:rgb(32,92,70)"></span> built first (ticket 1)</span><span><span class="sw" style="background:rgb(96,52,30)"></span> built last (ticket 53)</span>`;
+  else L.innerHTML = Object.values(LAYERS).map(l => `<span><span class="sw" style="background:${l.color}"></span> ${l.label}</span>`).join("");
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function renderDetail() {
+  const n = byId[state.selected], D = document.getElementById("detail");
+  if (!n) { D.innerHTML = `<h1>Pick a package</h1><div class="sub">Hover to see what it imports and what imports it; click for what it owns, its API, its status and the tickets that build it.</div>
+    <h2>How to read it</h2><div>Rows follow the module map: a package may import only the packages its arrows point to, all of them lower down, so there are no cycles. import-linter enforces it. The worker on the right is its own package, and talks to the server only over HTTP (the journal and the lease).</div>
+    <h2>Where the build is</h2><div>Switch "Colour by" to <b>Status</b>: the skeleton built <code>app</code> and <code>agentos_protocol</code>; <code>db</code> is ticket 1, paused; everything else is an empty package waiting for its first ticket.</div>`; return; }
+  const st = statusOf(n), tk = ticketsOf(n);
+  const uses = EDGES.filter(e => e.from === n.id && e.type === "uses").map(e => byId[e.to].label);
+  const usedBy = EDGES.filter(e => e.to === n.id && e.type === "uses").map(e => byId[e.from].label);
+  D.innerHTML = `
+    <h1>${esc(n.label)}</h1><div class="sub mono">${esc(n.path)}</div>
+    <h2>Owns</h2><div>${esc(n.owns || "")}</div>
+    ${n.routes ? `<h2>API</h2>${n.routes.map(r => `<div class="mono">${esc(r)}</div>`).join("")}` : ""}
+    ${n.layer !== "external" ? `<h2>Imports</h2><dl class="kv"><dt>Uses</dt><dd>${uses.length ? uses.map(u => `<span class="chip">${esc(u)}</span>`).join("") : "<span class='sub'>nothing of ours</span>"}</dd>
+      <dt>Used by</dt><dd>${usedBy.length ? usedBy.map(u => `<span class="chip">${esc(u)}</span>`).join("") : "<span class='sub'>—</span>"}</dd></dl>
+      <div class="hint">${n.id.startsWith("worker.") ? "Roles inside the worker: core is pure; run and client are the shell; http, git, procs, files are boundaries." : "Inside a package: model.py and rules.py are core (pure), service.py the shell, routes.py and rows.py the boundary. import-linter enforces these lists."}</div>` : ""}
+    <h2>Status</h2><div class="status">${esc(st.text)}</div>
+    ${tk.length ? `<h2>Built by tickets (${tk.length})</h2><div>${tk.map(t => `<span class="chip t" title="${esc(DATA.tickets[t] || "")}">${t}</span>`).join("")}</div><div class="hint">Hover a number for its title (docs/tickets.md).</div>` : ""}
+    ${n.layer !== "external" ? `<h2>Comment</h2><textarea id="ctext" placeholder="A question or a change you'd like for ${esc(n.label)}…"></textarea>
+      <div style="margin-top:6px"><button id="cadd">Add comment</button></div>` : ""}`;
+  const add = document.getElementById("cadd");
+  if (add) add.onclick = () => {
+    const v = document.getElementById("ctext").value.trim(); if (!v) return;
+    state.comments.push({ id: Date.now(), target: n.id, label: n.label, path: n.path, text: v }); updateAll();
+  };
+}
+function renderComments() {
+  document.getElementById("ccount").textContent = state.comments.length;
+  const C = document.getElementById("comments");
+  if (!state.comments.length) { C.innerHTML = `<div class="empty">Click a package, then add a comment.</div>`; return; }
+  C.innerHTML = state.comments.map(c => `<div class="comment"><button class="x" data-id="${c.id}">×</button><b>${esc(c.label)}</b><div>${esc(c.text)}</div></div>`).join("");
+  C.querySelectorAll(".x").forEach(b => b.onclick = () => { state.comments = state.comments.filter(c => c.id != b.dataset.id); updateAll(); });
+}
+function updatePrompt() {
+  const parts = [];
+  parts.push("This is the AgentOS V2 backend's module map (docs/architecture.md › Modules, on branch docs/api), with the build plan in docs/tickets.md.");
+  if (state.preset !== DEFAULT.preset) parts.push(`I'm looking at the "${state.preset}" view.`);
+  if (state.colourBy === "status") parts.push("Coloured by what exists today: app and agentos_protocol are built, db is paused mid-ticket, the rest are empty.");
+  if (state.colourBy === "first") parts.push("Coloured by the ticket that first builds each package.");
+  if (state.comments.length) {
+    parts.push("\nMy comments on specific packages:");
+    for (const c of state.comments) parts.push(`\n**${c.label}** (${c.path}):\n${c.text}`);
+  } else parts.push("\n(No comments yet: click a package to add one.)");
+  document.getElementById("prompt").textContent = parts.join(" ").replace(/ \n/g, "\n");
+}
+function updateAll() { render(); renderDetail(); renderComments(); updatePrompt(); }
+
+function controls() {
+  const P = document.getElementById("presets");
+  for (const name of Object.keys(PRESETS)) {
+    const b = document.createElement("button"); b.textContent = name;
+    b.onclick = () => { const p = PRESETS[name]; state.preset = name; state.layers = new Set(p.layers); state.edges = new Set(p.edges); state.focus = p.focus; syncControls(); updateAll(); };
+    P.appendChild(b);
+  }
+  const L = document.getElementById("layers");
+  for (const [k, l] of Object.entries(LAYERS)) {
+    const r = document.createElement("label"); r.className = "row";
+    r.innerHTML = `<input type="checkbox" data-layer="${k}"> <span class="sw" style="background:${l.color}"></span> ${l.label}`;
+    r.querySelector("input").onchange = e => { e.target.checked ? state.layers.add(k) : state.layers.delete(k); state.preset = "custom"; syncControls(); updateAll(); };
+    L.appendChild(r);
+  }
+  const E = document.getElementById("edgeTypes");
+  for (const [k, t] of Object.entries(EDGE_TYPES)) {
+    const r = document.createElement("label"); r.className = "row";
+    r.innerHTML = `<input type="checkbox" data-edge="${k}"> <span class="ln" style="border-color:${t.color};border-top-style:${t.dash ? "dashed" : "solid"}"></span> ${t.label}`;
+    r.querySelector("input").onchange = e => { e.target.checked ? state.edges.add(k) : state.edges.delete(k); state.preset = "custom"; syncControls(); updateAll(); };
+    E.appendChild(r);
+  }
+  document.getElementById("colourBy").onchange = e => { state.colourBy = e.target.value; updateAll(); };
+  document.getElementById("zin").onclick = () => { state.zoom = Math.min(2.5, state.zoom * 1.2); render(); };
+  document.getElementById("zout").onclick = () => { state.zoom = Math.max(0.5, state.zoom / 1.2); render(); };
+  document.getElementById("zreset").onclick = () => { state.zoom = 1; state.pan = [0, 0]; render(); };
+  let drag = null;
+  svg.addEventListener("mousedown", e => { drag = [e.clientX, e.clientY, ...state.pan]; });
+  window.addEventListener("mouseup", () => drag = null);
+  window.addEventListener("mousemove", e => { if (!drag) return; const k = 1240 / svg.clientWidth; state.pan = [drag[2] + (e.clientX - drag[0]) * k, drag[3] + (e.clientY - drag[1]) * k]; render(); });
+  document.getElementById("copy").onclick = async () => {
+    const b = document.getElementById("copy");
+    try { await navigator.clipboard.writeText(document.getElementById("prompt").textContent); b.textContent = "Copied!"; }
+    catch { b.textContent = "Select the text"; }
+    setTimeout(() => b.textContent = "Copy prompt", 1400);
+  };
+}
+function syncControls() {
+  document.querySelectorAll("#presets button").forEach(b => b.classList.toggle("on", b.textContent === state.preset));
+  document.querySelectorAll("[data-layer]").forEach(i => i.checked = state.layers.has(i.dataset.layer));
+  document.querySelectorAll("[data-edge]").forEach(i => i.checked = state.edges.has(i.dataset.edge));
+}
+defs(); controls(); syncControls(); updateAll();
+</script>
+</body>
+</html>

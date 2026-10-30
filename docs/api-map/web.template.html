@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentOS V2 Kit Map</title>
+<style>
+:root {
+  --bg: #0f1216; --panel: #161a20; --panel2: #1c2128; --line: #2a313b; --ink: #e6e9ee; --muted: #8b95a3;
+  --accent: #7cc4ff; --warn: #f2b35b; --ok: #6fd39a;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); font: 13px/1.45 var(--sans); }
+.app { display: grid; grid-template-columns: 260px 1fr 360px; grid-template-rows: auto 1fr auto; height: 100vh; }
+aside, .detail { background: var(--panel); overflow: auto; padding: 14px; grid-row: 1 / 4; }
+aside { border-right: 1px solid var(--line); }
+.detail { border-left: 1px solid var(--line); grid-column: 3; }
+h1 { font-size: 15px; margin: 0 0 2px; }
+h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 18px 0 8px; font-weight: 600; }
+.sub { color: var(--muted); font-size: 12px; }
+button { font: inherit; color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 9px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.on { background: #1d3245; border-color: var(--accent); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+label.row { display: flex; align-items: center; gap: 8px; padding: 2px 0; cursor: pointer; }
+.tabs { grid-column: 2; display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); align-items: center; }
+.tabs .sub { margin-left: auto; }
+.stage { grid-column: 2; position: relative; overflow: auto; }
+svg { width: 100%; height: 100%; display: block; min-height: 640px; }
+.node { cursor: pointer; }
+.node.dim { opacity: .16; }
+.edge { fill: none; }
+.stats { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; }
+.stats b { font-family: var(--mono); text-align: right; }
+.bar { height: 6px; border-radius: 3px; background: var(--panel2); overflow: hidden; margin: 2px 0 8px; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.bar.full i { background: var(--warn); }
+table.mx { border-collapse: collapse; margin: 14px; font-size: 12px; }
+.mx th, .mx td { padding: 3px 7px; border-bottom: 1px solid #222831; text-align: center; }
+.mx th { color: var(--muted); font-weight: 600; position: sticky; top: 0; background: var(--bg); }
+.mx th.v { writing-mode: vertical-rl; transform: rotate(180deg); height: 96px; white-space: nowrap; }
+.mx td.c, .mx th.c { text-align: left; font-family: var(--mono); cursor: pointer; }
+.mx tr:hover td { background: #171c22; }
+.mx tr.sel td { background: #1d3245; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.dot.sheet { background: #3d4652; }
+.flag { color: var(--warn); font-size: 11px; }
+.promptbar { grid-column: 2; border-top: 1px solid var(--line); background: var(--panel); padding: 10px 14px; }
+.promptbar pre { margin: 6px 0 0; white-space: pre-wrap; font: 12px/1.5 var(--mono); max-height: 140px; overflow: auto; color: #cfd6df; }
+.copy { float: right; }
+code, .mono { font-family: var(--mono); font-size: 12px; }
+.chip { display: inline-block; font: 11px var(--mono); padding: 1px 6px; border-radius: 10px; border: 1px solid var(--line); margin: 2px 3px 2px 0; background: var(--panel2); }
+.prop { border-left: 2px solid var(--line); padding: 2px 0 6px 8px; margin: 6px 0; }
+.prop b { font-family: var(--mono); font-size: 12px; }
+.val { font-size: 12px; color: #c4ccd6; margin-left: 10px; }
+.val code { color: var(--accent); }
+.note { padding: 6px 8px; border-radius: 6px; border: 1px solid #5a4a26; background: #2a2416; font-size: 12px; margin-top: 6px; }
+textarea { width: 100%; min-height: 64px; font: inherit; color: var(--ink); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 6px; resize: vertical; }
+.comment { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; background: var(--panel2); }
+.comment b { font-family: var(--mono); font-size: 12px; }
+.comment .x { float: right; padding: 0 6px; }
+.empty { color: var(--muted); font-style: italic; }
+.hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>AgentOS V2: the web kit</h1>
+    <div class="sub">The W0 spike as it stands (branch <code>web-w0</code>): five screens on fixture data, drawn only by the kit.</div>
+
+    <h2>Budget</h2>
+    <div id="budget"></div>
+
+    <h2>Views</h2>
+    <div class="presets" id="presets"></div>
+
+    <h2>Show</h2>
+    <label class="row"><input type="checkbox" id="showSheet"> The <code>/kit</code> sheet (draws everything on purpose)</label>
+    <label class="row"><input type="checkbox" id="showAllEdges"> Every usage line (otherwise only for the selection)</label>
+
+    <h2>Your comments (<span id="ccount">0</span>)</h2>
+    <div id="comments"><div class="empty">Click a screen or a component, then add a comment.</div></div>
+  </aside>
+
+  <div class="tabs">
+    <button id="tabMap">Layers</button><button id="tabMatrix">Component × screen</button>
+    <span class="sub" id="tabhint"></span>
+  </div>
+  <div class="stage" id="stage"></div>
+  <div class="detail" id="detail"></div>
+
+  <div class="promptbar">
+    <button class="copy" id="copy">Copy prompt</button>
+    <b>Prompt</b> <span class="sub">(your comments and view, ready to paste back to Claude)</span>
+    <pre id="prompt"></pre>
+  </div>
+</div>
+
+<script>
+const DATA = __DATA__;
+const SCREENS = ["queue", "compact", "intake", "ticket", "teams", "peek", "layout", "shared", "sheet"];
+const COMPS = Object.keys(DATA.components);
+const realScreens = (c) => SCREENS.filter(s => s !== "sheet" && DATA.usage[s].includes(c));
+const reuse = Object.fromEntries(COMPS.map(c => [c, realScreens(c).length]));
+const kitLines = c => DATA.kitLines[c].tsx + DATA.kitLines[c].css;
+const totalKitLines = COMPS.reduce((a, c) => a + kitLines(c), 0);
+
+const PRESETS = {
+  "Everything": { view: "map", sel: null, filter: null },
+  "Reuse": { view: "matrix", sel: null, filter: null },
+  "Single-screen components": { view: "matrix", sel: null, filter: "single" },
+  "The ticket page": { view: "map", sel: "s:ticket", filter: null },
+  "Data flow": { view: "map", sel: "d:api/queries", filter: null },
+};
+const DEFAULT = { preset: "Everything" };
+const state = { preset: "Everything", view: "map", sel: null, filter: null, showSheet: false, showAllEdges: false, hover: null, comments: [] };
+
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+// ---- layout: screens on top, the kit in the middle, tokens and data below
+const W = 1240, nodes = {};
+function place() {
+  const scr = SCREENS.filter(s => state.showSheet || s !== "sheet");
+  const sw = W / scr.length;
+  scr.forEach((s, i) => nodes["s:" + s] = { id: "s:" + s, kind: "screen", key: s, label: DATA.screens[s], sub: DATA.routes[s] || "helpers", x: sw * (i + .5), y: 50, w: Math.min(140, sw - 12), h: 44 });
+  const order = [...COMPS].sort((a, b) => reuse[b] - reuse[a] || a.localeCompare(b));
+  const perRow = 9;
+  order.forEach((c, i) => {
+    const r = Math.floor(i / perRow), col = i % perRow, n = Math.min(perRow, order.length - r * perRow);
+    const cw = W / perRow, off = (W - n * cw) / 2;
+    nodes["k:" + c] = { id: "k:" + c, kind: "kit", key: c, label: c, sub: `${reuse[c]} screen${reuse[c] === 1 ? "" : "s"} · ${kitLines(c)} lines`, x: off + cw * (col + .5), y: 210 + r * 78, w: 122, h: 44 };
+  });
+  nodes["t:tokens"] = { id: "t:tokens", kind: "tokens", key: "tokens.css", label: "tokens.css", sub: `${DATA.tokenCount} tokens · the only raw values`, x: W / 2, y: 470, w: 230, h: 44 };
+  const data = [...DATA.support.domain.map(f => "domain/" + f.name.replace(/\.tsx?$/, "")), ...DATA.support.api.map(f => "api/" + f.name.replace(/\.tsx?$/, ""))]
+    .filter(d => !d.endsWith(".test"));
+  const dw = W / data.length;
+  data.forEach((d, i) => {
+    const [dir, name] = d.split("/"), f = DATA.support[dir].find(x => x.name.startsWith(name + "."));
+    nodes["d:" + d] = { id: "d:" + d, kind: "data", key: d, label: d, sub: `${f ? f.lines : "?"} lines`, x: dw * (i + .5), y: 580, w: Math.min(140, dw - 10), h: 44 };
+  });
+}
+function edges() {
+  const E = [];
+  for (const s of SCREENS) {
+    if (!nodes["s:" + s]) continue;
+    for (const c of DATA.usage[s]) E.push({ from: "s:" + s, to: "k:" + c, type: "uses" });
+    for (const d of DATA.featDeps[s]) {
+      if (d.startsWith("feature/")) { const t = "s:" + d.slice(8); if (nodes[t] && t !== "s:" + s) E.push({ from: "s:" + s, to: t, type: "screen" }); }
+      else if (nodes["d:" + d]) E.push({ from: "s:" + s, to: "d:" + d, type: "data" });
+    }
+  }
+  E.push({ from: "d:api/queries", to: "d:api/source", type: "data" }, { from: "d:api/source", to: "d:api/fixtureSource", type: "data" }, { from: "d:api/fixtureSource", to: "d:domain/fixtures", type: "data" });
+  return E.filter(e => nodes[e.from] && nodes[e.to]);
+}
+const COLORS = { screen: "#1e3a2c", kit: "#20343f", tokens: "#3b2f5c", data: "#3d3420" };
+const ECOL = { uses: "#7cc4ff", data: "#f2b35b", screen: "#6fd39a" };
+
+function renderMap() {
+  const S = document.getElementById("stage"); S.innerHTML = "";
+  place(); const E = edges();
+  const svg = el("svg", { viewBox: `0 0 ${W} 630`, preserveAspectRatio: "xMidYMin meet" }, S);
+  const d = el("defs", {}, svg);
+  for (const [k, c] of Object.entries(ECOL)) { const m = el("marker", { id: "a-" + k, markerWidth: 8, markerHeight: 6, refX: 7, refY: 3, orient: "auto" }, d); el("polygon", { points: "0 0, 8 3, 0 6", fill: c }, m); }
+  const band = (y, h, t) => { el("rect", { x: 4, y, width: W - 8, height: h, rx: 10, fill: "#13171c", stroke: "#20262e" }, svg); const tx = el("text", { x: 14, y: y + 16, fill: "#5f6b79", "font-size": 11, "letter-spacing": ".08em" }, svg); tx.textContent = t; };
+  band(14, 74, "SCREENS (features/, app/)"); band(166, 238, "THE KIT (kit/: the only code that renders elements or has CSS)"); band(430, 80, "TOKENS"); band(540, 80, "DATA (api/ behind one data module, domain/ pure models)");
+  const hot = state.hover || state.sel;
+  const rel = new Set(hot ? [hot] : []);
+  if (hot) E.forEach(e => { if (e.from === hot || e.to === hot) { rel.add(e.from); rel.add(e.to); } });
+  const g = el("g", {}, svg);
+  for (const e of E) {
+    const on = hot && (e.from === hot || e.to === hot);
+    if (!on && !state.showAllEdges && e.type !== "screen") continue;
+    if (hot && !on) continue;
+    const a = nodes[e.from], b = nodes[e.to];
+    const y1 = a.y + (b.y > a.y ? a.h / 2 : -a.h / 2), y2 = b.y + (b.y > a.y ? -b.h / 2 : b.h / 2);
+    const my = (y1 + y2) / 2;
+    el("path", { d: `M${a.x},${y1} C${a.x},${my} ${b.x},${my} ${b.x},${y2}`, class: "edge", stroke: ECOL[e.type], "stroke-width": on ? 1.8 : 1, opacity: on ? .95 : .35, "marker-end": `url(#a-${e.type})` }, g);
+  }
+  for (const n of Object.values(nodes)) {
+    const dim = hot && !rel.has(n.id);
+    const gg = el("g", { class: "node" + (dim ? " dim" : ""), transform: `translate(${n.x - n.w / 2},${n.y - n.h / 2})` }, svg);
+    const single = n.kind === "kit" && reuse[n.key] <= 1;
+    const commented = state.comments.some(c => c.target === n.id);
+    el("rect", { width: n.w, height: n.h, rx: 8, fill: COLORS[n.kind], stroke: n.id === state.sel ? "#fff" : commented ? "#f2b35b" : single ? "#8a6d2e" : "#3a4350", "stroke-width": n.id === state.sel || commented ? 2 : 1.2, "stroke-dasharray": single ? "4 3" : "" }, gg);
+    const t1 = el("text", { x: n.w / 2, y: 19, "text-anchor": "middle", fill: "#e6e9ee", "font-size": 12.5, "font-weight": 600 }, gg); t1.textContent = n.label;
+    const t2 = el("text", { x: n.w / 2, y: 34, "text-anchor": "middle", fill: "#9aa4b2", "font-size": 10.5, "font-family": "ui-monospace, Consolas, monospace" }, gg); t2.textContent = n.sub;
+    gg.addEventListener("click", () => { state.sel = n.id; state.preset = "custom"; updateAll(); });
+    gg.addEventListener("mouseenter", () => { state.hover = n.id; renderMap(); });
+    gg.addEventListener("mouseleave", () => { state.hover = null; renderMap(); });
+  }
+  document.getElementById("tabhint").textContent = "Hover or click a box to see what it uses and what uses it. Dashed amber: a component only one screen uses.";
+}
+
+function renderMatrix() {
+  const S = document.getElementById("stage");
+  const cols = SCREENS.filter(s => state.showSheet || s !== "sheet");
+  let rows = [...COMPS].sort((a, b) => reuse[b] - reuse[a] || a.localeCompare(b));
+  if (state.filter === "single") rows = rows.filter(c => reuse[c] <= 1);
+  S.innerHTML = `<table class="mx"><thead><tr><th class="c">Component</th>${cols.map(s => `<th class="v">${esc(DATA.screens[s])}</th>`).join("")}<th>Screens</th><th>Lines</th><th></th></tr></thead><tbody>${rows.map(c =>
+    `<tr data-c="${c}" class="${state.sel === "k:" + c ? "sel" : ""}"><td class="c">${c}</td>${cols.map(s => `<td>${DATA.usage[s].includes(c) ? `<span class="dot${s === "sheet" ? " sheet" : ""}"></span>` : ""}</td>`).join("")}<td><b>${reuse[c]}</b></td><td class="mono">${kitLines(c)}</td><td>${reuse[c] <= 1 ? `<span class="flag">${DATA.components[c].single ? "single, with a reason" : "single, NO reason"}</span>` : ""}</td></tr>`).join("")}</tbody></table>`;
+  S.querySelectorAll("tr[data-c]").forEach(tr => tr.onclick = () => { state.sel = "k:" + tr.dataset.c; state.preset = "custom"; updateAll(); });
+  document.getElementById("tabhint").textContent = state.filter === "single" ? "Components fewer than two screens use: each must give a reason in the ledger." : "Sorted by reuse. Click a row for its props and reasons.";
+}
+
+function renderBudget() {
+  const b = DATA.budget, n = COMPS.length, maxProps = Math.max(...COMPS.map(c => Object.keys(DATA.components[c].props || {}).length));
+  const bar = (v, max) => `<div class="bar${v >= max ? " full" : ""}"><i style="width:${Math.min(100, v / max * 100)}%"></i></div>`;
+  document.getElementById("budget").innerHTML = `<div class="stats"><span>Components</span><b>${n} / ${b.components}</b></div>${bar(n, b.components)}
+    <div class="stats"><span>Most props on one component</span><b>${maxProps} / ${b.props}</b></div>${bar(maxProps, b.props)}
+    <div class="stats"><span>Kit lines (the kit/ folder)</span><b>${DATA.kitTotal} / ${b.lines}</b></div>${bar(DATA.kitTotal, b.lines)}
+    <div class="stats"><span>Tokens</span><b>${DATA.tokenCount}</b></div>
+    <div class="hint">Raising a budget needs a <code>raises</code> entry, which is yours to add.</div>`;
+}
+
+function renderDetail() {
+  const D = document.getElementById("detail"), id = state.sel;
+  if (!id) { D.innerHTML = `<h1>Pick something</h1><div class="sub">Click a screen, a component or a data module.</div>
+    <h2>How the web is shaped</h2><div>Screens (<code>features/</code>) compose kit components and read data through one module (<code>api/</code>), which serves fixtures now and the real API at W12. Only <code>kit/</code> renders elements or has CSS; screens pass token names. Every component, prop and variant has a one-line reason in <code>kit/ledger.json</code>.</div>`; return; }
+  const [kind, key] = [id[0], id.slice(2)];
+  let html = "";
+  if (kind === "k") {
+    const c = DATA.components[key], props = c.props || {};
+    html = `<h1>${esc(key)}</h1><div class="sub mono">web/src/kit/${esc(key)}.tsx · ${DATA.kitLines[key].tsx} + ${DATA.kitLines[key].css} CSS lines</div>
+      <h2>Why it exists</h2><div>${esc(c.why)}</div>
+      ${c.single ? `<div class="note"><b>Used by one screen.</b> ${esc(c.single)}</div>` : ""}
+      <h2>Used by</h2><div>${realScreens(key).map(s => `<span class="chip">${esc(DATA.screens[s])}</span>`).join("") || "<span class='sub'>no screen</span>"}</div>
+      <h2>Props (${Object.keys(props).length} of ${DATA.budget.props})</h2>
+      ${Object.entries(props).map(([p, v]) => `<div class="prop"><b>${esc(p)}</b> <span class="sub">${esc(v.why || "")}</span>${v.values ? Object.entries(v.values).map(([k, r]) => `<div class="val"><code>${esc(k)}</code> ${esc(r)}</div>`).join("") : ""}</div>`).join("")}`;
+  } else if (kind === "s") {
+    const files = DATA.featFiles[key], lines = files.reduce((a, f) => a + f.lines, 0);
+    html = `<h1>${esc(DATA.screens[key])}</h1><div class="sub mono">${key === "layout" ? "web/src/app/" : "web/src/features/" + esc(key) + "/"} · ${esc(DATA.routes[key] || "")}</div>
+      <h2>Files (${lines} lines)</h2>${files.map(f => `<div class="mono">${esc(f.name)} <span class="sub">${f.lines}</span></div>`).join("")}
+      <h2>Kit components (${DATA.usage[key].length})</h2><div>${DATA.usage[key].map(c => `<span class="chip">${c}</span>`).join("")}</div>
+      <h2>Data and other screens</h2><div>${DATA.featDeps[key].map(d => `<span class="chip">${esc(d)}</span>`).join("") || "<span class='sub'>none</span>"}</div>
+      <div class="hint">Screens hold 0 raw tags and 0 raw values; the gates check it.</div>`;
+  } else if (kind === "t") {
+    html = `<h1>tokens.css</h1><div class="sub mono">web/src/kit/tokens.css · light and dark</div>
+      <h2>${DATA.tokenCount} tokens by group</h2><div>${Object.entries(DATA.tokenGroups).sort((a, b) => b[1] - a[1]).map(([g, n]) => `<span class="chip">${esc(g)} ${n}</span>`).join("")}</div>
+      <h2>Shared vocabularies (ledger)</h2>${Object.entries(DATA.vocab).map(([k, v]) => `<div class="prop"><b>${esc(k)}</b> <span class="sub">${esc(v.why || "")}</span></div>`).join("")}
+      <div class="hint">The one file allowed raw values; Stylelint refuses them everywhere else.</div>`;
+  } else {
+    const [dir, name] = key.split("/"), f = DATA.support[dir].find(x => x.name.startsWith(name + "."));
+    const users = SCREENS.filter(s => DATA.featDeps[s].includes(key)).map(s => DATA.screens[s]);
+    html = `<h1>${esc(key)}</h1><div class="sub mono">web/src/${esc(dir)}/${esc(f ? f.name : name)} · ${f ? f.lines : "?"} lines</div>
+      <h2>Role</h2><div>${dir === "api" ? "The one data module. Screens read through it; today it serves typed fixtures shaped like docs/api.md, and at W12 it swaps to the real API with generated types." : "Pure models and helpers the screens share (no rendering)."}</div>
+      <h2>Used by</h2><div>${users.map(u => `<span class="chip">${esc(u)}</span>`).join("") || "<span class='sub'>the data module</span>"}</div>`;
+  }
+  const label = kind === "s" ? DATA.screens[key] : key;
+  D.innerHTML = html + `<h2>Comment</h2><textarea id="ctext" placeholder="A question or a change for ${esc(label)}…"></textarea><div style="margin-top:6px"><button id="cadd">Add comment</button></div>`;
+  document.getElementById("cadd").onclick = () => {
+    const v = document.getElementById("ctext").value.trim(); if (!v) return;
+    state.comments.push({ id: Date.now(), target: id, label, text: v }); updateAll();
+  };
+}
+function renderComments() {
+  document.getElementById("ccount").textContent = state.comments.length;
+  const C = document.getElementById("comments");
+  if (!state.comments.length) { C.innerHTML = `<div class="empty">Click a screen or a component, then add a comment.</div>`; return; }
+  C.innerHTML = state.comments.map(c => `<div class="comment"><button class="x" data-id="${c.id}">×</button><b>${esc(c.label)}</b><div>${esc(c.text)}</div></div>`).join("");
+  C.querySelectorAll(".x").forEach(b => b.onclick = () => { state.comments = state.comments.filter(c => c.id != b.dataset.id); updateAll(); });
+}
+function updatePrompt() {
+  const parts = ["This is the AgentOS V2 web as of the W0 kit spike (branch web-w0): five screens on fixture data, drawn only by the 25-component kit in web/src/kit (ledger.json gives each component, prop and variant a reason)."];
+  if (state.preset !== DEFAULT.preset && state.preset !== "custom") parts.push(`I'm looking at the "${state.preset}" view.`);
+  if (state.comments.length) { parts.push("\nMy comments:"); for (const c of state.comments) parts.push(`\n**${c.label}**:\n${c.text}`); }
+  else parts.push("\n(No comments yet: click a screen or a component to add one.)");
+  document.getElementById("prompt").textContent = parts.join(" ").replace(/ \n/g, "\n");
+}
+function updateAll() {
+  document.getElementById("tabMap").classList.toggle("on", state.view === "map");
+  document.getElementById("tabMatrix").classList.toggle("on", state.view === "matrix");
+  document.querySelectorAll("#presets button").forEach(b => b.classList.toggle("on", b.textContent === state.preset));
+  state.view === "map" ? renderMap() : renderMatrix();
+  renderDetail(); renderComments(); updatePrompt();
+}
+function controls() {
+  const P = document.getElementById("presets");
+  for (const name of Object.keys(PRESETS)) {
+    const b = document.createElement("button"); b.textContent = name;
+    b.onclick = () => { const p = PRESETS[name]; Object.assign(state, { preset: name, view: p.view, sel: p.sel, filter: p.filter }); updateAll(); };
+    P.appendChild(b);
+  }
+  document.getElementById("tabMap").onclick = () => { state.view = "map"; updateAll(); };
+  document.getElementById("tabMatrix").onclick = () => { state.view = "matrix"; state.filter = null; updateAll(); };
+  document.getElementById("showSheet").onchange = e => { state.showSheet = e.target.checked; updateAll(); };
+  document.getElementById("showAllEdges").onchange = e => { state.showAllEdges = e.target.checked; updateAll(); };
+  document.getElementById("copy").onclick = async () => {
+    const b = document.getElementById("copy");
+    try { await navigator.clipboard.writeText(document.getElementById("prompt").textContent); b.textContent = "Copied!"; }
+    catch { b.textContent = "Select the text"; }
+    setTimeout(() => b.textContent = "Copy prompt", 1400);
+  };
+}
+renderBudget(); controls(); updateAll();
+</script>
+</body>
+</html>

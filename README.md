@@ -18,4 +18,19 @@ Status: design. No code yet.
 | [docs/api-v1.md](docs/api-v1.md) | V1's API as built, for reference |
 | [docs/decisions.md](docs/decisions.md) | Decisions taken, and why |
 | [docs/plan.md](docs/plan.md) | Build order and how we measure progress |
+| [docs/tickets.md](docs/tickets.md) | The ticket list |
 | [AGENTS.md](AGENTS.md) | Rules for agents (and people) working in this repo |
+
+## Branches after the 2026-10-30 clean-up
+
+The local working copies had grown to many worktrees and stale branches, so they were cleared out. What was worth keeping now lives on two branches:
+
+- **`backend`** (this one): `main`, plus the docs from `docs/api`, plus the unfinished work:
+  - ticket-01 (the database): `src/agentos/db/`, `tests/test_db.py`, `tests/integration/test_db_contract.py`. Unfinished, but its checks pass.
+  - the gates rework: unfinished, and it fails its own `baseline` gate, so it is kept as a patch. To pick it up: `git apply docs/review-archive/gates-self/gates-rework-wip.patch`.
+  - [docs/tickets.md](docs/tickets.md): the ticket list.
+  - `docs/api-map/`: the source of the API Map page.
+  - `docs/review-archive/`: review notes from the agents' `.review` folders.
+- **`frontend`**: the web restyle (`web-restyle` plus `web-patterns`) and `docs/design/`, the mockups and review rounds.
+
+Screenshots were not kept: the web app's regenerate from `web/e2e/screens.spec.ts` on `frontend`.
